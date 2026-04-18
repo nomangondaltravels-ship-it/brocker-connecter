@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broker Connector | Noman Properties</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(10, 20, 35, 0.94);
+      --panel-2: rgba(14, 27, 46, 0.96);
+      --text: #e5eef8;
+      --muted: #94a3b8;
+      --line: rgba(148, 163, 184, 0.14);
+      --green: #22c55e;
+      --green-dark: #15803d;
+      --gold: #f4c542;
+      --red: #ef4444;
+      --blue: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(7,17,31,0.92), rgba(7,17,31,0.97)),
+        url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80') center/cover fixed;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7,17,31,0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      width: min(1320px, 94%);
+      margin: 0 auto;
+      padding: 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-weight: 700;
+      font-size: 1.35rem;
+      line-height: 1.05;
+    }
+
+    .brand span { color: var(--gold); }
+    .brand small {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .menu-toggle {
+      min-width: 122px;
+      padding-inline: 14px;
+    }
+
+    .menu-toggle-lines {
+      display: inline-flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .menu-toggle-lines span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .account-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.78);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .account-chip.active { display: inline-flex; }
+    .top-actions .hidden { display: none; }
+
+    .top-badge {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.25);
+      color: #bbf7d0;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .top-badge.active { display: inline-flex; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--green-dark), var(--green));
+      color: white;
+      box-shadow: 0 10px 28px rgba(34,197,94,0.22);
+    }
+
+    .btn-primary:hover { transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: rgba(15,23,42,0.78);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .layout {
+      width: min(1320px, 94%);
+      margin: 12px auto 18px;
+      display: block;
+    }
+
+    .sidebar,
+    .content-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 92px;
+      right: 22px;
+      width: min(360px, calc(100vw - 28px));
+      max-height: calc(100vh - 112px);
+      overflow-y: auto;
+      padding: 22px;
+      z-index: 1600;
+      transform: translateX(calc(100% + 26px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.22s ease, opacity 0.22s ease;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-text {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-bottom: 18px;
+    }
+
+    .menu {
+      display: grid;
+      gap: 12px;
+    }
+
+    .menu-btn {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(12,23,39,0.82);
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .menu-btn.active {
+      background: linear-gradient(90deg, rgba(21,128,61,0.95), rgba(34,197,94,0.9));
+      border-color: rgba(34,197,94,0.35);
+      color: white;
+    }
+
+    .content-panel { overflow: hidden; }
+
+    .menu-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 8, 18, 0.54);
+      backdrop-filter: blur(6px);
+      display: none;
+      z-index: 1500;
+    }
+
+    .menu-backdrop.active { display: block; }
+
+    .section { display: none; padding: 20px; }
+    .section.active { display: block; }
+
+    .hero-box {
+      background:
+        linear-gradient(rgba(7,17,31,0.84), rgba(7,17,31,0.92)),
+        url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80') center/cover;
+      border-bottom: 1px solid var(--line);
+      padding: 22px 20px;
+    }
+
+    .hero-box h1 { font-size: 2rem; line-height: 1.06; margin-bottom: 8px; }
+    .hero-box p { max-width: 860px; color: #d8e2ee; font-size: 0.94rem; line-height: 1.45; }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-head h2 { font-size: 1.45rem; margin-bottom: 4px; }
+    .page-head p { color: var(--muted); font-size: 0.9rem; }
+
+    .page-use {
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.14);
+      background: rgba(15,23,42,0.6);
+      color: #d7e2ef;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .page-use strong {
+      color: #ffffff;
+      margin-right: 6px;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .stat-card, .card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .stat-card small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card strong { font-size: 1.2rem; }
+    .card h3 { margin-bottom: 8px; font-size: 1rem; }
+    .card p { color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+
+    .card-head-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .hero-tags,
+    .signal-list,
+    .flow-steps,
+    .trust-points {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .hero-tags { margin-top: 12px; }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(11,22,40,0.56);
+      color: #dce8f5;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .hero-action-btn {
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: rgba(11,22,40,0.56);
+      border: 1px solid rgba(148,163,184,0.18);
+      color: #dce8f5;
+    }
+
+    .hero-action-btn:hover {
+      border-color: rgba(34,197,94,0.45);
+      color: white;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .flow-step {
+      flex: 1 1 180px;
+      min-width: 0;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.66);
+    }
+
+    .flow-step strong,
+    .signal-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    .flow-step span,
+    .signal-item span,
+    .mini-feed-item span {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.82rem;
+    }
+
+    .signal-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .signal-item,
+    .mini-feed-item {
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.66);
+    }
+
+    .signal-item .badge,
+    .mini-feed-item .badge {
+      margin-bottom: 10px;
+    }
+
+    .mini-feed {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-feed-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .mini-feed-item time {
+      color: #86efac;
+      font-size: 0.8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .profile-item {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.56);
+    }
+
+    .profile-item small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .profile-item strong {
+      font-size: 0.92rem;
+    }
+
+    .notice-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notice-item {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.56);
+      color: var(--text);
+    }
+
+    .notice-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+
+    .notice-item span {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .saved-filter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .inline-note {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .admin-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .admin-item {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.56);
+    }
+
+    .admin-item h4 {
+      margin-bottom: 6px;
+      font-size: 0.96rem;
+    }
+
+    .admin-item p {
+      margin-bottom: 8px;
+      font-size: 0.84rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      border: 1px solid rgba(148,163,184,0.2);
+      background: rgba(148,163,184,0.12);
+      color: #dbe7f3;
+    }
+
+    .status-pill.open { color: #93c5fd; border-color: rgba(59,130,246,0.25); background: rgba(59,130,246,0.12); }
+    .status-pill.matched { color: #86efac; border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.12); }
+    .status-pill.closed { color: #fcd34d; border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.12); }
+    .status-pill.expired { color: #fca5a5; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.12); }
+
+    .tiny-btn {
+      min-height: 34px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .section-note {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.55;
+    }
+
+    .trust-points {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .trust-point {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.66);
+    }
+
+    .trust-point strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px 15px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(15,23,42,0.78);
+      color: var(--text);
+      outline: none;
+    }
+
+    input::placeholder, textarea::placeholder { color: #7f8ea3; }
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(34,197,94,0.65);
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.12);
+    }
+
+    .check-row {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .check-row label { display: inline-flex; align-items: center; gap: 8px; }
+    .check-row input { width: auto; }
+
+    .manual-wrap { display: none; }
+    .manual-wrap.active { display: block; }
+
+    .table-shell {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(10,20,35,0.9);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.18);
+    }
+
+    .requirements-compact .page-head h2 { font-size: 1.7rem; }
+    .requirements-compact .page-head p { font-size: 0.95rem; }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: end;
+    }
+
+    .filters > div { min-width: 0; }
+
+    .filters .btn {
+      width: 100%;
+      min-height: 48px;
+    }
+
+    .results-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .compact-table table { width: 100%; }
+    .compact-table th,
+    .compact-table td {
+      padding: 11px 10px;
+      font-size: 0.84rem;
+    }
+
+    .compact-table th { font-size: 0.74rem; }
+    .compact-table .broker-name {
+      font-size: 0.98rem;
+      margin-bottom: 2px;
+      line-height: 1.15;
+    }
+
+    .compact-table .broker-sub,
+    .compact-table .muted {
+      font-size: 0.76rem;
+      line-height: 1.25;
+    }
+
+    .compact-table .badges {
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .compact-table .badge {
+      padding: 4px 8px;
+      font-size: 0.67rem;
+    }
+
+    .compact-table .note {
+      max-width: 220px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .compact-table .cell-inline {
+      max-width: 160px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .compact-table .center-actions {
+      gap: 8px;
+    }
+
+    .compact-table .btn {
+      min-height: 40px;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    .filter-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(148,163,184,0.10);
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.92rem;
+    }
+
+    th {
+      background: rgba(15,23,42,0.98);
+      color: #f8fafc;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    tbody tr:hover { background: rgba(34,197,94,0.06); }
+    .broker-name { font-weight: 700; margin-bottom: 4px; }
+    .broker-sub, .muted { color: var(--muted); font-size: 0.82rem; }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge.green { background: rgba(34,197,94,0.14); color: #86efac; }
+    .badge.blue { background: rgba(56,189,248,0.14); color: #7dd3fc; }
+    .badge.red { background: rgba(239,68,68,0.14); color: #fca5a5; }
+    .badge.gold { background: rgba(244,197,66,0.14); color: #f4c542; }
+
+    .note { color: #9fb0c6; line-height: 1.45; max-width: 420px; }
+    .empty { padding: 30px; text-align: center; color: var(--muted); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 8, 18, 0.72);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-card {
+      width: min(720px, 100%);
+      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
+      border: 1px solid rgba(148,163,184,0.16);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 28px 70px rgba(0,0,0,0.45);
+    }
+
+    .modal-card h3 { font-size: 1.8rem; margin-bottom: 18px; }
+    .modal-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(15,23,42,0.55);
+      margin-bottom: 22px;
+    }
+
+    .modal-table td:first-child {
+      width: 180px;
+      color: #9fb0c6;
+      font-weight: 700;
+    }
+
+    .center-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .system-banner {
+      display: none;
+      margin: 18px 28px 0;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .system-banner.active { display: block; }
+    .system-banner.warning {
+      border-color: rgba(244,197,66,0.32);
+      background: rgba(64, 45, 7, 0.26);
+      color: #fde68a;
+    }
+
+    .system-banner.error {
+      border-color: rgba(239,68,68,0.32);
+      background: rgba(69, 10, 10, 0.24);
+      color: #fecaca;
+    }
+
+    .auth-card {
+      width: min(620px, 100%);
+      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
+      border: 1px solid rgba(148,163,184,0.16);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 28px 70px rgba(0,0,0,0.45);
+    }
+
+    .auth-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .auth-tabs {
+      display: inline-flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.8);
+      border: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .auth-tab {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .auth-tab.active {
+      background: linear-gradient(90deg, rgba(21,128,61,0.95), rgba(34,197,94,0.9));
+      color: white;
+    }
+
+    .auth-copy {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.55;
+    }
+
+    .auth-status {
+      display: none;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.75);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .auth-status.active { display: block; }
+
+    .auth-status.error {
+      border-color: rgba(239,68,68,0.32);
+      background: rgba(69, 10, 10, 0.24);
+      color: #fecaca;
+    }
+
+    .auth-status.success {
+      border-color: rgba(34,197,94,0.32);
+      background: rgba(9, 49, 26, 0.24);
+      color: #bbf7d0;
+    }
+
+    .auth-foot {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1100px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .grid-2, .grid-3, .form-grid, .signal-list, .trust-points { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .topbar-inner { align-items: flex-start; }
+      .top-actions { width: 100%; }
+      .menu-toggle { margin-left: auto; }
+      .hero-box h1 { font-size: 2rem; }
+      .filters, .stats { grid-template-columns: 1fr; }
+      .table-shell { overflow-x: auto; }
+      table { min-width: 1080px; }
+      .auth-head { align-items: flex-start; }
+      .sidebar {
+        top: 78px;
+        right: 12px;
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 94px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Broker <span>Connector</span><small>Noman Properties • Sponsored by Xsite Real Estate</small></div>
+      <div class="top-actions">
+        <div class="account-chip" id="accountChip">Broker ID: --</div>
+        <div class="top-badge" id="notificationBadge">0</div>
+        <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
+        <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
+        <button class="btn btn-secondary hidden" id="logoutBtn" type="button" onclick="logoutBroker()">Logout</button>
+        <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
+          <span>Menu</span>
+          <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">Broker Menu</div>
+      <div class="sidebar-text">Har button aapko ek clear kaam ke page par le jata hai.</div>
+      <div class="menu">
+        <button class="btn menu-btn active" data-target="home" onclick="openSection('home')">Home</button>
+        <button class="btn menu-btn" data-target="post-requirement" onclick="openSection('post-requirement')">Post Requirement</button>
+        <button class="btn menu-btn" data-target="urgent-deal" onclick="openSection('urgent-deal')">Post Urgent Deal</button>
+        <button class="btn menu-btn" data-target="requirements" onclick="openSection('requirements')">All Requirements</button>
+        <button class="btn menu-btn" data-target="distress" onclick="openSection('distress')">Urgent Deals Board</button>
+        <button class="btn menu-btn" data-target="complaint" onclick="openSection('complaint')">Report Problem</button>
+        <button class="btn menu-btn" type="button" onclick="openAdminPortal()">Admin Portal</button>
+        <button class="btn menu-btn" data-target="contact" onclick="openSection('contact')">Contact</button>
+      </div>
+    </aside>
+
+    <main class="content-panel">
+      <section class="hero-box">
+        <h1>Broker Requirement Network</h1>
+        <p>A broker-only platform to post requirements, share urgent deals, and connect quickly with matching brokers.</p>
+        <div class="hero-tags">
+          <button class="btn hero-action-btn" type="button" onclick="openSection('post-requirement')">Post Requirement</button>
+          <button class="btn hero-action-btn" type="button" onclick="openSection('urgent-deal')">Post Urgent Deal</button>
+          <button class="btn hero-action-btn" type="button" onclick="openSection('requirements')">All Requirements</button>
+          <button class="btn hero-action-btn" type="button" onclick="openSection('contact')">Contact</button>
+        </div>
+      </section>
+
+      <div class="system-banner" id="systemBanner"></div>
+
+      <section class="section active" id="home-section">
+        <div class="page-head">
+          <div>
+            <h2>Home</h2>
+            <p>Everything starts here.</p>
+          </div>
+        </div>
+        <div class="page-use"><strong>Use:</strong> Open any section, post a deal, or check broker requirements in one place.</div>
+
+        <div class="stats">
+          <div class="stat-card"><small>Live Needs</small><strong id="statRequirements">0</strong></div>
+          <div class="stat-card"><small>Urgent Matches</small><strong id="statUrgent">0</strong></div>
+          <div class="stat-card"><small>Hot Closures</small><strong id="statDistress">0</strong></div>
+          <div class="stat-card"><small>Verified Brokers</small><strong id="statVerified">0</strong></div>
+        </div>
+
+        <div class="grid-3" style="margin-top:12px;">
+          <div class="card">
+            <div class="card-head-inline">
+              <h3>Broker Profile</h3>
+              <span class="badge blue" id="profileBadge">Guest</span>
+            </div>
+            <div class="profile-grid" id="brokerProfileCard">
+              <div class="profile-item"><small>Name</small><strong>Guest Broker</strong></div>
+              <div class="profile-item"><small>Broker ID</small><strong>Not signed in</strong></div>
+              <div class="profile-item"><small>Mobile</small><strong>--</strong></div>
+              <div class="profile-item"><small>Status</small><strong>Register or sign in</strong></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head-inline">
+              <h3>Notifications</h3>
+              <span class="badge green" id="notificationCountCard">0 new</span>
+            </div>
+            <div class="notice-list" id="notificationPanel">
+              <div class="notice-item">
+                <strong>No alerts yet</strong>
+                <span>Saved filters and fresh matching posts will appear here.</span>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head-inline">
+              <h3>Quick Tools</h3>
+              <span class="badge gold">Pro</span>
+            </div>
+            <div class="notice-list">
+              <div class="notice-item">
+                <strong>Saved Search Ready</strong>
+                <span>Save your filters on the requirements page and reuse them instantly.</span>
+              </div>
+              <div class="notice-item">
+                <strong>Priority + Status</strong>
+                <span>Premium posts stay higher and every post can be marked open, matched, closed, or expired.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="card">
+            <h3>What You Can Do Here</h3>
+            <p>Post a requirement, check all requirements, share urgent deals, and contact brokers directly on WhatsApp or phone.</p>
+          </div>
+          <div class="card">
+            <h3>Why It Is Easy To Use</h3>
+            <p>Every post stays organized by purpose, location, budget, and broker name so brokers can find the right match faster.</p>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Simple Working Method</h3>
+          <div class="flow-steps" style="margin-top:14px;">
+            <div class="flow-step">
+              <strong>1. Post Requirement</strong>
+              <span>Add buyer or tenant requirement with location, budget, and category.</span>
+            </div>
+            <div class="flow-step">
+              <strong>2. Other Brokers Check</strong>
+              <span>Other brokers open the board and see if they have a matching option.</span>
+            </div>
+            <div class="flow-step">
+              <strong>3. Contact Directly</strong>
+              <span>If they have a match, they can contact the posting broker directly.</span>
+            </div>
+            <div class="flow-step">
+              <strong>4. Close Faster</strong>
+              <span>Urgent deals stay visible so active opportunities get quicker responses.</span>
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary" type="button" onclick="openSection('post-requirement')">Post Requirement</button>
+            <button class="btn btn-secondary" type="button" onclick="openSection('requirements')">View Requirements</button>
+            <button class="btn btn-secondary" type="button" onclick="openSection('urgent-deal')">Post Urgent Deal</button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="card">
+            <div class="page-head" style="margin-bottom:14px;">
+              <div>
+                <h3 style="margin-bottom:6px;">Latest Posts</h3>
+                <p>Recent broker requirements and urgent deal posts.</p>
+              </div>
+            </div>
+            <div class="mini-feed" id="homeFeed">
+              <div class="mini-feed-item">
+                <div>
+                  <strong>Feed is loading</strong>
+                  <span>Recent broker posts will appear here.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="page-head" style="margin-bottom:14px;">
+              <div>
+                <h3 style="margin-bottom:6px;">Urgent Deal Signals</h3>
+                <p>Important urgent opportunities appear here first.</p>
+              </div>
+            </div>
+            <div class="signal-list" id="matchSignals">
+              <div class="signal-item">
+                <span>Urgent deal posts will appear here.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="signin-section">
+        <div class="page-head"><div><h2>Broker Access</h2><p>Register once with your broker details, then use broker ID or mobile number to enter the exchange quickly.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Register your broker profile once, then sign in anytime.</div>
+        <div class="card" style="max-width:760px;">
+          <div class="form-grid">
+            <input type="text" value="Broker ID and mobile number are stored as separate values" readonly>
+            <input type="text" value="Use sign in before posting needs or urgent match opportunities" readonly>
+            <div class="full center-actions" style="justify-content:flex-start;">
+              <button class="btn btn-primary" type="button" onclick="openAuthModal('signin')">Sign In</button>
+              <button class="btn btn-secondary" type="button" onclick="openAuthModal('register')">Register</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="post-requirement-section">
+        <div class="page-head"><div><h2>Post Requirement</h2><p>Add a buyer or tenant requirement so other brokers can contact you if they have a match.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Post buyer or tenant demand for other brokers to match.</div>
+        <div class="card">
+          <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerName">Broker</strong></div>
+          <form class="form-grid" onsubmit="submitEntry(event, false)">
+            <input type="tel" id="reqPhone" placeholder="Broker WhatsApp Number (e.g. 9715XXXXXXXX)" required>
+            <select id="reqPurpose" required>
+              <option value="">Select Purpose</option>
+              <option>Monthly Apartment Rental</option>
+              <option>Yearly Apartment Rental</option>
+              <option>Apartment for Sale</option>
+              <option>Villa Rental</option>
+              <option>Villa for Sale</option>
+              <option>Commercial Lease</option>
+              <option>Commercial Sale</option>
+              <option>Land / Plot Requirement</option>
+              <option>Building Purchase</option>
+              <option>Warehouse Requirement</option>
+            </select>
+            <select id="reqCategory" required>
+              <option value="">Select Category</option>
+              <option>Studio</option>
+              <option>1 BHK</option>
+              <option>2 BHK</option>
+              <option>3+ BHK</option>
+              <option>Villa</option>
+              <option>Townhouse</option>
+              <option>Office</option>
+              <option>Retail Shop</option>
+              <option>Warehouse</option>
+              <option>Labour Camp</option>
+              <option>Plot / Land</option>
+              <option>Full Building</option>
+              <option>Hotel / Serviced Apartments</option>
+            </select>
+            <select id="reqLocation" required onchange="toggleManual('reqLocation','reqLocationManualWrap','reqLocationManual')">
+              <option value="">Select UAE Location</option>
+              <option value="manual">Custom Location - Add Manually</option>
+              <optgroup label="Dubai"><option>Dubai Marina</option><option>Downtown Dubai</option><option>Business Bay</option><option>Jumeirah Village Circle (JVC)</option><option>Jumeirah Lake Towers (JLT)</option><option>Palm Jumeirah</option><option>Dubai Hills Estate</option><option>Al Barsha</option><option>Deira</option><option>Bur Dubai</option></optgroup>
+              <optgroup label="Abu Dhabi"><option>Yas Island</option><option>Al Reem Island</option><option>Saadiyat Island</option><option>Khalifa City</option><option>Mussafah</option></optgroup>
+              <optgroup label="Sharjah"><option>Al Nahda Sharjah</option><option>Al Majaz</option><option>Muwaileh</option><option>Al Khan</option></optgroup>
+              <optgroup label="Ajman"><option>Ajman Corniche</option><option>Al Nuaimiya</option></optgroup>
+              <optgroup label="Ras Al Khaimah"><option>Al Marjan Island</option><option>Al Hamra Village</option></optgroup>
+              <optgroup label="Fujairah"><option>Fujairah City</option></optgroup>
+              <optgroup label="Umm Al Quwain"><option>UAQ Marina</option></optgroup>
+            </select>
+            <div class="manual-wrap" id="reqLocationManualWrap"><input type="text" id="reqLocationManual" placeholder="Manual Entry: Type custom UAE location"></div>
+            <select id="reqBudget" required onchange="toggleManual('reqBudget','reqBudgetManualWrap','reqBudgetManual')">
+              <option value="">Select Budget Range</option>
+              <option value="manual">Custom Budget - Enter Manually</option>
+              <optgroup label="Rental (Yearly)"><option>AED 30K - 50K</option><option>AED 50K - 80K</option><option>AED 80K - 120K</option><option>AED 120K - 180K</option><option>AED 180K+</option></optgroup>
+              <optgroup label="Rental (Monthly)"><option>AED 3K - 5K</option><option>AED 5K - 8K</option><option>AED 8K - 12K</option><option>AED 12K+</option></optgroup>
+              <optgroup label="Sale"><option>AED 300K - 600K</option><option>AED 600K - 1M</option><option>AED 1M - 2M</option><option>AED 2M - 5M</option><option>AED 5M+</option></optgroup>
+            </select>
+            <div class="manual-wrap" id="reqBudgetManualWrap"><input type="text" id="reqBudgetManual" placeholder="Manual Entry: Type custom budget"></div>
+            <div class="full check-row">
+              <label><input type="checkbox" id="reqVerified"> Verified Broker</label>
+              <label><input type="checkbox" id="reqPremium"> Premium</label>
+            </div>
+            <textarea class="full" id="reqNotes" rows="5" placeholder="Write full requirement here" required></textarea>
+            <div class="full center-actions" style="justify-content:flex-start;">
+              <button class="btn btn-primary" type="submit">Submit Requirement</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="section" id="urgent-deal-section">
+        <div class="page-head"><div><h2>Post Urgent Deal</h2><p>Share available stock clearly so brokers can understand the unit, price, and status without calling first.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Post ready stock, urgent inventory, or distress deals with full details.</div>
+        <div class="card">
+          <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerNameUrgent">Broker</strong></div>
+          <form class="form-grid" onsubmit="submitEntry(event, true)">
+            <input type="tel" id="urgentPhone" placeholder="Broker WhatsApp Number (e.g. 9715XXXXXXXX)" required>
+            <select id="urgentPurpose" required>
+              <option value="">Select Deal Type</option>
+              <option>Urgent Rental Match</option>
+              <option>Urgent Sale Match</option>
+              <option>Investor Deal</option>
+              <option>Distress Sale</option>
+              <option>Commercial Urgent Match</option>
+            </select>
+            <select id="urgentAvailability" required>
+              <option value="">Select Availability</option>
+              <option>Available Now</option>
+              <option>Available This Week</option>
+              <option>Available This Month</option>
+              <option>Coming Soon</option>
+            </select>
+            <select id="urgentCategory" required>
+              <option value="">Select Category</option>
+              <option>Studio</option>
+              <option>1 BHK</option>
+              <option>2 BHK</option>
+              <option>3+ BHK</option>
+              <option>Villa</option>
+              <option>Office</option>
+              <option>Retail Shop</option>
+              <option>Warehouse</option>
+              <option>Plot / Land</option>
+              <option>Full Building</option>
+            </select>
+            <select id="urgentLocation" required onchange="toggleManual('urgentLocation','urgentLocationManualWrap','urgentLocationManual')">
+              <option value="">Select Area</option>
+              <option value="manual">Custom Area - Add Manually</option>
+              <optgroup label="Dubai"><option>Dubai Marina</option><option>Downtown Dubai</option><option>Business Bay</option><option>Jumeirah Village Circle (JVC)</option><option>Jumeirah Lake Towers (JLT)</option><option>Palm Jumeirah</option><option>Dubai Hills Estate</option><option>Al Barsha</option><option>Deira</option><option>Bur Dubai</option></optgroup>
+              <optgroup label="Abu Dhabi"><option>Yas Island</option><option>Al Reem Island</option><option>Saadiyat Island</option><option>Khalifa City</option><option>Mussafah</option></optgroup>
+              <optgroup label="Sharjah"><option>Al Nahda Sharjah</option><option>Al Majaz</option><option>Muwaileh</option><option>Al Khan</option></optgroup>
+              <optgroup label="Ajman"><option>Ajman Corniche</option><option>Al Nuaimiya</option></optgroup>
+              <optgroup label="Ras Al Khaimah"><option>Al Marjan Island</option><option>Al Hamra Village</option></optgroup>
+              <optgroup label="Fujairah"><option>Fujairah City</option></optgroup>
+              <optgroup label="Umm Al Quwain"><option>UAQ Marina</option></optgroup>
+            </select>
+            <div class="manual-wrap" id="urgentLocationManualWrap"><input type="text" id="urgentLocationManual" placeholder="Manual Entry: Type custom area"></div>
+            <input type="text" id="urgentBuilding" placeholder="Building Name" required>
+            <select id="urgentFloor" required>
+              <option value="">Select Floor</option>
+              <option>Low Floor</option>
+              <option>Medium Floor</option>
+              <option>High Floor</option>
+            </select>
+            <input type="text" id="urgentSqft" placeholder="Size in Sqft (e.g. 750)" required>
+            <input type="text" id="urgentBudget" placeholder="Price (e.g. AED 850,000)" required>
+            <select id="urgentNegotiable" required>
+              <option value="">Price Status</option>
+              <option>Negotiable</option>
+              <option>Non Negotiable</option>
+            </select>
+            <select id="urgentOccupancy" required onchange="toggleRentedTillDate()">
+              <option value="">Select Unit Status</option>
+              <option>Vacant</option>
+              <option>Rented</option>
+            </select>
+            <div class="manual-wrap" id="urgentRentedTillWrap">
+              <input type="date" id="urgentRentedTill" placeholder="Rented Till Date">
+            </div>
+            <div class="full check-row">
+              <label><input type="checkbox" id="urgentVerified"> Verified Broker</label>
+              <label><input type="checkbox" id="urgentPremium"> Premium</label>
+              <label><input type="checkbox" id="urgentDistress"> Mark as Distress Deal</label>
+            </div>
+            <textarea class="full" id="urgentNotes" rows="5" placeholder="Comment / Extra details" required></textarea>
+            <div class="full center-actions" style="justify-content:flex-start;">
+              <button class="btn btn-primary" type="submit">Post Urgent Deal</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="section requirements-compact" id="requirements-section">
+        <div class="page-head"><div><h2>All Requirements</h2><p>View all broker requirements with filters and sorting.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Search all broker requirements by area, category, budget, and broker.</div>
+        <div class="filters">
+          <div><label class="filter-label">Purpose</label><select id="filterPurpose" onchange="renderBoards()"><option value="">All Purpose</option></select></div>
+          <div><label class="filter-label">Category</label><select id="filterCategory" onchange="renderBoards()"><option value="">All Category</option></select></div>
+          <div><label class="filter-label">Location</label><select id="filterLocation" onchange="renderBoards()"><option value="">All Location</option></select></div>
+          <div><label class="filter-label">Budget</label><select id="filterBudget" onchange="renderBoards()"><option value="">All Budget</option></select></div>
+          <div><label class="filter-label">Broker</label><select id="filterBroker" onchange="renderBoards()"><option value="">All Broker</option></select></div>
+          <div><label class="filter-label">Status</label><select id="filterStatus" onchange="renderBoards()"><option value="">All Status</option><option value="open">Open</option><option value="matched">Matched</option><option value="closed">Closed</option><option value="expired">Expired</option></select></div>
+          <div><label class="filter-label">Sort By</label>
+            <select id="sortBy" onchange="renderBoards()">
+              <option value="latest">Latest</option>
+              <option value="oldest">Oldest</option>
+              <option value="budget-high">Budget: High to Low</option>
+              <option value="budget-low">Budget: Low to High</option>
+            </select>
+          </div>
+          <div class="center-actions" style="justify-content:flex-start;">
+            <button class="btn btn-primary" type="button" onclick="searchRequirements()">Search</button>
+          </div>
+          <div class="center-actions" style="justify-content:flex-start;">
+            <button class="btn btn-secondary" type="button" onclick="clearFilters()">Clear</button>
+          </div>
+        </div>
+        <div class="saved-filter-actions">
+          <button class="btn btn-secondary tiny-btn" type="button" onclick="saveCurrentFilters()">Save Filters</button>
+          <button class="btn btn-secondary tiny-btn" type="button" onclick="applySavedFilters()">Load Saved</button>
+          <span class="inline-note" id="savedFilterNote">No saved filters yet.</span>
+        </div>
+        <div class="results-meta">
+          <div id="requirementsMeta">Loading requirements...</div>
+        </div>
+        <div class="table-shell" id="requirementsBoard"></div>
+      </section>
+
+      <section class="section" id="distress-section">
+        <div class="page-head"><div><h2>Urgent Deals Board</h2><p>View all urgent and distress deals in one place.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Check urgent and close-now deals first.</div>
+        <div class="table-shell" id="distressBoard"></div>
+      </section>
+
+      <section class="section" id="complaint-section">
+        <div class="page-head"><div><h2>Report Problem</h2><p>Report spam, misuse, fake activity, or any broker issue.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Report any fake, spam, or misuse issue here.</div>
+        <div class="card" style="max-width:760px;">
+          <form class="form-grid" onsubmit="submitComplaint(event)">
+            <input type="text" id="compName" placeholder="Your Name (Optional)">
+            <input type="text" id="compBroker" placeholder="Broker ID or Name">
+            <textarea class="full" id="compMsg" rows="6" placeholder="Describe the issue" required></textarea>
+            <div class="full center-actions" style="justify-content:flex-start;">
+              <button class="btn btn-primary" type="submit">Submit Complaint</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="section" id="contact-section">
+        <div class="page-head"><div><h2>Contact</h2><p>Direct support and platform contact details.</p></div></div>
+        <div class="page-use"><strong>Use:</strong> Contact support for help, setup, or platform questions.</div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Broker Connector</h3>
+            <p>Operated by Noman Properties</p>
+            <p>Sponsored by Xsite Real Estate</p>
+          </div>
+          <div class="card">
+            <h3>Direct Contact</h3>
+            <p>WhatsApp: +971 58 877 1139</p>
+            <p>Email: info@nomanproperties.com</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="menu-backdrop" id="menuBackdrop" onclick="closeMenuDrawer()"></div>
+
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-card">
+      <h3 id="confirmModalTitle">Submission Completed</h3>
+      <table class="modal-table"><tbody id="confirmModalBody"></tbody></table>
+      <div class="center-actions"><button class="btn btn-primary" onclick="closeConfirmModal()">OK</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="authModal">
+    <div class="auth-card">
+      <div class="auth-head">
+        <h3 id="authModalTitle">Broker Access</h3>
+        <button class="btn btn-secondary" type="button" onclick="closeAuthModal()">Close</button>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="authTabSignin" type="button" onclick="setAuthMode('signin')">Sign In</button>
+        <button class="auth-tab" id="authTabRegister" type="button" onclick="setAuthMode('register')">Register</button>
+      </div>
+      <p class="auth-copy" id="authCopy">Sign in with your broker ID, mobile number, and email address.</p>
+      <div class="auth-status" id="authStatus"></div>
+      <form class="form-grid" onsubmit="submitBrokerAccess(event)">
+        <input class="full" type="text" id="authName" placeholder="Broker Name" required>
+        <input class="full" type="text" id="authBrokerId" placeholder="Broker ID Number" inputmode="numeric">
+        <input class="full" type="tel" id="authPhone" placeholder="Mobile Number e.g. 9715XXXXXXXX or +9715XXXXXXXX">
+        <input class="full" type="email" id="authEmail" placeholder="Email Address" required>
+        <input class="full" type="password" id="authPassword" placeholder="Password" required>
+        <div class="full center-actions" style="justify-content:flex-start;">
+          <button class="btn btn-primary" id="authSubmitBtn" type="submit">Continue</button>
+        </div>
+      </form>
+      <div class="auth-foot">Broker ID, mobile number, email, and password are separate account details. A clean success popup will appear after login.</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
+    const supabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let currentBroker = localStorage.getItem('current_broker') || 'Broker';
+    let currentBrokerName = localStorage.getItem('current_broker_name') || '';
+    let currentBrokerId = localStorage.getItem('current_broker_id') || '';
+    let currentPhone = localStorage.getItem('current_phone') || '';
+    let currentEmail = localStorage.getItem('current_email') || '';
+    const entries = [];
+    let savedFilters = {};
+    let postStatusOverrides = {};
+    let matchRequests = {};
+    let brokerApprovals = {};
+    let seenEntryKeys = [];
+    const backendState = {
+      dealsTableReady: true
+    };
+    const uiState = {
+      activeSection: 'home',
+      bannerMessage: '',
+      bannerTone: 'warning',
+      authMode: 'signin',
+      isAuthenticated: false,
+      menuOpen: false
+    };
+
+    function saveEntries() {}
+
+    function safeJsonRead(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (err) {
+        console.error(err);
+        return fallback;
+      }
+    }
+
+    function safeJsonWrite(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function getEntryKey(item) {
+      return [
+        item.urgent ? 'urgent' : 'need',
+        item.broker,
+        item.purpose,
+        item.category,
+        item.location,
+        item.budget,
+        item.postedAt
+      ].join('|');
+    }
+
+    function getEntryStatus(item) {
+      const key = getEntryKey(item);
+      return postStatusOverrides[key] || item.status || 'open';
+    }
+
+    function saveStatusOverride(key, status) {
+      postStatusOverrides[key] = status;
+      safeJsonWrite('post_status_overrides', postStatusOverrides);
+    }
+
+    function getMatchCount(item) {
+      const key = getEntryKey(item);
+      return Array.isArray(matchRequests[key]) ? matchRequests[key].length : 0;
+    }
+
+    function isBrokerApprovedForEntry(item) {
+      const account = getStoredBrokerAccounts().find(acc =>
+        acc.name && String(item.broker || '').includes(acc.name)
+      );
+      return Boolean(item.verified || (account && brokerApprovals[account.brokerId]));
+    }
+
+    function getStoredBrokerAccounts() {
+      try {
+        const raw = localStorage.getItem('broker_accounts');
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    function saveStoredBrokerAccounts(accounts) {
+      localStorage.setItem('broker_accounts', JSON.stringify(accounts));
+    }
+
+    function updateLoggedBroker() {
+      document.getElementById('loggedBrokerName').textContent = currentBroker;
+      document.getElementById('loggedBrokerNameUrgent').textContent = currentBroker;
+
+      const accountChip = document.getElementById('accountChip');
+      const notificationBadge = document.getElementById('notificationBadge');
+      const signInBtn = document.getElementById('signInBtn');
+      const registerBtn = document.getElementById('registerBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      if (uiState.isAuthenticated && currentBrokerId) {
+        accountChip.textContent = `Broker ID: ${currentBrokerId}`;
+        accountChip.classList.add('active');
+        signInBtn.classList.add('hidden');
+        registerBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+      } else {
+        accountChip.textContent = 'Broker ID: --';
+        accountChip.classList.remove('active');
+        signInBtn.classList.remove('hidden');
+        registerBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+      }
+
+      if (notificationBadge && !notificationBadge.textContent.trim()) {
+        notificationBadge.textContent = '0';
+      }
+
+      const plainPhone = currentPhone.replace(/^\+/, '');
+      ['reqPhone', 'urgentPhone'].forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.value = uiState.isAuthenticated && plainPhone ? plainPhone : '';
+        input.readOnly = uiState.isAuthenticated && Boolean(plainPhone);
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('statRequirements').textContent = entries.filter(e => !e.urgent).length;
+      document.getElementById('statUrgent').textContent = entries.filter(e => e.urgent).length;
+      document.getElementById('statDistress').textContent = entries.filter(e => e.distress).length;
+      document.getElementById('statVerified').textContent = entries.filter(e => e.verified).length;
+    }
+
+    function updateBrokerProfileCard() {
+      const target = document.getElementById('brokerProfileCard');
+      const badge = document.getElementById('profileBadge');
+      if (!target || !badge) return;
+
+      const storedAccounts = getStoredBrokerAccounts();
+      const approved = brokerApprovals[currentBrokerId];
+      const totalPosts = entries.filter(item => item.broker === currentBroker).length;
+
+      badge.textContent = uiState.isAuthenticated
+        ? (approved ? 'Verified Broker' : 'Broker Account')
+        : 'Guest';
+      badge.className = `badge ${approved ? 'blue' : 'gold'}`;
+
+      target.innerHTML = `
+        <div class="profile-item"><small>Name</small><strong>${uiState.isAuthenticated ? currentBrokerName || 'Broker' : 'Guest Broker'}</strong></div>
+        <div class="profile-item"><small>Broker ID</small><strong>${uiState.isAuthenticated ? currentBrokerId : 'Not signed in'}</strong></div>
+        <div class="profile-item"><small>Mobile</small><strong>${uiState.isAuthenticated ? currentPhone : '--'}</strong></div>
+        <div class="profile-item"><small>Status</small><strong>${uiState.isAuthenticated ? (approved ? 'Approved / Verified' : 'Registered') : 'Register or sign in'}</strong></div>
+        <div class="profile-item"><small>Your Posts</small><strong>${uiState.isAuthenticated ? totalPosts : 0}</strong></div>
+        <div class="profile-item"><small>Broker Accounts</small><strong>${storedAccounts.length}</strong></div>
+      `;
+    }
+
+    function renderHomePanels() {
+      const homeFeed = document.getElementById('homeFeed');
+      const matchSignals = document.getElementById('matchSignals');
+      if (!homeFeed || !matchSignals) return;
+
+      const latestFeed = [...entries]
+        .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt))
+        .slice(0, 5);
+
+      if (!latestFeed.length) {
+        homeFeed.innerHTML = `
+          <div class="mini-feed-item">
+            <div>
+              <strong>No posts yet</strong>
+              <span>New requirements and urgent deals will appear here once brokers start posting.</span>
+            </div>
+          </div>
+        `;
+      } else {
+        homeFeed.innerHTML = latestFeed.map(item => `
+          <div class="mini-feed-item">
+            <div>
+              <span class="badge ${item.urgent ? 'red' : 'green'}">${item.urgent ? 'Urgent Deal' : 'Requirement'}</span>
+              ${Date.now() - new Date(item.postedAt).getTime() < 86400000 ? '<span class="badge blue">New</span>' : ''}
+              <strong>${item.purpose} • ${item.category}</strong>
+              <span>${item.location} • ${item.budget} • ${item.broker}</span>
+            </div>
+            <time>${formatPostedTime(item.postedAt)}</time>
+          </div>
+        `).join('');
+      }
+
+      const hotSignals = entries
+        .filter(item => item.urgent || item.distress)
+        .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt))
+        .slice(0, 4);
+
+      if (!hotSignals.length) {
+        matchSignals.innerHTML = `
+          <div class="signal-item">
+            <strong>No urgent deals yet</strong>
+            <span>Urgent and distress deals will appear here for quick action.</span>
+          </div>
+        `;
+      } else {
+        matchSignals.innerHTML = hotSignals.map(item => `
+          <div class="signal-item">
+            <span class="badge ${item.distress ? 'red' : 'gold'}">${item.distress ? 'Distress' : 'Urgent'}</span>
+            <strong>${item.location}</strong>
+            <span>${item.purpose} • ${item.category} • ${item.budget} • ${getEntryStatus(item)}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function updateNotificationPanel() {
+      const panel = document.getElementById('notificationPanel');
+      const countCard = document.getElementById('notificationCountCard');
+      const topBadge = document.getElementById('notificationBadge');
+      if (!panel || !countCard || !topBadge) return;
+
+      const recentMatches = getFilteredEntries()
+        .filter(item => savedFilters.purpose || savedFilters.category || savedFilters.location || savedFilters.budget || savedFilters.broker || savedFilters.status)
+        .filter(item => Date.now() - new Date(item.postedAt).getTime() < 7 * 86400000)
+        .slice(0, 3);
+
+      const unseen = entries.filter(item => !seenEntryKeys.includes(getEntryKey(item)));
+      const totalCount = recentMatches.length + unseen.length;
+
+      countCard.textContent = `${totalCount} new`;
+      topBadge.textContent = String(totalCount);
+      topBadge.classList.toggle('active', totalCount > 0);
+
+      const notices = [];
+      if (savedFilters.purpose || savedFilters.category || savedFilters.location || savedFilters.budget || savedFilters.broker || savedFilters.status) {
+        notices.push({
+          title: recentMatches.length ? `${recentMatches.length} posts match your saved filters` : 'Saved filters are active',
+          text: recentMatches.length ? 'Open All Requirements to review matching posts quickly.' : 'New matching posts will appear here.'
+        });
+      }
+      if (unseen.length) {
+        notices.push({
+          title: `${unseen.length} fresh posts on the board`,
+          text: 'Latest requirements and urgent deals are waiting for review.'
+        });
+      }
+      if (!uiState.isAuthenticated) {
+        notices.push({
+          title: 'Sign in for broker actions',
+          text: 'Login to post requirements, save filters, and send match interest.'
+        });
+      }
+
+      if (!notices.length) {
+        panel.innerHTML = `
+          <div class="notice-item">
+            <strong>No alerts yet</strong>
+            <span>Saved filters and fresh matching posts will appear here.</span>
+          </div>
+        `;
+        return;
+      }
+
+      panel.innerHTML = notices.map(item => `
+        <div class="notice-item">
+          <strong>${item.title}</strong>
+          <span>${item.text}</span>
+        </div>
+      `).join('');
+    }
+
+    function markAllPostsSeen() {
+      seenEntryKeys = entries.map(getEntryKey);
+      safeJsonWrite('seen_entry_keys', seenEntryKeys);
+      updateNotificationPanel();
+    }
+
+    function renderAdminReview() {
+      const brokerList = document.getElementById('adminBrokerList');
+      const postList = document.getElementById('adminPostList');
+      if (!brokerList || !postList) return;
+
+      const accounts = getStoredBrokerAccounts();
+      brokerList.innerHTML = accounts.length ? accounts.map(account => {
+        const approved = Boolean(brokerApprovals[account.brokerId]);
+        return `
+          <div class="admin-item">
+            <h4>${account.name} (${account.brokerId})</h4>
+            <p>${account.phone} • ${account.email}</p>
+            <div class="center-actions" style="justify-content:flex-start;">
+              <span class="status-pill ${approved ? 'matched' : 'open'}">${approved ? 'Approved' : 'Pending'}</span>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Approval' : 'Approve Broker'}</button>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div class="admin-item"><p>No broker accounts available yet.</p></div>`;
+
+      postList.innerHTML = entries.length ? entries.slice(0, 8).map(item => {
+        const key = getEntryKey(item);
+        const status = getEntryStatus(item);
+        return `
+          <div class="admin-item">
+            <h4>${item.purpose} • ${item.category}</h4>
+            <p>${item.broker} • ${item.location} • ${item.budget}</p>
+            <div class="center-actions" style="justify-content:flex-start;">
+              <span class="status-pill ${status}">${status}</span>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(key)}')">Change Status</button>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div class="admin-item"><p>No posts available yet.</p></div>`;
+    }
+
+    function openSection(name) {
+      uiState.activeSection = name;
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+      const section = document.getElementById(name + '-section');
+      const button = document.querySelector(`.menu-btn[data-target="${name}"]`);
+      if (section) section.classList.add('active');
+      if (button) button.classList.add('active');
+      if (name === 'requirements' || name === 'distress') {
+        markAllPostsSeen();
+      }
+      closeMenuDrawer();
+      refreshSystemBanner();
+    }
+
+    function syncMenuDrawer() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.getElementById('menuBackdrop');
+      if (!sidebar || !backdrop) return;
+      sidebar.classList.toggle('open', uiState.menuOpen);
+      backdrop.classList.toggle('active', uiState.menuOpen);
+    }
+
+    function openMenuDrawer() {
+      uiState.menuOpen = true;
+      syncMenuDrawer();
+    }
+
+    function closeMenuDrawer() {
+      uiState.menuOpen = false;
+      syncMenuDrawer();
+    }
+
+    function toggleMenuDrawer() {
+      uiState.menuOpen = !uiState.menuOpen;
+      syncMenuDrawer();
+    }
+
+    function openAdminPortal() {
+      closeMenuDrawer();
+      window.location.href = 'admin.html';
+    }
+
+    function closeAllModalsOnOverlay(event, modalId) {
+      if (event.target.id === modalId) {
+        document.getElementById(modalId).classList.remove('active');
+      }
+    }
+
+    document.getElementById('confirmModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'confirmModal'));
+    document.getElementById('authModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'authModal'));
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeMenuDrawer();
+      }
+    });
+
+    function toggleManual(selectId, wrapId, inputId) {
+      const select = document.getElementById(selectId);
+      const wrap = document.getElementById(wrapId);
+      const input = document.getElementById(inputId);
+      if (!select || !wrap || !input) return;
+      if (select.value === 'manual') {
+        wrap.classList.add('active');
+        input.required = true;
+      } else {
+        wrap.classList.remove('active');
+        input.required = false;
+        input.value = '';
+      }
+    }
+
+    function extractBudgetValue(text) {
+      if (!text) return 0;
+      const match = String(text).match(/(\d+(?:\.\d+)?)(K|M)?/i);
+      if (!match) return 0;
+      const num = parseFloat(match[1]);
+      const unit = (match[2] || '').toUpperCase();
+      if (unit === 'M') return num * 1000000;
+      if (unit === 'K') return num * 1000;
+      return num;
+    }
+
+    function formatPostedTime(value) {
+      if (!value) return 'just now';
+      const diff = Math.max(0, Date.now() - new Date(value).getTime());
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function showConfirmModal(data, title = 'Submission Completed') {
+      const body = document.getElementById('confirmModalBody');
+      document.getElementById('confirmModalTitle').textContent = title;
+      body.innerHTML = Object.entries(data).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+      document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    function showBrokerPopup(title, details) {
+      showConfirmModal(details, title);
+    }
+
+    function normalizePhoneNumber(phone) {
+      return String(phone || '').trim().replace(/[^\d]/g, '');
+    }
+
+    function normalizeEmail(email) {
+      return String(email || '').trim().toLowerCase();
+    }
+
+    function validateBrokerId(id) {
+      return /^\d{3,20}$/.test(String(id || '').trim());
+    }
+
+    function setAuthStatus(message, tone = '') {
+      const box = document.getElementById('authStatus');
+      if (!box) return;
+      if (!message) {
+        box.textContent = '';
+        box.className = 'auth-status';
+        return;
+      }
+      box.textContent = message;
+      box.className = `auth-status active ${tone}`.trim();
+    }
+
+    function setAuthMode(mode) {
+      uiState.authMode = mode;
+      document.getElementById('authTabSignin').classList.toggle('active', mode === 'signin');
+      document.getElementById('authTabRegister').classList.toggle('active', mode === 'register');
+      document.getElementById('authModalTitle').textContent = mode === 'register' ? 'Register Broker Account' : 'Sign In Broker Account';
+      document.getElementById('authCopy').textContent = mode === 'register'
+        ? 'Register with your broker ID, mobile number, email, and password.'
+        : 'Enter either your broker ID or mobile number, along with your password.';
+      document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Register Now' : 'Sign In Now';
+      document.getElementById('authName').required = mode === 'register';
+      document.getElementById('authEmail').required = mode === 'register';
+      document.getElementById('authPassword').required = true;
+      document.getElementById('authName').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('authEmail').style.display = mode === 'register' ? 'block' : 'none';
+      resetAuthForm(false);
+      setAuthStatus('');
+    }
+
+    function resetAuthForm(clearInputs = true) {
+      if (clearInputs) {
+        document.getElementById('authName').value = '';
+        document.getElementById('authBrokerId').value = '';
+        document.getElementById('authPhone').value = '';
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+      }
+    }
+
+    function openAuthModal(mode = 'signin') {
+      setAuthMode(mode);
+      document.getElementById('authModal').classList.add('active');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('active');
+      setAuthStatus('');
+    }
+
+    function completeBrokerSession(account) {
+      currentBrokerName = account.name;
+      currentBrokerId = account.brokerId;
+      currentPhone = account.phone;
+      currentEmail = account.email;
+      currentBroker = `${account.name} (ID: ${account.brokerId})`;
+      uiState.isAuthenticated = true;
+      localStorage.setItem('current_broker', currentBroker);
+      localStorage.setItem('current_broker_name', currentBrokerName);
+      localStorage.setItem('current_broker_id', currentBrokerId);
+      localStorage.setItem('current_phone', currentPhone);
+      localStorage.setItem('current_email', currentEmail);
+      updateLoggedBroker();
+      updateBrokerProfileCard();
+      resetAuthForm(true);
+    }
+
+    function restoreBrokerSession() {
+      uiState.isAuthenticated = Boolean(currentBrokerId && currentPhone && currentEmail);
+      updateLoggedBroker();
+      updateBrokerProfileCard();
+    }
+
+    function loadLocalEnhancements() {
+      savedFilters = safeJsonRead('saved_requirement_filters', {});
+      postStatusOverrides = safeJsonRead('post_status_overrides', {});
+      matchRequests = safeJsonRead('match_requests', {});
+      brokerApprovals = safeJsonRead('broker_approvals', {});
+      seenEntryKeys = safeJsonRead('seen_entry_keys', []);
+      const note = document.getElementById('savedFilterNote');
+      if (note) {
+        note.textContent = Object.keys(savedFilters).length ? 'Saved filters ready.' : 'No saved filters yet.';
+      }
+    }
+
+    function getFilterValues() {
+      return {
+        purpose: document.getElementById('filterPurpose')?.value || '',
+        category: document.getElementById('filterCategory')?.value || '',
+        location: document.getElementById('filterLocation')?.value || '',
+        budget: document.getElementById('filterBudget')?.value || '',
+        broker: document.getElementById('filterBroker')?.value || '',
+        status: document.getElementById('filterStatus')?.value || '',
+        sortBy: document.getElementById('sortBy')?.value || 'latest'
+      };
+    }
+
+    function saveCurrentFilters() {
+      savedFilters = getFilterValues();
+      safeJsonWrite('saved_requirement_filters', savedFilters);
+      const note = document.getElementById('savedFilterNote');
+      if (note) note.textContent = 'Filters saved successfully.';
+      updateNotificationPanel();
+    }
+
+    function applySavedFilters() {
+      if (!Object.keys(savedFilters).length) return;
+      Object.entries(savedFilters).forEach(([key, value]) => {
+        const map = {
+          purpose: 'filterPurpose',
+          category: 'filterCategory',
+          location: 'filterLocation',
+          budget: 'filterBudget',
+          broker: 'filterBroker',
+          status: 'filterStatus',
+          sortBy: 'sortBy'
+        };
+        const el = document.getElementById(map[key]);
+        if (el) el.value = value || '';
+      });
+      const note = document.getElementById('savedFilterNote');
+      if (note) note.textContent = 'Saved filters loaded.';
+      renderBoards();
+      openSection('requirements');
+    }
+
+    function toggleBrokerApproval(brokerId) {
+      brokerApprovals[brokerId] = !brokerApprovals[brokerId];
+      safeJsonWrite('broker_approvals', brokerApprovals);
+      updateBrokerProfileCard();
+      renderAdminReview();
+    }
+
+    function cycleEntryStatus(encodedKey) {
+      const key = decodeURIComponent(encodedKey);
+      const order = ['open', 'matched', 'closed', 'expired'];
+      const current = postStatusOverrides[key] || 'open';
+      const next = order[(order.indexOf(current) + 1) % order.length];
+      saveStatusOverride(key, next);
+      renderBoards();
+      renderHomePanels();
+      renderAdminReview();
+    }
+
+    function sendMatchInterest(encodedKey) {
+      if (!uiState.isAuthenticated) {
+        openAuthModal('signin');
+        return;
+      }
+      const key = decodeURIComponent(encodedKey);
+      const list = Array.isArray(matchRequests[key]) ? matchRequests[key] : [];
+      if (!list.includes(currentBrokerId)) {
+        list.push(currentBrokerId);
+      }
+      matchRequests[key] = list;
+      safeJsonWrite('match_requests', matchRequests);
+      saveStatusOverride(key, 'matched');
+      renderBoards();
+      renderHomePanels();
+      renderAdminReview();
+      showBrokerPopup('Match Sent', {
+        Broker: currentBroker,
+        Status: 'I Have Match submitted',
+        Note: 'This post is now marked as matched in your working view.'
+      });
+    }
+
+    async function submitBrokerAccess(event) {
+      event.preventDefault();
+      const name = document.getElementById('authName').value.trim();
+      const brokerId = document.getElementById('authBrokerId').value.trim();
+      const phone = normalizePhoneNumber(document.getElementById('authPhone').value);
+      const email = normalizeEmail(document.getElementById('authEmail').value);
+      const password = document.getElementById('authPassword').value;
+
+      const accounts = getStoredBrokerAccounts();
+
+      if (uiState.authMode === 'register') {
+        if (name.length < 2) {
+          setAuthStatus('Please enter the broker name.', 'error');
+          return;
+        }
+
+        if (!validateBrokerId(brokerId)) {
+          setAuthStatus('Broker ID must contain numbers only.', 'error');
+          return;
+        }
+
+        if (!/^\d{8,15}$/.test(phone)) {
+          setAuthStatus('Please enter a valid mobile number, for example 9715XXXXXXXX.', 'error');
+          return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setAuthStatus('Please enter a valid email address.', 'error');
+          return;
+        }
+
+        if (String(password || '').length < 6) {
+          setAuthStatus('Password must be at least 6 characters long.', 'error');
+          return;
+        }
+
+        const exists = accounts.find(account =>
+          account.brokerId === brokerId || account.phone === phone || account.email === email
+        );
+
+        if (exists) {
+          setAuthStatus('This broker account is already registered. Please use Sign In.', 'error');
+          return;
+        }
+
+        const account = {
+          name,
+          brokerId,
+          phone,
+          email,
+          password,
+          createdAt: new Date().toISOString()
+        };
+
+        accounts.push(account);
+        saveStoredBrokerAccounts(accounts);
+        completeBrokerSession(account);
+        closeAuthModal();
+        showBrokerPopup('Registration Successful', {
+          Message: 'Broker account created successfully.',
+          Name: name,
+          'Broker ID': brokerId,
+          Mobile: phone,
+          Email: email,
+          Password: 'Saved successfully'
+        });
+        openSection('post-requirement');
+        return;
+      }
+
+      if (!brokerId && !phone) {
+        setAuthStatus('Please enter either the broker ID or the mobile number.', 'error');
+        return;
+      }
+
+      if (!password) {
+        setAuthStatus('Please enter the password.', 'error');
+        return;
+      }
+
+      if (brokerId && !validateBrokerId(brokerId)) {
+        setAuthStatus('Please enter a valid broker ID.', 'error');
+        return;
+      }
+
+      if (phone && !/^\d{8,15}$/.test(phone)) {
+        setAuthStatus('Please enter a valid mobile number, for example 9715XXXXXXXX.', 'error');
+        return;
+      }
+
+      const account = accounts.find(item =>
+        (brokerId && item.brokerId === brokerId) ||
+        (phone && item.phone === phone)
+      );
+
+      if (!account) {
+        setAuthStatus('Broker record not found. Please register first or check the broker ID / mobile number.', 'error');
+        return;
+      }
+
+      if (account.password !== password) {
+        setAuthStatus('The password is incorrect.', 'error');
+        return;
+      }
+
+      completeBrokerSession(account);
+      closeAuthModal();
+      showBrokerPopup('Login Successful', {
+        Message: 'Welcome back. You have signed in successfully.',
+        Name: account.name,
+        'Broker ID': account.brokerId,
+        Mobile: account.phone,
+        Email: account.email
+      });
+      openSection('post-requirement');
+    }
+
+    async function logoutBroker() {
+      uiState.isAuthenticated = false;
+      currentBroker = 'Broker';
+      currentBrokerName = '';
+      currentBrokerId = '';
+      currentPhone = '';
+      currentEmail = '';
+      localStorage.removeItem('current_broker');
+      localStorage.removeItem('current_broker_name');
+      localStorage.removeItem('current_broker_id');
+      localStorage.removeItem('current_phone');
+      localStorage.removeItem('current_email');
+      updateLoggedBroker();
+      updateBrokerProfileCard();
+      setAuthStatus('');
+      openSection('home');
+    }
+
+    function showSystemBanner(message, tone = 'warning') {
+      uiState.bannerMessage = message;
+      uiState.bannerTone = tone;
+      refreshSystemBanner();
+    }
+
+    function hideSystemBanner() {
+      uiState.bannerMessage = '';
+      refreshSystemBanner();
+    }
+
+    function refreshSystemBanner() {
+      const banner = document.getElementById('systemBanner');
+      if (!banner) return;
+
+      const shouldShow =
+        Boolean(uiState.bannerMessage) &&
+        ['home', 'urgent-deal', 'distress'].includes(uiState.activeSection);
+
+      if (!shouldShow) {
+        banner.textContent = '';
+        banner.className = 'system-banner';
+        return;
+      }
+
+      banner.textContent = uiState.bannerMessage;
+      banner.className = `system-banner active ${uiState.bannerTone}`;
+    }
+
+    function getErrorText(error) {
+      return [error?.code, error?.message, error?.details, error?.hint]
+        .filter(Boolean)
+        .join(' | ');
+    }
+
+    function isMissingTableError(error) {
+      const text = getErrorText(error).toLowerCase();
+      return (
+        text.includes('404') ||
+        text.includes('not found') ||
+        text.includes('relation') ||
+        text.includes('schema cache') ||
+        text.includes('pgrst')
+      );
+    }
+
+    async function fetchTableSafely(tableName, options = {}) {
+      const { optional = false } = options;
+      const { data, error } = await supabaseClient
+        .from(tableName)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (optional && isMissingTableError(error)) {
+          return { data: [], missing: true };
+        }
+        throw error;
+      }
+
+      return { data: data || [], missing: false };
+    }
+
+    function buildEntryFromStandard() {
+      const locValue = document.getElementById('reqLocation').value;
+      const budgetValue = document.getElementById('reqBudget').value;
+      return {
+        broker: currentBroker,
+        phone: document.getElementById('reqPhone').value.trim(),
+        purpose: document.getElementById('reqPurpose').value,
+        category: document.getElementById('reqCategory').value,
+        location: locValue === 'manual' ? document.getElementById('reqLocationManual').value.trim() : locValue,
+        budget: budgetValue === 'manual' ? document.getElementById('reqBudgetManual').value.trim() : budgetValue,
+        notes: document.getElementById('reqNotes').value.trim(),
+        verified: document.getElementById('reqVerified').checked,
+        premium: document.getElementById('reqPremium').checked,
+        urgent: false,
+        distress: false,
+        postedAt: new Date().toISOString()
+      };
+    }
+
+    function toggleRentedTillDate() {
+      const occupancy = document.getElementById('urgentOccupancy');
+      const wrap = document.getElementById('urgentRentedTillWrap');
+      const input = document.getElementById('urgentRentedTill');
+      if (!occupancy || !wrap || !input) return;
+      const isRented = occupancy.value === 'Rented';
+      wrap.classList.toggle('active', isRented);
+      input.required = isRented;
+      if (!isRented) input.value = '';
+    }
+
+    function buildUrgentComment(details) {
+      const lines = [
+        `Availability: ${details.availability}`,
+        `Area: ${details.area}`,
+        `Building: ${details.building}`,
+        `Floor: ${details.floor}`,
+        `Size: ${details.sqft} sqft`,
+        `Price: ${details.price}`,
+        `Price Status: ${details.negotiable}`,
+        `Unit Status: ${details.occupancy}`
+      ];
+
+      if (details.rentedTill) {
+        lines.push(`Rented Till: ${details.rentedTill}`);
+      }
+
+      if (details.comment) {
+        lines.push(`Comment: ${details.comment}`);
+      }
+
+      return lines.join(' | ');
+    }
+
+    function buildEntryFromUrgent() {
+      const availability = document.getElementById('urgentAvailability').value;
+      const urgentAreaValue = document.getElementById('urgentLocation').value;
+      const area = urgentAreaValue === 'manual'
+        ? document.getElementById('urgentLocationManual').value.trim()
+        : urgentAreaValue.trim();
+      const building = document.getElementById('urgentBuilding').value.trim();
+      const floor = document.getElementById('urgentFloor').value;
+      const sqft = document.getElementById('urgentSqft').value.trim();
+      const price = document.getElementById('urgentBudget').value.trim();
+      const negotiable = document.getElementById('urgentNegotiable').value;
+      const occupancy = document.getElementById('urgentOccupancy').value;
+      const rentedTill = document.getElementById('urgentRentedTill').value;
+      const comment = document.getElementById('urgentNotes').value.trim();
+      return {
+        broker: currentBroker,
+        phone: document.getElementById('urgentPhone').value.trim(),
+        purpose: document.getElementById('urgentPurpose').value,
+        category: document.getElementById('urgentCategory').value,
+        location: building ? `${area} - ${building}` : area,
+        budget: price,
+        notes: buildUrgentComment({
+          availability,
+          area,
+          building,
+          floor,
+          sqft,
+          price,
+          negotiable,
+          occupancy,
+          rentedTill,
+          comment
+        }),
+        availability,
+        area,
+        building,
+        floor,
+        sqft,
+        negotiable,
+        occupancy,
+        rentedTill,
+        comment,
+        verified: document.getElementById('urgentVerified').checked,
+        premium: document.getElementById('urgentPremium').checked,
+        urgent: true,
+        distress: document.getElementById('urgentDistress').checked,
+        postedAt: new Date().toISOString()
+      };
+    }
+
+    function validatePhone(phone) {
+      return /^[0-9]{8,15}$/.test(phone);
+    }
+
+    async function submitEntry(event, isUrgent) {
+      event.preventDefault();
+
+      if (!uiState.isAuthenticated || !currentBrokerId || !currentPhone || !currentEmail) {
+        openAuthModal('signin');
+        alert('Requirement ya urgent deal post karne ke liye pehle Sign In karein.');
+        return;
+      }
+
+      const entry = isUrgent ? buildEntryFromUrgent() : buildEntryFromStandard();
+
+      if (!entry.phone || !validatePhone(entry.phone)) {
+        alert('Enter a valid WhatsApp number without + or spaces, e.g. 9715XXXXXXXX');
+        return;
+      }
+
+      if (!entry.location || !entry.budget || !entry.notes) {
+        alert('Please complete the required fields.');
+        return;
+      }
+
+      if (isUrgent && !backendState.dealsTableReady) {
+        alert('Urgent deals abhi save nahi ho sakti, kyun ke Supabase me deals table abhi maujood nahi hai.');
+        return;
+      }
+
+      try {
+        if (isUrgent) {
+          const { error } = await supabaseClient.from('deals').insert([
+            {
+              broker_name: entry.broker,
+              phone: entry.phone,
+              type: entry.purpose,
+              category: entry.category,
+              location: entry.location,
+              price: entry.budget,
+              notes: entry.notes,
+              urgent: entry.urgent,
+              distress: entry.distress,
+              status: 'pending'
+            }
+          ]);
+          if (error) throw error;
+        } else {
+          const { error } = await supabaseClient.from('requirements').insert([
+            {
+              broker_name: entry.broker,
+              phone: entry.phone,
+              purpose: entry.purpose,
+              category: entry.category,
+              location: entry.location,
+              budget: entry.budget,
+              notes: entry.notes,
+              verified: entry.verified,
+              premium: entry.premium,
+              status: 'pending'
+            }
+          ]);
+          if (error) throw error;
+        }
+
+        showConfirmModal({
+          Broker: entry.broker,
+          Purpose: entry.purpose,
+          Category: entry.category,
+          Location: entry.location,
+          Budget: entry.budget,
+          ...(isUrgent ? {
+            Availability: entry.availability,
+            Floor: entry.floor,
+            Sqft: `${entry.sqft} sqft`,
+            Occupancy: entry.occupancy
+          } : {}),
+          Status: isUrgent ? 'Urgent Deal Submitted' : 'Requirement Submitted'
+        });
+
+        event.target.reset();
+        if (!isUrgent) {
+          toggleManual('reqLocation', 'reqLocationManualWrap', 'reqLocationManual');
+          toggleManual('reqBudget', 'reqBudgetManualWrap', 'reqBudgetManual');
+        } else {
+          toggleManual('urgentLocation', 'urgentLocationManualWrap', 'urgentLocationManual');
+          toggleRentedTillDate();
+        }
+        updateLoggedBroker();
+        await loadSupabaseData();
+      } catch (err) {
+        console.error(err);
+        const message = isMissingTableError(err)
+          ? 'Required Supabase table abhi missing hai. Pehle database table create karni hogi.'
+          : `Data save nahi hua: ${getErrorText(err) || 'unknown error'}`;
+        alert(message);
+      }
+    }
+
+    async function loadSupabaseData() {
+      try {
+        hideSystemBanner();
+        const requirementsResult = await fetchTableSafely('requirements');
+        const dealsResult = await fetchTableSafely('deals', { optional: true });
+
+        const requirementsData = requirementsResult.data;
+        const dealsData = dealsResult.data;
+        backendState.dealsTableReady = !dealsResult.missing;
+
+        if (dealsResult.missing) {
+          showSystemBanner(
+            'Supabase me "deals" table abhi missing hai. Requirements load ho rahi hain, lekin urgent deals filhal show ya save nahi hongi.',
+            'warning'
+          );
+        }
+
+        const formattedRequirements = (requirementsData || []).map(item => ({
+          broker: item.broker_name,
+          phone: item.phone,
+          purpose: item.purpose,
+          category: item.category,
+          location: item.location,
+          budget: item.budget,
+          notes: item.notes,
+          verified: item.verified,
+          premium: item.premium,
+          urgent: false,
+          distress: false,
+          status: item.status || 'open',
+          postedAt: item.created_at
+        }));
+
+        const formattedDeals = (dealsData || []).map(item => ({
+          broker: item.broker_name,
+          phone: item.phone,
+          purpose: item.type,
+          category: item.category,
+          location: item.location,
+          budget: item.price,
+          notes: item.notes,
+          verified: false,
+          premium: false,
+          urgent: item.urgent,
+          distress: item.distress,
+          status: item.status || 'open',
+          postedAt: item.created_at
+        }));
+
+        entries.length = 0;
+        entries.push(...formattedRequirements, ...formattedDeals);
+        populateRequirementFilterOptions();
+        updateStats();
+        updateBrokerProfileCard();
+        renderHomePanels();
+        updateNotificationPanel();
+        renderAdminReview();
+        renderBoards();
+      } catch (err) {
+        console.error('Load error:', err);
+        backendState.dealsTableReady = false;
+        showSystemBanner(
+          `Supabase load error: ${getErrorText(err) || 'connection ya permissions issue'}`,
+          'error'
+        );
+        entries.length = 0;
+        populateRequirementFilterOptions();
+        updateStats();
+        updateBrokerProfileCard();
+        renderHomePanels();
+        updateNotificationPanel();
+        renderAdminReview();
+        renderBoards();
+      }
+    }
+
+    function getRequirementEntries() {
+      return entries.filter(item => !item.urgent);
+    }
+
+    function populateSelectOptions(selectId, values, defaultLabel) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+
+      const currentValue = select.value;
+      const uniqueValues = [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      select.innerHTML = '';
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = defaultLabel;
+      select.appendChild(defaultOption);
+
+      uniqueValues.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+      });
+
+      if (uniqueValues.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function getRequirementFormLocations() {
+      const select = document.getElementById('reqLocation');
+      if (!select) return [];
+
+      return [...select.options]
+        .map(option => option.value || option.textContent.trim())
+        .filter(value => value && value !== 'manual');
+    }
+
+    function populateRequirementFilterOptions() {
+      const source = getRequirementEntries();
+      populateSelectOptions('filterPurpose', source.map(item => item.purpose), 'All Purpose');
+      populateSelectOptions('filterCategory', source.map(item => item.category), 'All Category');
+      populateSelectOptions('filterLocation', [...source.map(item => item.location), ...getRequirementFormLocations()], 'All Location');
+      populateSelectOptions('filterBudget', source.map(item => item.budget), 'All Budget');
+      populateSelectOptions('filterBroker', source.map(item => item.broker), 'All Broker');
+    }
+
+    function getFilteredEntries() {
+      const purpose = (document.getElementById('filterPurpose')?.value || '').toLowerCase();
+      const category = (document.getElementById('filterCategory')?.value || '').toLowerCase();
+      const location = (document.getElementById('filterLocation')?.value || '').toLowerCase();
+      const budget = (document.getElementById('filterBudget')?.value || '').toLowerCase();
+      const broker = (document.getElementById('filterBroker')?.value || '').toLowerCase();
+      const status = (document.getElementById('filterStatus')?.value || '').toLowerCase();
+      const sortBy = document.getElementById('sortBy')?.value || 'latest';
+
+      const asText = value => String(value || '').toLowerCase();
+
+      const filtered = getRequirementEntries().filter(item => {
+        const matchPurpose = !purpose || asText(item.purpose) === purpose;
+        const matchCategory = !category || asText(item.category) === category;
+        const matchLocation = !location || asText(item.location) === location;
+        const matchBudget = !budget || asText(item.budget) === budget;
+        const matchBroker = !broker || asText(item.broker) === broker;
+        const matchStatus = !status || getEntryStatus(item) === status;
+        return matchPurpose && matchCategory && matchLocation && matchBudget && matchBroker && matchStatus;
+      });
+
+      filtered.sort((a, b) => {
+        if ((b.premium ? 1 : 0) !== (a.premium ? 1 : 0)) return (b.premium ? 1 : 0) - (a.premium ? 1 : 0);
+        if (sortBy === 'latest') return new Date(b.postedAt) - new Date(a.postedAt);
+        if (sortBy === 'oldest') return new Date(a.postedAt) - new Date(b.postedAt);
+        if (sortBy === 'budget-high') return extractBudgetValue(b.budget) - extractBudgetValue(a.budget);
+        if (sortBy === 'budget-low') return extractBudgetValue(a.budget) - extractBudgetValue(b.budget);
+        return 0;
+      });
+
+      return filtered;
+    }
+
+    function renderTable(targetId, sourceEntries) {
+      const container = document.getElementById(targetId);
+      if (!container) return;
+      if (!sourceEntries.length) {
+        container.innerHTML = '<div class="empty">No matching entries found.</div>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="compact-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Broker</th>
+              <th>Details</th>
+              <th>Location</th>
+              <th>Budget</th>
+              <th>Notes</th>
+              <th>Contact</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sourceEntries.map(item => `
+              <tr>
+                <td>
+                  <div class="broker-name">${item.broker}</div>
+                  <div class="broker-sub">Posted ${formatPostedTime(item.postedAt)}</div>
+                  <div class="badges">
+                    ${item.premium ? '<span class="badge gold">Premium</span>' : ''}
+                    ${isBrokerApprovedForEntry(item) ? '<span class="badge blue">Verified</span>' : ''}
+                    ${Date.now() - new Date(item.postedAt).getTime() < 86400000 ? '<span class="badge blue">New</span>' : ''}
+                    ${item.urgent ? '<span class="badge red">Urgent</span>' : ''}
+                    ${item.distress ? '<span class="badge red">Distress</span>' : ''}
+                    <span class="status-pill ${getEntryStatus(item)}">${getEntryStatus(item)}</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="badges" style="margin-top:0; margin-bottom:8px;">
+                    <span class="badge green">${item.purpose}</span>
+                    <span class="badge green">${item.category}</span>
+                  </div>
+                  <div class="muted">Direct broker posting • ${getMatchCount(item)} match request${getMatchCount(item) === 1 ? '' : 's'}</div>
+                </td>
+                <td><div class="cell-inline">${item.location}</div></td>
+                <td><div class="cell-inline">${item.budget}</div></td>
+                <td><div class="note">${item.notes}</div></td>
+                <td>
+                  <div class="center-actions" style="justify-content:flex-start;">
+                    <button class="btn btn-secondary tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
+                    <button class="btn btn-secondary tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
+                    <a class="btn btn-primary tiny-btn" href="https://wa.me/${item.phone}" target="_blank">WhatsApp</a>
+                    <a class="btn btn-secondary tiny-btn" href="tel:+${item.phone}">Call</a>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        </div>
+      `;
+    }
+
+    function renderBoards() {
+      const all = getFilteredEntries();
+      const distress = entries.filter(item => item.distress || item.urgent);
+      const requirementsMeta = document.getElementById('requirementsMeta');
+      if (requirementsMeta) {
+        requirementsMeta.textContent = `${all.length} requirement${all.length === 1 ? '' : 's'} found`;
+      }
+      renderTable('requirementsBoard', all);
+      renderTable('distressBoard', distress);
+    }
+
+    function searchRequirements() {
+      renderBoards();
+    }
+
+    function clearFilters() {
+      ['filterPurpose', 'filterCategory', 'filterLocation', 'filterBudget', 'filterBroker', 'filterStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const sort = document.getElementById('sortBy');
+      if (sort) sort.value = 'latest';
+      renderBoards();
+    }
+
+    async function submitComplaint(event) {
+      event.preventDefault();
+      const name = document.getElementById('compName').value || 'Anonymous';
+      const broker = document.getElementById('compBroker').value || 'N/A';
+      const message = document.getElementById('compMsg').value;
+
+      try {
+        const { error } = await supabaseClient.from('complaints').insert([
+          {
+            name,
+            broker,
+            message,
+            status: 'pending'
+          }
+        ]);
+        if (error) throw error;
+        alert('Complaint submitted successfully.');
+        event.target.reset();
+      } catch (err) {
+        console.error(err);
+        alert('Complaint save nahi hui.');
+      }
+    }
+
+    updateLoggedBroker();
+    setAuthMode('signin');
+    loadLocalEnhancements();
+    restoreBrokerSession();
+    toggleManual('urgentLocation', 'urgentLocationManualWrap', 'urgentLocationManual');
+    toggleRentedTillDate();
+    loadSupabaseData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broker Connector Admin Portal</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(10, 20, 35, 0.95);
+      --panel-2: rgba(14, 27, 46, 0.98);
+      --text: #e5eef8;
+      --muted: #94a3b8;
+      --line: rgba(148, 163, 184, 0.14);
+      --green: #22c55e;
+      --green-dark: #15803d;
+      --gold: #f4c542;
+      --red: #ef4444;
+      --blue: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(7,17,31,0.94), rgba(7,17,31,0.98)),
+        url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80') center/cover fixed;
+      min-height: 100vh;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--line);
+      background: rgba(7,17,31,0.9);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      width: min(1320px, 94%);
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-weight: 700;
+      font-size: 1.25rem;
+      line-height: 1.05;
+    }
+
+    .brand span { color: var(--gold); }
+    .brand small {
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--green-dark), var(--green));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(15,23,42,0.78);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background: rgba(127, 29, 29, 0.88);
+      color: white;
+    }
+
+    .shell {
+      width: min(1320px, 94%);
+      margin: 14px auto 24px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--line);
+      background:
+        linear-gradient(rgba(7,17,31,0.82), rgba(7,17,31,0.92)),
+        url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80') center/cover;
+    }
+
+    .hero h1 { font-size: 2rem; margin-bottom: 8px; }
+    .hero p { color: #d7e2ef; max-width: 860px; line-height: 1.45; }
+
+    .content { padding: 20px; display: grid; gap: 14px; }
+
+    .login-card {
+      width: min(520px, 100%);
+      margin: 40px auto;
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+    }
+
+    .login-card h2 { margin-bottom: 8px; font-size: 1.6rem; }
+    .login-card p { color: var(--muted); margin-bottom: 14px; line-height: 1.45; }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.18);
+      background: rgba(15,23,42,0.78);
+      color: var(--text);
+      outline: none;
+    }
+
+    .helper {
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.7);
+      color: #d7e2ef;
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .status {
+      display: none;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      border: 1px solid var(--line);
+    }
+
+    .status.active { display: block; }
+    .status.error { color: #fecaca; background: rgba(69,10,10,0.24); border-color: rgba(239,68,68,0.32); }
+    .status.success { color: #bbf7d0; background: rgba(9,49,26,0.24); border-color: rgba(34,197,94,0.32); }
+
+    .dashboard { display: none; }
+    .dashboard.active { display: block; }
+
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .card h3 { margin-bottom: 8px; font-size: 1rem; }
+    .card p { color: var(--muted); font-size: 0.88rem; line-height: 1.45; }
+
+    .stat-card small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card strong { font-size: 1.2rem; }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.56);
+    }
+
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .item h4 { font-size: 0.96rem; }
+    .item p { margin-bottom: 8px; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+    }
+
+    .badge.blue { background: rgba(56,189,248,0.14); color: #7dd3fc; }
+    .badge.green { background: rgba(34,197,94,0.14); color: #86efac; }
+    .badge.gold { background: rgba(244,197,66,0.14); color: #f4c542; }
+    .badge.red { background: rgba(239,68,68,0.14); color: #fca5a5; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      border: 1px solid rgba(148,163,184,0.2);
+      background: rgba(148,163,184,0.12);
+      color: #dbe7f3;
+    }
+
+    .status-pill.open { color: #93c5fd; border-color: rgba(59,130,246,0.25); background: rgba(59,130,246,0.12); }
+    .status-pill.matched { color: #86efac; border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.12); }
+    .status-pill.closed { color: #fcd34d; border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.12); }
+    .status-pill.expired { color: #fca5a5; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.12); }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tiny-btn {
+      min-height: 34px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .muted { color: var(--muted); font-size: 0.82rem; }
+
+    @media (max-width: 980px) {
+      .grid-4, .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Broker <span>Connector</span><small>Admin Portal • Separate Review Page</small></div>
+      <div class="top-actions">
+        <a class="btn btn-secondary" href="./index.html">Back To Website</a>
+        <button class="btn btn-danger" id="logoutBtn" type="button" onclick="logoutAdmin()" style="display:none;">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="shell" id="loginView">
+    <div class="login-card">
+      <h2>Admin Login</h2>
+      <p>Use the admin username and password to open the separate review portal connected with the main website and the same Supabase project.</p>
+      <div class="helper">Testing credentials are set inside this page. Change them before any live launch.</div>
+      <div class="status" id="loginStatus"></div>
+      <form class="form-grid" onsubmit="loginAdmin(event)">
+        <input type="text" id="adminUsername" placeholder="Admin Username" required>
+        <input type="password" id="adminPassword" placeholder="Admin Password" required>
+        <button class="btn btn-primary" type="submit">Open Admin Portal</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="shell dashboard" id="dashboardView">
+    <div class="panel">
+      <div class="hero">
+        <h1>Admin Review Portal</h1>
+        <p>Review broker accounts, approve verified brokers, update post statuses, and monitor complaints from a separate admin page.</p>
+      </div>
+      <div class="content">
+        <div class="status" id="adminStatus"></div>
+        <div class="grid-4">
+          <div class="card stat-card"><small>Broker Accounts</small><strong id="statAccounts">0</strong></div>
+          <div class="card stat-card"><small>Approved Brokers</small><strong id="statApproved">0</strong></div>
+          <div class="card stat-card"><small>Total Posts</small><strong id="statPosts">0</strong></div>
+          <div class="card stat-card"><small>Complaints</small><strong id="statComplaints">0</strong></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Broker Approvals</h3>
+            <p>Approve or remove verified status for registered brokers.</p>
+            <div class="list" id="brokerApprovalList">
+              <div class="item"><p>No broker accounts available yet.</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Review Notes</h3>
+            <div class="list">
+              <div class="item">
+                <div class="item-head">
+                  <h4>Portal Security</h4>
+                  <span class="badge gold">Testing</span>
+                </div>
+                <p>This username/password login is suitable for testing. For live production, move admin auth to secure server-side or Supabase auth.</p>
+              </div>
+              <div class="item">
+                <div class="item-head">
+                  <h4>Shared Data</h4>
+                  <span class="badge blue">Attached</span>
+                </div>
+                <p>This page reads the same Supabase project and the same local browser admin settings used by the main website.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="item-head" style="margin-bottom:10px;">
+              <div>
+                <h3>Requirement Review</h3>
+                <p>Change post statuses and keep the broker board clean.</p>
+              </div>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllRequirements()">Delete All Requirements</button>
+            </div>
+            <div class="list" id="requirementReviewList">
+              <div class="item"><p>No requirements found.</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="item-head" style="margin-bottom:10px;">
+              <div>
+                <h3>Urgent Deal Review</h3>
+                <p>Monitor urgent inventory and distress opportunities.</p>
+              </div>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Properties / Deals</button>
+            </div>
+            <div class="list" id="dealReviewList">
+              <div class="item"><p>No urgent deals found.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Complaint Review</h3>
+          <p>Recent complaints submitted from the main website.</p>
+          <div class="list" id="complaintList">
+            <div class="item"><p>No complaints found.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const ADMIN_USERNAME = 'admin';
+    const ADMIN_PASSWORD = 'BrokerAdmin@123';
+    const ADMIN_SESSION_KEY = 'admin_portal_session';
+
+    const supabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
+    const supabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let requirements = [];
+    let deals = [];
+    let complaints = [];
+    let brokerApprovals = {};
+    let postStatusOverrides = {};
+
+    function safeJsonRead(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (err) {
+        console.error(err);
+        return fallback;
+      }
+    }
+
+    function safeJsonWrite(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function setLoginStatus(message, tone = '') {
+      const target = document.getElementById('loginStatus');
+      if (!message) {
+        target.textContent = '';
+        target.className = 'status';
+        return;
+      }
+      target.textContent = message;
+      target.className = `status active ${tone}`.trim();
+    }
+
+    function setAdminStatus(message, tone = '') {
+      const target = document.getElementById('adminStatus');
+      if (!target) return;
+      if (!message) {
+        target.textContent = '';
+        target.className = 'status';
+        return;
+      }
+      target.textContent = message;
+      target.className = `status active ${tone}`.trim();
+    }
+
+    function showDashboard() {
+      document.getElementById('loginView').style.display = 'none';
+      document.getElementById('dashboardView').classList.add('active');
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+    }
+
+    function showLogin() {
+      document.getElementById('loginView').style.display = 'block';
+      document.getElementById('dashboardView').classList.remove('active');
+      document.getElementById('logoutBtn').style.display = 'none';
+    }
+
+    function loginAdmin(event) {
+      event.preventDefault();
+      const username = document.getElementById('adminUsername').value.trim();
+      const password = document.getElementById('adminPassword').value;
+
+      if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+        setLoginStatus('Invalid admin username or password.', 'error');
+        return;
+      }
+
+      sessionStorage.setItem(ADMIN_SESSION_KEY, 'active');
+      setLoginStatus('');
+      showDashboard();
+      loadAdminData();
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      showLogin();
+    }
+
+    function restoreAdminSession() {
+      if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'active') {
+        showDashboard();
+        loadAdminData();
+      } else {
+        showLogin();
+      }
+    }
+
+    function getEntryKey(item, urgent = false) {
+      return [
+        urgent ? 'urgent' : 'need',
+        item.broker,
+        item.purpose,
+        item.category,
+        item.location,
+        item.budget,
+        item.postedAt
+      ].join('|');
+    }
+
+    function getPostStatus(item, urgent = false) {
+      const key = getEntryKey(item, urgent);
+      return postStatusOverrides[key] || item.status || 'open';
+    }
+
+    function savePostStatus(item, urgent, status) {
+      const key = getEntryKey(item, urgent);
+      postStatusOverrides[key] = status;
+      safeJsonWrite('post_status_overrides', postStatusOverrides);
+      renderPostLists();
+    }
+
+    function loadLocalAdminState() {
+      brokerApprovals = safeJsonRead('broker_approvals', {});
+      postStatusOverrides = safeJsonRead('post_status_overrides', {});
+    }
+
+    async function loadAdminData() {
+      loadLocalAdminState();
+      const accounts = safeJsonRead('broker_accounts', []);
+
+      const [{ data: reqData, error: reqError }, { data: dealData, error: dealError }, { data: compData, error: compError }] = await Promise.all([
+        supabaseClient.from('requirements').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('deals').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('complaints').select('*').order('created_at', { ascending: false })
+      ]);
+
+      if (reqError) console.error(reqError);
+      if (dealError) console.error(dealError);
+      if (compError) console.error(compError);
+
+      requirements = (reqData || []).map(item => ({
+        broker: item.broker_name,
+        phone: item.phone,
+        purpose: item.purpose,
+        category: item.category,
+        location: item.location,
+        budget: item.budget,
+        notes: item.notes,
+        verified: item.verified,
+        premium: item.premium,
+        status: item.status || 'open',
+        postedAt: item.created_at
+      }));
+
+      deals = (dealData || []).map(item => ({
+        broker: item.broker_name,
+        phone: item.phone,
+        purpose: item.type,
+        category: item.category,
+        location: item.location,
+        budget: item.price,
+        notes: item.notes,
+        urgent: item.urgent,
+        distress: item.distress,
+        status: item.status || 'open',
+        postedAt: item.created_at
+      }));
+
+      complaints = compData || [];
+
+      renderStats(accounts);
+      renderBrokerApprovals(accounts);
+      renderPostLists();
+      renderComplaints();
+    }
+
+    function renderStats(accounts) {
+      document.getElementById('statAccounts').textContent = accounts.length;
+      document.getElementById('statApproved').textContent = Object.values(brokerApprovals).filter(Boolean).length;
+      document.getElementById('statPosts').textContent = requirements.length + deals.length;
+      document.getElementById('statComplaints').textContent = complaints.length;
+    }
+
+    function toggleBrokerApproval(brokerId) {
+      brokerApprovals[brokerId] = !brokerApprovals[brokerId];
+      safeJsonWrite('broker_approvals', brokerApprovals);
+      const accounts = safeJsonRead('broker_accounts', []);
+      renderStats(accounts);
+      renderBrokerApprovals(accounts);
+      setAdminStatus('Broker approval status updated successfully.', 'success');
+    }
+
+    function getDeleteErrorMessage(error, entityLabel) {
+      const message = String(error?.message || error || '');
+      if (message.toLowerCase().includes('permission denied') || String(error?.code || '') === '42501') {
+        return `Delete failed for ${entityLabel}. Current Supabase browser permissions do not allow delete. Add an admin delete policy or delete from the Supabase dashboard.`;
+      }
+      return `Delete failed for ${entityLabel}: ${message || 'Unknown error'}`;
+    }
+
+    async function deleteRequirementAt(index) {
+      const item = requirements[index];
+      if (!item) return;
+
+      const confirmed = window.confirm(`Delete this requirement from ${item.broker}?`);
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from('requirements')
+        .delete()
+        .eq('created_at', item.postedAt)
+        .eq('broker_name', item.broker)
+        .eq('phone', item.phone);
+
+      if (error) {
+        setAdminStatus(getDeleteErrorMessage(error, 'the requirement'), 'error');
+        return;
+      }
+
+      setAdminStatus('Requirement deleted successfully.', 'success');
+      loadAdminData();
+    }
+
+    async function deleteDealAt(index) {
+      const item = deals[index];
+      if (!item) return;
+
+      const confirmed = window.confirm(`Delete this property / urgent deal from ${item.broker}?`);
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from('deals')
+        .delete()
+        .eq('created_at', item.postedAt)
+        .eq('broker_name', item.broker)
+        .eq('phone', item.phone);
+
+      if (error) {
+        setAdminStatus(getDeleteErrorMessage(error, 'the property / deal'), 'error');
+        return;
+      }
+
+      setAdminStatus('Property / deal deleted successfully.', 'success');
+      loadAdminData();
+    }
+
+    async function deleteAllRequirements() {
+      if (!requirements.length) {
+        setAdminStatus('There are no requirements to delete.', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm('Delete all requirements from Supabase?');
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from('requirements')
+        .delete()
+        .neq('created_at', '');
+
+      if (error) {
+        setAdminStatus(getDeleteErrorMessage(error, 'all requirements'), 'error');
+        return;
+      }
+
+      setAdminStatus('All requirements deleted successfully.', 'success');
+      loadAdminData();
+    }
+
+    async function deleteAllDeals() {
+      if (!deals.length) {
+        setAdminStatus('There are no properties / deals to delete.', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm('Delete all properties / urgent deals from Supabase?');
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from('deals')
+        .delete()
+        .neq('created_at', '');
+
+      if (error) {
+        setAdminStatus(getDeleteErrorMessage(error, 'all properties / deals'), 'error');
+        return;
+      }
+
+      setAdminStatus('All properties / deals deleted successfully.', 'success');
+      loadAdminData();
+    }
+
+    function updateBrokerPassword(brokerId) {
+      const accounts = safeJsonRead('broker_accounts', []);
+      const accountIndex = accounts.findIndex(account => account.brokerId === brokerId);
+      if (accountIndex === -1) {
+        setAdminStatus('Broker account not found.', 'error');
+        return;
+      }
+
+      const newPassword = window.prompt('Enter a new password for this broker:');
+      if (newPassword === null) return;
+
+      if (String(newPassword).trim().length < 6) {
+        setAdminStatus('Password must be at least 6 characters long.', 'error');
+        return;
+      }
+
+      accounts[accountIndex].password = String(newPassword).trim();
+      safeJsonWrite('broker_accounts', accounts);
+      renderStats(accounts);
+      renderBrokerApprovals(accounts);
+      setAdminStatus('Broker password updated successfully.', 'success');
+    }
+
+    function deleteBrokerAccount(brokerId) {
+      const accounts = safeJsonRead('broker_accounts', []);
+      const account = accounts.find(item => item.brokerId === brokerId);
+      if (!account) {
+        setAdminStatus('Broker account not found.', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm(`Delete broker ${account.name} (${account.brokerId})? This will remove the local broker account from this browser.`);
+      if (!confirmed) return;
+
+      const updatedAccounts = accounts.filter(item => item.brokerId !== brokerId);
+      delete brokerApprovals[brokerId];
+      safeJsonWrite('broker_accounts', updatedAccounts);
+      safeJsonWrite('broker_approvals', brokerApprovals);
+
+      if (localStorage.getItem('current_broker_id') === brokerId) {
+        localStorage.removeItem('current_broker');
+        localStorage.removeItem('current_broker_name');
+        localStorage.removeItem('current_broker_id');
+        localStorage.removeItem('current_phone');
+        localStorage.removeItem('current_email');
+      }
+
+      renderStats(updatedAccounts);
+      renderBrokerApprovals(updatedAccounts);
+      setAdminStatus('Broker account deleted successfully.', 'success');
+    }
+
+    function renderBrokerApprovals(accounts) {
+      const target = document.getElementById('brokerApprovalList');
+      if (!accounts.length) {
+        target.innerHTML = `<div class="item"><p>No broker accounts available yet.</p></div>`;
+        return;
+      }
+
+      target.innerHTML = accounts.map(account => {
+        const approved = Boolean(brokerApprovals[account.brokerId]);
+        return `
+          <div class="item">
+            <div class="item-head">
+              <h4>${account.name} (${account.brokerId})</h4>
+              <span class="badge ${approved ? 'blue' : 'gold'}">${approved ? 'Approved' : 'Pending'}</span>
+            </div>
+            <p>${account.phone} • ${account.email}</p>
+            <div class="action-row">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Approval' : 'Approve Broker'}</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${account.brokerId}')">Change Password</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${account.brokerId}')">Delete Broker</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderPostLists() {
+      const reqTarget = document.getElementById('requirementReviewList');
+      const dealTarget = document.getElementById('dealReviewList');
+
+      reqTarget.innerHTML = requirements.length ? requirements.slice(0, 10).map(item => `
+        <div class="item">
+          <div class="item-head">
+            <h4>${item.purpose} • ${item.category}</h4>
+            <span class="status-pill ${getPostStatus(item, false)}">${getPostStatus(item, false)}</span>
+          </div>
+          <p>${item.broker} • ${item.location} • ${item.budget}</p>
+          <p class="muted">${item.notes}</p>
+          <div class="action-row">
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'open')">Open</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'matched')">Matched</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'closed')">Closed</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'expired')">Expired</button>
+            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${requirements.indexOf(item)})">Delete</button>
+          </div>
+        </div>
+      `).join('') : `<div class="item"><p>No requirements found.</p></div>`;
+
+      dealTarget.innerHTML = deals.length ? deals.slice(0, 10).map(item => `
+        <div class="item">
+          <div class="item-head">
+            <h4>${item.purpose} • ${item.category}</h4>
+            <span class="status-pill ${getPostStatus(item, true)}">${getPostStatus(item, true)}</span>
+          </div>
+          <p>${item.broker} • ${item.location} • ${item.budget}</p>
+          <p class="muted">${item.notes}</p>
+          <div class="action-row">
+            ${item.distress ? '<span class="badge red">Distress</span>' : ''}
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'open')">Open</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'matched')">Matched</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'closed')">Closed</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'expired')">Expired</button>
+            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${deals.indexOf(item)})">Delete</button>
+          </div>
+        </div>
+      `).join('') : `<div class="item"><p>No urgent deals found.</p></div>`;
+    }
+
+    function renderComplaints() {
+      const target = document.getElementById('complaintList');
+      if (!complaints.length) {
+        target.innerHTML = `<div class="item"><p>No complaints found.</p></div>`;
+        return;
+      }
+
+      target.innerHTML = complaints.slice(0, 12).map(item => `
+        <div class="item">
+          <div class="item-head">
+            <h4>${item.name || 'Anonymous'}</h4>
+            <span class="badge red">${item.status || 'pending'}</span>
+          </div>
+          <p>${item.broker || 'N/A'}</p>
+          <p class="muted">${item.message || ''}</p>
+        </div>
+      `).join('');
+    }
+
+    restoreAdminSession();
+  </script>
+</body>
+</html>
