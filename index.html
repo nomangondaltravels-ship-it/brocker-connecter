@@ -86,9 +86,16 @@
       flex-wrap: wrap;
     }
 
+    .top-actions-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      margin-left: auto;
+    }
+
     .top-cta {
-      width: 100%;
-      margin-top: 2px;
+      margin-top: 0;
       color: var(--gold-soft);
       font-size: 0.78rem;
       font-weight: 700;
@@ -982,6 +989,7 @@
       .filters { grid-template-columns: 1fr 1fr; }
       .stats { grid-template-columns: 1fr 1fr; }
       .grid-2, .grid-3, .form-grid, .signal-list, .trust-points { grid-template-columns: 1fr; }
+      .top-actions-wrap { width: 100%; }
     }
 
     @media (max-width: 700px) {
@@ -1006,16 +1014,18 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">Broker <span>Connector</span><small>Noman Properties • Sponsored by Xsite Real Estate</small></div>
-      <div class="top-actions">
-        <div class="account-chip" id="accountChip">Broker ID: --</div>
-        <div class="top-badge" id="notificationBadge">0</div>
-        <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
-        <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
-        <button class="btn btn-secondary hidden" id="logoutBtn" type="button" onclick="logoutBroker()">Logout</button>
-        <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
-          <span>Menu</span>
-          <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
-        </button>
+      <div class="top-actions-wrap">
+        <div class="top-actions">
+          <div class="account-chip" id="accountChip">Broker ID: --</div>
+          <div class="top-badge" id="notificationBadge">0</div>
+          <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
+          <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
+          <button class="btn btn-secondary hidden" id="logoutBtn" type="button" onclick="logoutBroker()">Logout</button>
+          <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
+            <span>Menu</span>
+            <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
+          </button>
+        </div>
         <div class="top-cta" id="registerCta">Register to unlock full broker access and live deal features.</div>
       </div>
     </div>
