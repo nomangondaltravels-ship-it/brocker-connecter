@@ -654,9 +654,13 @@
           table: 'requirements',
           scope: 'single',
           match: {
-            created_at: item.postedAt,
             broker_name: item.broker,
-            phone: item.phone
+            phone: item.phone,
+            purpose: item.purpose,
+            category: item.category,
+            location: item.location,
+            budget: item.budget,
+            notes: item.notes
           }
         });
       } catch (error) {
@@ -680,9 +684,13 @@
           table: 'deals',
           scope: 'single',
           match: {
-            created_at: item.postedAt,
             broker_name: item.broker,
-            phone: item.phone
+            phone: item.phone,
+            type: item.purpose,
+            category: item.category,
+            location: item.location,
+            price: item.budget,
+            notes: item.notes
           }
         });
       } catch (error) {

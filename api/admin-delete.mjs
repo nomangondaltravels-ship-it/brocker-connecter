@@ -35,11 +35,14 @@ function buildDeleteUrl(baseUrl, table, scope, match = {}) {
   const url = new URL(`${baseUrl}/rest/v1/${table}`);
 
   if (scope === 'all') {
-    url.searchParams.set('created_at', 'not.is.null');
+    url.searchParams.set('phone', 'not.is.null');
     return url;
   }
 
   Object.entries(match).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
     url.searchParams.set(key, `eq.${value}`);
   });
 
@@ -82,7 +85,7 @@ export async function POST(request) {
     return json({ message: 'Unsupported delete scope.' }, 400);
   }
 
-  if (scope === 'single' && (!match.created_at || !match.broker_name || !match.phone)) {
+  if (scope === 'single' && (!match.broker_name || !match.phone)) {
     return json({ message: 'Missing match fields for single delete.' }, 400);
   }
 
