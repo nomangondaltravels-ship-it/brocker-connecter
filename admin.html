@@ -404,8 +404,8 @@
           <div class="card">
             <div class="item-head" style="margin-bottom:10px;">
               <div>
-                <h3>Requirement Review</h3>
-                <p>Change post statuses and keep the broker board clean.</p>
+                <h3>Broker Requirements Review</h3>
+                <p>Change broker requirement statuses and keep the broker board clean.</p>
               </div>
               <div class="review-toolbar">
                 <select id="requirementAgeDays" aria-label="Delete requirement leads older than">
@@ -414,7 +414,7 @@
                   <option value="60">Older than 60 days</option>
                   <option value="90">Older than 90 days</option>
                 </select>
-                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldRequirements()">Delete Old Leads</button>
+                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldRequirements()">Delete Old Requirements</button>
                 <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllRequirements()">Delete All Requirements</button>
               </div>
             </div>
@@ -426,23 +426,23 @@
           <div class="card">
             <div class="item-head" style="margin-bottom:10px;">
               <div>
-                <h3>Urgent Deal Review</h3>
-                <p>Monitor urgent inventory and distress opportunities.</p>
+                <h3>Broker Connector Listings Review</h3>
+                <p>Monitor broker connector listings and premium distress opportunities.</p>
               </div>
               <div class="review-toolbar">
-                <select id="dealAgeDays" aria-label="Delete urgent deals older than">
+                <select id="dealAgeDays" aria-label="Delete broker connector listings older than">
                   <option value="10">Older than 10 days</option>
                   <option value="30" selected>Older than 30 days</option>
                   <option value="60">Older than 60 days</option>
                   <option value="90">Older than 90 days</option>
                 </select>
-                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldDeals()">Delete Old Deals</button>
-                <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Properties / Deals</button>
+                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldDeals()">Delete Old Listings</button>
+                <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Broker Connector Listings</button>
               </div>
             </div>
             <p class="inline-note">Age-based cleanup works on deals that already have a valid saved post date.</p>
             <div class="list" id="dealReviewList">
-              <div class="item"><p>No urgent deals found.</p></div>
+              <div class="item"><p>No broker connector listings found.</p></div>
             </div>
           </div>
         </div>
@@ -990,7 +990,7 @@
       const item = deals[index];
       if (!item) return;
 
-      const confirmed = window.confirm(`Delete this property / urgent deal from ${item.broker}?`);
+      const confirmed = window.confirm(`Delete this broker connector listing from ${item.broker}?`);
       if (!confirmed) return;
 
       try {
@@ -1012,7 +1012,7 @@
         return;
       }
 
-      setAdminStatus('Property / deal deleted successfully.', 'success');
+      setAdminStatus('Broker Connector listing deleted successfully.', 'success');
       loadAdminData();
     }
 
@@ -1041,11 +1041,11 @@
 
     async function deleteAllDeals() {
       if (!deals.length) {
-        setAdminStatus('There are no properties / deals to delete.', 'error');
+        setAdminStatus('There are no broker connector listings to delete.', 'error');
         return;
       }
 
-      const confirmed = window.confirm('Delete all properties / urgent deals from Supabase?');
+      const confirmed = window.confirm('Delete all broker connector listings from Supabase?');
       if (!confirmed) return;
 
       try {
@@ -1058,7 +1058,7 @@
         return;
       }
 
-      setAdminStatus('All properties / deals deleted successfully.', 'success');
+      setAdminStatus('All broker connector listings deleted successfully.', 'success');
       loadAdminData();
     }
 
@@ -1230,7 +1230,7 @@
           <p class="muted">Posted ${formatPostedTime(item.postedAt)}</p>
           <p class="muted">${item.notes}</p>
           <div class="action-row">
-            ${item.distress ? '<span class="badge red">Distress</span>' : ''}
+            ${item.distress ? '<span class="badge gold">Hot Distress</span>' : ''}
             <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'open')">Open</button>
             <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'matched')">Matched</button>
             <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'closed')">Closed</button>
@@ -1238,7 +1238,7 @@
             <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${deals.indexOf(item)})">Delete</button>
           </div>
         </div>
-      `).join('') : `<div class="item"><p>No urgent deals found.</p></div>`;
+      `).join('') : `<div class="item"><p>No broker connector listings found.</p></div>`;
     }
 
     function renderComplaints() {

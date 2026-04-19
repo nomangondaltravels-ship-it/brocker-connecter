@@ -224,6 +224,45 @@
       color: #bbf7d0;
     }
 
+    .search-hub {
+      margin: 16px 22px 0;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(11,21,36,0.94), rgba(11,21,36,0.82));
+    }
+
+    .search-hub h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+
+    .search-hub p {
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-suggestions {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .search-suggestions.hidden { display: none; }
+
+    .suggestion-chip {
+      justify-content: flex-start;
+      text-align: left;
+    }
+
     .section { display: none; padding: 0 22px 22px; }
     .section.active { display: block; }
 
@@ -321,6 +360,14 @@
       padding: 16px;
       display: grid;
       gap: 12px;
+    }
+
+    .item-card.distress-card {
+      background:
+        linear-gradient(180deg, rgba(58,16,16,0.18), rgba(13,24,42,0.97)),
+        var(--panel-2);
+      border-color: rgba(212,175,55,0.3);
+      box-shadow: 0 20px 40px rgba(143,106,18,0.16);
     }
 
     .item-top {
@@ -439,7 +486,8 @@
         grid-template-columns: 1fr;
       }
       .section, .hero { padding-left: 16px; padding-right: 16px; }
-      .status-bar { margin-left: 16px; margin-right: 16px; }
+      .status-bar, .search-hub { margin-left: 16px; margin-right: 16px; }
+      .search-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -454,7 +502,7 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Public Website</button>
+        <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
         <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
         <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
       </div>
@@ -464,12 +512,12 @@
   <div class="app-shell">
     <aside class="panel sidebar">
       <h2>Broker CRM</h2>
-      <p>Manage private leads, private inventory, meetings, and public Broker Connector listings without exposing client or owner details.</p>
+      <p>Manage private broker requirements, private inventory, meetings, and public Broker Connector listings without exposing client or owner details.</p>
       <div class="menu">
         <button class="btn active" data-section="overview" onclick="openSection('overview')">Overview</button>
-        <button class="btn" data-section="leads" onclick="openSection('leads')">My Leads</button>
+        <button class="btn" data-section="leads" onclick="openSection('leads')">My Broker Requirements</button>
         <button class="btn" data-section="properties" onclick="openSection('properties')">My Properties</button>
-        <button class="btn" data-section="shared" onclick="openSection('shared')">Shared to Broker Connector</button>
+        <button class="btn" data-section="shared" onclick="openSection('shared')">Listed on Broker Connector</button>
         <button class="btn" data-section="followups" onclick="openSection('followups')">Meetings / Follow-ups</button>
         <button class="btn" data-section="progress" onclick="openSection('progress')">Deal Progress / Status</button>
         <button class="btn" data-section="profile" onclick="openSection('profile')">Profile / Settings</button>
@@ -479,8 +527,18 @@
     <main class="panel">
       <section class="hero">
         <h1>Private Broker Dashboard</h1>
-        <p>This CRM is private to the logged-in broker. Leads, properties, meetings, and progress remain private unless you explicitly choose to list a sanitized version on Broker Connector.</p>
+        <p>This CRM is private to the logged-in broker. Broker requirements, properties, meetings, and progress remain private unless you explicitly choose to list a sanitized version on Broker Connector.</p>
       </section>
+      <div class="search-hub">
+        <h3>Search your CRM</h3>
+        <p>Search broker requirements, properties, listed items, locations, buildings, property types, categories, and follow-up keywords.</p>
+        <div class="search-row" id="dashboardSearchBox">
+          <input id="dashboardSearchInput" type="search" placeholder="Search broker requirements, properties, locations, buildings, or keywords" autocomplete="off">
+          <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
+          <button class="btn btn-secondary" type="button" onclick="clearDashboardSearch()">Clear</button>
+        </div>
+        <div class="search-suggestions hidden" id="dashboardSearchSuggestions"></div>
+      </div>
       <div class="status-bar" id="dashboardStatus"></div>
 
       <section class="section active" id="overview-section">
@@ -510,17 +568,17 @@
       <section class="section" id="leads-section">
         <div class="section-head">
           <div>
-            <h2>My Leads</h2>
-            <p>Add buyer or tenant demand privately, then list a sanitized version publicly only when you want to share it.</p>
+            <h2>My Broker Requirements</h2>
+            <p>Add buyer or tenant requirements privately, then list a sanitized version publicly only when you want to share it.</p>
           </div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <h3 id="leadFormTitle">Add Lead</h3>
+            <h3 id="leadFormTitle">Add Broker Requirement</h3>
             <form class="form-grid" id="leadForm">
               <input type="hidden" id="leadId">
               <div>
-                <label class="small">Lead Type</label>
+                <label class="small">Requirement Type</label>
                 <select id="leadType" required>
                   <option value="">Select</option>
                   <option value="buyer">Buyer</option>
@@ -539,7 +597,7 @@
               <div><label class="small">Location</label><input id="leadLocation" required></div>
               <div><label class="small">Budget</label><input id="leadBudget" required></div>
               <div><label class="small">Source</label><input id="leadSource"></div>
-              <div><label class="small">Priority</label><select id="leadPriority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+              <div><label class="small">Priority</label><select id="leadPriority"><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option></select></div>
               <div><label class="small">Status</label><select id="leadStatus"><option value="new">New</option><option value="contacted">Contacted</option><option value="demand confirmed">Demand Confirmed</option><option value="meeting scheduled">Meeting Scheduled</option><option value="negotiation">Negotiation</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option></select></div>
               <div><label class="small">Meeting Date</label><input type="date" id="leadMeetingDate"></div>
               <div><label class="small">Meeting Time</label><input type="time" id="leadMeetingTime"></div>
@@ -568,18 +626,18 @@
                 </div>
               </div>
               <div class="full actions">
-                <button class="btn btn-primary" type="submit" id="leadSubmitBtn">Save Lead</button>
+                <button class="btn btn-primary" type="submit" id="leadSubmitBtn">Save Requirement</button>
                 <button class="btn btn-secondary" type="button" onclick="resetLeadForm()">Clear</button>
               </div>
             </form>
           </div>
           <div class="card">
-            <h3>Lead Privacy Rules</h3>
-            <p>Private CRM data stays here only. When you list a lead publicly, Broker Connector will only publish safe fields like category, location, budget range, and public notes.</p>
+            <h3>Requirement Privacy Rules</h3>
+            <p>Private CRM data stays here only. When you list a broker requirement publicly, Broker Connector will only publish safe fields like category, location, budget range, and public notes.</p>
             <div class="detail-grid" style="margin-top:14px;">
               <div class="detail-cell"><small>Public-safe</small><strong>Category, location, budget, public note</strong></div>
               <div class="detail-cell"><small>Hidden always</small><strong>Owner name/phone, client name/phone</strong></div>
-              <div class="detail-cell"><small>Workflow</small><strong>List or unlist any lead with one click</strong></div>
+              <div class="detail-cell"><small>Workflow</small><strong>List or unlist any requirement with one click</strong></div>
               <div class="detail-cell"><small>Meetings</small><strong>Track meeting date, time, next action</strong></div>
             </div>
           </div>
@@ -611,7 +669,6 @@
               <div>
                 <label class="small">Flags</label>
                 <div class="check-grid">
-                  <label><input type="checkbox" id="propertyUrgent"> Urgent Deal</label>
                   <label><input type="checkbox" id="propertyDistress"> Distress Deal</label>
                 </div>
               </div>
@@ -645,8 +702,8 @@
       <section class="section" id="shared-section">
         <div class="section-head">
           <div>
-            <h2>Shared to Broker Connector</h2>
-            <p>Every listed lead or property appears on the public marketplace as a sanitized listing only.</p>
+            <h2>Listed on Broker Connector</h2>
+            <p>Every listed broker requirement or property appears on Broker Connector Page as a sanitized listing only.</p>
           </div>
         </div>
         <div class="item-list" id="sharedListingsList"></div>
@@ -656,14 +713,14 @@
         <div class="section-head">
           <div>
             <h2>Meetings / Follow-ups</h2>
-            <p>Track meetings, follow-up notes, and next actions separately from the public marketplace.</p>
+            <p>Track meetings, follow-up notes, and next actions separately from Broker Connector Page.</p>
           </div>
         </div>
         <div class="grid-2">
           <div class="card">
             <h3>Add Follow-up</h3>
             <form class="form-grid" id="followupForm">
-              <div><label class="small">Entity Type</label><select id="followupEntityType"><option value="lead">Lead</option><option value="property">Property</option></select></div>
+              <div><label class="small">Entity Type</label><select id="followupEntityType"><option value="lead">Requirement</option><option value="property">Property</option></select></div>
               <div><label class="small">Entity</label><select id="followupEntityId"></select></div>
               <div><label class="small">Type</label><select id="followupType"><option value="follow-up">Follow-up</option><option value="meeting">Meeting</option><option value="call">Call</option><option value="negotiation">Negotiation</option></select></div>
               <div><label class="small">Meeting Date</label><input type="date" id="followupDate"></div>
@@ -686,7 +743,7 @@
         <div class="section-head">
           <div>
             <h2>Deal Progress / Status Tracker</h2>
-            <p>Track private lead and property movement without exposing confidential CRM information.</p>
+            <p>Track private requirement and property movement without exposing confidential CRM information.</p>
           </div>
         </div>
         <div class="kanban" id="progressBoard"></div>
@@ -703,7 +760,7 @@
           <div class="card" id="profileCard"></div>
           <div class="card">
             <h3>How listing works</h3>
-            <p>Inside each lead or property card you can click <strong>List on Broker Connector</strong> or <strong>Unlist from Broker Connector</strong>. When listed, the public marketplace uses only the safe public fields. Private owner/client details remain hidden automatically.</p>
+            <p>Inside each broker requirement or property card you can click <strong>List on Broker Connector</strong> or <strong>Unlist from Broker Connector</strong>. When listed, Broker Connector Page uses only the safe public fields. Private owner/client details remain hidden automatically.</p>
           </div>
         </div>
       </section>
@@ -719,7 +776,8 @@
       properties: [],
       followUps: [],
       sharedListings: [],
-      activeSection: 'overview'
+      activeSection: 'overview',
+      dashboardSearchQuery: ''
     };
 
     function setStatus(message = '', tone = 'success') {
@@ -828,13 +886,142 @@
       return 'badge-blue';
     }
 
+    function getDashboardSearchText(item, type) {
+      if (type === 'lead') {
+        return [
+          'broker requirement',
+          item.leadType,
+          item.purpose,
+          item.category,
+          item.location,
+          item.budget,
+          item.notes,
+          item.publicGeneralNotes,
+          item.source,
+          item.priority,
+          item.status,
+          item.nextAction
+        ].join(' ').toLowerCase();
+      }
+      if (type === 'property') {
+        return [
+          'broker connector listing',
+          item.purpose,
+          item.propertyType,
+          item.category,
+          item.location,
+          item.price,
+          item.size,
+          item.description,
+          item.publicNotes,
+          item.internalNotes,
+          item.status,
+          item.isDistress ? 'distress deal hot listing' : ''
+        ].join(' ').toLowerCase();
+      }
+      if (type === 'shared') {
+        return [
+          item.listingKind,
+          item.purpose,
+          item.propertyType,
+          item.category,
+          item.location,
+          item.priceLabel,
+          item.publicNotes,
+          item.status,
+          item.isDistress ? 'distress deal hot listing' : ''
+        ].join(' ').toLowerCase();
+      }
+      return [
+        item.followUpType,
+        item.entityType,
+        item.note,
+        item.nextAction,
+        item.meetingDate,
+        item.meetingTime
+      ].join(' ').toLowerCase();
+    }
+
+    function getFilteredDashboardItems(items, type) {
+      const query = String(state.dashboardSearchQuery || '').trim().toLowerCase();
+      if (!query) return [...items];
+      return items.filter(item => getDashboardSearchText(item, type).includes(query));
+    }
+
+    function buildDashboardSuggestions(query) {
+      const normalized = String(query || '').trim().toLowerCase();
+      if (!normalized) return [];
+      const pool = new Set();
+      [...state.leads, ...state.properties, ...state.sharedListings].forEach(item => {
+        [
+          item.location,
+          item.category,
+          item.propertyType,
+          item.purpose,
+          item.price,
+          item.priceLabel,
+          item.sourceType === 'lead' || item.leadType ? 'Broker Requirements' : 'Broker Connector Listings',
+          item.isDistress ? 'Distress Deals' : ''
+        ].filter(Boolean).forEach(term => {
+          if (String(term).toLowerCase().includes(normalized)) pool.add(String(term));
+        });
+      });
+      return [...pool].slice(0, 8);
+    }
+
+    function renderDashboardSuggestions(query) {
+      const target = document.getElementById('dashboardSearchSuggestions');
+      const suggestions = buildDashboardSuggestions(query);
+      if (!suggestions.length) {
+        target.innerHTML = '';
+        target.classList.add('hidden');
+        return;
+      }
+      target.innerHTML = suggestions.map(term => `
+        <button class="btn btn-secondary btn-tiny suggestion-chip" type="button" onclick="selectDashboardSuggestion('${term.replace(/'/g, '\\&#39;')}')">${term}</button>
+      `).join('');
+      target.classList.remove('hidden');
+    }
+
+    function applyDashboardSearch(query = document.getElementById('dashboardSearchInput').value) {
+      state.dashboardSearchQuery = String(query || '').trim();
+      document.getElementById('dashboardSearchInput').value = state.dashboardSearchQuery;
+      renderDashboardSuggestions('');
+      renderLeads();
+      renderProperties();
+      renderSharedListings();
+      renderFollowups();
+      renderProgress();
+      if (state.dashboardSearchQuery) {
+        setStatus(`Showing CRM results for "${state.dashboardSearchQuery}".`, 'success');
+      } else {
+        setStatus('');
+      }
+    }
+
+    function clearDashboardSearch() {
+      state.dashboardSearchQuery = '';
+      document.getElementById('dashboardSearchInput').value = '';
+      renderDashboardSuggestions('');
+      renderLeads();
+      renderProperties();
+      renderSharedListings();
+      renderFollowups();
+      renderProgress();
+      setStatus('');
+    }
+
+    function selectDashboardSuggestion(term) {
+      applyDashboardSearch(term);
+    }
+
     function renderOverview() {
       const overview = state.overview || { totals: {}, broker: {} };
       const stats = [
-        ['Private Leads', overview.totals?.leads || 0],
+        ['Private Requirements', overview.totals?.leads || 0],
         ['Private Properties', overview.totals?.properties || 0],
-        ['Shared Listings', overview.totals?.sharedListings || 0],
-        ['Active Leads', overview.totals?.activeLeads || 0],
+        ['Broker Connector Listings', overview.totals?.sharedListings || 0],
+        ['Active Requirements', overview.totals?.activeLeads || 0],
         ['Active Properties', overview.totals?.activeProperties || 0],
         ['Meetings', overview.totals?.meetings || 0]
       ];
@@ -865,7 +1052,7 @@
           <strong>${item.purpose} · ${item.category}</strong>
           <div class="muted">${item.location} · ${item.priceLabel}</div>
         </div>
-      `).join('') : `<div class="empty">No public listings yet. Use “List on Broker Connector” from your leads or properties.</div>`;
+      `).join('') : `<div class="empty">No broker connector listings yet. Use “List on Broker Connector” from your broker requirements or properties.</div>`;
     }
 
     function leadChecklistSummary(lead) {
@@ -877,12 +1064,13 @@
 
     function renderLeads() {
       const target = document.getElementById('leadsList');
-      if (!state.leads.length) {
-        target.innerHTML = `<div class="empty">No leads yet. Add your first private lead above.</div>`;
+      const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      if (!requirements.length) {
+        target.innerHTML = `<div class="empty">No broker requirements match your current search. Add your first private broker requirement above.</div>`;
         return;
       }
 
-      target.innerHTML = state.leads.map(lead => `
+      target.innerHTML = requirements.map(lead => `
         <div class="item-card">
           <div class="item-top">
             <div class="item-title">
@@ -914,13 +1102,14 @@
 
     function renderProperties() {
       const target = document.getElementById('propertiesList');
-      if (!state.properties.length) {
-        target.innerHTML = `<div class="empty">No properties yet. Add your first private property above.</div>`;
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = `<div class="empty">No properties match your current search. Add your first private property above.</div>`;
         return;
       }
 
-      target.innerHTML = state.properties.map(property => `
-        <div class="item-card">
+      target.innerHTML = properties.map(property => `
+        <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
               <h4>${property.propertyType} · ${property.category}</h4>
@@ -928,8 +1117,7 @@
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(property.status)}">${property.status}</span>
-              ${property.isUrgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
-              ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+              ${property.isDistress ? '<span class="badge badge-red">Hot Distress</span>' : ''}
               <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
             </div>
           </div>
@@ -952,13 +1140,16 @@
 
     function renderSharedListings() {
       const target = document.getElementById('sharedListingsList');
-      if (!state.sharedListings.length) {
-        target.innerHTML = `<div class="empty">No items are listed publicly yet.</div>`;
+      const sharedListings = getFilteredDashboardItems(state.sharedListings, 'shared');
+      if (!sharedListings.length) {
+        target.innerHTML = `<div class="empty">No broker connector listings match your current search yet.</div>`;
         return;
       }
 
-      target.innerHTML = state.sharedListings.map(item => `
-        <div class="item-card">
+      target.innerHTML = sharedListings
+        .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)))
+        .map(item => `
+        <div class="item-card ${item.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
               <h4>${item.listingKind.replace('_', ' ')} · ${item.purpose} · ${item.category}</h4>
@@ -966,8 +1157,7 @@
             </div>
             <div class="badges">
               <span class="badge badge-green">${item.status}</span>
-              ${item.isUrgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
-              ${item.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+              ${item.isDistress ? '<span class="badge badge-red">Hot Distress</span>' : ''}
             </div>
           </div>
           <div class="muted">${item.publicNotes || 'No public note added.'}</div>
@@ -980,12 +1170,13 @@
 
     function renderFollowups() {
       const target = document.getElementById('followupsList');
-      if (!state.followUps.length) {
-        target.innerHTML = `<div class="empty">No follow-ups saved yet.</div>`;
+      const followUps = getFilteredDashboardItems(state.followUps, 'followup');
+      if (!followUps.length) {
+        target.innerHTML = `<div class="empty">No meetings or follow-ups match your current search.</div>`;
         return;
       }
 
-      target.innerHTML = state.followUps.map(item => `
+      target.innerHTML = followUps.map(item => `
         <div class="mini-item">
           <strong>${item.followUpType}</strong>
           <div class="muted">${item.entityType} #${item.entityId} · ${item.meetingDate || '--'} ${item.meetingTime || ''}</div>
@@ -1002,7 +1193,7 @@
         closed: []
       };
 
-      state.leads.forEach(lead => {
+      getFilteredDashboardItems(state.leads, 'lead').forEach(lead => {
         const status = String(lead.status || '').toLowerCase();
         const html = `<div class="mini-item"><strong>${lead.category}</strong><div class="muted">${lead.location} · ${lead.budget}</div></div>`;
         if (status === 'new') columns.new.push(html);
@@ -1012,10 +1203,10 @@
       });
 
       document.getElementById('progressBoard').innerHTML = `
-        <div class="kanban-card"><h4>New</h4><div class="mini-list">${columns.new.join('') || '<div class="empty">No new leads</div>'}</div></div>
+        <div class="kanban-card"><h4>New</h4><div class="mini-list">${columns.new.join('') || '<div class="empty">No new requirements</div>'}</div></div>
         <div class="kanban-card"><h4>Active</h4><div class="mini-list">${columns.active.join('') || '<div class="empty">No active negotiations</div>'}</div></div>
         <div class="kanban-card"><h4>Meetings</h4><div class="mini-list">${columns.meetings.join('') || '<div class="empty">No scheduled meetings</div>'}</div></div>
-        <div class="kanban-card"><h4>Closed / Cancelled</h4><div class="mini-list">${columns.closed.join('') || '<div class="empty">Nothing closed yet</div>'}</div></div>
+        <div class="kanban-card"><h4>Closed / Cancelled</h4><div class="mini-list">${columns.closed.join('') || '<div class="empty">No closed requirements yet</div>'}</div></div>
       `;
     }
 
@@ -1050,8 +1241,8 @@
     function resetLeadForm() {
       document.getElementById('leadForm').reset();
       document.getElementById('leadId').value = '';
-      document.getElementById('leadFormTitle').textContent = 'Add Lead';
-      document.getElementById('leadSubmitBtn').textContent = 'Save Lead';
+      document.getElementById('leadFormTitle').textContent = 'Add Broker Requirement';
+      document.getElementById('leadSubmitBtn').textContent = 'Save Requirement';
     }
 
     function resetPropertyForm() {
@@ -1090,8 +1281,8 @@
       document.getElementById('leadSaleA').checked = lead.saleChecklist.contractA;
       document.getElementById('leadSaleB').checked = lead.saleChecklist.contractB;
       document.getElementById('leadSaleF').checked = lead.saleChecklist.contractF;
-      document.getElementById('leadFormTitle').textContent = 'Edit Lead';
-      document.getElementById('leadSubmitBtn').textContent = 'Update Lead';
+      document.getElementById('leadFormTitle').textContent = 'Edit Broker Requirement';
+      document.getElementById('leadSubmitBtn').textContent = 'Update Requirement';
     }
 
     function editProperty(id) {
@@ -1115,16 +1306,15 @@
       document.getElementById('propertyClientName').value = property.clientName || '';
       document.getElementById('propertyClientPhone').value = property.clientPhone || '';
       document.getElementById('propertyStatus').value = property.status || 'available';
-      document.getElementById('propertyUrgent').checked = property.isUrgent;
       document.getElementById('propertyDistress').checked = property.isDistress;
       document.getElementById('propertyFormTitle').textContent = 'Edit Property';
       document.getElementById('propertySubmitBtn').textContent = 'Update Property';
     }
 
     async function deleteLead(id) {
-      if (!window.confirm('Delete this private lead?')) return;
+      if (!window.confirm('Delete this private broker requirement?')) return;
       try {
-        await dashboardAction({ action: 'delete-lead', id }, 'Lead deleted.');
+        await dashboardAction({ action: 'delete-lead', id }, 'Broker requirement deleted.');
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -1188,7 +1378,7 @@
       };
 
       try {
-        await dashboardAction(payload, id ? 'Lead updated successfully.' : 'Lead created successfully.');
+        await dashboardAction(payload, id ? 'Broker requirement updated successfully.' : 'Broker requirement created successfully.');
         resetLeadForm();
       } catch (error) {
         setStatus(error.message, 'error');
@@ -1217,7 +1407,6 @@
         clientName: document.getElementById('propertyClientName').value,
         clientPhone: document.getElementById('propertyClientPhone').value,
         status: document.getElementById('propertyStatus').value,
-        isUrgent: document.getElementById('propertyUrgent').checked,
         isDistress: document.getElementById('propertyDistress').checked
       };
 
@@ -1250,6 +1439,28 @@
     });
 
     document.getElementById('followupEntityType').addEventListener('change', populateFollowupEntities);
+    document.getElementById('dashboardSearchInput').addEventListener('input', event => {
+      renderDashboardSuggestions(event.target.value);
+    });
+    document.getElementById('dashboardSearchInput').addEventListener('focus', event => {
+      if (String(event.target.value || '').trim()) {
+        renderDashboardSuggestions(event.target.value);
+      }
+    });
+    document.getElementById('dashboardSearchInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        applyDashboardSearch(event.target.value);
+      }
+      if (event.key === 'Escape') {
+        renderDashboardSuggestions('');
+      }
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('#dashboardSearchBox') && !event.target.closest('#dashboardSearchSuggestions')) {
+        renderDashboardSuggestions('');
+      }
+    });
 
     async function logoutBroker() {
       localStorage.removeItem('broker_session_token');

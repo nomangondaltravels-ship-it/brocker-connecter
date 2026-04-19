@@ -8,12 +8,16 @@ import {
 function applySectionFilter(rows, section) {
   const items = Array.isArray(rows) ? rows : [];
   switch (section) {
+    case 'requirements':
+    case 'broker-requirements':
     case 'shared-leads':
       return items.filter(item => item.source_type === 'lead');
+    case 'marketplace':
+    case 'broker-connector-listings':
     case 'shared-properties':
-      return items.filter(item => item.source_type === 'property' && !item.is_urgent && !item.is_distress);
-    case 'urgent-deals':
-      return items.filter(item => item.source_type === 'property' && item.is_urgent);
+      return items
+        .filter(item => item.source_type === 'property')
+        .sort((left, right) => Number(Boolean(right.is_distress)) - Number(Boolean(left.is_distress)));
     case 'distress-deals':
       return items.filter(item => item.source_type === 'property' && item.is_distress);
     default:
@@ -25,7 +29,7 @@ export async function GET(request) {
   try {
     const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
     if (!supabaseUrl || !serviceRoleKey) {
-      return json({ message: 'Missing required environment variables for public marketplace.' }, 500);
+      return json({ message: 'Missing required environment variables for Broker Connector Page.' }, 500);
     }
 
     const section = new URL(request.url).searchParams.get('section') || 'all';
@@ -42,6 +46,6 @@ export async function GET(request) {
     const filtered = applySectionFilter(rows, section).map(sanitizePublicListing);
     return json({ listings: filtered });
   } catch (error) {
-    return json({ message: error.message || 'Public marketplace load failed.' }, 500);
+    return json({ message: error.message || 'Broker Connector Page load failed.' }, 500);
   }
 }

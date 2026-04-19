@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Broker Connector | Public Marketplace</title>
+  <title>Broker Connector Page | Broker Connector</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
@@ -303,6 +303,58 @@
       color: #bbf7d0;
     }
 
+    .search-hub {
+      margin: 14px 16px 0;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(11,21,36,0.94), rgba(11,21,36,0.82));
+      box-shadow: var(--shadow-gold);
+    }
+
+    .search-copy h3 {
+      font-size: 1.08rem;
+      margin-bottom: 6px;
+    }
+
+    .search-copy p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .search-bar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search-bar input {
+      min-height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(212,175,55,0.18);
+      background: rgba(9,18,32,0.86);
+      color: var(--text);
+      padding: 0 14px;
+    }
+
+    .search-suggestions {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .search-suggestions.hidden { display: none !important; }
+
+    .suggestion-chip {
+      width: 100%;
+      justify-content: flex-start;
+      background: rgba(9,18,32,0.82);
+      border-color: rgba(212,175,55,0.14);
+      text-align: left;
+    }
+
     .section { display: none; padding: 18px 16px 22px; }
     .section.active { display: block; }
 
@@ -333,6 +385,13 @@
     }
     .card, .listing-card { padding: 16px; }
     .stat-card { padding: 14px; }
+    .listing-card.distress-card {
+      background:
+        linear-gradient(180deg, rgba(58,16,16,0.18), rgba(13,24,42,0.97)),
+        var(--panel-2);
+      border-color: rgba(212,175,55,0.3);
+      box-shadow: 0 20px 40px rgba(143,106,18,0.16);
+    }
     .stat-card small {
       display: block;
       color: var(--muted);
@@ -380,6 +439,11 @@
     .badge-gold { background: rgba(212,175,55,0.14); border-color: rgba(212,175,55,0.28); color: var(--gold-soft); }
     .badge-red { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.28); color: #fecaca; }
     .badge-orange { background: rgba(249,115,22,0.14); border-color: rgba(249,115,22,0.28); color: #fdba74; }
+    .badge-hot {
+      background: linear-gradient(135deg, rgba(212,175,55,0.24), rgba(249,115,22,0.22));
+      border-color: rgba(212,175,55,0.38);
+      color: #f9e7ad;
+    }
 
     .detail-grid {
       display: grid;
@@ -516,7 +580,7 @@
 
     @media (max-width: 980px) {
       .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .grid-2, .grid-3, .listing-grid, .detail-grid { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .listing-grid, .detail-grid, .search-bar { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 768px) {
@@ -524,6 +588,7 @@
       .top-actions-wrap { width: 100%; align-items: flex-end; }
       .hero-box { padding: 22px 18px; }
       .page-head h2 { font-size: 1.7rem; }
+      .search-hub { margin-inline: 18px; }
       .sidebar {
         top: 78px;
         right: 12px;
@@ -549,7 +614,7 @@
         <div class="top-actions">
           <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
           <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
-          <button class="btn btn-secondary hidden" id="dashboardBtn" type="button" onclick="window.location.href='dashboard.html'">Open Dashboard</button>
+          <button class="btn btn-secondary hidden" id="dashboardBtn" type="button" onclick="window.location.href='dashboard.html'">Broker Desk</button>
           <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
             <span>Menu</span>
             <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
@@ -562,14 +627,12 @@
 
   <div class="layout">
     <aside class="sidebar" id="menuDrawer">
-      <div class="sidebar-title">Public Broker Connector</div>
-      <div class="sidebar-text">Public visitors only see broker-approved shared marketplace content. Private owner and client details never appear here.</div>
+      <div class="sidebar-title">Broker Connector Page</div>
+      <div class="sidebar-text">Public visitors only see broker-approved marketplace content. Private owner and client details never appear here.</div>
       <div class="menu">
         <button class="btn btn-secondary menu-btn active" data-target="home" onclick="openSection('home')">Home</button>
+        <button class="btn btn-secondary menu-btn" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
         <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
-        <button class="btn btn-secondary menu-btn" data-target="shared-leads" onclick="openSection('shared-leads')">Shared Leads</button>
-        <button class="btn btn-secondary menu-btn" data-target="shared-properties" onclick="openSection('shared-properties')">Shared Properties</button>
-        <button class="btn btn-secondary menu-btn" data-target="urgent-deals" onclick="openSection('urgent-deals')">Urgent Deals</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
         <button class="btn btn-secondary menu-btn" data-target="contact" onclick="openSection('contact')">Contact</button>
       </div>
@@ -577,34 +640,44 @@
 
     <main class="content-panel">
       <section class="hero-box">
-        <div class="hero-kicker">Public Marketplace + Private CRM</div>
-        <h1>Broker Connector Marketplace</h1>
-        <p>Browse broker-approved shared leads, shared properties, urgent deals, and distress opportunities. Only safe marketplace information appears publicly. Private owner, client, and follow-up details always stay inside the broker dashboard.</p>
+        <div class="hero-kicker">Broker Connector Page</div>
+        <h1>Broker Connector Page</h1>
+        <p>Browse broker-approved broker requirements, broker connector listings, and premium distress opportunities. Only safe marketplace information appears publicly. Private owner, client, and follow-up details always stay inside the broker dashboard.</p>
         <div class="hero-actions-label">Start Here</div>
         <div class="hero-tags">
           <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('home')">Home</button>
+          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('requirements')">Broker Requirements</button>
           <button class="btn btn-primary hero-action-btn primary-start" type="button" onclick="openSection('marketplace')">Broker Connector Listings</button>
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('shared-leads')">Shared Leads</button>
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('shared-properties')">Shared Properties</button>
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('urgent-deals')">Urgent Deals</button>
           <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('distress-deals')">Distress Deals</button>
         </div>
       </section>
 
       <div class="system-banner" id="systemBanner"></div>
+      <div class="search-hub">
+        <div class="search-copy">
+          <h3>Search Broker Connector Page</h3>
+          <p>Search broker requirements, broker connector listings, areas, buildings, property types, deal categories, and keywords.</p>
+        </div>
+        <div class="search-bar" id="publicSearchBox">
+          <input id="publicSearchInput" type="search" placeholder="Search requirements, listings, locations, buildings, property types, or keywords" autocomplete="off">
+          <button class="btn btn-primary" type="button" onclick="applyPublicSearch()">Search</button>
+          <button class="btn btn-secondary" type="button" onclick="clearPublicSearch()">Clear</button>
+        </div>
+        <div class="search-suggestions hidden" id="publicSearchSuggestions"></div>
+      </div>
 
       <section class="section active" id="home-section">
         <div class="page-head">
-          <h2>Public Marketplace Home</h2>
-          <p>One public-facing network for broker-approved shared leads, shared properties, urgent deals, and distress opportunities.</p>
+          <h2>Broker Connector Page</h2>
+          <p>One public-facing network for broker-approved broker requirements, broker connector listings, and premium distress opportunities.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> Browse public shared listings, then contact the listing broker if you have a match. Private CRM data stays inside the broker dashboard.</div>
+        <div class="page-use"><strong>Use:</strong> Browse public broker requirements and broker connector listings, then contact the listing broker if you have a match. Private CRM data stays inside the broker dashboard.</div>
 
         <div class="stats">
-          <div class="stat-card"><small>All Public Listings</small><strong id="statAll">0</strong></div>
-          <div class="stat-card"><small>Shared Leads</small><strong id="statLeads">0</strong></div>
-          <div class="stat-card"><small>Shared Properties</small><strong id="statProperties">0</strong></div>
-          <div class="stat-card"><small>Urgent + Distress</small><strong id="statUrgent">0</strong></div>
+          <div class="stat-card"><small>All Public Items</small><strong id="statAll">0</strong></div>
+          <div class="stat-card"><small>Broker Requirements</small><strong id="statLeads">0</strong></div>
+          <div class="stat-card"><small>Broker Connector Listings</small><strong id="statProperties">0</strong></div>
+          <div class="stat-card"><small>Distress Deals</small><strong id="statUrgent">0</strong></div>
         </div>
 
         <div class="grid-3" style="margin-top:16px;">
@@ -618,7 +691,7 @@
           </div>
           <div class="card">
             <h3>For brokers</h3>
-            <p>Register or sign in to open your separate private CRM dashboard where you can manage leads, properties, meetings, and list/unlist items on Broker Connector.</p>
+            <p>Register or sign in to open your separate private CRM dashboard where you can manage broker requirements, properties, meetings, and list or unlist items on Broker Connector.</p>
           </div>
         </div>
 
@@ -630,43 +703,25 @@
           <h2>Broker Connector Listings</h2>
           <p>All live public listings that brokers have chosen to share.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> Browse the full public marketplace. Only broker-approved public-safe listing data appears here.</div>
+        <div class="page-use"><strong>Use:</strong> Browse all public broker connector listings shared by brokers. Only broker-approved public-safe listing data appears here.</div>
         <div class="listing-grid" id="marketplaceGrid"></div>
       </section>
 
-      <section class="section" id="shared-leads-section">
+      <section class="section" id="requirements-section">
         <div class="page-head">
-          <h2>Shared Leads</h2>
-          <p>Public requirement-style listings created from private broker leads.</p>
+          <h2>Broker Requirements</h2>
+          <p>Broker and client requirements shared by brokers who are looking for matching properties.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> If you have a matching property for a shared lead, contact the listing broker directly.</div>
-        <div class="listing-grid" id="sharedLeadsGrid"></div>
-      </section>
-
-      <section class="section" id="shared-properties-section">
-        <div class="page-head">
-          <h2>Shared Properties</h2>
-          <p>Public-safe property inventory shared by brokers from their private dashboard.</p>
-        </div>
-        <div class="page-use"><strong>Use:</strong> Review available public properties without exposing private owner or client details.</div>
-        <div class="listing-grid" id="sharedPropertiesGrid"></div>
-      </section>
-
-      <section class="section" id="urgent-deals-section">
-        <div class="page-head">
-          <h2>Urgent Deals</h2>
-          <p>Priority public inventory that brokers marked for quick movement.</p>
-        </div>
-        <div class="page-use"><strong>Use:</strong> Check urgent public deals first when you want faster turnaround opportunities.</div>
-        <div class="listing-grid" id="urgentDealsGrid"></div>
+        <div class="page-use"><strong>Use:</strong> If you have a matching property for a broker requirement, contact the listing broker directly.</div>
+        <div class="listing-grid" id="requirementsGrid"></div>
       </section>
 
       <section class="section" id="distress-deals-section">
         <div class="page-head">
           <h2>Distress Deals</h2>
-          <p>Public-safe distress opportunities shared by brokers.</p>
+          <p>Priority broker connector listings that need fast, serious attention and stand out as exclusive hot opportunities.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> Review distress-marked opportunities without exposing hidden private CRM data.</div>
+        <div class="page-use"><strong>Use:</strong> Review premium distress opportunities without exposing hidden private CRM data.</div>
         <div class="listing-grid" id="distressDealsGrid"></div>
       </section>
 
@@ -677,7 +732,7 @@
         </div>
         <div class="grid-2" style="margin-top:16px;">
           <div class="card">
-            <h3>Broker Connector</h3>
+            <h3>Broker Connector Page</h3>
             <p>Operated by Noman Properties</p>
             <p>Sponsored by Xsite Real Estate</p>
           </div>
@@ -769,6 +824,7 @@
       brokerProfile: null,
       listings: [],
       activeSection: 'home',
+      publicSearchQuery: '',
       shareLink: '',
       contactPhone: '',
       whatsappPhone: '',
@@ -824,26 +880,25 @@
     }
 
     function openSection(name) {
-      state.activeSection = name;
+      const normalized = name === 'shared-leads' ? 'requirements' : name;
+      state.activeSection = normalized;
       document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
       document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('active'));
-      document.getElementById(`${name}-section`)?.classList.add('active');
-      document.querySelector(`.menu-btn[data-target="${name}"]`)?.classList.add('active');
+      document.getElementById(`${normalized}-section`)?.classList.add('active');
+      document.querySelector(`.menu-btn[data-target="${normalized}"]`)?.classList.add('active');
       closeMenuDrawer();
       revealSharedListingFromUrl();
     }
 
     function badgeClass(listing) {
       if (listing.isDistress) return 'badge-red';
-      if (listing.isUrgent) return 'badge-orange';
       if (listing.sourceType === 'lead') return 'badge-blue';
       return 'badge-green';
     }
 
     function badgeText(listing) {
-      if (listing.isDistress) return 'Distress';
-      if (listing.isUrgent) return 'Urgent';
-      return listing.sourceType === 'lead' ? 'Shared Lead' : 'Shared Property';
+      if (listing.isDistress) return 'Hot Distress';
+      return listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing';
     }
 
     function prefilledMatchText(listing) {
@@ -859,10 +914,89 @@
       return url.toString();
     }
 
+    function getPublicSearchText(listing) {
+      return [
+        listing.sourceType === 'lead' ? 'broker requirement' : 'broker connector listing',
+        listing.purpose,
+        listing.propertyType,
+        listing.category,
+        listing.location,
+        listing.priceLabel,
+        listing.publicNotes,
+        listing.brokerName,
+        listing.status,
+        listing.isDistress ? 'distress deal hot deal' : ''
+      ].join(' ').toLowerCase();
+    }
+
+    function getFilteredPublicListings() {
+      const query = state.publicSearchQuery.trim().toLowerCase();
+      if (!query) return [...state.listings];
+      return state.listings.filter(listing => getPublicSearchText(listing).includes(query));
+    }
+
+    function buildPublicSuggestions(query) {
+      const normalized = String(query || '').trim().toLowerCase();
+      if (!normalized) return [];
+      const terms = new Set();
+      state.listings.forEach(listing => {
+        [
+          listing.location,
+          listing.category,
+          listing.propertyType,
+          listing.purpose,
+          listing.brokerName,
+          listing.isDistress ? 'Distress Deals' : '',
+          listing.sourceType === 'lead' ? 'Broker Requirements' : 'Broker Connector Listings'
+        ].filter(Boolean).forEach(term => {
+          if (String(term).toLowerCase().includes(normalized)) terms.add(String(term));
+        });
+      });
+      return [...terms].slice(0, 7);
+    }
+
+    function renderPublicSuggestions(query) {
+      const target = document.getElementById('publicSearchSuggestions');
+      const suggestions = buildPublicSuggestions(query);
+      if (!suggestions.length) {
+        target.innerHTML = '';
+        target.classList.add('hidden');
+        return;
+      }
+      target.innerHTML = suggestions.map(term => `
+        <button class="btn btn-secondary suggestion-chip" type="button" onclick="selectPublicSuggestion('${term.replace(/'/g, '\\&#39;')}')">${term}</button>
+      `).join('');
+      target.classList.remove('hidden');
+    }
+
+    function applyPublicSearch(query = document.getElementById('publicSearchInput').value) {
+      state.publicSearchQuery = String(query || '').trim();
+      document.getElementById('publicSearchInput').value = state.publicSearchQuery;
+      renderPublicSuggestions('');
+      renderPublicViews();
+      if (state.publicSearchQuery) {
+        setSystemBanner(`Showing results for "${state.publicSearchQuery}".`, 'success');
+      } else {
+        setSystemBanner('');
+      }
+    }
+
+    function clearPublicSearch() {
+      state.publicSearchQuery = '';
+      document.getElementById('publicSearchInput').value = '';
+      renderPublicSuggestions('');
+      renderPublicViews();
+      setSystemBanner('');
+    }
+
+    function selectPublicSuggestion(term) {
+      applyPublicSearch(term);
+    }
+
     function renderListingCard(listing, sectionName) {
       const shareLink = buildListingLink(listing, sectionName);
       return `
-        <div class="listing-card" data-listing-id="${listing.id}">
+        <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
               <h3>${listing.purpose} · ${listing.category}</h3>
@@ -890,50 +1024,93 @@
       `;
     }
 
+    function renderPublicCard(listing, sectionName) {
+      const shareLink = buildListingLink(listing, sectionName);
+      return `
+        <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
+          <div class="listing-top">
+            <div class="listing-title">
+              <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${listing.category}</h3>
+              <div class="muted">${listing.location} &middot; ${listing.priceLabel}</div>
+            </div>
+            <div class="badges">
+              <span class="badge ${listing.isDistress ? 'badge-hot' : badgeClass(listing)}">${badgeText(listing)}</span>
+              ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Type</small><strong>${listing.propertyType || '--'}</strong></div>
+            <div class="detail-cell"><small>Category</small><strong>${listing.category || '--'}</strong></div>
+            <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
+            <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
+          </div>
+          <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
+          <div class="actions" style="margin-top:12px;">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">I Have Match</button>
+            <button class="btn btn-green btn-tiny" type="button" onclick="showWhatsappPopover(this, '${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">WhatsApp Broker</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="showContactPopover(this, '${listing.brokerMobile}')">Call Broker</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderSectionGrid(targetId, sectionName, items) {
       const target = document.getElementById(targetId);
       if (!target) return;
       if (!items.length) {
-        target.innerHTML = `<div class="empty">No public listings available in this section yet.</div>`;
+        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
         return;
       }
-      target.innerHTML = items.map(item => renderListingCard(item, sectionName)).join('');
+      target.innerHTML = items.map(item => renderPublicCard(item, sectionName)).join('');
     }
 
     function updateStats() {
-      const leads = state.listings.filter(item => item.sourceType === 'lead');
-      const properties = state.listings.filter(item => item.sourceType === 'property' && !item.isUrgent && !item.isDistress);
-      const urgent = state.listings.filter(item => item.isUrgent || item.isDistress);
-      document.getElementById('statAll').textContent = state.listings.length;
-      document.getElementById('statLeads').textContent = leads.length;
-      document.getElementById('statProperties').textContent = properties.length;
-      document.getElementById('statUrgent').textContent = urgent.length;
+      const filtered = getFilteredPublicListings();
+      const requirements = filtered.filter(item => item.sourceType === 'lead');
+      const listings = filtered.filter(item => item.sourceType === 'property');
+      const distress = listings.filter(item => item.isDistress);
+      document.getElementById('statAll').textContent = filtered.length;
+      document.getElementById('statLeads').textContent = requirements.length;
+      document.getElementById('statProperties').textContent = listings.length;
+      document.getElementById('statUrgent').textContent = distress.length;
     }
 
     function renderHomeHighlights() {
       const target = document.getElementById('homeHighlights');
-      const highlights = state.listings.slice(0, 4);
+      const highlights = getFilteredPublicListings()
+        .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)))
+        .slice(0, 4);
       if (!highlights.length) {
-        target.innerHTML = `<div class="empty">No public listings live yet. Brokers can list private leads or properties publicly from their dashboard.</div>`;
+        target.innerHTML = `<div class="empty">No public broker requirements or broker connector listings are live yet. Brokers can list private requirements or properties publicly from their dashboard.</div>`;
         return;
       }
-      target.innerHTML = highlights.map(item => renderListingCard(item, item.sourceType === 'lead' ? 'shared-leads' : item.isDistress ? 'distress-deals' : item.isUrgent ? 'urgent-deals' : 'shared-properties')).join('');
+      target.innerHTML = highlights.map(item => renderListingCard(item, item.sourceType === 'lead' ? 'requirements' : item.isDistress ? 'distress-deals' : 'marketplace')).join('');
+    }
+
+    function renderPublicViews() {
+      const filtered = getFilteredPublicListings();
+      const requirements = filtered.filter(item => item.sourceType === 'lead');
+      const marketplace = filtered
+        .filter(item => item.sourceType === 'property')
+        .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)));
+      const distress = marketplace.filter(item => item.isDistress);
+
+      updateStats();
+      renderHomeHighlights();
+      renderSectionGrid('marketplaceGrid', 'marketplace', marketplace);
+      renderSectionGrid('requirementsGrid', 'requirements', requirements);
+      renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
     }
 
     async function loadPublicListings() {
       const response = await fetch('/api/public-marketplace');
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.message || 'Public marketplace could not load.');
+        throw new Error(result?.message || 'Broker Connector Page could not load.');
       }
       state.listings = Array.isArray(result.listings) ? result.listings : [];
-      updateStats();
-      renderHomeHighlights();
-      renderSectionGrid('marketplaceGrid', 'marketplace', state.listings);
-      renderSectionGrid('sharedLeadsGrid', 'shared-leads', state.listings.filter(item => item.sourceType === 'lead'));
-      renderSectionGrid('sharedPropertiesGrid', 'shared-properties', state.listings.filter(item => item.sourceType === 'property' && !item.isUrgent && !item.isDistress));
-      renderSectionGrid('urgentDealsGrid', 'urgent-deals', state.listings.filter(item => item.isUrgent));
-      renderSectionGrid('distressDealsGrid', 'distress-deals', state.listings.filter(item => item.isDistress));
+      renderPublicViews();
       revealSharedListingFromUrl();
     }
 
@@ -1021,9 +1198,10 @@
       const section = params.get('section');
       const listingId = params.get('listing');
       if (!listingId) return;
-      if (section && section !== state.activeSection) {
-        document.getElementById(`${section}-section`)?.classList.add('active');
-        openSection(section);
+      const normalizedSection = section === 'shared-leads' ? 'requirements' : section;
+      if (normalizedSection && normalizedSection !== state.activeSection) {
+        document.getElementById(`${normalizedSection}-section`)?.classList.add('active');
+        openSection(normalizedSection);
       }
       const target = document.querySelector(`[data-listing-id="${listingId}"]`);
       if (target) {
@@ -1156,7 +1334,9 @@
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
       try {
-        const identifierValue = document.getElementById('authBrokerId').value || document.getElementById('authMobile').value;
+        const brokerIdValue = document.getElementById('authBrokerId').value.trim();
+        const mobileValue = document.getElementById('authMobile').value.trim();
+        const identifierValue = brokerIdValue || mobileValue;
         const passwordValue = document.getElementById('authPassword').value;
         const payload = state.authMode === 'register'
           ? {
@@ -1207,15 +1387,37 @@
       if (!event.target.closest('.floating-card') && !event.target.closest('.btn-tiny')) {
         closeAllPopovers();
       }
+      if (!event.target.closest('#publicSearchBox') && !event.target.closest('#publicSearchSuggestions')) {
+        renderPublicSuggestions('');
+      }
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         closeMenuDrawer();
         closeAllPopovers();
         closeAuthModal();
+        renderPublicSuggestions('');
       }
     });
     window.addEventListener('resize', closeAllPopovers);
+
+    document.getElementById('publicSearchInput').addEventListener('input', event => {
+      renderPublicSuggestions(event.target.value);
+    });
+    document.getElementById('publicSearchInput').addEventListener('focus', event => {
+      if (String(event.target.value || '').trim()) {
+        renderPublicSuggestions(event.target.value);
+      }
+    });
+    document.getElementById('publicSearchInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        applyPublicSearch(event.target.value);
+      }
+      if (event.key === 'Escape') {
+        renderPublicSuggestions('');
+      }
+    });
 
     (async function init() {
       try {
@@ -1227,7 +1429,7 @@
         document.getElementById('registerCta').classList.toggle('hidden', authenticated || state.forcePublicView);
         await loadPublicListings();
       } catch (error) {
-        setSystemBanner(error.message || 'Could not load the public marketplace.', 'error');
+        setSystemBanner(error.message || 'Could not load Broker Connector Page.', 'error');
       }
     })();
   </script>

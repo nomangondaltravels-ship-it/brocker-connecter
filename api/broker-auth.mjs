@@ -162,6 +162,7 @@ export async function POST(request) {
   }
 
   const identifier = normalizeText(body?.identifier);
+  const normalizedIdentifierText = identifier.toLowerCase();
   const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
   const password = String(body?.password || '');
 
@@ -176,9 +177,18 @@ export async function POST(request) {
     order: { column: 'created_at', ascending: false }
   });
 
-  const broker = (Array.isArray(candidates) ? candidates : []).find(item =>
-    item.broker_id_number === identifier || item.mobile_number === normalizedIdentifierPhone
-  );
+  const broker = (Array.isArray(candidates) ? candidates : []).find(item => {
+    const candidateBrokerId = normalizeText(item?.broker_id_number);
+    const candidateBrokerIdText = candidateBrokerId.toLowerCase();
+    const candidateMobile = normalizePhoneNumber(item?.mobile_number);
+    const candidateEmail = normalizeEmail(item?.email);
+
+    return (
+      candidateBrokerIdText === normalizedIdentifierText ||
+      candidateMobile === normalizedIdentifierPhone ||
+      candidateEmail === normalizeEmail(identifier)
+    );
+  });
 
   if (!broker) {
     return json({ message: 'Broker account not found.' }, 404);

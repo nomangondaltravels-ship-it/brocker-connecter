@@ -281,7 +281,6 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const generalNotes = normalizeText(item.public_notes || item.public_general_notes || item.notes || item.description);
   const propertyType = normalizeText(item.property_type || item.lead_type || '');
   const status = normalizeText(item.status || 'active').toLowerCase();
-  const isUrgent = normalizeBool(item.is_urgent);
   const isDistress = normalizeBool(item.is_distress);
 
   return {
@@ -291,7 +290,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     broker_mobile: broker.mobile_number,
     source_type: sourceType,
     source_id: item.id,
-    listing_kind: isLead ? 'shared_lead' : 'shared_property',
+    listing_kind: isLead ? 'broker_requirement' : 'broker_connector_listing',
     purpose,
     property_type: propertyType,
     category,
@@ -302,7 +301,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     bathrooms: item.bathrooms ?? null,
     public_notes: generalNotes,
     status,
-    is_urgent: isUrgent,
+    is_urgent: false,
     is_distress: isDistress,
     updated_at: new Date().toISOString()
   };

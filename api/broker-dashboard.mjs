@@ -67,7 +67,7 @@ function getPropertyPayload(body, brokerId) {
     client_name: normalizeText(body?.clientName),
     client_phone: normalizeText(body?.clientPhone),
     status: normalizeText(body?.status || 'available').toLowerCase(),
-    is_urgent: normalizeBool(body?.isUrgent),
+    is_urgent: false,
     is_distress: normalizeBool(body?.isDistress),
     is_listed_public: normalizeBool(body?.isListedPublic),
     public_listing_status: normalizeBool(body?.isListedPublic) ? 'listed' : 'private',
