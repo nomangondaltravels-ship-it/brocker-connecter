@@ -495,6 +495,28 @@
       return sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
     }
 
+    async function fetchAdminComplaints() {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-complaints', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result?.message || 'Complaint request failed.');
+      }
+
+      return Array.isArray(result?.complaints) ? result.complaints : [];
+    }
+
     function showDashboard() {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('dashboardView').classList.add('active');
@@ -619,11 +641,22 @@
       if (dealError) console.error(dealError);
       if (compError) console.error(compError);
 
+      let resolvedComplaints = compData || [];
       complaintsReadable = !compError;
+
+      if (compError) {
+        try {
+          resolvedComplaints = await fetchAdminComplaints();
+          complaintsReadable = true;
+        } catch (fallbackError) {
+          console.error(fallbackError);
+          complaintsReadable = false;
+        }
+      }
 
       if (reqError || dealError) {
         setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
-      } else if (compError) {
+      } else if (!complaintsReadable) {
         setAdminStatus('Requirements and deals loaded, but complaint review is not available with current Supabase permissions.', 'error');
       } else {
         setAdminStatus('');
@@ -657,7 +690,7 @@
         postedAt: item.created_at || null
       }));
 
-      complaints = compData || [];
+      complaints = resolvedComplaints;
 
       renderStats(accounts);
       renderBrokerApprovals(accounts);
