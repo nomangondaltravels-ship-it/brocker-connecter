@@ -772,7 +772,8 @@
       shareLink: '',
       contactPhone: '',
       whatsappPhone: '',
-      menuOpen: false
+      menuOpen: false,
+      forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
 
     function safeJsonRead(key, fallback) {
@@ -1130,6 +1131,9 @@
     }
 
     async function verifyBrokerSession() {
+      if (state.forcePublicView) {
+        return false;
+      }
       if (!state.sessionToken) return false;
       const response = await fetch('/api/broker-auth', {
         method: 'GET',
@@ -1216,10 +1220,11 @@
     (async function init() {
       try {
         const authenticated = await verifyBrokerSession();
-        document.getElementById('dashboardBtn').classList.toggle('hidden', !authenticated);
-        document.getElementById('signInBtn').classList.toggle('hidden', authenticated);
-        document.getElementById('registerBtn').classList.toggle('hidden', authenticated);
-        document.getElementById('registerCta').classList.toggle('hidden', authenticated);
+        const showDashboardButton = authenticated || state.forcePublicView;
+        document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
+        document.getElementById('signInBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
+        document.getElementById('registerBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
+        document.getElementById('registerCta').classList.toggle('hidden', authenticated || state.forcePublicView);
         await loadPublicListings();
       } catch (error) {
         setSystemBanner(error.message || 'Could not load the public marketplace.', 'error');
