@@ -746,6 +746,57 @@
       font-size: 0.92rem;
     }
 
+    .owner-posts-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .owner-post-card {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(15,23,42,0.56);
+    }
+
+    .owner-post-card h4 {
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .owner-post-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .owner-post-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .owner-post-stat {
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(10,16,31,0.58);
+    }
+
+    .owner-post-stat small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.7rem;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .owner-post-stat strong {
+      font-size: 0.96rem;
+    }
+
     .notice-list {
       display: grid;
       gap: 10px;
@@ -1606,6 +1657,7 @@
         width: 100%;
       }
       .profile-grid { grid-template-columns: 1fr; }
+      .owner-post-stats { grid-template-columns: 1fr 1fr; }
       .notice-list,
       .mini-feed,
       .signal-list {
@@ -1854,6 +1906,25 @@
           </div>
         </div>
 
+        <div class="card" style="margin-top:12px;">
+          <div class="card-head-inline">
+            <h3>My Posts Dashboard</h3>
+            <span class="badge blue" id="myPostsCountBadge">0 posts</span>
+          </div>
+          <div class="profile-grid" id="myPostsSummary" style="margin-top:12px;">
+            <div class="profile-item"><small>Total Posts</small><strong>0</strong></div>
+            <div class="profile-item"><small>Total Views</small><strong>0</strong></div>
+            <div class="profile-item"><small>Total Clicks</small><strong>0</strong></div>
+            <div class="profile-item"><small>Total Inquiries</small><strong>0</strong></div>
+          </div>
+          <div class="owner-posts-list" id="myPostsList" style="margin-top:12px;">
+            <div class="owner-post-card">
+              <strong>Sign in to manage your posts</strong>
+              <div class="inline-note">Your requirement and urgent deal posts will appear here with views, clicks, inquiries, and owner edit/delete tools.</div>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-2" style="margin-top:12px;">
           <div class="card">
             <div class="page-head" style="margin-bottom:14px;">
@@ -1907,7 +1978,7 @@
         <div class="page-use"><strong>Use:</strong> Post buyer or tenant demand for other brokers to match.</div>
         <div class="card">
           <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerName">Broker</strong></div>
-          <form class="form-grid" onsubmit="submitEntry(event, false)">
+          <form class="form-grid" id="reqForm" onsubmit="submitEntry(event, false)">
             <input type="tel" id="reqPhone" placeholder="Broker WhatsApp Number (e.g. 058XXXXXXX or +9715XXXXXXXX)" required>
             <select id="reqPurpose" required>
               <option value="">Select Purpose</option>
@@ -1957,7 +2028,8 @@
             </div>
             <textarea class="full" id="reqNotes" rows="5" placeholder="Write full requirement here" required></textarea>
             <div class="full center-actions" style="justify-content:flex-start;">
-              <button class="btn btn-primary" type="submit">Submit Requirement</button>
+              <button class="btn btn-primary" id="reqSubmitBtn" type="submit">Submit Requirement</button>
+              <button class="btn btn-secondary hidden" id="reqCancelEditBtn" type="button" onclick="cancelEditMode(false)">Cancel Edit</button>
             </div>
           </form>
         </div>
@@ -1968,7 +2040,7 @@
         <div class="page-use"><strong>Use:</strong> Post ready stock, urgent inventory, or distress deals with full details.</div>
         <div class="card">
           <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerNameUrgent">Broker</strong></div>
-          <form class="form-grid" onsubmit="submitEntry(event, true)">
+          <form class="form-grid" id="urgentForm" onsubmit="submitEntry(event, true)">
             <input type="tel" id="urgentPhone" placeholder="Broker WhatsApp Number (e.g. 058XXXXXXX or +9715XXXXXXXX)" required>
             <select id="urgentPurpose" required>
               <option value="">Select Deal Type</option>
@@ -2039,7 +2111,8 @@
             </div>
             <textarea class="full" id="urgentNotes" rows="5" placeholder="Comment / Extra details" required></textarea>
             <div class="full center-actions" style="justify-content:flex-start;">
-              <button class="btn btn-primary" type="submit">Post Urgent Deal</button>
+              <button class="btn btn-primary" id="urgentSubmitBtn" type="submit">Post Urgent Deal</button>
+              <button class="btn btn-secondary hidden" id="urgentCancelEditBtn" type="button" onclick="cancelEditMode(true)">Cancel Edit</button>
             </div>
           </form>
         </div>
@@ -2231,6 +2304,11 @@
     let brokerApprovals = {};
     let blockedBrokerIds = {};
     let seenEntryKeys = [];
+    let entryViewCounts = {};
+    let entryClickCounts = {};
+    let entryInquiryCounts = {};
+    let viewedEntryKeys = [];
+    let activeEditPost = null;
     const sharedEntryState = {
       encodedKey: '',
       section: ''
@@ -2292,6 +2370,13 @@
       ].join('|');
     }
 
+    function getEntryAnalyticsKey(item) {
+      if (item?.id && item?.table) {
+        return `${item.table}:${item.id}`;
+      }
+      return getEntryKey(item);
+    }
+
     function getEntrySection(item) {
       return item.urgent || item.distress ? 'distress' : 'requirements';
     }
@@ -2325,6 +2410,125 @@
     function getMatchCount(item) {
       const key = getEntryKey(item);
       return Array.isArray(matchRequests[key]) ? matchRequests[key].length : 0;
+    }
+
+    function getEntryMetrics(item) {
+      const analyticsKey = getEntryAnalyticsKey(item);
+      return {
+        views: Number(entryViewCounts[analyticsKey] || 0),
+        clicks: Number(entryClickCounts[analyticsKey] || 0),
+        inquiries: Number(entryInquiryCounts[analyticsKey] || 0)
+      };
+    }
+
+    function updateMetricStore(metricKey, analyticsKey, amount = 1) {
+      if (!analyticsKey || !metricKey) return;
+      const stores = {
+        views: entryViewCounts,
+        clicks: entryClickCounts,
+        inquiries: entryInquiryCounts
+      };
+      const storageKeys = {
+        views: 'entry_view_counts',
+        clicks: 'entry_click_counts',
+        inquiries: 'entry_inquiry_counts'
+      };
+      const store = stores[metricKey];
+      if (!store) return;
+      store[analyticsKey] = Number(store[analyticsKey] || 0) + amount;
+      safeJsonWrite(storageKeys[metricKey], store);
+    }
+
+    function trackEntryView(item) {
+      const analyticsKey = getEntryAnalyticsKey(item);
+      if (!analyticsKey || viewedEntryKeys.includes(analyticsKey)) return;
+      viewedEntryKeys.push(analyticsKey);
+      safeJsonWrite('viewed_entry_keys', viewedEntryKeys);
+      updateMetricStore('views', analyticsKey, 1);
+    }
+
+    function trackEntryAction(item, type) {
+      if (!item) return;
+      const analyticsKey = getEntryAnalyticsKey(item);
+      if (!analyticsKey) return;
+      updateMetricStore('clicks', analyticsKey, 1);
+      if (['match', 'call', 'whatsapp'].includes(type)) {
+        updateMetricStore('inquiries', analyticsKey, 1);
+      }
+    }
+
+    function getCurrentBrokerAccount() {
+      if (!uiState.isAuthenticated || !currentBrokerId) return null;
+      return getStoredBrokerAccounts().find(account => account.brokerId === currentBrokerId) || null;
+    }
+
+    function isCurrentBrokerEntry(item) {
+      if (!uiState.isAuthenticated) return false;
+      const account = getCurrentBrokerAccount();
+      const normalizedItemPhone = normalizePhoneNumber(item?.phone);
+      const phoneMatch = Boolean(account?.phone && normalizedItemPhone && account.phone === normalizedItemPhone);
+      const nameMatch = Boolean(currentBrokerName && String(item?.broker || '').trim().toLowerCase() === String(currentBrokerName).trim().toLowerCase());
+      return phoneMatch || nameMatch;
+    }
+
+    function getCurrentBrokerEntries() {
+      return entries
+        .filter(item => isCurrentBrokerEntry(item))
+        .sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt));
+    }
+
+    function parseUrgentComment(notes) {
+      const details = {
+        availability: '',
+        area: '',
+        building: '',
+        floor: '',
+        sqft: '',
+        price: '',
+        negotiable: '',
+        occupancy: '',
+        rentedTill: '',
+        comment: ''
+      };
+
+      String(notes || '').split('|').map(part => part.trim()).forEach(part => {
+        if (part.startsWith('Availability:')) details.availability = part.replace('Availability:', '').trim();
+        else if (part.startsWith('Area:')) details.area = part.replace('Area:', '').trim();
+        else if (part.startsWith('Building:')) details.building = part.replace('Building:', '').trim();
+        else if (part.startsWith('Floor:')) details.floor = part.replace('Floor:', '').trim();
+        else if (part.startsWith('Size:')) details.sqft = part.replace('Size:', '').replace('sqft', '').trim();
+        else if (part.startsWith('Price:')) details.price = part.replace('Price:', '').trim();
+        else if (part.startsWith('Price Status:')) details.negotiable = part.replace('Price Status:', '').trim();
+        else if (part.startsWith('Unit Status:')) details.occupancy = part.replace('Unit Status:', '').trim();
+        else if (part.startsWith('Rented Till:')) details.rentedTill = part.replace('Rented Till:', '').trim();
+        else if (part.startsWith('Comment:')) details.comment = part.replace('Comment:', '').trim();
+      });
+
+      return details;
+    }
+
+    function setSelectOrManual(selectId, wrapId, inputId, value) {
+      const select = document.getElementById(selectId);
+      const input = document.getElementById(inputId);
+      if (!select) return;
+      const rawValue = String(value || '').trim();
+      const options = Array.from(select.options);
+      const matchingOption = options.find(option => (option.value || option.text).trim() === rawValue);
+
+      if (matchingOption && rawValue) {
+        select.value = matchingOption.value || matchingOption.text;
+        if (input) input.value = '';
+      } else if (rawValue) {
+        select.value = 'manual';
+        if (input) input.value = rawValue;
+      } else {
+        select.value = '';
+        if (input) input.value = '';
+      }
+
+      if (wrapId && inputId) {
+        toggleManual(selectId, wrapId, inputId);
+      }
     }
 
     function getBrokerAccountForEntry(item) {
@@ -2422,7 +2626,7 @@
 
       const storedAccounts = getStoredBrokerAccounts();
       const approved = brokerApprovals[currentBrokerId];
-      const totalPosts = entries.filter(item => item.broker === currentBroker).length;
+      const totalPosts = getCurrentBrokerEntries().length;
 
       badge.textContent = uiState.isAuthenticated
         ? (approved ? 'Verified Broker' : 'Broker Account')
@@ -2437,6 +2641,243 @@
         <div class="profile-item"><small>Your Posts</small><strong>${uiState.isAuthenticated ? totalPosts : 0}</strong></div>
         <div class="profile-item"><small>Broker Accounts</small><strong>${storedAccounts.length}</strong></div>
       `;
+    }
+
+    function renderMyPostsPanel() {
+      const summary = document.getElementById('myPostsSummary');
+      const list = document.getElementById('myPostsList');
+      const badge = document.getElementById('myPostsCountBadge');
+      if (!summary || !list || !badge) return;
+
+      if (!uiState.isAuthenticated || !currentBrokerId) {
+        badge.className = 'badge gold';
+        badge.textContent = '0 posts';
+        summary.innerHTML = `
+          <div class="profile-item"><small>Total Posts</small><strong>0</strong></div>
+          <div class="profile-item"><small>Total Views</small><strong>0</strong></div>
+          <div class="profile-item"><small>Total Clicks</small><strong>0</strong></div>
+          <div class="profile-item"><small>Total Inquiries</small><strong>0</strong></div>
+        `;
+        list.innerHTML = `
+          <div class="owner-post-card">
+            <strong>Sign in to manage your posts</strong>
+            <div class="inline-note">Your requirement and urgent deal posts will appear here with views, clicks, inquiries, and owner edit/delete tools.</div>
+          </div>
+        `;
+        return;
+      }
+
+      const ownEntries = getCurrentBrokerEntries();
+      const totals = ownEntries.reduce((acc, item) => {
+        const metrics = getEntryMetrics(item);
+        acc.posts += 1;
+        acc.views += metrics.views;
+        acc.clicks += metrics.clicks;
+        acc.inquiries += metrics.inquiries;
+        return acc;
+      }, { posts: 0, views: 0, clicks: 0, inquiries: 0 });
+
+      badge.className = `badge ${ownEntries.length ? 'blue' : 'gold'}`;
+      badge.textContent = `${totals.posts} post${totals.posts === 1 ? '' : 's'}`;
+      summary.innerHTML = `
+        <div class="profile-item"><small>Total Posts</small><strong>${totals.posts}</strong></div>
+        <div class="profile-item"><small>Total Views</small><strong>${totals.views}</strong></div>
+        <div class="profile-item"><small>Total Clicks</small><strong>${totals.clicks}</strong></div>
+        <div class="profile-item"><small>Total Inquiries</small><strong>${totals.inquiries}</strong></div>
+      `;
+
+      if (!ownEntries.length) {
+        list.innerHTML = `
+          <div class="owner-post-card">
+            <strong>No posts yet</strong>
+            <div class="inline-note">Post a requirement or urgent deal and your broker dashboard will start tracking it here.</div>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = ownEntries.slice(0, 8).map(item => {
+        const metrics = getEntryMetrics(item);
+        const encodedKey = encodeURIComponent(getEntryKey(item));
+        return `
+          <div class="owner-post-card">
+            <div class="owner-post-meta">
+              <span class="badge ${item.urgent ? 'red' : 'green'}">${item.urgent ? 'Urgent Deal' : 'Requirement'}</span>
+              <span class="badge ${getEntryStatus(item) === 'open' ? 'blue' : getEntryStatus(item) === 'matched' ? 'green' : getEntryStatus(item) === 'closed' ? 'gold' : 'red'}">${getEntryStatus(item)}</span>
+              ${isFreshPost(item.postedAt) ? '<span class="badge yellow">New</span>' : ''}
+            </div>
+            <h4>${item.purpose} &middot; ${item.category}</h4>
+            <div class="inline-note">${item.location} &middot; ${item.budget} &middot; Posted ${formatPostedTime(item.postedAt)}</div>
+            <div class="owner-post-stats">
+              <div class="owner-post-stat"><small>Views</small><strong>${metrics.views}</strong></div>
+              <div class="owner-post-stat"><small>Clicks</small><strong>${metrics.clicks}</strong></div>
+              <div class="owner-post-stat"><small>Inquiries</small><strong>${metrics.inquiries}</strong></div>
+              <div class="owner-post-stat"><small>Match Requests</small><strong>${getMatchCount(item)}</strong></div>
+            </div>
+            <div class="center-actions" style="justify-content:flex-start;">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="openOwnPost('${encodedKey}')">Open</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="openEditEntry('${encodedKey}')">Edit</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteOwnEntry('${encodedKey}')">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setEditMode(item, isUrgent) {
+      activeEditPost = {
+        id: item.id,
+        table: item.table,
+        isUrgent
+      };
+
+      const submitBtn = document.getElementById(isUrgent ? 'urgentSubmitBtn' : 'reqSubmitBtn');
+      const cancelBtn = document.getElementById(isUrgent ? 'urgentCancelEditBtn' : 'reqCancelEditBtn');
+      if (submitBtn) submitBtn.textContent = isUrgent ? 'Update Urgent Deal' : 'Update Requirement';
+      if (cancelBtn) cancelBtn.classList.remove('hidden');
+    }
+
+    function clearEditMode(resetForms = false) {
+      activeEditPost = null;
+      const reqSubmitBtn = document.getElementById('reqSubmitBtn');
+      const urgentSubmitBtn = document.getElementById('urgentSubmitBtn');
+      const reqCancelBtn = document.getElementById('reqCancelEditBtn');
+      const urgentCancelBtn = document.getElementById('urgentCancelEditBtn');
+      if (reqSubmitBtn) reqSubmitBtn.textContent = 'Submit Requirement';
+      if (urgentSubmitBtn) urgentSubmitBtn.textContent = 'Post Urgent Deal';
+      if (reqCancelBtn) reqCancelBtn.classList.add('hidden');
+      if (urgentCancelBtn) urgentCancelBtn.classList.add('hidden');
+
+      if (resetForms) {
+        document.getElementById('reqForm')?.reset();
+        document.getElementById('urgentForm')?.reset();
+        toggleManual('reqLocation', 'reqLocationManualWrap', 'reqLocationManual');
+        toggleManual('urgentLocation', 'urgentLocationManualWrap', 'urgentLocationManual');
+        toggleRentedTillDate();
+        updateLoggedBroker();
+      }
+    }
+
+    function cancelEditMode(isUrgent) {
+      clearEditMode(true);
+      showSystemBanner(isUrgent ? 'Urgent deal edit cancelled.' : 'Requirement edit cancelled.', 'warning');
+    }
+
+    function openOwnPost(encodedKey) {
+      const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
+      if (!item) return;
+      trackEntryView(item);
+      sharedEntryState.encodedKey = encodeURIComponent(key);
+      sharedEntryState.section = getEntrySection(item);
+      openSection(sharedEntryState.section);
+      setTimeout(revealSharedEntry, 120);
+    }
+
+    function openEditEntry(encodedKey) {
+      if (!uiState.isAuthenticated) {
+        openAuthModal('signin');
+        return;
+      }
+
+      const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
+      if (!item || !isCurrentBrokerEntry(item)) {
+        showSystemBanner('Only your own posts can be edited from this dashboard.', 'error');
+        return;
+      }
+
+      clearEditMode(false);
+
+      if (item.urgent || item.distress) {
+        const details = parseUrgentComment(item.notes);
+        document.getElementById('urgentPhone').value = formatDisplayPhone(item.phone);
+        document.getElementById('urgentPurpose').value = item.purpose || '';
+        document.getElementById('urgentAvailability').value = details.availability || '';
+        document.getElementById('urgentCategory').value = item.category || '';
+        setSelectOrManual('urgentLocation', 'urgentLocationManualWrap', 'urgentLocationManual', details.area || item.location || '');
+        document.getElementById('urgentBuilding').value = details.building || '';
+        document.getElementById('urgentFloor').value = details.floor || '';
+        document.getElementById('urgentSqft').value = details.sqft || '';
+        document.getElementById('urgentBudget').value = details.price || item.budget || '';
+        document.getElementById('urgentNegotiable').value = details.negotiable || '';
+        document.getElementById('urgentOccupancy').value = details.occupancy || '';
+        document.getElementById('urgentRentedTill').value = details.rentedTill || '';
+        document.getElementById('urgentNotes').value = details.comment || '';
+        document.getElementById('urgentVerified').checked = Boolean(item.verified);
+        document.getElementById('urgentPremium').checked = Boolean(item.premium);
+        document.getElementById('urgentDistress').checked = Boolean(item.distress);
+        toggleRentedTillDate();
+        setEditMode(item, true);
+        openSection('urgent-deal');
+        showSystemBanner('Edit mode is active for your urgent deal.', 'warning');
+        return;
+      }
+
+      document.getElementById('reqPhone').value = formatDisplayPhone(item.phone);
+      document.getElementById('reqPurpose').value = item.purpose || '';
+      document.getElementById('reqCategory').value = item.category || '';
+      setSelectOrManual('reqLocation', 'reqLocationManualWrap', 'reqLocationManual', item.location || '');
+      document.getElementById('reqBudget').value = item.budget || '';
+      document.getElementById('reqNotes').value = item.notes || '';
+      document.getElementById('reqVerified').checked = Boolean(item.verified);
+      document.getElementById('reqPremium').checked = Boolean(item.premium);
+      setEditMode(item, false);
+      openSection('post-requirement');
+      showSystemBanner('Edit mode is active for your requirement.', 'warning');
+    }
+
+    async function requestBrokerPostAction(payload) {
+      const response = await fetch('/api/broker-posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...payload,
+          ownerPhone: normalizePhoneNumber(currentPhone),
+          ownerBroker: currentBrokerName || currentBroker
+        })
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Broker post action failed.');
+      }
+      return result;
+    }
+
+    async function deleteOwnEntry(encodedKey) {
+      if (!uiState.isAuthenticated) {
+        openAuthModal('signin');
+        return;
+      }
+
+      const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
+      if (!item || !item.id || !item.table || !isCurrentBrokerEntry(item)) {
+        showSystemBanner('This post is not available for owner delete.', 'error');
+        return;
+      }
+
+      const confirmed = window.confirm('Delete this post permanently from the live board?');
+      if (!confirmed) return;
+
+      try {
+        await requestBrokerPostAction({
+          action: 'delete',
+          table: item.table,
+          id: item.id
+        }).then(result => {
+          if (!result?.deletedCount) {
+            throw new Error('No post was deleted. Please refresh and try again.');
+          }
+        });
+        showSystemBanner('Your post was deleted successfully.', 'success');
+        await loadSupabaseData();
+      } catch (error) {
+        showSystemBanner(`Delete failed: ${error.message || error}`, 'error');
+      }
     }
 
     function renderHomePanels() {
@@ -2494,6 +2935,8 @@
           </div>
         `).join('');
       }
+
+      renderMyPostsPanel();
     }
 
     function updateNotificationPanel() {
@@ -2685,6 +3128,9 @@
       if (button) button.classList.add('active');
       if (name === 'requirements' || name === 'distress') {
         markAllPostsSeen();
+      }
+      if (name === 'home') {
+        renderHomePanels();
       }
       closeMenuDrawer();
       refreshSystemBanner();
@@ -3045,11 +3491,16 @@
       }
     }
 
-    function showContactPopover(button, phone) {
+    function showContactPopover(button, phone, encodedKey = '') {
       const normalized = normalizePhoneNumber(phone);
       if (!normalized) {
         alert('Phone number is not available for this broker.');
         return;
+      }
+
+      if (encodedKey) {
+        const item = entries.find(entry => getEntryKey(entry) === decodeURIComponent(encodedKey));
+        if (item) trackEntryAction(item, 'call');
       }
 
       closeSharePopover();
@@ -3068,11 +3519,16 @@
       positionContactPopover(button);
     }
 
-    function showWhatsappPopover(button, phone) {
+    function showWhatsappPopover(button, phone, encodedKey = '') {
       const normalized = normalizePhoneNumber(phone);
       if (!normalized) {
         alert('WhatsApp number is not available for this broker.');
         return;
+      }
+
+      if (encodedKey) {
+        const item = entries.find(entry => getEntryKey(entry) === decodeURIComponent(encodedKey));
+        if (item) trackEntryAction(item, 'whatsapp');
       }
 
       closeSharePopover();
@@ -3099,6 +3555,8 @@
         return;
       }
 
+      trackEntryAction(item, 'share');
+
       closeContactPopover();
       closeWhatsappPopover();
 
@@ -3124,6 +3582,8 @@
         alert('This post could not be found for reporting.');
         return;
       }
+
+      trackEntryAction(item, 'report');
 
       closeSharePopover();
       closeContactPopover();
@@ -3296,6 +3756,10 @@
       brokerApprovals = safeJsonRead('broker_approvals', {});
       blockedBrokerIds = safeJsonRead('blocked_brokers', {});
       seenEntryKeys = safeJsonRead('seen_entry_keys', []);
+      entryViewCounts = safeJsonRead('entry_view_counts', {});
+      entryClickCounts = safeJsonRead('entry_click_counts', {});
+      entryInquiryCounts = safeJsonRead('entry_inquiry_counts', {});
+      viewedEntryKeys = safeJsonRead('viewed_entry_keys', []);
       const note = document.getElementById('savedFilterNote');
       if (note) {
         note.textContent = Object.keys(savedFilters).length ? 'Saved filters ready.' : 'No saved filters yet.';
@@ -3371,12 +3835,14 @@
         return;
       }
       const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
       const list = Array.isArray(matchRequests[key]) ? matchRequests[key] : [];
       if (!list.includes(currentBrokerId)) {
         list.push(currentBrokerId);
       }
       matchRequests[key] = list;
       safeJsonWrite('match_requests', matchRequests);
+      if (item) trackEntryAction(item, 'match');
       saveStatusOverride(key, 'matched');
       renderBoards();
       renderHomePanels();
@@ -3530,6 +3996,7 @@
       localStorage.removeItem('current_phone');
       localStorage.removeItem('current_email');
       myComplaints = [];
+      clearEditMode(true);
       updateLoggedBroker();
       updateBrokerProfileCard();
       renderComplaintStatusPanel();
@@ -3722,6 +4189,7 @@
       }
 
       const entry = isUrgent ? buildEntryFromUrgent() : buildEntryFromStandard();
+      const isEditing = Boolean(activeEditPost && activeEditPost.isUrgent === isUrgent);
 
       if (!entry.phone || !validatePhone(entry.phone)) {
         alert('Enter a valid UAE WhatsApp number, for example 058XXXXXXX or +9715XXXXXXXX.');
@@ -3739,7 +4207,41 @@
       }
 
       try {
-        if (isUrgent) {
+        if (isEditing) {
+          const updateResult = await requestBrokerPostAction({
+            action: 'update',
+            table: activeEditPost.table,
+            id: activeEditPost.id,
+            payload: isUrgent
+              ? {
+                  broker_name: entry.broker,
+                  phone: entry.phone,
+                  type: entry.purpose,
+                  category: entry.category,
+                  location: entry.location,
+                  price: entry.budget,
+                  notes: entry.notes,
+                  urgent: entry.urgent,
+                  distress: entry.distress,
+                  status: 'open'
+                }
+              : {
+                  broker_name: entry.broker,
+                  phone: entry.phone,
+                  purpose: entry.purpose,
+                  category: entry.category,
+                  location: entry.location,
+                  budget: entry.budget,
+                  notes: entry.notes,
+                  verified: entry.verified,
+                  premium: entry.premium,
+                  status: 'open'
+                }
+          });
+          if (!updateResult?.updatedCount) {
+            throw new Error('No post was updated. Please refresh and try again.');
+          }
+        } else if (isUrgent) {
           const { error } = await supabaseClient.from('deals').insert([
             {
               broker_name: entry.broker,
@@ -3787,10 +4289,13 @@
             Sqft: `${entry.sqft} sqft`,
             Occupancy: entry.occupancy
           } : {}),
-          Status: isUrgent ? 'Urgent Deal Submitted' : 'Requirement Submitted'
-        });
+          Status: isEditing
+            ? (isUrgent ? 'Urgent Deal Updated' : 'Requirement Updated')
+            : (isUrgent ? 'Urgent Deal Submitted' : 'Requirement Submitted')
+        }, isEditing ? 'Post Updated' : 'Submission Completed');
 
         event.target.reset();
+        clearEditMode(false);
         if (!isUrgent) {
           toggleManual('reqLocation', 'reqLocationManualWrap', 'reqLocationManual');
         } else {
@@ -3826,6 +4331,8 @@
         }
 
         const formattedRequirements = (requirementsData || []).map(item => ({
+          id: item.id,
+          table: 'requirements',
           broker: item.broker_name,
           phone: item.phone,
           purpose: item.purpose,
@@ -3842,6 +4349,8 @@
         }));
 
         const formattedDeals = (dealsData || []).map(item => ({
+          id: item.id,
+          table: 'deals',
           broker: item.broker_name,
           phone: item.phone,
           purpose: item.type,
@@ -4016,8 +4525,8 @@
                 <td>
                   <div class="center-actions" style="justify-content:flex-start;">
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
-                    <button class="btn btn-primary btn-whatsapp tiny-btn" type="button" onclick="showWhatsappPopover(this, '${item.phone}')">WhatsApp</button>
-                    <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactPopover(this, '${item.phone}')">Call</button>
+                    <button class="btn btn-primary btn-whatsapp tiny-btn" type="button" onclick="showWhatsappPopover(this, '${item.phone}', '${encodeURIComponent(getEntryKey(item))}')">WhatsApp</button>
+                    <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactPopover(this, '${item.phone}', '${encodeURIComponent(getEntryKey(item))}')">Call</button>
                     <button class="btn btn-secondary btn-report tiny-btn" type="button" onclick="openReportModal('${encodeURIComponent(getEntryKey(item))}')">Report</button>
                     <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry(this, '${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
@@ -4037,6 +4546,12 @@
       const requirementsMeta = document.getElementById('requirementsMeta');
       if (requirementsMeta) {
         requirementsMeta.textContent = `${all.length} requirement${all.length === 1 ? '' : 's'} found`;
+      }
+      if (uiState.activeSection === 'requirements') {
+        all.forEach(trackEntryView);
+      }
+      if (uiState.activeSection === 'distress') {
+        distress.forEach(trackEntryView);
       }
       renderTable('requirementsBoard', all);
       renderTable('distressBoard', distress);
