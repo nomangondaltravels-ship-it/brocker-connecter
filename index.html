@@ -1780,7 +1780,7 @@
       if (!homeFeed || !matchSignals) return;
 
       const latestFeed = [...entries]
-        .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt))
+        .sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt))
         .slice(0, 5);
 
       if (!latestFeed.length) {
@@ -1797,9 +1797,9 @@
           <div class="mini-feed-item">
             <div>
               <span class="badge ${item.urgent ? 'red' : 'green'}">${item.urgent ? 'Urgent Deal' : 'Requirement'}</span>
-              ${Date.now() - new Date(item.postedAt).getTime() < 86400000 ? '<span class="badge blue">New</span>' : ''}
-              <strong>${item.purpose} • ${item.category}</strong>
-              <span>${item.location} • ${item.budget} • ${item.broker}</span>
+              ${isFreshPost(item.postedAt) ? '<span class="badge blue">New</span>' : ''}
+              <strong>${item.purpose} &middot; ${item.category}</strong>
+              <span>${item.location} &middot; ${item.budget} &middot; ${item.broker}</span>
             </div>
             <time>${formatPostedTime(item.postedAt)}</time>
           </div>
@@ -1808,7 +1808,7 @@
 
       const hotSignals = entries
         .filter(item => item.urgent || item.distress)
-        .sort((a, b) => new Date(b.postedAt) - new Date(a.postedAt))
+        .sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt))
         .slice(0, 4);
 
       if (!hotSignals.length) {
@@ -1823,7 +1823,7 @@
           <div class="signal-item">
             <span class="badge ${item.distress ? 'red' : 'gold'}">${item.distress ? 'Distress' : 'Urgent'}</span>
             <strong>${item.location}</strong>
-            <span>${item.purpose} • ${item.category} • ${item.budget} • ${getEntryStatus(item)}</span>
+            <span>${item.purpose} &middot; ${item.category} &middot; ${item.budget} &middot; ${getEntryStatus(item)}</span>
           </div>
         `).join('');
       }
@@ -1837,7 +1837,7 @@
 
       const recentMatches = getFilteredEntries()
         .filter(item => savedFilters.purpose || savedFilters.category || savedFilters.location || savedFilters.budget || savedFilters.broker || savedFilters.status)
-        .filter(item => Date.now() - new Date(item.postedAt).getTime() < 7 * 86400000)
+        .filter(item => getPostedAge(item.postedAt) < 7 * 86400000)
         .slice(0, 3);
 
       const unseen = entries.filter(item => !seenEntryKeys.includes(getEntryKey(item)));
@@ -1902,7 +1902,7 @@
         return `
           <div class="admin-item">
             <h4>${account.name} (${account.brokerId})</h4>
-            <p>${account.phone} • ${account.email}</p>
+            <p>${account.phone} &middot; ${account.email}</p>
             <div class="center-actions" style="justify-content:flex-start;">
               <span class="status-pill ${approved ? 'matched' : 'open'}">${approved ? 'Approved' : 'Pending'}</span>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Approval' : 'Approve Broker'}</button>
@@ -1916,8 +1916,8 @@
         const status = getEntryStatus(item);
         return `
           <div class="admin-item">
-            <h4>${item.purpose} • ${item.category}</h4>
-            <p>${item.broker} • ${item.location} • ${item.budget}</p>
+            <h4>${item.purpose} &middot; ${item.category}</h4>
+            <p>${item.broker} &middot; ${item.location} &middot; ${item.budget}</p>
             <div class="center-actions" style="justify-content:flex-start;">
               <span class="status-pill ${status}">${status}</span>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(key)}')">Change Status</button>
@@ -2010,9 +2010,24 @@
       return num;
     }
 
+    function getPostedTimestamp(value) {
+      const timestamp = Date.parse(String(value || ''));
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function getPostedAge(value) {
+      const timestamp = getPostedTimestamp(value);
+      return timestamp ? Math.max(0, Date.now() - timestamp) : Number.POSITIVE_INFINITY;
+    }
+
+    function isFreshPost(value, maxAge = 86400000) {
+      return getPostedAge(value) < maxAge;
+    }
+
     function formatPostedTime(value) {
-      if (!value) return 'just now';
-      const diff = Math.max(0, Date.now() - new Date(value).getTime());
+      const timestamp = getPostedTimestamp(value);
+      if (!timestamp) return 'date unavailable';
+      const diff = Math.max(0, Date.now() - timestamp);
       const mins = Math.floor(diff / 60000);
       if (mins < 1) return 'just now';
       if (mins < 60) return `${mins}m ago`;
@@ -2560,7 +2575,8 @@
               notes: entry.notes,
               urgent: entry.urgent,
               distress: entry.distress,
-              status: 'pending'
+              status: 'pending',
+              created_at: entry.postedAt
             }
           ]);
           if (error) throw error;
@@ -2576,7 +2592,8 @@
               notes: entry.notes,
               verified: entry.verified,
               premium: entry.premium,
-              status: 'pending'
+              status: 'pending',
+              created_at: entry.postedAt
             }
           ]);
           if (error) throw error;
@@ -2646,7 +2663,7 @@
           urgent: false,
           distress: false,
           status: item.status || 'open',
-          postedAt: item.created_at
+          postedAt: item.created_at || null
         }));
 
         const formattedDeals = (dealsData || []).map(item => ({
@@ -2662,7 +2679,7 @@
           urgent: item.urgent,
           distress: item.distress,
           status: item.status || 'open',
-          postedAt: item.created_at
+          postedAt: item.created_at || null
         }));
 
         entries.length = 0;
@@ -2762,8 +2779,8 @@
 
       filtered.sort((a, b) => {
         if ((b.premium ? 1 : 0) !== (a.premium ? 1 : 0)) return (b.premium ? 1 : 0) - (a.premium ? 1 : 0);
-        if (sortBy === 'latest') return new Date(b.postedAt) - new Date(a.postedAt);
-        if (sortBy === 'oldest') return new Date(a.postedAt) - new Date(b.postedAt);
+        if (sortBy === 'latest') return getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt);
+        if (sortBy === 'oldest') return getPostedTimestamp(a.postedAt) - getPostedTimestamp(b.postedAt);
         if (sortBy === 'budget-high') return extractBudgetValue(b.budget) - extractBudgetValue(a.budget);
         if (sortBy === 'budget-low') return extractBudgetValue(a.budget) - extractBudgetValue(b.budget);
         return 0;
@@ -2801,7 +2818,7 @@
                   <div class="badges">
                     ${item.premium ? '<span class="badge gold">Premium</span>' : ''}
                     ${isBrokerApprovedForEntry(item) ? '<span class="badge blue">Verified</span>' : ''}
-                    ${Date.now() - new Date(item.postedAt).getTime() < 86400000 ? '<span class="badge blue">New</span>' : ''}
+                    ${isFreshPost(item.postedAt) ? '<span class="badge blue">New</span>' : ''}
                     ${item.urgent ? '<span class="badge red">Urgent</span>' : ''}
                     ${item.distress ? '<span class="badge red">Distress</span>' : ''}
                     <span class="status-pill ${getEntryStatus(item)}">${getEntryStatus(item)}</span>
@@ -2812,7 +2829,7 @@
                     <span class="badge green">${item.purpose}</span>
                     <span class="badge green">${item.category}</span>
                   </div>
-                  <div class="muted">Direct broker posting • ${getMatchCount(item)} match request${getMatchCount(item) === 1 ? '' : 's'}</div>
+                  <div class="muted">Direct broker posting &middot; ${getMatchCount(item)} match request${getMatchCount(item) === 1 ? '' : 's'}</div>
                 </td>
                 <td><div class="cell-inline">${item.location}</div></td>
                 <td><div class="cell-inline">${item.budget}</div></td>
@@ -2870,7 +2887,8 @@
             name,
             broker,
             message,
-            status: 'pending'
+            status: 'pending',
+            created_at: new Date().toISOString()
           }
         ]);
         if (error) throw error;

@@ -31,11 +31,17 @@ function verifyAdminToken(token, secret) {
   }
 }
 
-function buildDeleteUrl(baseUrl, table, scope, match = {}) {
+function buildDeleteUrl(baseUrl, table, scope, match = {}, days = 0) {
   const url = new URL(`${baseUrl}/rest/v1/${table}`);
 
   if (scope === 'all') {
     url.searchParams.set('phone', 'not.is.null');
+    return url;
+  }
+
+  if (scope === 'older_than_days') {
+    const cutoff = new Date(Date.now() - (days * 86400000)).toISOString();
+    url.searchParams.set('created_at', `lt.${cutoff}`);
     return url;
   }
 
@@ -76,12 +82,13 @@ export async function POST(request) {
   const table = String(body?.table || '').trim();
   const scope = String(body?.scope || '').trim();
   const match = body?.match && typeof body.match === 'object' ? body.match : {};
+  const days = Number(body?.days || 0);
 
   if (!['requirements', 'deals'].includes(table)) {
     return json({ message: 'Unsupported delete table.' }, 400);
   }
 
-  if (!['single', 'all'].includes(scope)) {
+  if (!['single', 'all', 'older_than_days'].includes(scope)) {
     return json({ message: 'Unsupported delete scope.' }, 400);
   }
 
@@ -89,7 +96,11 @@ export async function POST(request) {
     return json({ message: 'Missing match fields for single delete.' }, 400);
   }
 
-  const url = buildDeleteUrl(supabaseUrl, table, scope, match);
+  if (scope === 'older_than_days' && (!Number.isFinite(days) || days <= 0)) {
+    return json({ message: 'Missing valid days value for age-based delete.' }, 400);
+  }
+
+  const url = buildDeleteUrl(supabaseUrl, table, scope, match, days);
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {
@@ -105,7 +116,12 @@ export async function POST(request) {
     return json({ message: `Supabase delete failed: ${errorBody || response.statusText}` }, response.status);
   }
 
-  return json({ success: true });
+  const deletedRows = await response.json().catch(() => []);
+
+  return json({
+    success: true,
+    deletedCount: Array.isArray(deletedRows) ? deletedRows.length : 0
+  });
 }
 
 export function GET() {
