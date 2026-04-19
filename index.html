@@ -86,6 +86,20 @@
       flex-wrap: wrap;
     }
 
+    .top-cta {
+      width: 100%;
+      margin-top: 2px;
+      color: var(--gold-soft);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-align: right;
+    }
+
+    .top-cta.hidden {
+      display: none;
+    }
+
     .menu-toggle {
       min-width: 122px;
       padding-inline: 14px;
@@ -1002,6 +1016,7 @@
           <span>Menu</span>
           <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
         </button>
+        <div class="top-cta" id="registerCta">Register to unlock full broker access and live deal features.</div>
       </div>
     </div>
   </header>
@@ -1549,6 +1564,7 @@
       const signInBtn = document.getElementById('signInBtn');
       const registerBtn = document.getElementById('registerBtn');
       const logoutBtn = document.getElementById('logoutBtn');
+      const registerCta = document.getElementById('registerCta');
 
       if (uiState.isAuthenticated && currentBrokerId) {
         accountChip.textContent = `Broker ID: ${currentBrokerId}`;
@@ -1556,12 +1572,14 @@
         signInBtn.classList.add('hidden');
         registerBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
+        if (registerCta) registerCta.classList.add('hidden');
       } else {
         accountChip.textContent = 'Broker ID: --';
         accountChip.classList.remove('active');
         signInBtn.classList.remove('hidden');
         registerBtn.classList.remove('hidden');
         logoutBtn.classList.add('hidden');
+        if (registerCta) registerCta.classList.remove('hidden');
       }
 
       if (notificationBadge && !notificationBadge.textContent.trim()) {
