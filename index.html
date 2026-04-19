@@ -775,6 +775,16 @@
       menuOpen: false
     };
 
+    function safeJsonRead(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch (error) {
+        console.error(error);
+        return fallback;
+      }
+    }
+
     function normalizePhoneNumber(phone) {
       const digits = String(phone || '').replace(/[^\d]/g, '');
       if (!digits) return '';
@@ -1050,6 +1060,65 @@
       status.textContent = message;
     }
 
+    function findLegacyBrokerAccount(identifier, password) {
+      const accounts = safeJsonRead('broker_accounts', []);
+      const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
+      return (Array.isArray(accounts) ? accounts : []).find(account => {
+        const brokerIdMatch = String(account?.brokerId || '') === String(identifier || '');
+        const phoneMatch = normalizePhoneNumber(account?.phone) === normalizedIdentifierPhone;
+        const passwordMatch = String(account?.password || '') === String(password || '');
+        return passwordMatch && (brokerIdMatch || phoneMatch);
+      }) || null;
+    }
+
+    async function migrateLegacyBrokerAccount(identifier, password) {
+      const account = findLegacyBrokerAccount(identifier, password);
+      if (!account) return null;
+
+      const registerPayload = {
+        action: 'register',
+        fullName: account.name || 'Broker',
+        companyName: account.company || '',
+        brokerIdNumber: account.brokerId || identifier,
+        mobileNumber: account.phone || identifier,
+        email: account.email || `${String(account.brokerId || 'broker').toLowerCase()}@brokerconnector.local`,
+        password
+      };
+
+      const registerResponse = await fetch('/api/broker-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(registerPayload)
+      });
+      const registerResult = await registerResponse.json().catch(() => ({}));
+
+      if (registerResponse.ok && registerResult?.token) {
+        return registerResult;
+      }
+
+      if (registerResponse.status === 409) {
+        const loginResponse = await fetch('/api/broker-auth', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'login',
+            identifier: account.brokerId || account.phone || identifier,
+            password
+          })
+        });
+        const loginResult = await loginResponse.json().catch(() => ({}));
+        if (loginResponse.ok && loginResult?.token) {
+          return loginResult;
+        }
+      }
+
+      throw new Error(registerResult?.message || 'Legacy broker migration failed.');
+    }
+
     function openAuthModal(mode = 'signin') {
       setAuthMode(mode);
       document.getElementById('authModal').classList.add('active');
@@ -1083,6 +1152,8 @@
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
       try {
+        const identifierValue = document.getElementById('authBrokerId').value || document.getElementById('authMobile').value;
+        const passwordValue = document.getElementById('authPassword').value;
         const payload = state.authMode === 'register'
           ? {
               action: 'register',
@@ -1091,12 +1162,12 @@
               brokerIdNumber: document.getElementById('authBrokerId').value,
               mobileNumber: document.getElementById('authMobile').value,
               email: document.getElementById('authEmail').value,
-              password: document.getElementById('authPassword').value
+              password: passwordValue
             }
           : {
               action: 'login',
-              identifier: document.getElementById('authBrokerId').value || document.getElementById('authMobile').value,
-              password: document.getElementById('authPassword').value
+              identifier: identifierValue,
+              password: passwordValue
             };
 
         const response = await fetch('/api/broker-auth', {
@@ -1108,6 +1179,14 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
+          if (state.authMode === 'signin' && response.status === 404) {
+            const migrated = await migrateLegacyBrokerAccount(identifierValue, passwordValue);
+            localStorage.setItem('broker_session_token', migrated.token);
+            localStorage.setItem('broker_session_profile', JSON.stringify(migrated.broker));
+            state.sessionToken = migrated.token;
+            window.location.href = 'dashboard.html';
+            return;
+          }
           throw new Error(result?.message || 'Broker access request failed.');
         }
 
