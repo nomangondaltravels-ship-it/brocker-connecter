@@ -449,6 +449,7 @@
     let requirements = [];
     let deals = [];
     let complaints = [];
+    let complaintsReadable = true;
     let brokerApprovals = {};
     let blockedBrokerIds = {};
     let postStatusOverrides = {};
@@ -617,8 +618,15 @@
       if (reqError) console.error(reqError);
       if (dealError) console.error(dealError);
       if (compError) console.error(compError);
-      if (reqError || dealError || compError) {
+
+      complaintsReadable = !compError;
+
+      if (reqError || dealError) {
         setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
+      } else if (compError) {
+        setAdminStatus('Requirements and deals loaded, but complaint review is not available with current Supabase permissions.', 'error');
+      } else {
+        setAdminStatus('');
       }
 
       requirements = (reqData || []).map(item => ({
@@ -1042,6 +1050,10 @@
 
     function renderComplaints() {
       const target = document.getElementById('complaintList');
+      if (!complaintsReadable) {
+        target.innerHTML = `<div class="item"><p>Complaint review is currently unavailable because complaint read access is blocked by Supabase permissions.</p></div>`;
+        return;
+      }
       if (!complaints.length) {
         target.innerHTML = `<div class="item"><p>No complaints found.</p></div>`;
         return;
