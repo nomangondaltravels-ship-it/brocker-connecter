@@ -1,0 +1,419 @@
+import crypto from 'node:crypto';
+
+export function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+}
+
+export function requiredEnv(name) {
+  const value = process.env[name];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+export function normalizePhoneNumber(phone) {
+  const digits = String(phone || '').replace(/[^\d]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('00971')) return `971${digits.slice(5)}`;
+  if (digits.startsWith('971')) return digits;
+  if (digits.startsWith('0')) return `971${digits.slice(1)}`;
+  return digits;
+}
+
+export function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+export function normalizeText(value) {
+  return String(value || '').trim();
+}
+
+export function normalizeBool(value) {
+  return Boolean(value);
+}
+
+export function createPasswordHash(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derived = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
+  return `${salt}:${derived}`;
+}
+
+export function verifyPassword(password, storedHash) {
+  const [salt, expected] = String(storedHash || '').split(':');
+  if (!salt || !expected) return false;
+  const actual = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(actual, 'hex'), Buffer.from(expected, 'hex'));
+}
+
+export function createToken(payload, secret, expiresInMs = 8 * 60 * 60 * 1000) {
+  const data = {
+    ...payload,
+    exp: Date.now() + expiresInMs
+  };
+  const encoded = Buffer.from(JSON.stringify(data)).toString('base64url');
+  const signature = crypto.createHmac('sha256', secret).update(encoded).digest('base64url');
+  return `${encoded}.${signature}`;
+}
+
+export function verifyToken(token, secret) {
+  if (!token || !secret || !token.includes('.')) return null;
+  const [encoded, signature] = token.split('.');
+  const expected = crypto.createHmac('sha256', secret).update(encoded).digest('base64url');
+  if (signature !== expected) return null;
+
+  try {
+    const payload = JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
+    if (!payload?.exp || Date.now() > payload.exp) return null;
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+export function getBearerToken(request) {
+  const authHeader = request.headers.get('authorization') || '';
+  return authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+}
+
+export function getSupabaseConfig() {
+  const supabaseUrl = requiredEnv('SUPABASE_URL');
+  const serviceRoleKey = requiredEnv('SUPABASE_SERVICE_ROLE_KEY');
+  return { supabaseUrl, serviceRoleKey };
+}
+
+export function createRestUrl(baseUrl, table) {
+  return new URL(`${baseUrl}/rest/v1/${table}`);
+}
+
+export async function supabaseSelect({
+  supabaseUrl,
+  serviceRoleKey,
+  table,
+  select = '*',
+  filters = {},
+  order
+}) {
+  const url = createRestUrl(supabaseUrl, table);
+  url.searchParams.set('select', select);
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (String(value).includes('.')) {
+      url.searchParams.set(key, value);
+      return;
+    }
+    url.searchParams.set(key, `eq.${value}`);
+  });
+  if (order?.column) {
+    url.searchParams.set('order', `${order.column}.${order.ascending ? 'asc' : 'desc'}`);
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Supabase select failed for ${table}: ${errorBody || response.statusText}`);
+  }
+
+  return response.json().catch(() => []);
+}
+
+export async function supabaseInsert({
+  supabaseUrl,
+  serviceRoleKey,
+  table,
+  payload
+}) {
+  const url = createRestUrl(supabaseUrl, table);
+  url.searchParams.set('select', '*');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Supabase insert failed for ${table}: ${errorBody || response.statusText}`);
+  }
+
+  return response.json().catch(() => []);
+}
+
+export async function supabasePatch({
+  supabaseUrl,
+  serviceRoleKey,
+  table,
+  filters = {},
+  payload
+}) {
+  const url = createRestUrl(supabaseUrl, table);
+  url.searchParams.set('select', '*');
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (String(value).includes('.')) {
+      url.searchParams.set(key, value);
+      return;
+    }
+    url.searchParams.set(key, `eq.${value}`);
+  });
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Supabase update failed for ${table}: ${errorBody || response.statusText}`);
+  }
+
+  return response.json().catch(() => []);
+}
+
+export async function supabaseDelete({
+  supabaseUrl,
+  serviceRoleKey,
+  table,
+  filters = {}
+}) {
+  const url = createRestUrl(supabaseUrl, table);
+  url.searchParams.set('select', '*');
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    if (String(value).includes('.')) {
+      url.searchParams.set(key, value);
+      return;
+    }
+    url.searchParams.set(key, `eq.${value}`);
+  });
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    }
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Supabase delete failed for ${table}: ${errorBody || response.statusText}`);
+  }
+
+  return response.json().catch(() => []);
+}
+
+export async function requireBrokerSession(request) {
+  const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
+  const brokerSecret = requiredEnv('BROKER_SESSION_SECRET');
+
+  if (!supabaseUrl || !serviceRoleKey || !brokerSecret) {
+    throw new Error('Missing broker session environment variables.');
+  }
+
+  const token = getBearerToken(request);
+  const session = verifyToken(token, brokerSecret);
+  if (!session?.brokerUuid) {
+    const error = new Error('Broker session is missing or invalid.');
+    error.status = 401;
+    throw error;
+  }
+
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'brokers',
+    filters: { id: session.brokerUuid },
+    order: { column: 'created_at', ascending: false }
+  });
+  const broker = Array.isArray(rows) ? rows[0] : null;
+
+  if (!broker) {
+    const error = new Error('Broker account was not found.');
+    error.status = 404;
+    throw error;
+  }
+
+  if (broker.is_blocked) {
+    const error = new Error('This broker account is blocked.');
+    error.status = 403;
+    throw error;
+  }
+
+  return {
+    supabaseUrl,
+    serviceRoleKey,
+    brokerSecret,
+    session,
+    broker
+  };
+}
+
+export function buildPublicListingPayload(sourceType, broker, item) {
+  const isLead = sourceType === 'lead';
+  const purpose = normalizeText(item.purpose);
+  const category = normalizeText(item.category);
+  const location = normalizeText(item.location);
+  const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
+  const generalNotes = normalizeText(item.public_notes || item.public_general_notes || item.notes || item.description);
+  const propertyType = normalizeText(item.property_type || item.lead_type || '');
+  const status = normalizeText(item.status || 'active').toLowerCase();
+  const isUrgent = normalizeBool(item.is_urgent);
+  const isDistress = normalizeBool(item.is_distress);
+
+  return {
+    broker_uuid: broker.id,
+    broker_id_number: broker.broker_id_number,
+    broker_display_name: broker.full_name,
+    broker_mobile: broker.mobile_number,
+    source_type: sourceType,
+    source_id: item.id,
+    listing_kind: isLead ? 'shared_lead' : 'shared_property',
+    purpose,
+    property_type: propertyType,
+    category,
+    location,
+    price_label: priceLabel,
+    size_label: normalizeText(item.size),
+    bedrooms: item.bedrooms ?? null,
+    bathrooms: item.bathrooms ?? null,
+    public_notes: generalNotes,
+    status,
+    is_urgent: isUrgent,
+    is_distress: isDistress,
+    updated_at: new Date().toISOString()
+  };
+}
+
+export function sanitizeLead(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    purpose: row.purpose,
+    category: row.category,
+    location: row.location,
+    budget: row.budget,
+    notes: row.notes || '',
+    publicGeneralNotes: row.public_general_notes || '',
+    leadType: row.lead_type,
+    status: row.status,
+    priority: row.priority,
+    source: row.source,
+    meetingDate: row.meeting_date,
+    meetingTime: row.meeting_time,
+    followUpNotes: row.follow_up_notes,
+    nextAction: row.next_action,
+    rentChecklist: {
+      booking: Boolean(row.rent_booking),
+      agreementSigned: Boolean(row.rent_agreement_signed),
+      handoverDone: Boolean(row.rent_handover_done)
+    },
+    saleChecklist: {
+      contractA: Boolean(row.sale_contract_a),
+      contractB: Boolean(row.sale_contract_b),
+      contractF: Boolean(row.sale_contract_f)
+    },
+    ownerName: row.owner_name || '',
+    ownerPhone: row.owner_phone || '',
+    clientName: row.client_name || '',
+    clientPhone: row.client_phone || '',
+    isListedPublic: Boolean(row.is_listed_public),
+    publicListingStatus: row.public_listing_status || 'private',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+export function sanitizeProperty(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    purpose: row.purpose,
+    propertyType: row.property_type,
+    category: row.category,
+    location: row.location,
+    price: row.price,
+    size: row.size,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
+    description: row.description || '',
+    publicNotes: row.public_notes || '',
+    internalNotes: row.internal_notes || '',
+    ownerName: row.owner_name || '',
+    ownerPhone: row.owner_phone || '',
+    clientName: row.client_name || '',
+    clientPhone: row.client_phone || '',
+    status: row.status,
+    isUrgent: Boolean(row.is_urgent),
+    isDistress: Boolean(row.is_distress),
+    isListedPublic: Boolean(row.is_listed_public),
+    publicListingStatus: row.public_listing_status || 'private',
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+export function sanitizeFollowUp(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    followUpType: row.follow_up_type,
+    meetingDate: row.meeting_date,
+    meetingTime: row.meeting_time,
+    note: row.note,
+    nextAction: row.next_action,
+    createdAt: row.created_at
+  };
+}
+
+export function sanitizePublicListing(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    brokerName: row.broker_display_name,
+    brokerIdNumber: row.broker_id_number,
+    brokerMobile: row.broker_mobile,
+    sourceType: row.source_type,
+    sourceId: row.source_id,
+    listingKind: row.listing_kind,
+    purpose: row.purpose,
+    propertyType: row.property_type,
+    category: row.category,
+    location: row.location,
+    priceLabel: row.price_label,
+    sizeLabel: row.size_label,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
+    publicNotes: row.public_notes,
+    status: row.status,
+    isUrgent: Boolean(row.is_urgent),
+    isDistress: Boolean(row.is_distress),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}

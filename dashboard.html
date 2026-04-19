@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broker Dashboard | Broker Connector</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg: #06101d;
+      --panel: rgba(8, 17, 31, 0.95);
+      --panel-2: rgba(13, 24, 42, 0.97);
+      --panel-3: rgba(18, 30, 52, 0.92);
+      --text: #f5efe4;
+      --muted: #b8b1a2;
+      --line: rgba(212, 175, 55, 0.16);
+      --line-strong: rgba(212, 175, 55, 0.3);
+      --green: #22c55e;
+      --green-dark: #15803d;
+      --gold: #d4af37;
+      --gold-soft: #f2df98;
+      --gold-deep: #8f6a12;
+      --navy-soft: #0e1c30;
+      --navy-mid: #112641;
+      --ivory: #faf5ea;
+      --red: #ef4444;
+      --blue: #38bdf8;
+      --orange: #f97316;
+      --yellow: #facc15;
+      --shadow-deep: 0 24px 60px rgba(0,0,0,0.34);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Manrope', Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(212,175,55,0.12), transparent 28%),
+        linear-gradient(rgba(6,16,29,0.93), rgba(4,10,20,0.97)),
+        url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80') center/cover fixed;
+      min-height: 100vh;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(7,14,27,0.96), rgba(7,14,27,0.88));
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      width: min(1400px, 95%);
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      border: 1px solid rgba(242,223,152,0.18);
+      background: linear-gradient(180deg, rgba(9,18,32,0.98), rgba(9,18,32,0.9));
+      box-shadow: 0 18px 36px rgba(143,106,18,0.18);
+    }
+
+    .brand-copy { display: flex; flex-direction: column; gap: 2px; }
+    .brand-title { font-weight: 800; font-size: 1.3rem; }
+    .brand-title span { color: var(--gold); }
+    .brand small {
+      font-size: 0.72rem;
+      color: #d0c6ad;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      font-weight: 700;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary {
+      background: linear-gradient(135deg, #f0de9b, var(--gold) 45%, #9e7415 100%);
+      color: #111827;
+      border-color: rgba(242,223,152,0.35);
+    }
+    .btn-secondary {
+      background: linear-gradient(180deg, rgba(16,28,46,0.92), rgba(9,18,32,0.95));
+      border-color: rgba(212,175,55,0.18);
+      color: var(--text);
+    }
+    .btn-danger { background: rgba(127,29,29,0.92); color: white; }
+    .btn-success { background: rgba(22, 101, 52, 0.92); color: white; }
+    .btn-warning { background: rgba(146, 64, 14, 0.92); color: #fff7ed; }
+    .btn-tiny { padding: 8px 11px; border-radius: 10px; font-size: 0.84rem; }
+
+    .app-shell {
+      width: min(1400px, 95%);
+      margin: 18px auto 24px;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow-deep);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .sidebar {
+      padding: 18px;
+      position: sticky;
+      top: 92px;
+      align-self: start;
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      margin-bottom: 6px;
+    }
+
+    .sidebar p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .menu {
+      display: grid;
+      gap: 10px;
+    }
+
+    .menu button {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(10, 20, 36, 0.86);
+      border: 1px solid rgba(212,175,55,0.12);
+      color: var(--text);
+    }
+
+    .menu button.active {
+      background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(143,106,18,0.2));
+      border-color: rgba(212,175,55,0.34);
+      color: var(--gold-soft);
+    }
+
+    .content {
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero {
+      padding: 22px;
+      background:
+        linear-gradient(rgba(7,14,27,0.72), rgba(7,14,27,0.9)),
+        url('https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80') center/cover;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 3vw, 3.1rem);
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      max-width: 840px;
+      color: #e8dcc0;
+      line-height: 1.6;
+    }
+
+    .status-bar {
+      margin: 16px 22px 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      display: none;
+    }
+
+    .status-bar.active { display: block; }
+    .status-bar.error {
+      background: rgba(69,10,10,0.24);
+      border-color: rgba(239,68,68,0.32);
+      color: #fecaca;
+    }
+    .status-bar.success {
+      background: rgba(9,49,26,0.24);
+      border-color: rgba(34,197,94,0.32);
+      color: #bbf7d0;
+    }
+
+    .section { display: none; padding: 0 22px 22px; }
+    .section.active { display: block; }
+
+    .section-head {
+      padding: 18px 0 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .section-head h2 { font-size: 1.45rem; }
+    .section-head p { color: var(--muted); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card, .card, .item-card, .kanban-card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .stat-card { padding: 14px; }
+    .stat-card small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      margin-bottom: 8px;
+    }
+    .stat-card strong { font-size: 1.8rem; }
+
+    .grid-2, .grid-3 { display: grid; gap: 14px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card { padding: 16px; }
+    .card h3 { margin-bottom: 8px; font-size: 1rem; }
+    .card p { color: var(--muted); line-height: 1.5; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.12);
+      background: rgba(9,18,32,0.86);
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea { min-height: 110px; resize: vertical; }
+    label.small {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px 12px;
+    }
+
+    .check-grid label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 0.92rem;
+    }
+
+    .item-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .item-card {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .item-title {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-title h4 { font-size: 1.05rem; }
+    .item-meta, .muted {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .badges, .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid transparent;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .badge-blue { background: rgba(56,189,248,0.14); border-color: rgba(56,189,248,0.28); color: #93c5fd; }
+    .badge-green { background: rgba(34,197,94,0.14); border-color: rgba(34,197,94,0.28); color: #bbf7d0; }
+    .badge-gold { background: rgba(212,175,55,0.14); border-color: rgba(212,175,55,0.28); color: var(--gold-soft); }
+    .badge-red { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.28); color: #fecaca; }
+    .badge-orange { background: rgba(249,115,22,0.14); border-color: rgba(249,115,22,0.28); color: #fdba74; }
+    .badge-yellow { background: rgba(250,204,21,0.14); border-color: rgba(250,204,21,0.28); color: #fde68a; }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail-cell {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(212,175,55,0.1);
+      background: rgba(9,18,32,0.7);
+    }
+
+    .detail-cell small {
+      display: block;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.72rem;
+      margin-bottom: 6px;
+    }
+
+    .kanban {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kanban-card {
+      padding: 14px;
+      min-height: 180px;
+    }
+
+    .kanban-card h4 { margin-bottom: 10px; }
+
+    .mini-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .mini-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.08);
+      background: rgba(9,18,32,0.72);
+    }
+
+    .empty {
+      padding: 18px;
+      border-radius: 16px;
+      border: 1px dashed rgba(212,175,55,0.18);
+      color: var(--muted);
+      text-align: center;
+      background: rgba(9,18,32,0.5);
+    }
+
+    @media (max-width: 1080px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-3, .kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 760px) {
+      .stats, .grid-2, .grid-3, .kanban, .detail-grid, .form-grid, .check-grid {
+        grid-template-columns: 1fr;
+      }
+      .section, .hero { padding-left: 16px; padding-right: 16px; }
+      .status-bar { margin-left: 16px; margin-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
+        <div class="brand-copy">
+          <div class="brand-title">Broker <span>Connector</span></div>
+          <small>Private CRM Dashboard</small>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html'">Public Website</button>
+        <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
+        <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="panel sidebar">
+      <h2>Broker CRM</h2>
+      <p>Manage private leads, private inventory, meetings, and public Broker Connector listings without exposing client or owner details.</p>
+      <div class="menu">
+        <button class="btn active" data-section="overview" onclick="openSection('overview')">Overview</button>
+        <button class="btn" data-section="leads" onclick="openSection('leads')">My Leads</button>
+        <button class="btn" data-section="properties" onclick="openSection('properties')">My Properties</button>
+        <button class="btn" data-section="shared" onclick="openSection('shared')">Shared to Broker Connector</button>
+        <button class="btn" data-section="followups" onclick="openSection('followups')">Meetings / Follow-ups</button>
+        <button class="btn" data-section="progress" onclick="openSection('progress')">Deal Progress / Status</button>
+        <button class="btn" data-section="profile" onclick="openSection('profile')">Profile / Settings</button>
+      </div>
+    </aside>
+
+    <main class="panel">
+      <section class="hero">
+        <h1>Private Broker Dashboard</h1>
+        <p>This CRM is private to the logged-in broker. Leads, properties, meetings, and progress remain private unless you explicitly choose to list a sanitized version on Broker Connector.</p>
+      </section>
+      <div class="status-bar" id="dashboardStatus"></div>
+
+      <section class="section active" id="overview-section">
+        <div class="section-head">
+          <div>
+            <h2>Overview</h2>
+            <p>Broker CRM summary, active inventory, and marketplace exposure at a glance.</p>
+          </div>
+        </div>
+        <div class="stats" id="overviewStats"></div>
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="card">
+            <h3>Broker Summary</h3>
+            <div class="item-list" id="brokerSummaryCard"></div>
+          </div>
+          <div class="card">
+            <h3>Upcoming Meetings</h3>
+            <div class="item-list" id="meetingHighlights"></div>
+          </div>
+          <div class="card">
+            <h3>Public Exposure</h3>
+            <div class="item-list" id="sharedHighlights"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="leads-section">
+        <div class="section-head">
+          <div>
+            <h2>My Leads</h2>
+            <p>Add buyer or tenant demand privately, then list a sanitized version publicly only when you want to share it.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 id="leadFormTitle">Add Lead</h3>
+            <form class="form-grid" id="leadForm">
+              <input type="hidden" id="leadId">
+              <div>
+                <label class="small">Lead Type</label>
+                <select id="leadType" required>
+                  <option value="">Select</option>
+                  <option value="buyer">Buyer</option>
+                  <option value="tenant">Tenant</option>
+                </select>
+              </div>
+              <div>
+                <label class="small">Purpose</label>
+                <select id="leadPurpose" required>
+                  <option value="">Select</option>
+                  <option value="sale">Sale</option>
+                  <option value="rent">Rent</option>
+                </select>
+              </div>
+              <div><label class="small">Category</label><input id="leadCategory" required></div>
+              <div><label class="small">Location</label><input id="leadLocation" required></div>
+              <div><label class="small">Budget</label><input id="leadBudget" required></div>
+              <div><label class="small">Source</label><input id="leadSource"></div>
+              <div><label class="small">Priority</label><select id="leadPriority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+              <div><label class="small">Status</label><select id="leadStatus"><option value="new">New</option><option value="contacted">Contacted</option><option value="demand confirmed">Demand Confirmed</option><option value="meeting scheduled">Meeting Scheduled</option><option value="negotiation">Negotiation</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option></select></div>
+              <div><label class="small">Meeting Date</label><input type="date" id="leadMeetingDate"></div>
+              <div><label class="small">Meeting Time</label><input type="time" id="leadMeetingTime"></div>
+              <div class="full"><label class="small">Private Notes</label><textarea id="leadNotes"></textarea></div>
+              <div class="full"><label class="small">Public General Notes</label><textarea id="leadPublicNotes" placeholder="Only this note will be shared publicly when listed. Do not include owner or client details."></textarea></div>
+              <div class="full"><label class="small">Follow-up Notes</label><textarea id="leadFollowupNotes"></textarea></div>
+              <div class="full"><label class="small">Next Action</label><input id="leadNextAction"></div>
+              <div><label class="small">Owner Name (Private)</label><input id="leadOwnerName"></div>
+              <div><label class="small">Owner Phone (Private)</label><input id="leadOwnerPhone"></div>
+              <div><label class="small">Client Name (Private)</label><input id="leadClientName"></div>
+              <div><label class="small">Client Phone (Private)</label><input id="leadClientPhone"></div>
+              <div class="full">
+                <label class="small">Rent Checklist</label>
+                <div class="check-grid">
+                  <label><input type="checkbox" id="leadRentBooking"> Booking</label>
+                  <label><input type="checkbox" id="leadRentAgreement"> Agreement Signed</label>
+                  <label><input type="checkbox" id="leadRentHandover"> Handover Done</label>
+                </div>
+              </div>
+              <div class="full">
+                <label class="small">Sale Checklist</label>
+                <div class="check-grid">
+                  <label><input type="checkbox" id="leadSaleA"> Contract A</label>
+                  <label><input type="checkbox" id="leadSaleB"> Contract B</label>
+                  <label><input type="checkbox" id="leadSaleF"> Contract F</label>
+                </div>
+              </div>
+              <div class="full actions">
+                <button class="btn btn-primary" type="submit" id="leadSubmitBtn">Save Lead</button>
+                <button class="btn btn-secondary" type="button" onclick="resetLeadForm()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <h3>Lead Privacy Rules</h3>
+            <p>Private CRM data stays here only. When you list a lead publicly, Broker Connector will only publish safe fields like category, location, budget range, and public notes.</p>
+            <div class="detail-grid" style="margin-top:14px;">
+              <div class="detail-cell"><small>Public-safe</small><strong>Category, location, budget, public note</strong></div>
+              <div class="detail-cell"><small>Hidden always</small><strong>Owner name/phone, client name/phone</strong></div>
+              <div class="detail-cell"><small>Workflow</small><strong>List or unlist any lead with one click</strong></div>
+              <div class="detail-cell"><small>Meetings</small><strong>Track meeting date, time, next action</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="item-list" id="leadsList" style="margin-top:16px;"></div>
+      </section>
+
+      <section class="section" id="properties-section">
+        <div class="section-head">
+          <div>
+            <h2>My Properties</h2>
+            <p>Keep full inventory private, and publish only the sanitized marketplace version when you choose.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3 id="propertyFormTitle">Add Property</h3>
+            <form class="form-grid" id="propertyForm">
+              <input type="hidden" id="propertyId">
+              <div><label class="small">Purpose</label><select id="propertyPurpose" required><option value="">Select</option><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
+              <div><label class="small">Property Type</label><input id="propertyType" required></div>
+              <div><label class="small">Category</label><input id="propertyCategory" required></div>
+              <div><label class="small">Location</label><input id="propertyLocation" required></div>
+              <div><label class="small">Price</label><input id="propertyPrice" required></div>
+              <div><label class="small">Size</label><input id="propertySize"></div>
+              <div><label class="small">Bedrooms</label><input id="propertyBedrooms" type="number" min="0"></div>
+              <div><label class="small">Bathrooms</label><input id="propertyBathrooms" type="number" min="0"></div>
+              <div><label class="small">Status</label><select id="propertyStatus"><option value="available">Available</option><option value="reserved">Reserved</option><option value="under negotiation">Under Negotiation</option><option value="closed">Closed</option><option value="unlisted">Unlisted</option></select></div>
+              <div>
+                <label class="small">Flags</label>
+                <div class="check-grid">
+                  <label><input type="checkbox" id="propertyUrgent"> Urgent Deal</label>
+                  <label><input type="checkbox" id="propertyDistress"> Distress Deal</label>
+                </div>
+              </div>
+              <div class="full"><label class="small">Description</label><textarea id="propertyDescription"></textarea></div>
+              <div class="full"><label class="small">Public Notes</label><textarea id="propertyPublicNotes" placeholder="Only this note will be shown publicly when listed."></textarea></div>
+              <div class="full"><label class="small">Internal Notes</label><textarea id="propertyInternalNotes"></textarea></div>
+              <div><label class="small">Owner Name (Private)</label><input id="propertyOwnerName"></div>
+              <div><label class="small">Owner Phone (Private)</label><input id="propertyOwnerPhone"></div>
+              <div><label class="small">Client Name (Private)</label><input id="propertyClientName"></div>
+              <div><label class="small">Client Phone (Private)</label><input id="propertyClientPhone"></div>
+              <div class="full actions">
+                <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Property</button>
+                <button class="btn btn-secondary" type="button" onclick="resetPropertyForm()">Clear</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <h3>Property Sharing Rules</h3>
+            <p>Shared property cards will show only safe marketplace information: purpose, property type, category, location, price, size, general note, and broker contact actions. Owner and client details remain hidden.</p>
+            <div class="detail-grid" style="margin-top:14px;">
+              <div class="detail-cell"><small>Marketplace actions</small><strong>I Have Match, WhatsApp Broker, Call Broker, Share Listing</strong></div>
+              <div class="detail-cell"><small>Listing control</small><strong>List or unlist each property independently</strong></div>
+              <div class="detail-cell"><small>Status</small><strong>Available, reserved, negotiation, closed, unlisted</strong></div>
+              <div class="detail-cell"><small>Privacy</small><strong>Internal notes stay private</strong></div>
+            </div>
+          </div>
+        </div>
+        <div class="item-list" id="propertiesList" style="margin-top:16px;"></div>
+      </section>
+
+      <section class="section" id="shared-section">
+        <div class="section-head">
+          <div>
+            <h2>Shared to Broker Connector</h2>
+            <p>Every listed lead or property appears on the public marketplace as a sanitized listing only.</p>
+          </div>
+        </div>
+        <div class="item-list" id="sharedListingsList"></div>
+      </section>
+
+      <section class="section" id="followups-section">
+        <div class="section-head">
+          <div>
+            <h2>Meetings / Follow-ups</h2>
+            <p>Track meetings, follow-up notes, and next actions separately from the public marketplace.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Add Follow-up</h3>
+            <form class="form-grid" id="followupForm">
+              <div><label class="small">Entity Type</label><select id="followupEntityType"><option value="lead">Lead</option><option value="property">Property</option></select></div>
+              <div><label class="small">Entity</label><select id="followupEntityId"></select></div>
+              <div><label class="small">Type</label><select id="followupType"><option value="follow-up">Follow-up</option><option value="meeting">Meeting</option><option value="call">Call</option><option value="negotiation">Negotiation</option></select></div>
+              <div><label class="small">Meeting Date</label><input type="date" id="followupDate"></div>
+              <div><label class="small">Meeting Time</label><input type="time" id="followupTime"></div>
+              <div class="full"><label class="small">Note</label><textarea id="followupNote"></textarea></div>
+              <div class="full"><label class="small">Next Action</label><input id="followupNextAction"></div>
+              <div class="full actions">
+                <button class="btn btn-primary" type="submit">Save Follow-up</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <h3>Recent Follow-ups</h3>
+            <div class="item-list" id="followupsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="progress-section">
+        <div class="section-head">
+          <div>
+            <h2>Deal Progress / Status Tracker</h2>
+            <p>Track private lead and property movement without exposing confidential CRM information.</p>
+          </div>
+        </div>
+        <div class="kanban" id="progressBoard"></div>
+      </section>
+
+      <section class="section" id="profile-section">
+        <div class="section-head">
+          <div>
+            <h2>Profile / Settings</h2>
+            <p>Your broker profile, verification state, and marketplace visibility information.</p>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card" id="profileCard"></div>
+          <div class="card">
+            <h3>How listing works</h3>
+            <p>Inside each lead or property card you can click <strong>List on Broker Connector</strong> or <strong>Unlist from Broker Connector</strong>. When listed, the public marketplace uses only the safe public fields. Private owner/client details remain hidden automatically.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const state = {
+      token: localStorage.getItem('broker_session_token') || '',
+      broker: null,
+      overview: null,
+      leads: [],
+      properties: [],
+      followUps: [],
+      sharedListings: [],
+      activeSection: 'overview'
+    };
+
+    function setStatus(message = '', tone = 'success') {
+      const el = document.getElementById('dashboardStatus');
+      if (!el) return;
+      if (!message) {
+        el.className = 'status-bar';
+        el.textContent = '';
+        return;
+      }
+      el.className = `status-bar active ${tone}`;
+      el.textContent = message;
+    }
+
+    function apiHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${state.token}`
+      };
+    }
+
+    async function verifySession() {
+      if (!state.token) {
+        window.location.href = 'index.html';
+        return false;
+      }
+
+      const response = await fetch('/api/broker-auth', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${state.token}`
+        }
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result?.authenticated) {
+        localStorage.removeItem('broker_session_token');
+        localStorage.removeItem('broker_session_profile');
+        window.location.href = 'index.html';
+        return false;
+      }
+
+      state.broker = result.broker;
+      localStorage.setItem('broker_session_profile', JSON.stringify(result.broker));
+      document.getElementById('brokerIdentityBtn').textContent = `${result.broker.fullName} (${result.broker.brokerIdNumber})`;
+      return true;
+    }
+
+    async function loadDashboard() {
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${state.token}`
+        }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Dashboard load failed.');
+      }
+
+      state.overview = result.overview || null;
+      state.leads = Array.isArray(result.leads) ? result.leads : [];
+      state.properties = Array.isArray(result.properties) ? result.properties : [];
+      state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
+      state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+
+      renderOverview();
+      renderLeads();
+      renderProperties();
+      renderSharedListings();
+      renderFollowups();
+      renderProgress();
+      renderProfile();
+      populateFollowupEntities();
+    }
+
+    async function dashboardAction(payload, successMessage) {
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Dashboard action failed.');
+      }
+      if (successMessage) setStatus(successMessage, 'success');
+      await loadDashboard();
+      return result;
+    }
+
+    function openSection(name) {
+      state.activeSection = name;
+      document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+      document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
+      document.getElementById(`${name}-section`)?.classList.add('active');
+      document.querySelector(`.menu button[data-section="${name}"]`)?.classList.add('active');
+    }
+
+    function badgeClass(status) {
+      const value = String(status || '').toLowerCase();
+      if (['new', 'available', 'listed', 'open'].includes(value)) return 'badge-yellow';
+      if (['contacted', 'demand confirmed', 'meeting scheduled', 'under negotiation', 'under review'].includes(value)) return 'badge-orange';
+      if (['closed', 'resolved', 'verified'].includes(value)) return 'badge-green';
+      if (['cancelled', 'rejected', 'blocked', 'unlisted', 'distress'].includes(value)) return 'badge-red';
+      return 'badge-blue';
+    }
+
+    function renderOverview() {
+      const overview = state.overview || { totals: {}, broker: {} };
+      const stats = [
+        ['Private Leads', overview.totals?.leads || 0],
+        ['Private Properties', overview.totals?.properties || 0],
+        ['Shared Listings', overview.totals?.sharedListings || 0],
+        ['Active Leads', overview.totals?.activeLeads || 0],
+        ['Active Properties', overview.totals?.activeProperties || 0],
+        ['Meetings', overview.totals?.meetings || 0]
+      ];
+
+      document.getElementById('overviewStats').innerHTML = stats.map(item => `
+        <div class="stat-card">
+          <small>${item[0]}</small>
+          <strong>${item[1]}</strong>
+        </div>
+      `).join('');
+
+      document.getElementById('brokerSummaryCard').innerHTML = `
+        <div class="mini-item"><strong>${overview.broker?.fullName || '--'}</strong><div class="muted">${overview.broker?.brokerIdNumber || '--'}</div></div>
+        <div class="mini-item"><strong>${overview.broker?.mobileNumber || '--'}</strong><div class="muted">${overview.broker?.email || '--'}</div></div>
+        <div class="mini-item"><strong>${overview.broker?.companyName || 'No company added'}</strong><div class="muted">${overview.broker?.isVerified ? 'Verified broker' : 'Verification pending'}</div></div>
+      `;
+
+      const meetings = state.followUps.slice(0, 4);
+      document.getElementById('meetingHighlights').innerHTML = meetings.length ? meetings.map(item => `
+        <div class="mini-item">
+          <strong>${item.followUpType || 'Follow-up'}</strong>
+          <div class="muted">${item.entityType} #${item.entityId}${item.meetingDate ? ` · ${item.meetingDate}` : ''}${item.meetingTime ? ` ${item.meetingTime}` : ''}</div>
+        </div>
+      `).join('') : `<div class="empty">No meetings or follow-ups yet.</div>`;
+
+      document.getElementById('sharedHighlights').innerHTML = state.sharedListings.length ? state.sharedListings.slice(0, 4).map(item => `
+        <div class="mini-item">
+          <strong>${item.purpose} · ${item.category}</strong>
+          <div class="muted">${item.location} · ${item.priceLabel}</div>
+        </div>
+      `).join('') : `<div class="empty">No public listings yet. Use “List on Broker Connector” from your leads or properties.</div>`;
+    }
+
+    function leadChecklistSummary(lead) {
+      if (String(lead.purpose).toLowerCase() === 'rent') {
+        return `Booking: ${lead.rentChecklist.booking ? 'Yes' : 'No'} · Agreement: ${lead.rentChecklist.agreementSigned ? 'Yes' : 'No'} · Handover: ${lead.rentChecklist.handoverDone ? 'Yes' : 'No'}`;
+      }
+      return `Contract A: ${lead.saleChecklist.contractA ? 'Yes' : 'No'} · Contract B: ${lead.saleChecklist.contractB ? 'Yes' : 'No'} · Contract F: ${lead.saleChecklist.contractF ? 'Yes' : 'No'}`;
+    }
+
+    function renderLeads() {
+      const target = document.getElementById('leadsList');
+      if (!state.leads.length) {
+        target.innerHTML = `<div class="empty">No leads yet. Add your first private lead above.</div>`;
+        return;
+      }
+
+      target.innerHTML = state.leads.map(lead => `
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-title">
+              <h4>${lead.leadType || 'Lead'} · ${lead.purpose} · ${lead.category}</h4>
+              <div class="muted">${lead.location} · ${lead.budget} · Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
+            </div>
+            <div class="badges">
+              <span class="badge ${badgeClass(lead.status)}">${lead.status}</span>
+              <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Source</small><strong>${lead.source || '--'}</strong></div>
+            <div class="detail-cell"><small>Priority</small><strong>${lead.priority || '--'}</strong></div>
+            <div class="detail-cell"><small>Meeting</small><strong>${lead.meetingDate || '--'} ${lead.meetingTime || ''}</strong></div>
+            <div class="detail-cell"><small>Next Action</small><strong>${lead.nextAction || '--'}</strong></div>
+          </div>
+          <div class="muted"><strong>Private CRM note:</strong> ${lead.notes || 'No private note added'}</div>
+          <div class="muted"><strong>Public-safe note:</strong> ${lead.publicGeneralNotes || 'No public note added'}</div>
+          <div class="muted"><strong>Checklist:</strong> ${leadChecklistSummary(lead)}</div>
+          <div class="actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
+            <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+            <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      if (!state.properties.length) {
+        target.innerHTML = `<div class="empty">No properties yet. Add your first private property above.</div>`;
+        return;
+      }
+
+      target.innerHTML = state.properties.map(property => `
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-title">
+              <h4>${property.propertyType} · ${property.category}</h4>
+              <div class="muted">${property.location} · ${property.price} · ${property.purpose}</div>
+            </div>
+            <div class="badges">
+              <span class="badge ${badgeClass(property.status)}">${property.status}</span>
+              ${property.isUrgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
+              ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+              <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Size</small><strong>${property.size || '--'}</strong></div>
+            <div class="detail-cell"><small>Bedrooms</small><strong>${property.bedrooms ?? '--'}</strong></div>
+            <div class="detail-cell"><small>Bathrooms</small><strong>${property.bathrooms ?? '--'}</strong></div>
+            <div class="detail-cell"><small>Updated</small><strong>${new Date(property.updatedAt || property.createdAt || Date.now()).toLocaleDateString()}</strong></div>
+          </div>
+          <div class="muted"><strong>Public-safe note:</strong> ${property.publicNotes || 'No public note added'}</div>
+          <div class="muted"><strong>Internal note:</strong> ${property.internalNotes || 'No internal note added'}</div>
+          <div class="actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+            <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+            <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSharedListings() {
+      const target = document.getElementById('sharedListingsList');
+      if (!state.sharedListings.length) {
+        target.innerHTML = `<div class="empty">No items are listed publicly yet.</div>`;
+        return;
+      }
+
+      target.innerHTML = state.sharedListings.map(item => `
+        <div class="item-card">
+          <div class="item-top">
+            <div class="item-title">
+              <h4>${item.listingKind.replace('_', ' ')} · ${item.purpose} · ${item.category}</h4>
+              <div class="muted">${item.location} · ${item.priceLabel}</div>
+            </div>
+            <div class="badges">
+              <span class="badge badge-green">${item.status}</span>
+              ${item.isUrgent ? '<span class="badge badge-orange">Urgent</span>' : ''}
+              ${item.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+            </div>
+          </div>
+          <div class="muted">${item.publicNotes || 'No public note added.'}</div>
+          <div class="actions">
+            <button class="btn btn-warning btn-tiny" type="button" onclick="toggleListItem('${item.sourceType}', ${item.sourceId}, true)">Unlist from Broker Connector</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderFollowups() {
+      const target = document.getElementById('followupsList');
+      if (!state.followUps.length) {
+        target.innerHTML = `<div class="empty">No follow-ups saved yet.</div>`;
+        return;
+      }
+
+      target.innerHTML = state.followUps.map(item => `
+        <div class="mini-item">
+          <strong>${item.followUpType}</strong>
+          <div class="muted">${item.entityType} #${item.entityId} · ${item.meetingDate || '--'} ${item.meetingTime || ''}</div>
+          <div class="muted">${item.note || 'No note'}${item.nextAction ? ` · Next: ${item.nextAction}` : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderProgress() {
+      const columns = {
+        new: [],
+        active: [],
+        meetings: [],
+        closed: []
+      };
+
+      state.leads.forEach(lead => {
+        const status = String(lead.status || '').toLowerCase();
+        const html = `<div class="mini-item"><strong>${lead.category}</strong><div class="muted">${lead.location} · ${lead.budget}</div></div>`;
+        if (status === 'new') columns.new.push(html);
+        else if (['contacted', 'demand confirmed', 'negotiation'].includes(status)) columns.active.push(html);
+        else if (status === 'meeting scheduled') columns.meetings.push(html);
+        else columns.closed.push(html);
+      });
+
+      document.getElementById('progressBoard').innerHTML = `
+        <div class="kanban-card"><h4>New</h4><div class="mini-list">${columns.new.join('') || '<div class="empty">No new leads</div>'}</div></div>
+        <div class="kanban-card"><h4>Active</h4><div class="mini-list">${columns.active.join('') || '<div class="empty">No active negotiations</div>'}</div></div>
+        <div class="kanban-card"><h4>Meetings</h4><div class="mini-list">${columns.meetings.join('') || '<div class="empty">No scheduled meetings</div>'}</div></div>
+        <div class="kanban-card"><h4>Closed / Cancelled</h4><div class="mini-list">${columns.closed.join('') || '<div class="empty">Nothing closed yet</div>'}</div></div>
+      `;
+    }
+
+    function renderProfile() {
+      const broker = state.overview?.broker || state.broker || {};
+      document.getElementById('profileCard').innerHTML = `
+        <h3>${broker.fullName || '--'}</h3>
+        <div class="detail-grid" style="margin-top:12px;">
+          <div class="detail-cell"><small>Broker ID</small><strong>${broker.brokerIdNumber || '--'}</strong></div>
+          <div class="detail-cell"><small>Mobile</small><strong>${broker.mobileNumber || '--'}</strong></div>
+          <div class="detail-cell"><small>Email</small><strong>${broker.email || '--'}</strong></div>
+          <div class="detail-cell"><small>Verification</small><strong>${broker.isVerified ? 'Verified' : 'Pending'}</strong></div>
+        </div>
+      `;
+    }
+
+    function populateFollowupEntities() {
+      const select = document.getElementById('followupEntityId');
+      const type = document.getElementById('followupEntityType').value;
+      const source = type === 'lead' ? state.leads : state.properties;
+      select.innerHTML = source.map(item => {
+        const label = type === 'lead'
+          ? `${item.id} · ${item.category} · ${item.location}`
+          : `${item.id} · ${item.propertyType} · ${item.location}`;
+        return `<option value="${item.id}">${label}</option>`;
+      }).join('');
+      if (!source.length) {
+        select.innerHTML = '<option value="">No records available</option>';
+      }
+    }
+
+    function resetLeadForm() {
+      document.getElementById('leadForm').reset();
+      document.getElementById('leadId').value = '';
+      document.getElementById('leadFormTitle').textContent = 'Add Lead';
+      document.getElementById('leadSubmitBtn').textContent = 'Save Lead';
+    }
+
+    function resetPropertyForm() {
+      document.getElementById('propertyForm').reset();
+      document.getElementById('propertyId').value = '';
+      document.getElementById('propertyFormTitle').textContent = 'Add Property';
+      document.getElementById('propertySubmitBtn').textContent = 'Save Property';
+    }
+
+    function editLead(id) {
+      const lead = state.leads.find(item => item.id === id);
+      if (!lead) return;
+      openSection('leads');
+      document.getElementById('leadId').value = lead.id;
+      document.getElementById('leadType').value = lead.leadType || '';
+      document.getElementById('leadPurpose').value = lead.purpose || '';
+      document.getElementById('leadCategory').value = lead.category || '';
+      document.getElementById('leadLocation').value = lead.location || '';
+      document.getElementById('leadBudget').value = lead.budget || '';
+      document.getElementById('leadSource').value = lead.source || '';
+      document.getElementById('leadPriority').value = lead.priority || 'normal';
+      document.getElementById('leadStatus').value = lead.status || 'new';
+      document.getElementById('leadMeetingDate').value = lead.meetingDate || '';
+      document.getElementById('leadMeetingTime').value = lead.meetingTime || '';
+      document.getElementById('leadNotes').value = lead.notes || '';
+      document.getElementById('leadPublicNotes').value = lead.publicGeneralNotes || '';
+      document.getElementById('leadFollowupNotes').value = lead.followUpNotes || '';
+      document.getElementById('leadNextAction').value = lead.nextAction || '';
+      document.getElementById('leadOwnerName').value = lead.ownerName || '';
+      document.getElementById('leadOwnerPhone').value = lead.ownerPhone || '';
+      document.getElementById('leadClientName').value = lead.clientName || '';
+      document.getElementById('leadClientPhone').value = lead.clientPhone || '';
+      document.getElementById('leadRentBooking').checked = lead.rentChecklist.booking;
+      document.getElementById('leadRentAgreement').checked = lead.rentChecklist.agreementSigned;
+      document.getElementById('leadRentHandover').checked = lead.rentChecklist.handoverDone;
+      document.getElementById('leadSaleA').checked = lead.saleChecklist.contractA;
+      document.getElementById('leadSaleB').checked = lead.saleChecklist.contractB;
+      document.getElementById('leadSaleF').checked = lead.saleChecklist.contractF;
+      document.getElementById('leadFormTitle').textContent = 'Edit Lead';
+      document.getElementById('leadSubmitBtn').textContent = 'Update Lead';
+    }
+
+    function editProperty(id) {
+      const property = state.properties.find(item => item.id === id);
+      if (!property) return;
+      openSection('properties');
+      document.getElementById('propertyId').value = property.id;
+      document.getElementById('propertyPurpose').value = property.purpose || '';
+      document.getElementById('propertyType').value = property.propertyType || '';
+      document.getElementById('propertyCategory').value = property.category || '';
+      document.getElementById('propertyLocation').value = property.location || '';
+      document.getElementById('propertyPrice').value = property.price || '';
+      document.getElementById('propertySize').value = property.size || '';
+      document.getElementById('propertyBedrooms').value = property.bedrooms ?? '';
+      document.getElementById('propertyBathrooms').value = property.bathrooms ?? '';
+      document.getElementById('propertyDescription').value = property.description || '';
+      document.getElementById('propertyPublicNotes').value = property.publicNotes || '';
+      document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
+      document.getElementById('propertyOwnerName').value = property.ownerName || '';
+      document.getElementById('propertyOwnerPhone').value = property.ownerPhone || '';
+      document.getElementById('propertyClientName').value = property.clientName || '';
+      document.getElementById('propertyClientPhone').value = property.clientPhone || '';
+      document.getElementById('propertyStatus').value = property.status || 'available';
+      document.getElementById('propertyUrgent').checked = property.isUrgent;
+      document.getElementById('propertyDistress').checked = property.isDistress;
+      document.getElementById('propertyFormTitle').textContent = 'Edit Property';
+      document.getElementById('propertySubmitBtn').textContent = 'Update Property';
+    }
+
+    async function deleteLead(id) {
+      if (!window.confirm('Delete this private lead?')) return;
+      try {
+        await dashboardAction({ action: 'delete-lead', id }, 'Lead deleted.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function deleteProperty(id) {
+      if (!window.confirm('Delete this private property?')) return;
+      try {
+        await dashboardAction({ action: 'delete-property', id }, 'Property deleted.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function toggleListItem(entityType, id, listed) {
+      try {
+        await dashboardAction({
+          action: listed ? 'unlist-item' : 'list-item',
+          entityType,
+          id
+        }, listed ? 'Item removed from Broker Connector.' : 'Item listed on Broker Connector.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    document.getElementById('leadForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const id = Number(document.getElementById('leadId').value || 0);
+      const payload = {
+        action: id ? 'update-lead' : 'create-lead',
+        id,
+        leadType: document.getElementById('leadType').value,
+        purpose: document.getElementById('leadPurpose').value,
+        category: document.getElementById('leadCategory').value,
+        location: document.getElementById('leadLocation').value,
+        budget: document.getElementById('leadBudget').value,
+        notes: document.getElementById('leadNotes').value,
+        publicGeneralNotes: document.getElementById('leadPublicNotes').value,
+        source: document.getElementById('leadSource').value,
+        priority: document.getElementById('leadPriority').value,
+        status: document.getElementById('leadStatus').value,
+        meetingDate: document.getElementById('leadMeetingDate').value,
+        meetingTime: document.getElementById('leadMeetingTime').value,
+        followUpNotes: document.getElementById('leadFollowupNotes').value,
+        nextAction: document.getElementById('leadNextAction').value,
+        ownerName: document.getElementById('leadOwnerName').value,
+        ownerPhone: document.getElementById('leadOwnerPhone').value,
+        clientName: document.getElementById('leadClientName').value,
+        clientPhone: document.getElementById('leadClientPhone').value,
+        rentChecklist: {
+          booking: document.getElementById('leadRentBooking').checked,
+          agreementSigned: document.getElementById('leadRentAgreement').checked,
+          handoverDone: document.getElementById('leadRentHandover').checked
+        },
+        saleChecklist: {
+          contractA: document.getElementById('leadSaleA').checked,
+          contractB: document.getElementById('leadSaleB').checked,
+          contractF: document.getElementById('leadSaleF').checked
+        }
+      };
+
+      try {
+        await dashboardAction(payload, id ? 'Lead updated successfully.' : 'Lead created successfully.');
+        resetLeadForm();
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    });
+
+    document.getElementById('propertyForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const id = Number(document.getElementById('propertyId').value || 0);
+      const payload = {
+        action: id ? 'update-property' : 'create-property',
+        id,
+        purpose: document.getElementById('propertyPurpose').value,
+        propertyType: document.getElementById('propertyType').value,
+        category: document.getElementById('propertyCategory').value,
+        location: document.getElementById('propertyLocation').value,
+        price: document.getElementById('propertyPrice').value,
+        size: document.getElementById('propertySize').value,
+        bedrooms: document.getElementById('propertyBedrooms').value ? Number(document.getElementById('propertyBedrooms').value) : null,
+        bathrooms: document.getElementById('propertyBathrooms').value ? Number(document.getElementById('propertyBathrooms').value) : null,
+        description: document.getElementById('propertyDescription').value,
+        publicNotes: document.getElementById('propertyPublicNotes').value,
+        internalNotes: document.getElementById('propertyInternalNotes').value,
+        ownerName: document.getElementById('propertyOwnerName').value,
+        ownerPhone: document.getElementById('propertyOwnerPhone').value,
+        clientName: document.getElementById('propertyClientName').value,
+        clientPhone: document.getElementById('propertyClientPhone').value,
+        status: document.getElementById('propertyStatus').value,
+        isUrgent: document.getElementById('propertyUrgent').checked,
+        isDistress: document.getElementById('propertyDistress').checked
+      };
+
+      try {
+        await dashboardAction(payload, id ? 'Property updated successfully.' : 'Property created successfully.');
+        resetPropertyForm();
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    });
+
+    document.getElementById('followupForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await dashboardAction({
+          action: 'save-followup',
+          entityType: document.getElementById('followupEntityType').value,
+          entityId: document.getElementById('followupEntityId').value,
+          followUpType: document.getElementById('followupType').value,
+          meetingDate: document.getElementById('followupDate').value,
+          meetingTime: document.getElementById('followupTime').value,
+          note: document.getElementById('followupNote').value,
+          nextAction: document.getElementById('followupNextAction').value
+        }, 'Follow-up saved.');
+        document.getElementById('followupForm').reset();
+        populateFollowupEntities();
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    });
+
+    document.getElementById('followupEntityType').addEventListener('change', populateFollowupEntities);
+
+    async function logoutBroker() {
+      localStorage.removeItem('broker_session_token');
+      localStorage.removeItem('broker_session_profile');
+      window.location.href = 'index.html';
+    }
+
+    (async function init() {
+      try {
+        const ok = await verifySession();
+        if (!ok) return;
+        await loadDashboard();
+      } catch (error) {
+        setStatus(error.message || 'Could not open the dashboard.', 'error');
+      }
+    })();
+  </script>
+</body>
+</html>
