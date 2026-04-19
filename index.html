@@ -455,7 +455,7 @@
     }
 
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 
     .stats {
       display: grid;
@@ -1103,6 +1103,8 @@
     .badge.blue { background: rgba(56,189,248,0.14); color: #7dd3fc; }
     .badge.red { background: rgba(239,68,68,0.14); color: #fca5a5; }
     .badge.gold { background: rgba(244,197,66,0.14); color: #f4c542; }
+    .badge.yellow { background: rgba(250,204,21,0.16); color: #fde68a; }
+    .badge.orange { background: rgba(249,115,22,0.16); color: #fdba74; }
 
     .note { color: #9fb0c6; line-height: 1.45; max-width: 420px; }
     .empty { padding: 30px; text-align: center; color: var(--muted); }
@@ -1800,6 +1802,18 @@
               </div>
             </div>
           </div>
+          <div class="card">
+            <div class="card-head-inline">
+              <h3>My Complaint Status</h3>
+              <span class="badge gold" id="complaintStatusCountCard">0 active</span>
+            </div>
+            <div class="notice-list" id="complaintStatusPanel">
+              <div class="notice-item">
+                <strong>No complaint tracking yet</strong>
+                <span>Sign in and submit a complaint to track its latest review status here.</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="grid-2" style="margin-top:12px;">
@@ -2237,6 +2251,7 @@
       key: '',
       item: null
     };
+    let myComplaints = [];
     const backendState = {
       dealsTableReady: true
     };
@@ -2545,6 +2560,84 @@
       updateNotificationPanel();
     }
 
+    function renderComplaintStatusPanel() {
+      const panel = document.getElementById('complaintStatusPanel');
+      const badge = document.getElementById('complaintStatusCountCard');
+      if (!panel || !badge) return;
+
+      if (!uiState.isAuthenticated || !currentBrokerId) {
+        badge.className = 'badge gold';
+        badge.textContent = '0 active';
+        panel.innerHTML = `
+          <div class="notice-item">
+            <strong>Sign in required</strong>
+            <span>Sign in with your broker account to track your complaint review status here.</span>
+          </div>
+        `;
+        return;
+      }
+
+      if (!myComplaints.length) {
+        badge.className = 'badge gold';
+        badge.textContent = '0 active';
+        panel.innerHTML = `
+          <div class="notice-item">
+            <strong>No complaints submitted</strong>
+            <span>Your submitted complaints will appear here with their latest review status.</span>
+          </div>
+        `;
+        return;
+      }
+
+      const activeCount = myComplaints.filter(item => item.normalizedStatus !== 'resolved' && item.normalizedStatus !== 'rejected').length;
+      badge.className = `badge ${activeCount ? 'orange' : 'green'}`;
+      badge.textContent = `${activeCount} active`;
+      panel.innerHTML = myComplaints.slice(0, 4).map(item => {
+        const statusMeta = getComplaintStatusMeta(item.normalizedStatus);
+        return `
+          <div class="notice-item">
+            <strong>${item.broker || 'Reported Broker'} <span class="badge ${statusMeta.tone}" style="margin-left:8px;">${statusMeta.label}</span></strong>
+            <span>${item.displayMessage || 'Complaint submitted.'}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadMyComplaintStatuses() {
+      if (!uiState.isAuthenticated || !currentBrokerId) {
+        myComplaints = [];
+        renderComplaintStatusPanel();
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/broker-complaints', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            brokerId: currentBrokerId,
+            email: currentEmail
+          })
+        });
+
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Complaint status request failed.');
+        }
+
+        myComplaints = Array.isArray(result?.complaints)
+          ? result.complaints.map(parseComplaintRecord)
+          : [];
+      } catch (error) {
+        console.error(error);
+        myComplaints = [];
+      }
+
+      renderComplaintStatusPanel();
+    }
+
     function renderAdminReview() {
       const brokerList = document.getElementById('adminBrokerList');
       const postList = document.getElementById('adminPostList');
@@ -2836,6 +2929,52 @@
     function formatPhoneFieldValue(phone) {
       const normalized = normalizePhoneNumber(phone);
       return normalized.startsWith('971') ? `+${normalized}` : String(phone || '').trim();
+    }
+
+    function encodeComplaintMessage(text, meta = {}) {
+      const payload = {
+        reporterBrokerId: meta.reporterBrokerId || currentBrokerId || '',
+        reporterEmail: meta.reporterEmail || currentEmail || '',
+        reporterName: meta.reporterName || currentBrokerName || '',
+        text: String(text || '').trim()
+      };
+      return `${payload.text}\n\n[[BC_META:${encodeURIComponent(JSON.stringify(payload))}]]`;
+    }
+
+    function parseComplaintRecord(item) {
+      const rawMessage = String(item?.message || '');
+      const match = rawMessage.match(/\[\[BC_META:([\s\S]+?)\]\]\s*$/);
+      let meta = {};
+      let displayMessage = rawMessage;
+
+      if (match) {
+        try {
+          meta = JSON.parse(decodeURIComponent(match[1]));
+        } catch (error) {
+          meta = {};
+        }
+        displayMessage = rawMessage.replace(match[0], '').trim();
+      }
+
+      const rawStatus = String(item?.status || '').trim().toLowerCase();
+      const normalizedStatus = rawStatus === 'pending' ? 'new' : (rawStatus || 'new');
+
+      return {
+        ...item,
+        reporterBrokerId: meta.reporterBrokerId || '',
+        reporterEmail: meta.reporterEmail || '',
+        reporterName: meta.reporterName || '',
+        displayMessage,
+        normalizedStatus
+      };
+    }
+
+    function getComplaintStatusMeta(status) {
+      const normalized = String(status || '').trim().toLowerCase();
+      if (normalized === 'resolved') return { label: 'Resolved', tone: 'green' };
+      if (normalized === 'under-review') return { label: 'Under Review', tone: 'orange' };
+      if (normalized === 'rejected') return { label: 'Rejected', tone: 'red' };
+      return { label: 'New', tone: 'yellow' };
     }
 
     function applyPhoneFieldFormatting(input) {
@@ -3310,18 +3449,19 @@
 
         accounts.push(account);
         saveStoredBrokerAccounts(accounts);
-        completeBrokerSession(account);
-        closeAuthModal();
-        showBrokerPopup('Registration Successful', {
+      completeBrokerSession(account);
+      closeAuthModal();
+      showBrokerPopup('Registration Successful', {
           Message: 'Broker account created successfully.',
           Name: name,
           'Broker ID': brokerId,
           Mobile: formatDisplayPhone(phone),
           Email: email,
           Password: 'Saved successfully'
-        });
-        openSection('post-requirement');
-        return;
+      });
+      loadMyComplaintStatuses();
+      openSection('post-requirement');
+      return;
       }
 
       if (!brokerId && !phone) {
@@ -3373,6 +3513,7 @@
         Mobile: formatDisplayPhone(account.phone),
         Email: account.email
       });
+      loadMyComplaintStatuses();
       openSection('post-requirement');
     }
 
@@ -3388,8 +3529,10 @@
       localStorage.removeItem('current_broker_id');
       localStorage.removeItem('current_phone');
       localStorage.removeItem('current_email');
+      myComplaints = [];
       updateLoggedBroker();
       updateBrokerProfileCard();
+      renderComplaintStatusPanel();
       setAuthStatus('');
       openSection('home');
     }
@@ -3719,11 +3862,12 @@
         populateRequirementFilterOptions();
         updateStats();
         updateBrokerProfileCard();
-        renderHomePanels();
-        updateNotificationPanel();
-        renderAdminReview();
-        renderBoards();
-        revealSharedEntry();
+      renderHomePanels();
+      updateNotificationPanel();
+      await loadMyComplaintStatuses();
+      renderAdminReview();
+      renderBoards();
+      revealSharedEntry();
       } catch (err) {
         console.error('Load error:', err);
         backendState.dealsTableReady = false;
@@ -3737,6 +3881,7 @@
         updateBrokerProfileCard();
         renderHomePanels();
         updateNotificationPanel();
+        renderComplaintStatusPanel();
         renderAdminReview();
         renderBoards();
         revealSharedEntry();
@@ -3913,9 +4058,13 @@
 
     async function submitComplaint(event) {
       event.preventDefault();
-      const name = document.getElementById('compName').value || 'Anonymous';
+      const name = document.getElementById('compName').value || currentBrokerName || 'Anonymous';
       const broker = document.getElementById('compBroker').value || 'N/A';
-      const message = document.getElementById('compMsg').value;
+      const message = encodeComplaintMessage(document.getElementById('compMsg').value, {
+        reporterBrokerId: currentBrokerId,
+        reporterEmail: currentEmail,
+        reporterName: currentBrokerName
+      });
 
       try {
         const { error } = await supabaseClient.from('complaints').insert([
@@ -3923,13 +4072,14 @@
             name,
             broker,
             message,
-            status: 'pending',
+            status: 'new',
             created_at: new Date().toISOString()
           }
         ]);
         if (error) throw error;
         alert('Complaint submitted successfully.');
         event.target.reset();
+        await loadMyComplaintStatuses();
       } catch (err) {
         console.error(err);
         alert('Complaint save nahi hui.');
@@ -3967,8 +4117,12 @@
           {
             name,
             broker,
-            message,
-            status: 'pending',
+            message: encodeComplaintMessage(message, {
+              reporterBrokerId: currentBrokerId,
+              reporterEmail: currentEmail,
+              reporterName: currentBrokerName
+            }),
+            status: 'new',
             created_at: new Date().toISOString()
           }
         ]);
@@ -3977,8 +4131,9 @@
         showConfirmModal({
           Submitted: 'Complaint received',
           Broker: broker,
-          Status: 'Pending review'
+          Status: 'New complaint'
         }, 'Complaint Submitted');
+        await loadMyComplaintStatuses();
       } catch (err) {
         console.error(err);
         alert('Complaint could not be submitted right now.');
