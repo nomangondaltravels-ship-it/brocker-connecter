@@ -392,6 +392,35 @@ export function sanitizeFollowUp(row) {
   };
 }
 
+export function sanitizeNotification(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    notificationType: row.notification_type,
+    title: row.title,
+    message: row.message,
+    relatedSourceType: row.related_source_type || '',
+    relatedSourceId: row.related_source_id ?? null,
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+export function sanitizeAiMatch(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    requirementId: row.requirement_id ?? null,
+    propertyId: row.property_id ?? null,
+    matchScore: row.match_score ?? 0,
+    matchReason: row.match_reason || '',
+    status: row.status,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
 export function sanitizePublicListing(row) {
   if (!row) return null;
   return {

@@ -4,8 +4,10 @@ import {
   normalizeBool,
   normalizeText,
   requireBrokerSession,
+  sanitizeAiMatch,
   sanitizeFollowUp,
   sanitizeLead,
+  sanitizeNotification,
   sanitizeProperty,
   sanitizePublicListing,
   supabaseDelete,
@@ -115,6 +117,29 @@ function buildOverview(leads, properties, followUps, sharedListings, broker) {
   };
 }
 
+async function selectOptionalBrokerRows(context, table) {
+  const { supabaseUrl, serviceRoleKey, broker } = context;
+  try {
+    return await supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table,
+      filters: { broker_uuid: broker.id },
+      order: { column: 'created_at', ascending: false }
+    });
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (
+      message.includes('could not find') ||
+      message.includes('relation') ||
+      message.includes('does not exist')
+    ) {
+      return [];
+    }
+    throw error;
+  }
+}
+
 async function syncPublicListing(context, sourceType, item, broker) {
   const { supabaseUrl, serviceRoleKey } = context;
   const existing = await supabaseSelect({
@@ -167,7 +192,7 @@ async function fetchBrokerDataset(context) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const brokerFilter = { broker_uuid: broker.id };
 
-  const [leadRows, propertyRows, followUpRows, listingRows] = await Promise.all([
+  const [leadRows, propertyRows, followUpRows, listingRows, notificationRows, aiMatchRows] = await Promise.all([
     supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
@@ -195,20 +220,26 @@ async function fetchBrokerDataset(context) {
       table: 'public_listings',
       filters: { broker_uuid: broker.id },
       order: { column: 'created_at', ascending: false }
-    })
+    }),
+    selectOptionalBrokerRows(context, 'broker_notifications'),
+    selectOptionalBrokerRows(context, 'broker_ai_matches')
   ]);
 
   const leads = (Array.isArray(leadRows) ? leadRows : []).map(sanitizeLead);
   const properties = (Array.isArray(propertyRows) ? propertyRows : []).map(sanitizeProperty);
   const followUps = (Array.isArray(followUpRows) ? followUpRows : []).map(sanitizeFollowUp);
   const sharedListings = (Array.isArray(listingRows) ? listingRows : []).map(sanitizePublicListing);
+  const notifications = (Array.isArray(notificationRows) ? notificationRows : []).map(sanitizeNotification);
+  const aiMatches = (Array.isArray(aiMatchRows) ? aiMatchRows : []).map(sanitizeAiMatch);
 
   return {
     overview: buildOverview(leads, properties, followUps, sharedListings, broker),
     leads,
     properties,
     followUps,
-    sharedListings
+    sharedListings,
+    notifications,
+    aiMatches
   };
 }
 
