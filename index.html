@@ -22,8 +22,12 @@
       --gold-soft: #f2df98;
       --gold-deep: #8f6a12;
       --navy-soft: #0e1c30;
+      --navy-mid: #112641;
+      --ivory: #faf5ea;
       --red: #ef4444;
       --blue: #38bdf8;
+      --shadow-deep: 0 24px 60px rgba(0,0,0,0.34);
+      --shadow-gold: 0 18px 36px rgba(143,106,18,0.18);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -64,20 +68,46 @@
 
     .brand {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
-      font-weight: 700;
-      font-size: 1.35rem;
-      line-height: 1.05;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
     }
 
-    .brand span { color: var(--gold); }
+    .brand-logo {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(242,223,152,0.18);
+      background: linear-gradient(180deg, rgba(9,18,32,0.98), rgba(9,18,32,0.9));
+      box-shadow: var(--shadow-gold);
+      object-fit: cover;
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 1.35rem;
+      line-height: 1.05;
+      letter-spacing: 0.01em;
+    }
+
+    .brand-title span { color: var(--gold); }
     .brand small {
       font-size: 0.72rem;
       font-weight: 600;
       color: #d0c6ad;
       text-transform: uppercase;
       letter-spacing: 0.12em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .top-actions {
@@ -297,10 +327,11 @@
     .hero-box {
       position: relative;
       background:
+        radial-gradient(circle at top right, rgba(212,175,55,0.16), transparent 28%),
         linear-gradient(rgba(6,14,25,0.8), rgba(6,14,25,0.92)),
         url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80') center/cover;
       border-bottom: 1px solid var(--line);
-      padding: 24px 20px 26px;
+      padding: 28px 24px 30px;
       overflow: hidden;
     }
 
@@ -313,9 +344,47 @@
       background: linear-gradient(90deg, var(--gold-soft), rgba(212,175,55,0));
     }
 
+    .hero-box::before {
+      content: '';
+      position: absolute;
+      inset: 18px 22px auto auto;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(242,223,152,0.18), rgba(242,223,152,0));
+      filter: blur(8px);
+      opacity: 0.75;
+      pointer-events: none;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(212,175,55,0.22);
+      background: rgba(10,19,34,0.72);
+      color: var(--gold-soft);
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .hero-kicker::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+      box-shadow: 0 0 0 4px rgba(212,175,55,0.14);
+    }
+
     .hero-box h1 {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 2.45rem;
+      font-size: 2.8rem;
       line-height: 0.98;
       margin-bottom: 8px;
       letter-spacing: 0.01em;
@@ -323,7 +392,32 @@
       text-shadow: 0 10px 30px rgba(0,0,0,0.22);
     }
 
-    .hero-box p { max-width: 860px; color: #e2d7bb; font-size: 0.95rem; line-height: 1.5; }
+    .hero-box p {
+      max-width: 760px;
+      color: #e6dcc2;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .hero-support {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: rgba(10,19,34,0.76);
+      color: #efe6ca;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
 
     .page-head {
       display: flex;
@@ -377,6 +471,23 @@
       border-radius: 18px;
       padding: 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .stat-card,
+    .card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after,
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(242,223,152,0.22), rgba(242,223,152,0));
+      pointer-events: none;
     }
 
     .stat-card small {
@@ -459,10 +570,10 @@
     }
 
     .hero-action-btn {
-      min-height: 46px;
-      padding: 10px 15px;
+      min-height: 48px;
+      padding: 11px 16px;
       border-radius: 999px;
-      font-size: 0.84rem;
+      font-size: 0.85rem;
       font-weight: 800;
       background: linear-gradient(180deg, rgba(20,34,58,0.96), rgba(11,20,36,0.96));
       border: 1px solid rgba(212,175,55,0.24);
@@ -486,6 +597,58 @@
     .hero-action-btn.primary-start:hover {
       color: #0b1220;
       box-shadow: 0 18px 34px rgba(143,106,18,0.4);
+    }
+
+    .home-intro-card {
+      background:
+        linear-gradient(180deg, rgba(17,31,54,0.98), rgba(10,19,34,0.98));
+      border: 1px solid rgba(212,175,55,0.18);
+      box-shadow: var(--shadow-gold);
+    }
+
+    .home-intro-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .home-intro-title h3 {
+      margin-bottom: 0;
+      font-size: 1.08rem;
+    }
+
+    .home-intro-card p {
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .home-points {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .home-point {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: rgba(8,16,29,0.48);
+    }
+
+    .home-point strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ivory);
+      font-size: 0.84rem;
+    }
+
+    .home-point span {
+      color: var(--muted);
+      font-size: 0.79rem;
+      line-height: 1.5;
     }
 
     .action-row {
@@ -667,6 +830,37 @@
       border-radius: 10px;
       font-size: 0.76rem;
       font-weight: 800;
+    }
+
+    .btn-whatsapp {
+      background: linear-gradient(135deg, #23d366, #15803d);
+      border-color: rgba(74,222,128,0.32);
+      color: #f7fff9;
+      box-shadow: 0 10px 24px rgba(21,128,61,0.24);
+    }
+
+    .btn-call {
+      background: linear-gradient(180deg, rgba(24,38,64,0.96), rgba(11,20,36,0.96));
+      border-color: rgba(56,189,248,0.24);
+      color: #dff5ff;
+    }
+
+    .btn-share {
+      background: linear-gradient(180deg, rgba(32,27,19,0.92), rgba(17,14,10,0.96));
+      border-color: rgba(242,223,152,0.24);
+      color: var(--gold-soft);
+    }
+
+    .btn-match {
+      background: linear-gradient(180deg, rgba(20,34,58,0.96), rgba(11,20,36,0.96));
+      border-color: rgba(212,175,55,0.24);
+      color: var(--ivory);
+    }
+
+    .btn-status {
+      background: rgba(12,21,36,0.66);
+      border-color: rgba(184,177,162,0.2);
+      color: var(--muted);
     }
 
     .section-note {
@@ -1052,7 +1246,7 @@
     @media (max-width: 1100px) {
       .filters { grid-template-columns: 1fr 1fr; }
       .stats { grid-template-columns: 1fr 1fr; }
-      .grid-2, .grid-3, .form-grid, .signal-list, .trust-points { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .form-grid, .signal-list, .trust-points, .home-points { grid-template-columns: 1fr; }
       .top-actions-wrap { width: 100%; }
       .hero-tags { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
       .hero-action-btn { flex: 0 0 auto; white-space: nowrap; }
@@ -1065,10 +1259,21 @@
         gap: 12px;
         padding: 12px 0;
       }
-      .brand { font-size: 1.12rem; }
+      .brand {
+        width: 100%;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+      }
+      .brand-title { font-size: 1.12rem; }
       .brand small {
         font-size: 0.63rem;
         letter-spacing: 0.08em;
+        white-space: normal;
       }
       .top-actions-wrap {
         width: 100%;
@@ -1104,11 +1309,34 @@
         inset: auto auto 0 16px;
         width: 110px;
       }
+      .hero-box::before {
+        width: 110px;
+        height: 110px;
+        right: 10px;
+        top: 10px;
+      }
+      .hero-kicker {
+        margin-bottom: 10px;
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+      }
       .hero-box h1 {
-        font-size: 1.78rem;
+        font-size: 1.92rem;
         line-height: 1;
       }
-      .hero-box p { font-size: 0.88rem; }
+      .hero-box p {
+        font-size: 0.89rem;
+        max-width: 100%;
+      }
+      .hero-support {
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .hero-pill {
+        min-height: 34px;
+        padding: 7px 10px;
+        font-size: 0.72rem;
+      }
       .hero-tags {
         margin-right: -2px;
         gap: 8px;
@@ -1161,6 +1389,15 @@
         min-height: 38px;
         padding: 8px 10px;
       }
+      .compact-table .center-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+      }
+      .compact-table .center-actions .btn,
+      .compact-table .center-actions a.btn {
+        width: 100%;
+      }
       .table-shell { overflow-x: auto; }
       table { min-width: 860px; }
       .system-banner {
@@ -1197,7 +1434,13 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">Broker <span>Connector</span><small>Noman Properties • Sponsored by Xsite Real Estate</small></div>
+      <div class="brand">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
+        <div class="brand-copy">
+          <div class="brand-title">Broker <span>Connector</span></div>
+          <small>Noman Properties &bull; Sponsored by Xsite Real Estate</small>
+        </div>
+      </div>
       <div class="top-actions-wrap">
         <div class="top-actions">
           <div class="account-chip" id="accountChip">Broker ID: --</div>
@@ -1233,8 +1476,14 @@
 
     <main class="content-panel">
       <section class="hero-box">
+        <div class="hero-kicker">Private Broker Exchange</div>
         <h1>Broker Requirement Network</h1>
-        <p>A broker-only platform to post requirements, share urgent deals, and connect quickly with matching brokers.</p>
+        <p>A clean broker-only platform to post live requirements, share urgent stock, and connect directly with serious matching brokers across the UAE.</p>
+        <div class="hero-support">
+          <span class="hero-pill">Clean requirement board</span>
+          <span class="hero-pill">Urgent stock visibility</span>
+          <span class="hero-pill">Direct broker contact</span>
+        </div>
         <div class="hero-actions-label">Start Here</div>
         <div class="hero-tags">
           <button class="btn hero-action-btn" type="button" onclick="openSection('home')">Home</button>
@@ -1252,10 +1501,32 @@
         <div class="page-head">
           <div>
             <h2>Home</h2>
-            <p>Everything starts here.</p>
+            <p>One clean dashboard for broker requirements, urgent deals, and direct contact.</p>
           </div>
         </div>
         <div class="page-use"><strong>Use:</strong> Open any section, post a deal, or check broker requirements in one place.</div>
+
+        <div class="card home-intro-card" style="margin-bottom:12px;">
+          <div class="home-intro-title">
+            <h3>Professional Broker Workflow</h3>
+            <span class="badge gold">Royal Theme</span>
+          </div>
+          <p>This exchange is designed to feel fast, serious, and professional. Brokers can post demand, check live stock, and contact matching agents without confusion or clutter.</p>
+          <div class="home-points">
+            <div class="home-point">
+              <strong>Clear Posting</strong>
+              <span>Requirements and urgent deals are separated for quicker review.</span>
+            </div>
+            <div class="home-point">
+              <strong>Direct Contact</strong>
+              <span>WhatsApp, call, and share actions stay visible for faster deal movement.</span>
+            </div>
+            <div class="home-point">
+              <strong>Admin Control</strong>
+              <span>Verification, blocking, and cleanup tools keep the board professional.</span>
+            </div>
+          </div>
+        </div>
 
         <div class="stats">
           <div class="stat-card"><small>Live Needs</small><strong id="statRequirements">0</strong></div>
@@ -2098,6 +2369,56 @@
       return `${days}d ago`;
     }
 
+    function buildEntryShareText(item) {
+      const lines = [
+        'Broker Connector',
+        `${item.urgent ? 'Urgent Deal' : 'Requirement'}: ${item.purpose} / ${item.category}`,
+        `Location: ${item.location}`,
+        `Budget: ${item.budget}`,
+        `Broker: ${item.broker}`,
+        `Contact: +${item.phone}`
+      ];
+
+      if (item.notes) {
+        lines.push(`Notes: ${String(item.notes).trim()}`);
+      }
+
+      lines.push('Open the broker exchange at https://www.nomanproperties.com');
+      return lines.join('\n');
+    }
+
+    async function shareEntry(encodedKey) {
+      const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
+      if (!item) {
+        alert('This post could not be found for sharing.');
+        return;
+      }
+
+      const shareText = buildEntryShareText(item);
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Broker Connector',
+            text: shareText
+          });
+          return;
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareText);
+          alert('Post details copied. You can now paste and share them.');
+          return;
+        }
+
+        alert(shareText);
+      } catch (err) {
+        console.error(err);
+        alert('Share action was cancelled or unavailable on this device.');
+      }
+    }
+
     function showConfirmModal(data, title = 'Submission Completed') {
       const body = document.getElementById('confirmModalBody');
       document.getElementById('confirmModalTitle').textContent = title;
@@ -2930,10 +3251,11 @@
                 <td><div class="note">${item.notes}</div></td>
                 <td>
                   <div class="center-actions" style="justify-content:flex-start;">
-                    <button class="btn btn-secondary tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
-                    <button class="btn btn-secondary tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
-                    <a class="btn btn-primary tiny-btn" href="https://wa.me/${item.phone}" target="_blank">WhatsApp</a>
-                    <a class="btn btn-secondary tiny-btn" href="tel:+${item.phone}">Call</a>
+                    <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
+                    <a class="btn btn-primary btn-whatsapp tiny-btn" href="https://wa.me/${item.phone}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                    <a class="btn btn-secondary btn-call tiny-btn" href="tel:+${item.phone}">Call</a>
+                    <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry('${encodeURIComponent(getEntryKey(item))}')">Share</button>
+                    <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
                   </div>
                 </td>
               </tr>
