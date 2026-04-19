@@ -1141,40 +1141,108 @@
       font-weight: 700;
     }
 
-    .contact-modal-copy {
-      color: var(--muted);
-      margin-bottom: 18px;
-      line-height: 1.6;
+    .contact-popover {
+      position: fixed;
+      z-index: 2100;
+      width: min(280px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(56,189,248,0.18);
+      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
+      box-shadow: 0 24px 56px rgba(0,0,0,0.38);
+      display: none;
     }
 
-    .contact-call-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 16px 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(212,175,55,0.16);
-      background: linear-gradient(180deg, rgba(18,30,52,0.96), rgba(10,19,34,0.98));
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .contact-call-box small {
+    .contact-popover.active {
       display: block;
-      margin-bottom: 6px;
+    }
+
+    .contact-popover::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      right: 24px;
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: rgba(8,17,31,0.98);
+      border-right: 1px solid rgba(56,189,248,0.18);
+      border-bottom: 1px solid rgba(56,189,248,0.18);
+    }
+
+    .contact-popover-label {
+      display: block;
+      margin-bottom: 8px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      font-size: 0.72rem;
+      font-size: 0.68rem;
+      font-weight: 800;
     }
 
-    .contact-call-box strong {
-      display: block;
+    .contact-popover-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .contact-inline-number {
+      flex: 1 1 auto;
       color: var(--gold-soft);
-      font-size: 1.2rem;
-      letter-spacing: 0.03em;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
       word-break: break-word;
+    }
+
+    .copy-icon-btn {
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid rgba(212,175,55,0.22);
+      background: rgba(17,28,45,0.94);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .copy-icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(242,223,152,0.34);
+      background: rgba(22,36,58,0.96);
+    }
+
+    .copy-icon {
+      position: relative;
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .copy-icon::before,
+    .copy-icon::after {
+      content: '';
+      position: absolute;
+      border: 1.6px solid var(--gold-soft);
+      border-radius: 3px;
+      width: 10px;
+      height: 10px;
+      background: transparent;
+    }
+
+    .copy-icon::before {
+      top: 2px;
+      left: 0;
+      opacity: 0.72;
+    }
+
+    .copy-icon::after {
+      top: 0;
+      left: 3px;
     }
 
     .center-actions {
@@ -2031,31 +2099,21 @@
     </div>
   </div>
 
+  <div class="contact-popover" id="contactPopover">
+    <span class="contact-popover-label">Phone Number</span>
+    <div class="contact-popover-row">
+      <div class="contact-inline-number" id="contactPopoverNumber">+971000000000</div>
+      <button class="copy-icon-btn" type="button" onclick="copyContactPopoverNumber()" aria-label="Copy number">
+        <span class="copy-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-card">
       <h3 id="confirmModalTitle">Submission Completed</h3>
       <table class="modal-table"><tbody id="confirmModalBody"></tbody></table>
       <div class="center-actions"><button class="btn btn-primary" onclick="closeConfirmModal()">OK</button></div>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="contactModal">
-    <div class="modal-card">
-      <h3 id="contactModalTitle">Broker Contact</h3>
-      <p class="contact-modal-copy">View the broker number clearly, copy it instantly, or call directly from here.</p>
-      <div class="contact-call-box">
-        <div>
-          <small>Phone Number</small>
-          <strong id="contactModalNumber">+971000000000</strong>
-        </div>
-        <div class="center-actions" style="justify-content:flex-start;">
-          <button class="btn btn-secondary btn-share" type="button" onclick="copyContactNumber()">Copy Number</button>
-          <a class="btn btn-secondary btn-call" id="contactModalCallLink" href="tel:+971000000000">Call Now</a>
-        </div>
-      </div>
-      <div class="center-actions" style="justify-content:flex-end;">
-        <button class="btn btn-primary" type="button" onclick="closeContactModal()">Close</button>
-      </div>
     </div>
   </div>
 
@@ -2109,6 +2167,10 @@
     };
     const sharePopoverState = {
       link: '',
+      open: false
+    };
+    const contactPopoverState = {
+      phone: '',
       open: false
     };
     const backendState = {
@@ -2501,19 +2563,28 @@
     }
 
     document.getElementById('confirmModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'confirmModal'));
-    document.getElementById('contactModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'contactModal'));
     document.getElementById('authModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'authModal'));
     document.addEventListener('click', event => {
       const popover = document.getElementById('sharePopover');
-      if (!popover || !sharePopoverState.open) return;
-      if (popover.contains(event.target)) return;
-      if (event.target.closest('.btn-share')) return;
-      closeSharePopover();
+      const contactPopover = document.getElementById('contactPopover');
+
+      if (popover && sharePopoverState.open) {
+        if (!popover.contains(event.target) && !event.target.closest('.btn-share')) {
+          closeSharePopover();
+        }
+      }
+
+      if (contactPopover && contactPopoverState.open) {
+        if (!contactPopover.contains(event.target) && !event.target.closest('.btn-call')) {
+          closeContactPopover();
+        }
+      }
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         closeMenuDrawer();
         closeSharePopover();
+        closeContactPopover();
       }
     });
 
@@ -2580,6 +2651,16 @@
       sharePopoverState.open = false;
     }
 
+    function closeContactPopover() {
+      const popover = document.getElementById('contactPopover');
+      if (!popover) return;
+      popover.classList.remove('active');
+      popover.style.top = '';
+      popover.style.left = '';
+      contactPopoverState.phone = '';
+      contactPopoverState.open = false;
+    }
+
     function positionSharePopover(button) {
       const popover = document.getElementById('sharePopover');
       if (!popover || !button) return;
@@ -2589,6 +2670,28 @@
       let left = rect.right - popoverWidth;
       left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
       const top = Math.max(16, rect.top - 16);
+
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top - popover.offsetHeight}px`;
+
+      const adjustedTop = parseFloat(popover.style.top);
+      if (adjustedTop < 12) {
+        popover.style.top = `${rect.bottom + 12}px`;
+        popover.style.transformOrigin = 'top right';
+      } else {
+        popover.style.transformOrigin = 'bottom right';
+      }
+    }
+
+    function positionContactPopover(button) {
+      const popover = document.getElementById('contactPopover');
+      if (!popover || !button) return;
+
+      const rect = button.getBoundingClientRect();
+      const popoverWidth = Math.min(280, window.innerWidth - 24);
+      let left = rect.right - popoverWidth;
+      left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
+      const top = Math.max(16, rect.top - 12);
 
       popover.style.left = `${left}px`;
       popover.style.top = `${top - popover.offsetHeight}px`;
@@ -2618,6 +2721,42 @@
         console.error(err);
         alert('Copy link was not completed on this device.');
       }
+    }
+
+    async function copyContactPopoverNumber() {
+      if (!contactPopoverState.phone) return;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(contactPopoverState.phone);
+          showSystemBanner('Phone number copied successfully.', 'success');
+          closeContactPopover();
+          return;
+        }
+
+        alert(contactPopoverState.phone);
+      } catch (err) {
+        console.error(err);
+        alert('Copy number was not completed on this device.');
+      }
+    }
+
+    function showContactPopover(button, phone) {
+      const cleanPhone = String(phone || '').replace(/[^\d]/g, '');
+      if (!cleanPhone) {
+        alert('Phone number is not available for this broker.');
+        return;
+      }
+
+      const popover = document.getElementById('contactPopover');
+      const number = document.getElementById('contactPopoverNumber');
+      if (!popover || !number) return;
+
+      contactPopoverState.phone = `+${cleanPhone}`;
+      contactPopoverState.open = true;
+      number.textContent = contactPopoverState.phone;
+      popover.classList.add('active');
+      positionContactPopover(button);
     }
 
     function shareEntry(button, encodedKey) {
@@ -2670,44 +2809,6 @@
 
     function closeConfirmModal() {
       document.getElementById('confirmModal').classList.remove('active');
-    }
-
-    function showContactModal(phone, broker = 'Broker') {
-      const cleanPhone = String(phone || '').replace(/[^\d]/g, '');
-      if (!cleanPhone) {
-        alert('Phone number is not available for this broker.');
-        return;
-      }
-
-      document.getElementById('contactModalTitle').textContent = `${broker} Contact`;
-      document.getElementById('contactModalNumber').textContent = `+${cleanPhone}`;
-      document.getElementById('contactModalCallLink').href = `tel:+${cleanPhone}`;
-      document.getElementById('contactModal').classList.add('active');
-    }
-
-    function closeContactModal() {
-      document.getElementById('contactModal').classList.remove('active');
-    }
-
-    async function copyContactNumber() {
-      const value = document.getElementById('contactModalNumber')?.textContent?.trim();
-      if (!value) {
-        alert('Phone number is not available to copy.');
-        return;
-      }
-
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(value);
-          alert('Phone number copied successfully.');
-          return;
-        }
-
-        alert(value);
-      } catch (err) {
-        console.error(err);
-        alert('Copy number was not completed on this device.');
-      }
     }
 
     function showBrokerPopup(title, details) {
@@ -3535,7 +3636,7 @@
                   <div class="center-actions" style="justify-content:flex-start;">
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
                     <a class="btn btn-primary btn-whatsapp tiny-btn" href="https://wa.me/${item.phone}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-                    <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactModal('${item.phone}','${String(item.broker).replace(/'/g, "\\'")}')">Call</button>
+                    <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactPopover(this, '${item.phone}')">Call</button>
                     <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry(this, '${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
                   </div>
