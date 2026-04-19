@@ -1141,23 +1141,37 @@
       font-weight: 700;
     }
 
-    .contact-popover {
+    .share-popover,
+    .contact-popover,
+    .whatsapp-popover {
       position: fixed;
       z-index: 2100;
-      width: min(280px, calc(100vw - 24px));
+      width: min(258px, calc(100vw - 24px));
       padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(56,189,248,0.18);
+      border-radius: 14px;
       background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
       box-shadow: 0 24px 56px rgba(0,0,0,0.38);
       display: none;
     }
 
-    .contact-popover.active {
+    .share-popover {
+      border: 1px solid rgba(212,175,55,0.22);
+    }
+
+    .contact-popover,
+    .whatsapp-popover {
+      border: 1px solid rgba(56,189,248,0.18);
+    }
+
+    .share-popover.active,
+    .contact-popover.active,
+    .whatsapp-popover.active {
       display: block;
     }
 
-    .contact-popover::after {
+    .share-popover::after,
+    .contact-popover::after,
+    .whatsapp-popover::after {
       content: '';
       position: absolute;
       bottom: -7px;
@@ -1166,33 +1180,58 @@
       height: 14px;
       transform: rotate(45deg);
       background: rgba(8,17,31,0.98);
+    }
+
+    .share-popover::after {
+      border-right: 1px solid rgba(212,175,55,0.22);
+      border-bottom: 1px solid rgba(212,175,55,0.22);
+    }
+
+    .contact-popover::after,
+    .whatsapp-popover::after {
       border-right: 1px solid rgba(56,189,248,0.18);
       border-bottom: 1px solid rgba(56,189,248,0.18);
     }
 
-    .contact-popover-label {
+    .share-popover-label,
+    .contact-popover-label,
+    .whatsapp-popover-label {
       display: block;
-      margin-bottom: 8px;
-      color: var(--muted);
+      margin-bottom: 7px;
+      color: var(--gold-soft);
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       font-weight: 800;
     }
 
-    .contact-popover-row {
+    .share-popover-row,
+    .contact-popover-row,
+    .whatsapp-popover-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .contact-inline-number {
+    .share-inline-link,
+    .contact-inline-number,
+    .whatsapp-inline-number {
       flex: 1 1 auto;
       color: var(--gold-soft);
-      font-size: 1rem;
+      font-size: 0.9rem;
       font-weight: 800;
       letter-spacing: 0.02em;
       word-break: break-word;
+    }
+
+    .share-inline-link {
+      min-width: 0;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
+    .share-inline-link:hover {
+      color: #f6e4a6;
     }
 
     .copy-icon-btn {
@@ -1214,6 +1253,30 @@
       transform: translateY(-1px);
       border-color: rgba(242,223,152,0.34);
       background: rgba(22,36,58,0.96);
+    }
+
+    .action-icon-btn {
+      flex: 0 0 auto;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(34,197,94,0.25);
+      background: rgba(10,31,20,0.92);
+      color: #bbf7d0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .action-icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(74,222,128,0.36);
+      background: rgba(11,41,25,0.96);
     }
 
     .copy-icon {
@@ -1274,93 +1337,6 @@
       border-color: rgba(239,68,68,0.32);
       background: rgba(69, 10, 10, 0.24);
       color: #fecaca;
-    }
-
-    .share-popover {
-      position: fixed;
-      z-index: 2100;
-      width: min(380px, calc(100vw - 24px));
-      padding: 14px;
-      border-radius: 18px;
-      border: 1px solid rgba(212,175,55,0.22);
-      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
-      box-shadow: 0 28px 70px rgba(0,0,0,0.4);
-      display: none;
-    }
-
-    .share-popover.active {
-      display: block;
-    }
-
-    .share-popover::after {
-      content: '';
-      position: absolute;
-      bottom: -7px;
-      right: 26px;
-      width: 14px;
-      height: 14px;
-      transform: rotate(45deg);
-      background: rgba(8,17,31,0.98);
-      border-right: 1px solid rgba(212,175,55,0.22);
-      border-bottom: 1px solid rgba(212,175,55,0.22);
-    }
-
-    .share-popover-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .share-popover-title {
-      color: var(--gold-soft);
-      font-size: 0.88rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .share-close-btn {
-      min-width: 34px;
-      min-height: 34px;
-      padding: 0;
-      border-radius: 10px;
-      font-size: 1.1rem;
-      line-height: 1;
-    }
-
-    .share-popover-copy {
-      color: var(--muted);
-      font-size: 0.8rem;
-      line-height: 1.5;
-      margin-bottom: 12px;
-    }
-
-    .share-link-box {
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(212,175,55,0.14);
-      background: rgba(13,24,42,0.88);
-      color: #eef4ff;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      word-break: break-all;
-      margin-bottom: 12px;
-    }
-
-    .share-popover-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .mini-copy-btn {
-      min-height: 34px;
-      padding: 7px 11px;
-      border-radius: 10px;
-      font-size: 0.76rem;
-      font-weight: 800;
     }
 
     .auth-card {
@@ -1871,7 +1847,7 @@
         <div class="card">
           <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerName">Broker</strong></div>
           <form class="form-grid" onsubmit="submitEntry(event, false)">
-            <input type="tel" id="reqPhone" placeholder="Broker WhatsApp Number (e.g. 9715XXXXXXXX)" required>
+            <input type="tel" id="reqPhone" placeholder="Broker WhatsApp Number (e.g. 058XXXXXXX or +9715XXXXXXXX)" required>
             <select id="reqPurpose" required>
               <option value="">Select Purpose</option>
               <option>Monthly Apartment Rental</option>
@@ -1932,7 +1908,7 @@
         <div class="card">
           <div class="muted" style="margin-bottom:14px;">Logged in as <strong id="loggedBrokerNameUrgent">Broker</strong></div>
           <form class="form-grid" onsubmit="submitEntry(event, true)">
-            <input type="tel" id="urgentPhone" placeholder="Broker WhatsApp Number (e.g. 9715XXXXXXXX)" required>
+            <input type="tel" id="urgentPhone" placeholder="Broker WhatsApp Number (e.g. 058XXXXXXX or +9715XXXXXXXX)" required>
             <select id="urgentPurpose" required>
               <option value="">Select Deal Type</option>
               <option>Urgent Rental Match</option>
@@ -2088,14 +2064,13 @@
   <div class="menu-backdrop" id="menuBackdrop" onclick="closeMenuDrawer()"></div>
 
   <div class="share-popover" id="sharePopover">
-    <div class="share-popover-head">
-      <div class="share-popover-title">Share Link</div>
-      <button class="btn btn-secondary share-close-btn" type="button" onclick="closeSharePopover()">&times;</button>
-    </div>
-    <div class="share-popover-copy">Copy this direct link and paste it anywhere to open the same post.</div>
-    <div class="share-link-box" id="sharePopoverLink">https://www.nomanproperties.com</div>
-    <div class="share-popover-actions">
-      <button class="btn btn-secondary btn-share mini-copy-btn" type="button" onclick="copyShareLink()">Copy Link</button>
+    <span class="share-popover-label">Share Link</span>
+    <div class="share-popover-row">
+      <a class="share-inline-link" id="sharePopoverLink" href="https://www.nomanproperties.com" target="_blank" rel="noopener noreferrer">https://www.nomanproperties.com</a>
+      <button class="copy-icon-btn" type="button" onclick="copyShareLink()" aria-label="Copy link">
+        <span class="copy-icon" aria-hidden="true"></span>
+      </button>
+      <a class="action-icon-btn" id="sharePopoverOpen" href="https://www.nomanproperties.com" target="_blank" rel="noopener noreferrer">Open</a>
     </div>
   </div>
 
@@ -2106,6 +2081,18 @@
       <button class="copy-icon-btn" type="button" onclick="copyContactPopoverNumber()" aria-label="Copy number">
         <span class="copy-icon" aria-hidden="true"></span>
       </button>
+      <a class="action-icon-btn" id="contactPopoverCall" href="tel:+971000000000">Call</a>
+    </div>
+  </div>
+
+  <div class="whatsapp-popover" id="whatsappPopover">
+    <span class="whatsapp-popover-label">WhatsApp Number</span>
+    <div class="whatsapp-popover-row">
+      <div class="whatsapp-inline-number" id="whatsappPopoverNumber">+971000000000</div>
+      <button class="copy-icon-btn" type="button" onclick="copyWhatsappPopoverNumber()" aria-label="Copy WhatsApp number">
+        <span class="copy-icon" aria-hidden="true"></span>
+      </button>
+      <a class="action-icon-btn" id="whatsappPopoverOpen" href="https://wa.me/971000000000" target="_blank" rel="noopener noreferrer">Open</a>
     </div>
   </div>
 
@@ -2132,7 +2119,7 @@
       <form class="form-grid" onsubmit="submitBrokerAccess(event)">
         <input class="full" type="text" id="authName" placeholder="Broker Name" required>
         <input class="full" type="text" id="authBrokerId" placeholder="Broker ID Number" inputmode="numeric">
-        <input class="full" type="tel" id="authPhone" placeholder="Mobile Number e.g. 9715XXXXXXXX or +9715XXXXXXXX">
+        <input class="full" type="tel" id="authPhone" placeholder="Mobile Number e.g. 058XXXXXXX or +9715XXXXXXXX">
         <input class="full" type="email" id="authEmail" placeholder="Email Address" required>
         <input class="full" type="password" id="authPassword" placeholder="Password" required>
         <div class="full center-actions" style="justify-content:flex-start;">
@@ -2170,6 +2157,10 @@
       open: false
     };
     const contactPopoverState = {
+      phone: '',
+      open: false
+    };
+    const whatsappPopoverState = {
       phone: '',
       open: false
     };
@@ -2273,7 +2264,12 @@
       try {
         const raw = localStorage.getItem('broker_accounts');
         const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
+        return Array.isArray(parsed)
+          ? parsed.map(account => ({
+              ...account,
+              phone: normalizePhoneNumber(account.phone)
+            }))
+          : [];
       } catch (err) {
         console.error(err);
         return [];
@@ -2315,11 +2311,11 @@
         notificationBadge.textContent = '0';
       }
 
-      const plainPhone = currentPhone.replace(/^\+/, '');
+      const plainPhone = normalizePhoneNumber(currentPhone);
       ['reqPhone', 'urgentPhone'].forEach(id => {
         const input = document.getElementById(id);
         if (!input) return;
-        input.value = uiState.isAuthenticated && plainPhone ? plainPhone : '';
+        input.value = uiState.isAuthenticated && plainPhone ? formatDisplayPhone(plainPhone) : '';
         input.readOnly = uiState.isAuthenticated && Boolean(plainPhone);
       });
     }
@@ -2348,7 +2344,7 @@
       target.innerHTML = `
         <div class="profile-item"><small>Name</small><strong>${uiState.isAuthenticated ? currentBrokerName || 'Broker' : 'Guest Broker'}</strong></div>
         <div class="profile-item"><small>Broker ID</small><strong>${uiState.isAuthenticated ? currentBrokerId : 'Not signed in'}</strong></div>
-        <div class="profile-item"><small>Mobile</small><strong>${uiState.isAuthenticated ? currentPhone : '--'}</strong></div>
+        <div class="profile-item"><small>Mobile</small><strong>${uiState.isAuthenticated ? formatDisplayPhone(currentPhone) : '--'}</strong></div>
         <div class="profile-item"><small>Status</small><strong>${uiState.isAuthenticated ? (approved ? 'Approved / Verified' : 'Registered') : 'Register or sign in'}</strong></div>
         <div class="profile-item"><small>Your Posts</small><strong>${uiState.isAuthenticated ? totalPosts : 0}</strong></div>
         <div class="profile-item"><small>Broker Accounts</small><strong>${storedAccounts.length}</strong></div>
@@ -2567,6 +2563,7 @@
     document.addEventListener('click', event => {
       const popover = document.getElementById('sharePopover');
       const contactPopover = document.getElementById('contactPopover');
+      const whatsappPopover = document.getElementById('whatsappPopover');
 
       if (popover && sharePopoverState.open) {
         if (!popover.contains(event.target) && !event.target.closest('.btn-share')) {
@@ -2579,12 +2576,19 @@
           closeContactPopover();
         }
       }
+
+      if (whatsappPopover && whatsappPopoverState.open) {
+        if (!whatsappPopover.contains(event.target) && !event.target.closest('.btn-whatsapp')) {
+          closeWhatsappPopover();
+        }
+      }
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         closeMenuDrawer();
         closeSharePopover();
         closeContactPopover();
+        closeWhatsappPopover();
       }
     });
 
@@ -2661,12 +2665,22 @@
       contactPopoverState.open = false;
     }
 
+    function closeWhatsappPopover() {
+      const popover = document.getElementById('whatsappPopover');
+      if (!popover) return;
+      popover.classList.remove('active');
+      popover.style.top = '';
+      popover.style.left = '';
+      whatsappPopoverState.phone = '';
+      whatsappPopoverState.open = false;
+    }
+
     function positionSharePopover(button) {
       const popover = document.getElementById('sharePopover');
       if (!popover || !button) return;
 
       const rect = button.getBoundingClientRect();
-      const popoverWidth = Math.min(380, window.innerWidth - 24);
+      const popoverWidth = Math.min(258, window.innerWidth - 24);
       let left = rect.right - popoverWidth;
       left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
       const top = Math.max(16, rect.top - 16);
@@ -2688,7 +2702,7 @@
       if (!popover || !button) return;
 
       const rect = button.getBoundingClientRect();
-      const popoverWidth = Math.min(280, window.innerWidth - 24);
+      const popoverWidth = Math.min(258, window.innerWidth - 24);
       let left = rect.right - popoverWidth;
       left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
       const top = Math.max(16, rect.top - 12);
@@ -2703,6 +2717,64 @@
       } else {
         popover.style.transformOrigin = 'bottom right';
       }
+    }
+
+    function positionWhatsappPopover(button) {
+      const popover = document.getElementById('whatsappPopover');
+      if (!popover || !button) return;
+
+      const rect = button.getBoundingClientRect();
+      const popoverWidth = Math.min(258, window.innerWidth - 24);
+      let left = rect.right - popoverWidth;
+      left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
+      const top = Math.max(16, rect.top - 12);
+
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top - popover.offsetHeight}px`;
+
+      const adjustedTop = parseFloat(popover.style.top);
+      if (adjustedTop < 12) {
+        popover.style.top = `${rect.bottom + 12}px`;
+        popover.style.transformOrigin = 'top right';
+      } else {
+        popover.style.transformOrigin = 'bottom right';
+      }
+    }
+
+    function normalizePhoneNumber(phone) {
+      let digits = String(phone || '').trim().replace(/[^\d]/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('00971')) return `971${digits.slice(5)}`;
+      if (digits.startsWith('971')) return digits;
+      if (digits.startsWith('0') && digits.length >= 9) return `971${digits.slice(1)}`;
+      if (digits.startsWith('5') && digits.length === 9) return `971${digits}`;
+      return digits;
+    }
+
+    function formatDisplayPhone(phone) {
+      const normalized = normalizePhoneNumber(phone);
+      if (!normalized) return '';
+      if (normalized.startsWith('971')) return `+${normalized}`;
+      return `+${normalized}`;
+    }
+
+    function formatPhoneFieldValue(phone) {
+      const normalized = normalizePhoneNumber(phone);
+      return normalized.startsWith('971') ? `+${normalized}` : String(phone || '').trim();
+    }
+
+    function applyPhoneFieldFormatting(input) {
+      if (!input || !String(input.value || '').trim()) return;
+      input.value = formatPhoneFieldValue(input.value);
+    }
+
+    function setupPhoneFieldFormatting() {
+      ['authPhone', 'reqPhone', 'urgentPhone'].forEach(id => {
+        const input = document.getElementById(id);
+        if (!input || input.dataset.phoneFormatReady === 'yes') return;
+        input.dataset.phoneFormatReady = 'yes';
+        input.addEventListener('blur', () => applyPhoneFieldFormatting(input));
+      });
     }
 
     async function copyShareLink() {
@@ -2741,22 +2813,68 @@
       }
     }
 
+    async function copyWhatsappPopoverNumber() {
+      if (!whatsappPopoverState.phone) return;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(whatsappPopoverState.phone);
+          showSystemBanner('WhatsApp number copied successfully.', 'success');
+          closeWhatsappPopover();
+          return;
+        }
+
+        alert(whatsappPopoverState.phone);
+      } catch (err) {
+        console.error(err);
+        alert('Copy number was not completed on this device.');
+      }
+    }
+
     function showContactPopover(button, phone) {
-      const cleanPhone = String(phone || '').replace(/[^\d]/g, '');
-      if (!cleanPhone) {
+      const normalized = normalizePhoneNumber(phone);
+      if (!normalized) {
         alert('Phone number is not available for this broker.');
         return;
       }
 
+      closeSharePopover();
+      closeWhatsappPopover();
+
       const popover = document.getElementById('contactPopover');
       const number = document.getElementById('contactPopoverNumber');
-      if (!popover || !number) return;
+      const call = document.getElementById('contactPopoverCall');
+      if (!popover || !number || !call) return;
 
-      contactPopoverState.phone = `+${cleanPhone}`;
+      contactPopoverState.phone = formatDisplayPhone(normalized);
       contactPopoverState.open = true;
       number.textContent = contactPopoverState.phone;
+      call.href = `tel:${contactPopoverState.phone}`;
       popover.classList.add('active');
       positionContactPopover(button);
+    }
+
+    function showWhatsappPopover(button, phone) {
+      const normalized = normalizePhoneNumber(phone);
+      if (!normalized) {
+        alert('WhatsApp number is not available for this broker.');
+        return;
+      }
+
+      closeSharePopover();
+      closeContactPopover();
+
+      const popover = document.getElementById('whatsappPopover');
+      const number = document.getElementById('whatsappPopoverNumber');
+      const open = document.getElementById('whatsappPopoverOpen');
+      if (!popover || !number || !open) return;
+
+      whatsappPopoverState.phone = formatDisplayPhone(normalized);
+      whatsappPopoverState.open = true;
+      number.textContent = whatsappPopoverState.phone;
+      open.href = `https://wa.me/${normalized}`;
+      popover.classList.add('active');
+      positionWhatsappPopover(button);
     }
 
     function shareEntry(button, encodedKey) {
@@ -2767,14 +2885,20 @@
         return;
       }
 
+      closeContactPopover();
+      closeWhatsappPopover();
+
       const shareLink = buildEntryLink(item);
       const popover = document.getElementById('sharePopover');
       const linkBox = document.getElementById('sharePopoverLink');
-      if (!popover || !linkBox) return;
+      const open = document.getElementById('sharePopoverOpen');
+      if (!popover || !linkBox || !open) return;
 
       sharePopoverState.link = shareLink;
       sharePopoverState.open = true;
       linkBox.textContent = shareLink;
+      linkBox.href = shareLink;
+      open.href = shareLink;
       popover.classList.add('active');
       positionSharePopover(button);
     }
@@ -2813,10 +2937,6 @@
 
     function showBrokerPopup(title, details) {
       showConfirmModal(details, title);
-    }
-
-    function normalizePhoneNumber(phone) {
-      return String(phone || '').trim().replace(/[^\d]/g, '');
     }
 
     function normalizeEmail(email) {
@@ -2880,7 +3000,7 @@
     function completeBrokerSession(account) {
       currentBrokerName = account.name;
       currentBrokerId = account.brokerId;
-      currentPhone = account.phone;
+      currentPhone = normalizePhoneNumber(account.phone);
       currentEmail = account.email;
       currentBroker = `${account.name} (ID: ${account.brokerId})`;
       uiState.isAuthenticated = true;
@@ -2895,6 +3015,7 @@
     }
 
     function restoreBrokerSession() {
+      currentPhone = normalizePhoneNumber(currentPhone);
       uiState.isAuthenticated = Boolean(currentBrokerId && currentPhone && currentEmail);
       if (uiState.isAuthenticated && blockedBrokerIds[currentBrokerId]) {
         uiState.isAuthenticated = false;
@@ -3035,7 +3156,7 @@
         }
 
         if (!/^\d{8,15}$/.test(phone)) {
-          setAuthStatus('Please enter a valid mobile number, for example 9715XXXXXXXX.', 'error');
+          setAuthStatus('Please enter a valid mobile number, for example 058XXXXXXX or +9715XXXXXXXX.', 'error');
           return;
         }
 
@@ -3080,7 +3201,7 @@
           Message: 'Broker account created successfully.',
           Name: name,
           'Broker ID': brokerId,
-          Mobile: phone,
+          Mobile: formatDisplayPhone(phone),
           Email: email,
           Password: 'Saved successfully'
         });
@@ -3104,7 +3225,7 @@
       }
 
       if (phone && !/^\d{8,15}$/.test(phone)) {
-        setAuthStatus('Please enter a valid mobile number, for example 9715XXXXXXXX.', 'error');
+        setAuthStatus('Please enter a valid mobile number, for example 058XXXXXXX or +9715XXXXXXXX.', 'error');
         return;
       }
 
@@ -3134,7 +3255,7 @@
         Message: 'Welcome back. You have signed in successfully.',
         Name: account.name,
         'Broker ID': account.brokerId,
-        Mobile: account.phone,
+        Mobile: formatDisplayPhone(account.phone),
         Email: account.email
       });
       openSection('post-requirement');
@@ -3225,7 +3346,7 @@
       const locValue = document.getElementById('reqLocation').value;
       return {
         broker: currentBroker,
-        phone: document.getElementById('reqPhone').value.trim(),
+        phone: normalizePhoneNumber(document.getElementById('reqPhone').value),
         purpose: document.getElementById('reqPurpose').value,
         category: document.getElementById('reqCategory').value,
         location: locValue === 'manual' ? document.getElementById('reqLocationManual').value.trim() : locValue,
@@ -3289,7 +3410,7 @@
       const comment = document.getElementById('urgentNotes').value.trim();
       return {
         broker: currentBroker,
-        phone: document.getElementById('urgentPhone').value.trim(),
+        phone: normalizePhoneNumber(document.getElementById('urgentPhone').value),
         purpose: document.getElementById('urgentPurpose').value,
         category: document.getElementById('urgentCategory').value,
         location: building ? `${area} - ${building}` : area,
@@ -3345,7 +3466,7 @@
       const entry = isUrgent ? buildEntryFromUrgent() : buildEntryFromStandard();
 
       if (!entry.phone || !validatePhone(entry.phone)) {
-        alert('Enter a valid WhatsApp number without + or spaces, e.g. 9715XXXXXXXX');
+        alert('Enter a valid UAE WhatsApp number, for example 058XXXXXXX or +9715XXXXXXXX.');
         return;
       }
 
@@ -3635,7 +3756,7 @@
                 <td>
                   <div class="center-actions" style="justify-content:flex-start;">
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
-                    <a class="btn btn-primary btn-whatsapp tiny-btn" href="https://wa.me/${item.phone}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+                    <button class="btn btn-primary btn-whatsapp tiny-btn" type="button" onclick="showWhatsappPopover(this, '${item.phone}')">WhatsApp</button>
                     <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactPopover(this, '${item.phone}')">Call</button>
                     <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry(this, '${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
@@ -3700,6 +3821,7 @@
     }
 
     hydrateSharedEntryStateFromUrl();
+    setupPhoneFieldFormatting();
     updateLoggedBroker();
     setAuthMode('signin');
     loadLocalEnhancements();
