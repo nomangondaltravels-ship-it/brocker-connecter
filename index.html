@@ -1036,6 +1036,16 @@
       border-radius: 10px;
     }
 
+    .compact-table tr.shared-entry-focus {
+      box-shadow: inset 0 0 0 1px rgba(242,223,152,0.2);
+      background: linear-gradient(180deg, rgba(26,48,70,0.72), rgba(13,25,40,0.84));
+    }
+
+    .compact-table tr.shared-entry-focus td {
+      border-top-color: rgba(242,223,152,0.2);
+      border-bottom-color: rgba(242,223,152,0.2);
+    }
+
     .filter-label {
       display: block;
       color: var(--muted);
@@ -1938,6 +1948,10 @@
     let brokerApprovals = {};
     let blockedBrokerIds = {};
     let seenEntryKeys = [];
+    const sharedEntryState = {
+      encodedKey: '',
+      section: ''
+    };
     const backendState = {
       dealsTableReady: true
     };
@@ -1976,6 +1990,25 @@
         item.budget,
         item.postedAt
       ].join('|');
+    }
+
+    function getEntrySection(item) {
+      return item.urgent || item.distress ? 'distress' : 'requirements';
+    }
+
+    function hydrateSharedEntryStateFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const entry = params.get('entry') || '';
+      const section = params.get('section') || '';
+      sharedEntryState.encodedKey = entry ? encodeURIComponent(entry) : '';
+      sharedEntryState.section = ['requirements', 'distress'].includes(section) ? section : '';
+    }
+
+    function buildEntryLink(item) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('section', getEntrySection(item));
+      url.searchParams.set('entry', getEntryKey(item));
+      return url.toString();
     }
 
     function getEntryStatus(item) {
@@ -2369,24 +2402,6 @@
       return `${days}d ago`;
     }
 
-    function buildEntryShareText(item) {
-      const lines = [
-        'Broker Connector',
-        `${item.urgent ? 'Urgent Deal' : 'Requirement'}: ${item.purpose} / ${item.category}`,
-        `Location: ${item.location}`,
-        `Budget: ${item.budget}`,
-        `Broker: ${item.broker}`,
-        `Contact: +${item.phone}`
-      ];
-
-      if (item.notes) {
-        lines.push(`Notes: ${String(item.notes).trim()}`);
-      }
-
-      lines.push('Open the broker exchange at https://www.nomanproperties.com');
-      return lines.join('\n');
-    }
-
     async function shareEntry(encodedKey) {
       const key = decodeURIComponent(encodedKey);
       const item = entries.find(entry => getEntryKey(entry) === key);
@@ -2395,28 +2410,41 @@
         return;
       }
 
-      const shareText = buildEntryShareText(item);
+      const shareLink = buildEntryLink(item);
 
       try {
-        if (navigator.share) {
-          await navigator.share({
-            title: 'Broker Connector',
-            text: shareText
-          });
-          return;
-        }
-
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(shareText);
-          alert('Post details copied. You can now paste and share them.');
+          await navigator.clipboard.writeText(shareLink);
+          alert('Direct link copied. You can now paste and open this post from the link.');
           return;
         }
 
-        alert(shareText);
+        alert(shareLink);
       } catch (err) {
         console.error(err);
-        alert('Share action was cancelled or unavailable on this device.');
+        alert('Copy link was not completed on this device.');
       }
+    }
+
+    function revealSharedEntry() {
+      if (!sharedEntryState.encodedKey) return;
+
+      const match = entries.find(item => encodeURIComponent(getEntryKey(item)) === sharedEntryState.encodedKey);
+      if (!match) return;
+
+      const targetSection = sharedEntryState.section || getEntrySection(match);
+      if (uiState.activeSection !== targetSection) {
+        openSection(targetSection);
+      }
+
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.shared-entry-focus').forEach(node => node.classList.remove('shared-entry-focus'));
+        const row = Array.from(document.querySelectorAll('[data-entry-key]')).find(node => node.dataset.entryKey === sharedEntryState.encodedKey);
+        if (!row) return;
+        row.classList.add('shared-entry-focus');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        showSystemBanner('Shared post opened from copied link.', 'success');
+      });
     }
 
     function showConfirmModal(data, title = 'Submission Completed') {
@@ -2794,7 +2822,7 @@
 
       const shouldShow =
         Boolean(uiState.bannerMessage) &&
-        ['home', 'urgent-deal', 'distress'].includes(uiState.activeSection);
+        ['home', 'urgent-deal', 'distress', 'requirements'].includes(uiState.activeSection);
 
       if (!shouldShow) {
         banner.textContent = '';
@@ -3106,6 +3134,7 @@
         updateNotificationPanel();
         renderAdminReview();
         renderBoards();
+        revealSharedEntry();
       } catch (err) {
         console.error('Load error:', err);
         backendState.dealsTableReady = false;
@@ -3121,6 +3150,7 @@
         updateNotificationPanel();
         renderAdminReview();
         renderBoards();
+        revealSharedEntry();
       }
     }
 
@@ -3226,7 +3256,7 @@
           </thead>
           <tbody>
             ${sourceEntries.map(item => `
-              <tr>
+              <tr data-entry-key="${encodeURIComponent(getEntryKey(item))}">
                 <td>
                   <div class="broker-name">${item.broker}</div>
                   <div class="broker-sub">Posted ${formatPostedTime(item.postedAt)}</div>
@@ -3316,6 +3346,7 @@
       }
     }
 
+    hydrateSharedEntryStateFromUrl();
     updateLoggedBroker();
     setAuthMode('signin');
     loadLocalEnhancements();
