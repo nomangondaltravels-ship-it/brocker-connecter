@@ -1141,6 +1141,42 @@
       font-weight: 700;
     }
 
+    .contact-modal-copy {
+      color: var(--muted);
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+
+    .contact-call-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: linear-gradient(180deg, rgba(18,30,52,0.96), rgba(10,19,34,0.98));
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .contact-call-box small {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+    }
+
+    .contact-call-box strong {
+      display: block;
+      color: var(--gold-soft);
+      font-size: 1.2rem;
+      letter-spacing: 0.03em;
+      word-break: break-word;
+    }
+
     .center-actions {
       display: flex;
       justify-content: center;
@@ -1904,6 +1940,26 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="contactModal">
+    <div class="modal-card">
+      <h3 id="contactModalTitle">Broker Contact</h3>
+      <p class="contact-modal-copy">View the broker number clearly, copy it instantly, or call directly from here.</p>
+      <div class="contact-call-box">
+        <div>
+          <small>Phone Number</small>
+          <strong id="contactModalNumber">+971000000000</strong>
+        </div>
+        <div class="center-actions" style="justify-content:flex-start;">
+          <button class="btn btn-secondary btn-share" type="button" onclick="copyContactNumber()">Copy Number</button>
+          <a class="btn btn-secondary btn-call" id="contactModalCallLink" href="tel:+971000000000">Call Now</a>
+        </div>
+      </div>
+      <div class="center-actions" style="justify-content:flex-end;">
+        <button class="btn btn-primary" type="button" onclick="closeContactModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="authModal">
     <div class="auth-card">
       <div class="auth-head">
@@ -2342,6 +2398,7 @@
     }
 
     document.getElementById('confirmModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'confirmModal'));
+    document.getElementById('contactModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'contactModal'));
     document.getElementById('authModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'authModal'));
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
@@ -2456,6 +2513,44 @@
 
     function closeConfirmModal() {
       document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    function showContactModal(phone, broker = 'Broker') {
+      const cleanPhone = String(phone || '').replace(/[^\d]/g, '');
+      if (!cleanPhone) {
+        alert('Phone number is not available for this broker.');
+        return;
+      }
+
+      document.getElementById('contactModalTitle').textContent = `${broker} Contact`;
+      document.getElementById('contactModalNumber').textContent = `+${cleanPhone}`;
+      document.getElementById('contactModalCallLink').href = `tel:+${cleanPhone}`;
+      document.getElementById('contactModal').classList.add('active');
+    }
+
+    function closeContactModal() {
+      document.getElementById('contactModal').classList.remove('active');
+    }
+
+    async function copyContactNumber() {
+      const value = document.getElementById('contactModalNumber')?.textContent?.trim();
+      if (!value) {
+        alert('Phone number is not available to copy.');
+        return;
+      }
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(value);
+          alert('Phone number copied successfully.');
+          return;
+        }
+
+        alert(value);
+      } catch (err) {
+        console.error(err);
+        alert('Copy number was not completed on this device.');
+      }
     }
 
     function showBrokerPopup(title, details) {
@@ -3283,7 +3378,7 @@
                   <div class="center-actions" style="justify-content:flex-start;">
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
                     <a class="btn btn-primary btn-whatsapp tiny-btn" href="https://wa.me/${item.phone}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-                    <a class="btn btn-secondary btn-call tiny-btn" href="tel:+${item.phone}">Call</a>
+                    <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactModal('${item.phone}','${String(item.broker).replace(/'/g, "\\'")}')">Call</button>
                     <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry('${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
                   </div>
