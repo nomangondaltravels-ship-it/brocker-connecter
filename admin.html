@@ -304,7 +304,7 @@
     <div class="login-card">
       <h2>Admin Login</h2>
       <p>Use the admin username and password to open the separate review portal connected with the main website and the same Supabase project.</p>
-      <div class="helper">Testing credentials are set inside this page. Change them before any live launch.</div>
+      <div class="helper">Admin login and delete actions use secure Vercel server functions. Add the required Vercel environment variables before using delete actions on the live site.</div>
       <div class="status" id="loginStatus"></div>
       <form class="form-grid" onsubmit="loginAdmin(event)">
         <input type="text" id="adminUsername" placeholder="Admin Username" required>
@@ -345,7 +345,7 @@
                   <h4>Portal Security</h4>
                   <span class="badge gold">Testing</span>
                 </div>
-                <p>This username/password login is suitable for testing. For live production, move admin auth to secure server-side or Supabase auth.</p>
+                <p>Admin access and delete actions should run through secure server-side checks. Keep this page as the dashboard UI only.</p>
               </div>
               <div class="item">
                 <div class="item-head">
@@ -398,8 +398,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const ADMIN_USERNAME = 'admin';
-    const ADMIN_PASSWORD = 'BrokerAdmin@123';
     const ADMIN_SESSION_KEY = 'admin_portal_session';
 
     const supabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
@@ -449,6 +447,10 @@
       target.className = `status active ${tone}`.trim();
     }
 
+    function getAdminToken() {
+      return sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
+    }
+
     function showDashboard() {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('dashboardView').classList.add('active');
@@ -461,20 +463,35 @@
       document.getElementById('logoutBtn').style.display = 'none';
     }
 
-    function loginAdmin(event) {
+    async function loginAdmin(event) {
       event.preventDefault();
       const username = document.getElementById('adminUsername').value.trim();
       const password = document.getElementById('adminPassword').value;
 
-      if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-        setLoginStatus('Invalid admin username or password.', 'error');
-        return;
-      }
+      try {
+        const response = await fetch('/api/admin-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, password })
+        });
 
-      sessionStorage.setItem(ADMIN_SESSION_KEY, 'active');
-      setLoginStatus('');
-      showDashboard();
-      loadAdminData();
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || !result?.token) {
+          setLoginStatus(result?.message || 'Invalid admin username or password.', 'error');
+          return;
+        }
+
+        sessionStorage.setItem(ADMIN_SESSION_KEY, result.token);
+        setLoginStatus('');
+        showDashboard();
+        loadAdminData();
+      } catch (error) {
+        console.error(error);
+        setLoginStatus('Admin login is unavailable right now. Make sure the Vercel API functions are deployed and environment variables are set.', 'error');
+      }
     }
 
     function logoutAdmin() {
@@ -483,7 +500,7 @@
     }
 
     function restoreAdminSession() {
-      if (sessionStorage.getItem(ADMIN_SESSION_KEY) === 'active') {
+      if (sessionStorage.getItem(ADMIN_SESSION_KEY)) {
         showDashboard();
         loadAdminData();
       } else {
@@ -588,10 +605,41 @@
 
     function getDeleteErrorMessage(error, entityLabel) {
       const message = String(error?.message || error || '');
-      if (message.toLowerCase().includes('permission denied') || String(error?.code || '') === '42501') {
-        return `Delete failed for ${entityLabel}. Current Supabase browser permissions do not allow delete. Add an admin delete policy or delete from the Supabase dashboard.`;
+      const lower = message.toLowerCase();
+      if (lower.includes('token') || lower.includes('admin login')) {
+        return `Delete failed for ${entityLabel}. Please sign in to the admin portal again.`;
+      }
+      if (lower.includes('environment variable') || lower.includes('service role')) {
+        return `Delete failed for ${entityLabel}. Required Vercel environment variables are missing for secure admin delete.`;
+      }
+      if (lower.includes('permission denied') || String(error?.code || '') === '42501') {
+        return `Delete failed for ${entityLabel}. The secure admin delete route could not complete the Supabase request.`;
       }
       return `Delete failed for ${entityLabel}: ${message || 'Unknown error'}`;
+    }
+
+    async function requestAdminDelete(payload) {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result?.message || 'Delete request failed.');
+      }
+
+      return result;
     }
 
     async function deleteRequirementAt(index) {
@@ -601,14 +649,17 @@
       const confirmed = window.confirm(`Delete this requirement from ${item.broker}?`);
       if (!confirmed) return;
 
-      const { error } = await supabaseClient
-        .from('requirements')
-        .delete()
-        .eq('created_at', item.postedAt)
-        .eq('broker_name', item.broker)
-        .eq('phone', item.phone);
-
-      if (error) {
+      try {
+        await requestAdminDelete({
+          table: 'requirements',
+          scope: 'single',
+          match: {
+            created_at: item.postedAt,
+            broker_name: item.broker,
+            phone: item.phone
+          }
+        });
+      } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'the requirement'), 'error');
         return;
       }
@@ -624,14 +675,17 @@
       const confirmed = window.confirm(`Delete this property / urgent deal from ${item.broker}?`);
       if (!confirmed) return;
 
-      const { error } = await supabaseClient
-        .from('deals')
-        .delete()
-        .eq('created_at', item.postedAt)
-        .eq('broker_name', item.broker)
-        .eq('phone', item.phone);
-
-      if (error) {
+      try {
+        await requestAdminDelete({
+          table: 'deals',
+          scope: 'single',
+          match: {
+            created_at: item.postedAt,
+            broker_name: item.broker,
+            phone: item.phone
+          }
+        });
+      } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'the property / deal'), 'error');
         return;
       }
@@ -649,12 +703,12 @@
       const confirmed = window.confirm('Delete all requirements from Supabase?');
       if (!confirmed) return;
 
-      const { error } = await supabaseClient
-        .from('requirements')
-        .delete()
-        .neq('created_at', '');
-
-      if (error) {
+      try {
+        await requestAdminDelete({
+          table: 'requirements',
+          scope: 'all'
+        });
+      } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'all requirements'), 'error');
         return;
       }
@@ -672,12 +726,12 @@
       const confirmed = window.confirm('Delete all properties / urgent deals from Supabase?');
       if (!confirmed) return;
 
-      const { error } = await supabaseClient
-        .from('deals')
-        .delete()
-        .neq('created_at', '');
-
-      if (error) {
+      try {
+        await requestAdminDelete({
+          table: 'deals',
+          scope: 'all'
+        });
+      } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'all properties / deals'), 'error');
         return;
       }
