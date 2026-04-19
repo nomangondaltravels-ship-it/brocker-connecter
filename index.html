@@ -1672,6 +1672,7 @@
     let postStatusOverrides = {};
     let matchRequests = {};
     let brokerApprovals = {};
+    let blockedBrokerIds = {};
     let seenEntryKeys = [];
     const backendState = {
       dealsTableReady: true
@@ -1715,7 +1716,8 @@
 
     function getEntryStatus(item) {
       const key = getEntryKey(item);
-      return postStatusOverrides[key] || item.status || 'open';
+      const status = postStatusOverrides[key] || item.status || 'open';
+      return status === 'pending' ? 'open' : status;
     }
 
     function saveStatusOverride(key, status) {
@@ -1728,10 +1730,24 @@
       return Array.isArray(matchRequests[key]) ? matchRequests[key].length : 0;
     }
 
+    function getBrokerAccountForEntry(item) {
+      return getStoredBrokerAccounts().find(acc =>
+        (acc.phone && item.phone && acc.phone === item.phone) ||
+        (acc.name && String(item.broker || '').includes(acc.name))
+      ) || null;
+    }
+
+    function isBrokerBlockedAccount(account) {
+      return Boolean(account && blockedBrokerIds[account.brokerId]);
+    }
+
+    function isBrokerBlockedForEntry(item) {
+      return isBrokerBlockedAccount(getBrokerAccountForEntry(item));
+    }
+
     function isBrokerApprovedForEntry(item) {
-      const account = getStoredBrokerAccounts().find(acc =>
-        acc.name && String(item.broker || '').includes(acc.name)
-      );
+      const account = getBrokerAccountForEntry(item);
+      if (isBrokerBlockedAccount(account)) return false;
       return Boolean(item.verified || (account && brokerApprovals[account.brokerId]));
     }
 
@@ -1827,6 +1843,7 @@
       if (!homeFeed || !matchSignals) return;
 
       const latestFeed = [...entries]
+        .filter(item => !isBrokerBlockedForEntry(item))
         .sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt))
         .slice(0, 5);
 
@@ -1854,6 +1871,7 @@
       }
 
       const hotSignals = entries
+        .filter(item => !isBrokerBlockedForEntry(item))
         .filter(item => item.urgent || item.distress)
         .sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt))
         .slice(0, 4);
@@ -1887,7 +1905,9 @@
         .filter(item => getPostedAge(item.postedAt) < 7 * 86400000)
         .slice(0, 3);
 
-      const unseen = entries.filter(item => !seenEntryKeys.includes(getEntryKey(item)));
+      const unseen = entries
+        .filter(item => !isBrokerBlockedForEntry(item))
+        .filter(item => !seenEntryKeys.includes(getEntryKey(item)));
       const totalCount = recentMatches.length + unseen.length;
 
       countCard.textContent = `${totalCount} new`;
@@ -1946,13 +1966,14 @@
       const accounts = getStoredBrokerAccounts();
       brokerList.innerHTML = accounts.length ? accounts.map(account => {
         const approved = Boolean(brokerApprovals[account.brokerId]);
+        const blocked = Boolean(blockedBrokerIds[account.brokerId]);
         return `
           <div class="admin-item">
             <h4>${account.name} (${account.brokerId})</h4>
             <p>${account.phone} &middot; ${account.email}</p>
             <div class="center-actions" style="justify-content:flex-start;">
-              <span class="status-pill ${approved ? 'matched' : 'open'}">${approved ? 'Approved' : 'Pending'}</span>
-              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Approval' : 'Approve Broker'}</button>
+              <span class="status-pill ${blocked ? 'expired' : approved ? 'matched' : 'open'}">${blocked ? 'Blocked' : approved ? 'Verified' : 'Pending'}</span>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
             </div>
           </div>
         `;
@@ -2180,6 +2201,20 @@
 
     function restoreBrokerSession() {
       uiState.isAuthenticated = Boolean(currentBrokerId && currentPhone && currentEmail);
+      if (uiState.isAuthenticated && blockedBrokerIds[currentBrokerId]) {
+        uiState.isAuthenticated = false;
+        currentBroker = 'Broker';
+        currentBrokerName = '';
+        currentBrokerId = '';
+        currentPhone = '';
+        currentEmail = '';
+        localStorage.removeItem('current_broker');
+        localStorage.removeItem('current_broker_name');
+        localStorage.removeItem('current_broker_id');
+        localStorage.removeItem('current_phone');
+        localStorage.removeItem('current_email');
+        showSystemBanner('Your broker account is blocked. Please contact admin support.', 'error');
+      }
       updateLoggedBroker();
       updateBrokerProfileCard();
     }
@@ -2189,6 +2224,7 @@
       postStatusOverrides = safeJsonRead('post_status_overrides', {});
       matchRequests = safeJsonRead('match_requests', {});
       brokerApprovals = safeJsonRead('broker_approvals', {});
+      blockedBrokerIds = safeJsonRead('blocked_brokers', {});
       seenEntryKeys = safeJsonRead('seen_entry_keys', []);
       const note = document.getElementById('savedFilterNote');
       if (note) {
@@ -2238,6 +2274,10 @@
     }
 
     function toggleBrokerApproval(brokerId) {
+      if (blockedBrokerIds[brokerId]) {
+        delete blockedBrokerIds[brokerId];
+        safeJsonWrite('blocked_brokers', blockedBrokerIds);
+      }
       brokerApprovals[brokerId] = !brokerApprovals[brokerId];
       safeJsonWrite('broker_approvals', brokerApprovals);
       updateBrokerProfileCard();
@@ -2323,6 +2363,11 @@
           return;
         }
 
+        if (blockedBrokerIds[brokerId]) {
+          setAuthStatus('This broker account is blocked. Please contact admin support.', 'error');
+          return;
+        }
+
         const account = {
           name,
           brokerId,
@@ -2380,6 +2425,11 @@
 
       if (account.password !== password) {
         setAuthStatus('The password is incorrect.', 'error');
+        return;
+      }
+
+      if (blockedBrokerIds[account.brokerId]) {
+        setAuthStatus('This broker account is blocked. Please contact admin support.', 'error');
         return;
       }
 
@@ -2592,6 +2642,12 @@
         return;
       }
 
+      if (blockedBrokerIds[currentBrokerId]) {
+        await logoutBroker();
+        alert('Your broker account is blocked. Please contact admin support.');
+        return;
+      }
+
       const entry = isUrgent ? buildEntryFromUrgent() : buildEntryFromStandard();
 
       if (!entry.phone || !validatePhone(entry.phone)) {
@@ -2622,7 +2678,7 @@
               notes: entry.notes,
               urgent: entry.urgent,
               distress: entry.distress,
-              status: 'pending',
+              status: 'open',
               created_at: entry.postedAt
             }
           ]);
@@ -2639,7 +2695,7 @@
               notes: entry.notes,
               verified: entry.verified,
               premium: entry.premium,
-              status: 'pending',
+              status: 'open',
               created_at: entry.postedAt
             }
           ]);
@@ -2757,7 +2813,7 @@
     }
 
     function getRequirementEntries() {
-      return entries.filter(item => !item.urgent);
+      return entries.filter(item => !item.urgent && !isBrokerBlockedForEntry(item));
     }
 
     function populateSelectOptions(selectId, values, defaultLabel) {
@@ -2899,7 +2955,7 @@
 
     function renderBoards() {
       const all = getFilteredEntries();
-      const distress = entries.filter(item => item.distress || item.urgent);
+      const distress = entries.filter(item => !isBrokerBlockedForEntry(item) && (item.distress || item.urgent));
       const requirementsMeta = document.getElementById('requirementsMeta');
       if (requirementsMeta) {
         requirementsMeta.textContent = `${all.length} requirement${all.length === 1 ? '' : 's'} found`;

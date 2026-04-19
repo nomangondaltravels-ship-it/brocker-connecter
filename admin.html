@@ -354,7 +354,7 @@
         <div class="grid-2">
           <div class="card">
             <h3>Broker Approvals</h3>
-            <p>Approve or remove verified status for registered brokers.</p>
+            <p>Verify genuine brokers, block spam brokers, and control who can keep posting.</p>
             <div class="list" id="brokerApprovalList">
               <div class="item"><p>No broker accounts available yet.</p></div>
             </div>
@@ -450,6 +450,7 @@
     let deals = [];
     let complaints = [];
     let brokerApprovals = {};
+    let blockedBrokerIds = {};
     let postStatusOverrides = {};
 
     function safeJsonRead(key, fallback) {
@@ -564,7 +565,8 @@
 
     function getPostStatus(item, urgent = false) {
       const key = getEntryKey(item, urgent);
-      return postStatusOverrides[key] || item.status || 'open';
+      const status = postStatusOverrides[key] || item.status || 'open';
+      return status === 'pending' ? 'open' : status;
     }
 
     function savePostStatus(item, urgent, status) {
@@ -576,6 +578,7 @@
 
     function loadLocalAdminState() {
       brokerApprovals = safeJsonRead('broker_approvals', {});
+      blockedBrokerIds = safeJsonRead('blocked_brokers', {});
       postStatusOverrides = safeJsonRead('post_status_overrides', {});
     }
 
@@ -614,6 +617,9 @@
       if (reqError) console.error(reqError);
       if (dealError) console.error(dealError);
       if (compError) console.error(compError);
+      if (reqError || dealError || compError) {
+        setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
+      }
 
       requirements = (reqData || []).map(item => ({
         broker: item.broker_name,
@@ -625,7 +631,7 @@
         notes: item.notes,
         verified: item.verified,
         premium: item.premium,
-        status: item.status || 'open',
+        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
         postedAt: item.created_at || null
       }));
 
@@ -639,7 +645,7 @@
         notes: item.notes,
         urgent: item.urgent,
         distress: item.distress,
-        status: item.status || 'open',
+        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
         postedAt: item.created_at || null
       }));
 
@@ -659,12 +665,55 @@
     }
 
     function toggleBrokerApproval(brokerId) {
+      if (blockedBrokerIds[brokerId]) {
+        delete blockedBrokerIds[brokerId];
+        safeJsonWrite('blocked_brokers', blockedBrokerIds);
+      }
       brokerApprovals[brokerId] = !brokerApprovals[brokerId];
       safeJsonWrite('broker_approvals', brokerApprovals);
       const accounts = safeJsonRead('broker_accounts', []);
       renderStats(accounts);
       renderBrokerApprovals(accounts);
-      setAdminStatus('Broker approval status updated successfully.', 'success');
+      setAdminStatus('Broker verification status updated successfully.', 'success');
+    }
+
+    function toggleBrokerBlock(brokerId) {
+      const accounts = safeJsonRead('broker_accounts', []);
+      const account = accounts.find(item => item.brokerId === brokerId);
+      if (!account) {
+        setAdminStatus('Broker account not found.', 'error');
+        return;
+      }
+
+      const willBlock = !blockedBrokerIds[brokerId];
+      const confirmed = window.confirm(
+        willBlock
+          ? `Block broker ${account.name} (${brokerId})? They will no longer be able to sign in or post.`
+          : `Unblock broker ${account.name} (${brokerId})?`
+      );
+      if (!confirmed) return;
+
+      if (willBlock) {
+        blockedBrokerIds[brokerId] = true;
+        delete brokerApprovals[brokerId];
+      } else {
+        delete blockedBrokerIds[brokerId];
+      }
+
+      safeJsonWrite('blocked_brokers', blockedBrokerIds);
+      safeJsonWrite('broker_approvals', brokerApprovals);
+
+      if (localStorage.getItem('current_broker_id') === brokerId) {
+        localStorage.removeItem('current_broker');
+        localStorage.removeItem('current_broker_name');
+        localStorage.removeItem('current_broker_id');
+        localStorage.removeItem('current_phone');
+        localStorage.removeItem('current_email');
+      }
+
+      renderStats(accounts);
+      renderBrokerApprovals(accounts);
+      setAdminStatus(willBlock ? 'Broker blocked successfully.' : 'Broker unblocked successfully.', 'success');
     }
 
     function getDeleteErrorMessage(error, entityLabel) {
@@ -899,8 +948,10 @@
 
       const updatedAccounts = accounts.filter(item => item.brokerId !== brokerId);
       delete brokerApprovals[brokerId];
+      delete blockedBrokerIds[brokerId];
       safeJsonWrite('broker_accounts', updatedAccounts);
       safeJsonWrite('broker_approvals', brokerApprovals);
+      safeJsonWrite('blocked_brokers', blockedBrokerIds);
 
       if (localStorage.getItem('current_broker_id') === brokerId) {
         localStorage.removeItem('current_broker');
@@ -924,15 +975,17 @@
 
       target.innerHTML = accounts.map(account => {
         const approved = Boolean(brokerApprovals[account.brokerId]);
+        const blocked = Boolean(blockedBrokerIds[account.brokerId]);
         return `
           <div class="item">
             <div class="item-head">
               <h4>${account.name} (${account.brokerId})</h4>
-              <span class="badge ${approved ? 'blue' : 'gold'}">${approved ? 'Approved' : 'Pending'}</span>
+              <span class="badge ${blocked ? 'red' : approved ? 'blue' : 'gold'}">${blocked ? 'Blocked' : approved ? 'Verified' : 'Pending'}</span>
             </div>
             <p>${account.phone} &middot; ${account.email}</p>
             <div class="action-row">
-              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Approval' : 'Approve Broker'}</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
+              <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${account.brokerId}')">${blocked ? 'Unblock Broker' : 'Block Broker'}</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${account.brokerId}')">Change Password</button>
               <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${account.brokerId}')">Delete Broker</button>
             </div>
