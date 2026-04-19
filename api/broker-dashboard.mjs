@@ -24,7 +24,8 @@ function getLeadPayload(body, brokerId) {
     location: normalizeText(body?.location),
     budget: normalizeText(body?.budget),
     notes: normalizeText(body?.notes),
-    public_general_notes: normalizeText(body?.publicGeneralNotes || body?.notes),
+    // Public note stays separate from the broker's private CRM note.
+    public_general_notes: normalizeText(body?.publicGeneralNotes),
     source: normalizeText(body?.source),
     priority: normalizeText(body?.priority || 'normal').toLowerCase(),
     status: normalizeText(body?.status || 'new').toLowerCase(),

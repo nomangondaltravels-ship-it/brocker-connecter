@@ -278,7 +278,9 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const category = normalizeText(item.category);
   const location = normalizeText(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
-  const generalNotes = normalizeText(item.public_notes || item.public_general_notes || item.notes || item.description);
+  const generalNotes = isLead
+    ? normalizeText(item.public_general_notes)
+    : normalizeText(item.public_notes || item.description);
   const propertyType = normalizeText(item.property_type || item.lead_type || '');
   const status = normalizeText(item.status || 'active').toLowerCase();
   const isDistress = normalizeBool(item.is_distress);
