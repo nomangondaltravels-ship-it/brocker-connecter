@@ -1208,6 +1208,93 @@
       color: #fecaca;
     }
 
+    .share-popover {
+      position: fixed;
+      z-index: 2100;
+      width: min(380px, calc(100vw - 24px));
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(212,175,55,0.22);
+      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
+      box-shadow: 0 28px 70px rgba(0,0,0,0.4);
+      display: none;
+    }
+
+    .share-popover.active {
+      display: block;
+    }
+
+    .share-popover::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      right: 26px;
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: rgba(8,17,31,0.98);
+      border-right: 1px solid rgba(212,175,55,0.22);
+      border-bottom: 1px solid rgba(212,175,55,0.22);
+    }
+
+    .share-popover-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .share-popover-title {
+      color: var(--gold-soft);
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .share-close-btn {
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .share-popover-copy {
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .share-link-box {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: rgba(13,24,42,0.88);
+      color: #eef4ff;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      word-break: break-all;
+      margin-bottom: 12px;
+    }
+
+    .share-popover-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .mini-copy-btn {
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 10px;
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
     .auth-card {
       width: min(620px, 100%);
       background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
@@ -1932,6 +2019,18 @@
 
   <div class="menu-backdrop" id="menuBackdrop" onclick="closeMenuDrawer()"></div>
 
+  <div class="share-popover" id="sharePopover">
+    <div class="share-popover-head">
+      <div class="share-popover-title">Share Link</div>
+      <button class="btn btn-secondary share-close-btn" type="button" onclick="closeSharePopover()">&times;</button>
+    </div>
+    <div class="share-popover-copy">Copy this direct link and paste it anywhere to open the same post.</div>
+    <div class="share-link-box" id="sharePopoverLink">https://www.nomanproperties.com</div>
+    <div class="share-popover-actions">
+      <button class="btn btn-secondary btn-share mini-copy-btn" type="button" onclick="copyShareLink()">Copy Link</button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="confirmModal">
     <div class="modal-card">
       <h3 id="confirmModalTitle">Submission Completed</h3>
@@ -2007,6 +2106,10 @@
     const sharedEntryState = {
       encodedKey: '',
       section: ''
+    };
+    const sharePopoverState = {
+      link: '',
+      open: false
     };
     const backendState = {
       dealsTableReady: true
@@ -2400,9 +2503,17 @@
     document.getElementById('confirmModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'confirmModal'));
     document.getElementById('contactModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'contactModal'));
     document.getElementById('authModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'authModal'));
+    document.addEventListener('click', event => {
+      const popover = document.getElementById('sharePopover');
+      if (!popover || !sharePopoverState.open) return;
+      if (popover.contains(event.target)) return;
+      if (event.target.closest('.btn-share')) return;
+      closeSharePopover();
+    });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         closeMenuDrawer();
+        closeSharePopover();
       }
     });
 
@@ -2459,7 +2570,57 @@
       return `${days}d ago`;
     }
 
-    async function shareEntry(encodedKey) {
+    function closeSharePopover() {
+      const popover = document.getElementById('sharePopover');
+      if (!popover) return;
+      popover.classList.remove('active');
+      popover.style.top = '';
+      popover.style.left = '';
+      sharePopoverState.link = '';
+      sharePopoverState.open = false;
+    }
+
+    function positionSharePopover(button) {
+      const popover = document.getElementById('sharePopover');
+      if (!popover || !button) return;
+
+      const rect = button.getBoundingClientRect();
+      const popoverWidth = Math.min(380, window.innerWidth - 24);
+      let left = rect.right - popoverWidth;
+      left = Math.max(12, Math.min(left, window.innerWidth - popoverWidth - 12));
+      const top = Math.max(16, rect.top - 16);
+
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top - popover.offsetHeight}px`;
+
+      const adjustedTop = parseFloat(popover.style.top);
+      if (adjustedTop < 12) {
+        popover.style.top = `${rect.bottom + 12}px`;
+        popover.style.transformOrigin = 'top right';
+      } else {
+        popover.style.transformOrigin = 'bottom right';
+      }
+    }
+
+    async function copyShareLink() {
+      if (!sharePopoverState.link) return;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(sharePopoverState.link);
+          showSystemBanner('Share link copied successfully.', 'success');
+          closeSharePopover();
+          return;
+        }
+
+        alert(sharePopoverState.link);
+      } catch (err) {
+        console.error(err);
+        alert('Copy link was not completed on this device.');
+      }
+    }
+
+    function shareEntry(button, encodedKey) {
       const key = decodeURIComponent(encodedKey);
       const item = entries.find(entry => getEntryKey(entry) === key);
       if (!item) {
@@ -2468,19 +2629,15 @@
       }
 
       const shareLink = buildEntryLink(item);
+      const popover = document.getElementById('sharePopover');
+      const linkBox = document.getElementById('sharePopoverLink');
+      if (!popover || !linkBox) return;
 
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(shareLink);
-          alert('Direct link copied. You can now paste and open this post from the link.');
-          return;
-        }
-
-        alert(shareLink);
-      } catch (err) {
-        console.error(err);
-        alert('Copy link was not completed on this device.');
-      }
+      sharePopoverState.link = shareLink;
+      sharePopoverState.open = true;
+      linkBox.textContent = shareLink;
+      popover.classList.add('active');
+      positionSharePopover(button);
     }
 
     function revealSharedEntry() {
@@ -3379,7 +3536,7 @@
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
                     <a class="btn btn-primary btn-whatsapp tiny-btn" href="https://wa.me/${item.phone}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
                     <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactModal('${item.phone}','${String(item.broker).replace(/'/g, "\\'")}')">Call</button>
-                    <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry('${encodeURIComponent(getEntryKey(item))}')">Share</button>
+                    <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry(this, '${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
                   </div>
                 </td>
