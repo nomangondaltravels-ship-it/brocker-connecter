@@ -1441,14 +1441,7 @@
               <optgroup label="Umm Al Quwain"><option>UAQ Marina</option></optgroup>
             </select>
             <div class="manual-wrap" id="reqLocationManualWrap"><input type="text" id="reqLocationManual" placeholder="Manual Entry: Type custom UAE location"></div>
-            <select id="reqBudget" required onchange="toggleManual('reqBudget','reqBudgetManualWrap','reqBudgetManual')">
-              <option value="">Select Budget Range</option>
-              <option value="manual">Custom Budget - Enter Manually</option>
-              <optgroup label="Rental (Yearly)"><option>AED 30K - 50K</option><option>AED 50K - 80K</option><option>AED 80K - 120K</option><option>AED 120K - 180K</option><option>AED 180K+</option></optgroup>
-              <optgroup label="Rental (Monthly)"><option>AED 3K - 5K</option><option>AED 5K - 8K</option><option>AED 8K - 12K</option><option>AED 12K+</option></optgroup>
-              <optgroup label="Sale"><option>AED 300K - 600K</option><option>AED 600K - 1M</option><option>AED 1M - 2M</option><option>AED 2M - 5M</option><option>AED 5M+</option></optgroup>
-            </select>
-            <div class="manual-wrap" id="reqBudgetManualWrap"><input type="text" id="reqBudgetManual" placeholder="Manual Entry: Type custom budget"></div>
+            <input type="text" id="reqBudget" placeholder="Budget in AED (e.g. AED 85,000 or AED 1.2M)" required>
             <div class="full check-row">
               <label><input type="checkbox" id="reqVerified"> Verified Broker</label>
               <label><input type="checkbox" id="reqPremium"> Premium</label>
@@ -2528,14 +2521,13 @@
 
     function buildEntryFromStandard() {
       const locValue = document.getElementById('reqLocation').value;
-      const budgetValue = document.getElementById('reqBudget').value;
       return {
         broker: currentBroker,
         phone: document.getElementById('reqPhone').value.trim(),
         purpose: document.getElementById('reqPurpose').value,
         category: document.getElementById('reqCategory').value,
         location: locValue === 'manual' ? document.getElementById('reqLocationManual').value.trim() : locValue,
-        budget: budgetValue === 'manual' ? document.getElementById('reqBudgetManual').value.trim() : budgetValue,
+        budget: document.getElementById('reqBudget').value.trim(),
         notes: document.getElementById('reqNotes').value.trim(),
         verified: document.getElementById('reqVerified').checked,
         premium: document.getElementById('reqPremium').checked,
@@ -2720,7 +2712,6 @@
         event.target.reset();
         if (!isUrgent) {
           toggleManual('reqLocation', 'reqLocationManualWrap', 'reqLocationManual');
-          toggleManual('reqBudget', 'reqBudgetManualWrap', 'reqBudgetManual');
         } else {
           toggleManual('urgentLocation', 'urgentLocationManualWrap', 'urgentLocationManual');
           toggleRentedTillDate();
