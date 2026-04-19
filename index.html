@@ -851,6 +851,12 @@
       color: var(--gold-soft);
     }
 
+    .btn-report {
+      background: linear-gradient(180deg, rgba(58,21,28,0.92), rgba(30,11,16,0.96));
+      border-color: rgba(248,113,113,0.24);
+      color: #fecaca;
+    }
+
     .btn-match {
       background: linear-gradient(180deg, rgba(20,34,58,0.96), rgba(11,20,36,0.96));
       border-color: rgba(212,175,55,0.24);
@@ -1418,6 +1424,47 @@
       color: var(--muted);
       font-size: 0.88rem;
       line-height: 1.45;
+    }
+
+    .report-card {
+      width: min(560px, 100%);
+      background: linear-gradient(180deg, rgba(11,22,40,0.98), rgba(8,17,31,0.98));
+      border: 1px solid rgba(248,113,113,0.16);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 28px 70px rgba(0,0,0,0.45);
+    }
+
+    .report-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .report-head h3 {
+      margin-bottom: 6px;
+    }
+
+    .report-head p,
+    .report-context,
+    .report-note {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .report-context {
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(248,113,113,0.16);
+      background: rgba(36, 13, 18, 0.34);
+    }
+
+    .report-note {
+      margin-top: 12px;
+      font-size: 0.82rem;
     }
 
     @media (max-width: 1100px) {
@@ -2130,6 +2177,28 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="reportModal">
+    <div class="report-card">
+      <div class="report-head">
+        <div>
+          <h3>Report This Post</h3>
+          <p>Send a complaint about spam, wrong data, fake activity, or any broker issue.</p>
+        </div>
+        <button class="btn btn-secondary" type="button" onclick="closeReportModal()">Close</button>
+      </div>
+      <div class="report-context" id="reportContext">Select a post to report.</div>
+      <form class="form-grid" onsubmit="submitReportComplaint(event)">
+        <input type="text" id="reportName" placeholder="Your Name (Optional)">
+        <input type="text" id="reportBroker" placeholder="Reported Broker" readonly>
+        <textarea class="full" id="reportMessage" rows="6" placeholder="Write your complaint here" required></textarea>
+        <div class="full center-actions" style="justify-content:flex-start;">
+          <button class="btn btn-primary" type="submit">Submit Complaint</button>
+        </div>
+      </form>
+      <div class="report-note">Your complaint will go to the admin panel for review.</div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
@@ -2163,6 +2232,10 @@
     const whatsappPopoverState = {
       phone: '',
       open: false
+    };
+    const reportContextState = {
+      key: '',
+      item: null
     };
     const backendState = {
       dealsTableReady: true
@@ -2560,6 +2633,7 @@
 
     document.getElementById('confirmModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'confirmModal'));
     document.getElementById('authModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'authModal'));
+    document.getElementById('reportModal').addEventListener('click', event => closeAllModalsOnOverlay(event, 'reportModal'));
     document.addEventListener('click', event => {
       const popover = document.getElementById('sharePopover');
       const contactPopover = document.getElementById('contactPopover');
@@ -2589,6 +2663,7 @@
         closeSharePopover();
         closeContactPopover();
         closeWhatsappPopover();
+        closeReportModal();
       }
     });
 
@@ -2903,6 +2978,39 @@
       positionSharePopover(button);
     }
 
+    function openReportModal(encodedKey) {
+      const key = decodeURIComponent(encodedKey);
+      const item = entries.find(entry => getEntryKey(entry) === key);
+      if (!item) {
+        alert('This post could not be found for reporting.');
+        return;
+      }
+
+      closeSharePopover();
+      closeContactPopover();
+      closeWhatsappPopover();
+
+      reportContextState.key = key;
+      reportContextState.item = item;
+
+      const context = document.getElementById('reportContext');
+      const brokerInput = document.getElementById('reportBroker');
+      const nameInput = document.getElementById('reportName');
+      if (context) {
+        context.innerHTML = `
+          <strong>${item.urgent ? 'Urgent Deal' : 'Requirement'}</strong><br>
+          Broker: ${item.broker}<br>
+          Type: ${item.purpose} / ${item.category}<br>
+          Location: ${item.location}<br>
+          Budget: ${item.budget}
+        `;
+      }
+      if (brokerInput) brokerInput.value = item.broker || '';
+      if (nameInput && currentBrokerName) nameInput.value = currentBrokerName;
+      document.getElementById('reportMessage').value = '';
+      document.getElementById('reportModal').classList.add('active');
+    }
+
     function revealSharedEntry() {
       if (!sharedEntryState.encodedKey) return;
 
@@ -2937,6 +3045,13 @@
 
     function showBrokerPopup(title, details) {
       showConfirmModal(details, title);
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('active');
+      document.getElementById('reportMessage').value = '';
+      reportContextState.key = '';
+      reportContextState.item = null;
     }
 
     function normalizeEmail(email) {
@@ -3758,6 +3873,7 @@
                     <button class="btn btn-secondary btn-match tiny-btn" type="button" onclick="sendMatchInterest('${encodeURIComponent(getEntryKey(item))}')">I Have Match</button>
                     <button class="btn btn-primary btn-whatsapp tiny-btn" type="button" onclick="showWhatsappPopover(this, '${item.phone}')">WhatsApp</button>
                     <button class="btn btn-secondary btn-call tiny-btn" type="button" onclick="showContactPopover(this, '${item.phone}')">Call</button>
+                    <button class="btn btn-secondary btn-report tiny-btn" type="button" onclick="openReportModal('${encodeURIComponent(getEntryKey(item))}')">Report</button>
                     <button class="btn btn-secondary btn-share tiny-btn" type="button" onclick="shareEntry(this, '${encodeURIComponent(getEntryKey(item))}')">Share</button>
                     <button class="btn btn-secondary btn-status tiny-btn" type="button" onclick="cycleEntryStatus('${encodeURIComponent(getEntryKey(item))}')">Change Status</button>
                   </div>
@@ -3817,6 +3933,55 @@
       } catch (err) {
         console.error(err);
         alert('Complaint save nahi hui.');
+      }
+    }
+
+    async function submitReportComplaint(event) {
+      event.preventDefault();
+      if (!reportContextState.item) {
+        alert('Please choose a post to report first.');
+        return;
+      }
+
+      const name = document.getElementById('reportName').value.trim() || 'Anonymous';
+      const broker = document.getElementById('reportBroker').value.trim() || reportContextState.item.broker || 'N/A';
+      const complaintText = document.getElementById('reportMessage').value.trim();
+
+      if (!complaintText) {
+        alert('Please write your complaint before submitting.');
+        return;
+      }
+
+      const item = reportContextState.item;
+      const message = [
+        `${item.urgent ? 'Urgent Deal' : 'Requirement'} report`,
+        `Purpose: ${item.purpose}`,
+        `Category: ${item.category}`,
+        `Location: ${item.location}`,
+        `Budget: ${item.budget}`,
+        `Complaint: ${complaintText}`
+      ].join(' | ');
+
+      try {
+        const { error } = await supabaseClient.from('complaints').insert([
+          {
+            name,
+            broker,
+            message,
+            status: 'pending',
+            created_at: new Date().toISOString()
+          }
+        ]);
+        if (error) throw error;
+        closeReportModal();
+        showConfirmModal({
+          Submitted: 'Complaint received',
+          Broker: broker,
+          Status: 'Pending review'
+        }, 'Complaint Submitted');
+      } catch (err) {
+        console.error(err);
+        alert('Complaint could not be submitted right now.');
       }
     }
 

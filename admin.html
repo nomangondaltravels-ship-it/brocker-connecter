@@ -517,6 +517,30 @@
       return Array.isArray(result?.complaints) ? result.complaints : [];
     }
 
+    async function requestComplaintAction(payload) {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-complaints', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result?.message || 'Complaint action failed.');
+      }
+
+      return result;
+    }
+
     function showDashboard() {
       document.getElementById('loginView').style.display = 'none';
       document.getElementById('dashboardView').classList.add('active');
@@ -603,6 +627,32 @@
       brokerApprovals = safeJsonRead('broker_approvals', {});
       blockedBrokerIds = safeJsonRead('blocked_brokers', {});
       postStatusOverrides = safeJsonRead('post_status_overrides', {});
+    }
+
+    function findBrokerIdByComplaint(item) {
+      const brokerRef = String(item?.broker || '').trim().toLowerCase();
+      if (!brokerRef) return '';
+      const accounts = safeJsonRead('broker_accounts', []);
+      const exact = accounts.find(account =>
+        String(account.brokerId || '').trim().toLowerCase() === brokerRef ||
+        String(account.name || '').trim().toLowerCase() === brokerRef
+      );
+      if (exact) return exact.brokerId;
+
+      const partial = accounts.find(account =>
+        brokerRef.includes(String(account.name || '').trim().toLowerCase()) ||
+        String(account.name || '').trim().toLowerCase().includes(brokerRef)
+      );
+      return partial?.brokerId || '';
+    }
+
+    function getComplaintMatch(item) {
+      return {
+        name: item.name || 'Anonymous',
+        broker: item.broker || 'N/A',
+        message: item.message || '',
+        created_at: item.created_at || ''
+      };
     }
 
     function getPostedTimestamp(value) {
@@ -755,6 +805,59 @@
       renderStats(accounts);
       renderBrokerApprovals(accounts);
       setAdminStatus(willBlock ? 'Broker blocked successfully.' : 'Broker unblocked successfully.', 'success');
+    }
+
+    async function updateComplaintStatus(index, status) {
+      const item = complaints[index];
+      if (!item) return;
+
+      try {
+        await requestComplaintAction({
+          action: 'update-status',
+          complaintId: item.id,
+          match: getComplaintMatch(item),
+          status
+        });
+      } catch (error) {
+        setAdminStatus(`Complaint update failed: ${error.message || error}`, 'error');
+        return;
+      }
+
+      setAdminStatus(`Complaint marked as ${status.replace('-', ' ')}.`, 'success');
+      loadAdminData();
+    }
+
+    async function deleteComplaintAt(index) {
+      const item = complaints[index];
+      if (!item) return;
+
+      const confirmed = window.confirm('Delete this complaint from the review list?');
+      if (!confirmed) return;
+
+      try {
+        await requestComplaintAction({
+          action: 'delete',
+          complaintId: item.id,
+          match: getComplaintMatch(item)
+        });
+      } catch (error) {
+        setAdminStatus(`Complaint delete failed: ${error.message || error}`, 'error');
+        return;
+      }
+
+      setAdminStatus('Complaint deleted successfully.', 'success');
+      loadAdminData();
+    }
+
+    function blockComplaintBroker(index) {
+      const item = complaints[index];
+      if (!item) return;
+      const brokerId = findBrokerIdByComplaint(item);
+      if (!brokerId) {
+        setAdminStatus('Linked broker account was not found for this complaint.', 'error');
+        return;
+      }
+      toggleBrokerBlock(brokerId);
     }
 
     function getDeleteErrorMessage(error, entityLabel) {
@@ -1100,6 +1203,13 @@
           </div>
           <p>${item.broker || 'N/A'}</p>
           <p class="muted">${item.message || ''}</p>
+          <div class="action-row">
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'under-review')">Under Review</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'resolved')">Resolve</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'rejected')">Reject</button>
+            <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${complaints.indexOf(item)})">Block Broker</button>
+            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${complaints.indexOf(item)})">Delete Complaint</button>
+          </div>
         </div>
       `).join('');
     }
