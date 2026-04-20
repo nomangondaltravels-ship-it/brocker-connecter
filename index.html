@@ -1277,18 +1277,36 @@
       state.brokerProfile = null;
     }
 
+    function normalizeAuthPayload(payload) {
+      if (!payload || typeof payload !== 'object') {
+        return null;
+      }
+      const token = String(
+        payload.token
+        || payload.access_token
+        || payload.session?.access_token
+        || ''
+      ).trim();
+      const broker = payload.broker || payload.user || payload.session?.user || null;
+      if (!token || !broker || typeof broker !== 'object') {
+        return null;
+      }
+      return { token, broker };
+    }
+
     function isValidAuthPayload(payload) {
-      return Boolean(payload && typeof payload === 'object' && typeof payload.token === 'string' && payload.token.trim() && payload.broker && typeof payload.broker === 'object');
+      return Boolean(normalizeAuthPayload(payload));
     }
 
     function persistBrokerSession(payload) {
-      if (!isValidAuthPayload(payload)) {
+      const authPayload = normalizeAuthPayload(payload);
+      if (!authPayload) {
         return false;
       }
-      localStorage.setItem('broker_session_token', payload.token);
-      localStorage.setItem('broker_session_profile', JSON.stringify(payload.broker));
-      state.sessionToken = payload.token;
-      state.brokerProfile = payload.broker;
+      localStorage.setItem('broker_session_token', authPayload.token);
+      localStorage.setItem('broker_session_profile', JSON.stringify(authPayload.broker));
+      state.sessionToken = authPayload.token;
+      state.brokerProfile = authPayload.broker;
       return true;
     }
 
@@ -2010,10 +2028,17 @@
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
       try {
+        setAuthStatus('');
         const brokerIdValue = document.getElementById('authBrokerId').value.trim();
         const mobileValue = document.getElementById('authMobile').value.trim();
         const identifierValue = brokerIdValue || mobileValue;
         const passwordValue = document.getElementById('authPassword').value;
+        if (state.authMode === 'signin' && !identifierValue) {
+          throw new Error('Enter broker ID or mobile number.');
+        }
+        if (!passwordValue) {
+          throw new Error(state.authMode === 'register' ? 'Enter password.' : 'Enter your password.');
+        }
         const payload = state.authMode === 'register'
           ? {
               action: 'register',
