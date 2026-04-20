@@ -5,6 +5,8 @@ import {
   normalizeBool,
   normalizePhoneNumber,
   normalizeText,
+  parseLeadMeta,
+  parsePropertyMeta,
   requireBrokerSession,
   sanitizeAiMatch,
   sanitizeFollowUp,
@@ -20,95 +22,293 @@ import {
   supabaseSelect
 } from './_broker-platform.mjs';
 
-function getLeadPayload(body, brokerId) {
-  const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
-  const purpose = clientPurpose === 'rent' ? 'rent' : 'sale';
-  const propertyType = normalizeText(body?.propertyType || body?.category);
-  const preferredBuildingProject = normalizeText(body?.preferredBuildingProject);
-  const paymentMethod = clientPurpose === 'buy' ? normalizeText(body?.paymentMethod) : '';
-  const legacyFollowUpNotes = normalizeText(body?.legacyFollowUpNotes);
-  const serializedMeta = serializeLeadMeta({
-    preferredBuildingProject,
-    paymentMethod,
-    legacyFollowUpNotes
+const LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost'];
+const LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market'];
+const CLOSED_LEAD_STATUSES = new Set(['closed won', 'closed lost']);
+const INACTIVE_LISTING_STATUSES = new Set(['rented', 'sold', 'off market']);
+const ACTIVE_MATCH_LISTING_STATUSES = new Set(['available', 'reserved']);
+const DUBAI_TIME_ZONE = 'Asia/Dubai';
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function formatDateInDubai(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: DUBAI_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
   });
-  const publicGeneralNotes = normalizeText(body?.publicGeneralNotes || buildLeadPublicSummary({
-    clientPurpose,
-    category: propertyType,
-    location: normalizeText(body?.location),
-    budget: normalizeText(body?.budget),
-    preferredBuildingProject,
-    paymentMethod
-  }));
+  return formatter.format(date);
+}
+
+function normalizeLeadStatus(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return LEAD_STATUS_OPTIONS.includes(normalized) ? normalized : 'new';
+}
+
+function normalizeListingStatus(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return LISTING_STATUS_OPTIONS.includes(normalized) ? normalized : 'available';
+}
+
+function formatStatusLabel(value) {
+  return normalizeText(value)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ') || 'Status';
+}
+
+function normalizeDateValue(value, fallback = '') {
+  return value === undefined ? normalizeText(fallback) : normalizeText(value);
+}
+
+function normalizeTimeValue(value, fallback = '') {
+  return value === undefined ? normalizeText(fallback) : normalizeText(value);
+}
+
+function parseMoney(value) {
+  const digits = String(value || '').replace(/[^\d]/g, '');
+  return digits ? Number(digits) : 0;
+}
+
+function normalizeMatchKey(value) {
+  return normalizeText(value).toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function createActivityEntry(text, type = 'system') {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    type,
+    text: normalizeText(text),
+    createdAt: nowIso()
+  };
+}
+
+function prependActivityLog(existingLog, text, type = 'system') {
+  const message = normalizeText(text);
+  if (!message) return Array.isArray(existingLog) ? existingLog : [];
+  return [createActivityEntry(message, type), ...(Array.isArray(existingLog) ? existingLog : [])].slice(0, 80);
+}
+
+function buildFollowUpText(dateValue, timeValue, urgent) {
+  if (!dateValue && !timeValue) return 'Follow-up details updated.';
+  const suffix = urgent ? ' (Urgent)' : '';
+  return `Follow-up set for ${[dateValue, timeValue].filter(Boolean).join(' ')}${suffix}.`;
+}
+
+function formatContactLog(method, owner = false) {
+  const label = normalizeText(method) || 'Manual';
+  return `${owner ? 'Owner' : 'Client'} contact logged via ${label}.`;
+}
+
+function getLeadMeta(body, existingLead = null, overrides = {}) {
+  const existingMeta = parseLeadMeta(existingLead?.follow_up_notes);
+  const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose || existingLead?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
+  return {
+    preferredBuildingProject: body?.preferredBuildingProject !== undefined
+      ? normalizeText(body?.preferredBuildingProject)
+      : existingMeta.preferredBuildingProject,
+    paymentMethod: clientPurpose === 'buy'
+      ? (body?.paymentMethod !== undefined ? normalizeText(body?.paymentMethod) : existingMeta.paymentMethod)
+      : '',
+    legacyFollowUpNotes: body?.legacyFollowUpNotes !== undefined
+      ? normalizeText(body?.legacyFollowUpNotes)
+      : existingMeta.legacyFollowUpNotes,
+    nextFollowUpDate: normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate),
+    nextFollowUpTime: normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime),
+    followUpNote: body?.followUpNote !== undefined ? normalizeText(body?.followUpNote) : existingMeta.followUpNote,
+    isUrgentFollowUp: body?.isUrgentFollowUp !== undefined ? normalizeBool(body?.isUrgentFollowUp) : Boolean(existingMeta.isUrgentFollowUp),
+    callCount: overrides.callCount ?? existingMeta.callCount,
+    whatsappCount: overrides.whatsappCount ?? existingMeta.whatsappCount,
+    lastContactedAt: overrides.lastContactedAt ?? existingMeta.lastContactedAt,
+    lastContactMethod: overrides.lastContactMethod ?? existingMeta.lastContactMethod,
+    isArchived: overrides.isArchived ?? existingMeta.isArchived,
+    archivedAt: overrides.archivedAt ?? existingMeta.archivedAt,
+    activityLog: Array.isArray(overrides.activityLog) ? overrides.activityLog : existingMeta.activityLog
+  };
+}
+
+function getPropertyMeta(body, existingProperty = null, overrides = {}) {
+  const existingMeta = parsePropertyMeta(existingProperty?.description);
+  const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  return {
+    buildingName: body?.buildingName !== undefined ? normalizeText(body?.buildingName) : existingMeta.buildingName,
+    floorLevel: body?.floorLevel !== undefined ? normalizeText(body?.floorLevel) : existingMeta.floorLevel,
+    furnishing: purpose === 'rent'
+      ? (body?.furnishing !== undefined ? normalizeText(body?.furnishing) : existingMeta.furnishing)
+      : '',
+    cheques: purpose === 'rent'
+      ? (body?.cheques !== undefined ? normalizeText(body?.cheques) : existingMeta.cheques)
+      : '',
+    chiller: purpose === 'rent'
+      ? (body?.chiller !== undefined ? normalizeText(body?.chiller) : existingMeta.chiller)
+      : '',
+    mortgageStatus: purpose === 'sale'
+      ? (body?.mortgageStatus !== undefined ? normalizeText(body?.mortgageStatus) : existingMeta.mortgageStatus)
+      : '',
+    leasehold: purpose === 'sale'
+      ? (body?.leasehold !== undefined ? normalizeBool(body?.leasehold) : Boolean(existingMeta.leasehold))
+      : false,
+    legacyDescription: body?.legacyDescription !== undefined ? normalizeText(body?.legacyDescription) : existingMeta.legacyDescription,
+    nextFollowUpDate: normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate),
+    nextFollowUpTime: normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime),
+    followUpNote: body?.followUpNote !== undefined ? normalizeText(body?.followUpNote) : existingMeta.followUpNote,
+    isUrgentFollowUp: body?.isUrgentFollowUp !== undefined ? normalizeBool(body?.isUrgentFollowUp) : Boolean(existingMeta.isUrgentFollowUp),
+    ownerCallCount: overrides.ownerCallCount ?? existingMeta.ownerCallCount,
+    ownerWhatsappCount: overrides.ownerWhatsappCount ?? existingMeta.ownerWhatsappCount,
+    lastOwnerContactedAt: overrides.lastOwnerContactedAt ?? existingMeta.lastOwnerContactedAt,
+    lastOwnerContactMethod: overrides.lastOwnerContactMethod ?? existingMeta.lastOwnerContactMethod,
+    isArchived: overrides.isArchived ?? existingMeta.isArchived,
+    archivedAt: overrides.archivedAt ?? existingMeta.archivedAt,
+    activityLog: Array.isArray(overrides.activityLog) ? overrides.activityLog : existingMeta.activityLog
+  };
+}
+
+function buildLeadActivityLog(existingLead, body, extraEntries = []) {
+  const existingMeta = parseLeadMeta(existingLead?.follow_up_notes);
+  let activityLog = Array.isArray(existingMeta.activityLog) ? existingMeta.activityLog : [];
+  const nextStatus = body?.status !== undefined ? normalizeLeadStatus(body?.status) : normalizeLeadStatus(existingLead?.status);
+  if (nextStatus !== normalizeLeadStatus(existingLead?.status)) {
+    activityLog = prependActivityLog(activityLog, `Status changed from ${formatStatusLabel(existingLead?.status)} to ${formatStatusLabel(nextStatus)}.`, 'status');
+  }
+
+  const nextFollowUpDate = normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate);
+  const nextFollowUpTime = normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime);
+  const nextFollowUpNote = body?.followUpNote !== undefined ? normalizeText(body?.followUpNote) : existingMeta.followUpNote;
+  const nextUrgent = body?.isUrgentFollowUp !== undefined ? normalizeBool(body?.isUrgentFollowUp) : Boolean(existingMeta.isUrgentFollowUp);
+  if (
+    nextFollowUpDate !== existingMeta.nextFollowUpDate ||
+    nextFollowUpTime !== existingMeta.nextFollowUpTime ||
+    nextFollowUpNote !== existingMeta.followUpNote ||
+    nextUrgent !== Boolean(existingMeta.isUrgentFollowUp)
+  ) {
+    activityLog = prependActivityLog(activityLog, buildFollowUpText(nextFollowUpDate, nextFollowUpTime, nextUrgent), 'followup');
+  }
+
+  if (body?.privateNotes !== undefined && normalizeText(body?.privateNotes) !== normalizeText(existingLead?.notes)) {
+    activityLog = prependActivityLog(activityLog, 'Private notes updated.', 'note');
+  }
+
+  extraEntries.forEach(entry => {
+    activityLog = prependActivityLog(activityLog, entry.text, entry.type);
+  });
+  return activityLog;
+}
+
+function buildPropertyActivityLog(existingProperty, body, extraEntries = []) {
+  const existingMeta = parsePropertyMeta(existingProperty?.description);
+  let activityLog = Array.isArray(existingMeta.activityLog) ? existingMeta.activityLog : [];
+  const nextStatus = body?.status !== undefined ? normalizeListingStatus(body?.status) : normalizeListingStatus(existingProperty?.status);
+  if (nextStatus !== normalizeListingStatus(existingProperty?.status)) {
+    activityLog = prependActivityLog(activityLog, `Status changed from ${formatStatusLabel(existingProperty?.status)} to ${formatStatusLabel(nextStatus)}.`, 'status');
+  }
+
+  const nextFollowUpDate = normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate);
+  const nextFollowUpTime = normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime);
+  const nextFollowUpNote = body?.followUpNote !== undefined ? normalizeText(body?.followUpNote) : existingMeta.followUpNote;
+  const nextUrgent = body?.isUrgentFollowUp !== undefined ? normalizeBool(body?.isUrgentFollowUp) : Boolean(existingMeta.isUrgentFollowUp);
+  if (
+    nextFollowUpDate !== existingMeta.nextFollowUpDate ||
+    nextFollowUpTime !== existingMeta.nextFollowUpTime ||
+    nextFollowUpNote !== existingMeta.followUpNote ||
+    nextUrgent !== Boolean(existingMeta.isUrgentFollowUp)
+  ) {
+    activityLog = prependActivityLog(activityLog, buildFollowUpText(nextFollowUpDate, nextFollowUpTime, nextUrgent), 'followup');
+  }
+
+  if (body?.internalNotes !== undefined && normalizeText(body?.internalNotes) !== normalizeText(existingProperty?.internal_notes)) {
+    activityLog = prependActivityLog(activityLog, 'Internal notes updated.', 'note');
+  }
+
+  extraEntries.forEach(entry => {
+    activityLog = prependActivityLog(activityLog, entry.text, entry.type);
+  });
+  return activityLog;
+}
+
+function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
+  const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose || existingLead?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
+  const purpose = clientPurpose === 'rent' ? 'rent' : 'sale';
+  const propertyType = normalizeText(body?.propertyType || body?.category || existingLead?.category);
+  const meta = getLeadMeta(body, existingLead, overrides);
+  const publicGeneralNotes = body?.publicGeneralNotes !== undefined
+    ? normalizeText(body?.publicGeneralNotes)
+    : buildLeadPublicSummary({
+        clientPurpose,
+        category: propertyType,
+        location: normalizeText(body?.location || existingLead?.location),
+        budget: normalizeText(body?.budget || existingLead?.budget),
+        preferredBuildingProject: meta.preferredBuildingProject,
+        paymentMethod: meta.paymentMethod
+      });
+  const isListedPublic = body?.isListedPublic !== undefined
+    ? normalizeBool(body?.isListedPublic)
+    : Boolean(existingLead?.is_listed_public);
 
   return {
     broker_uuid: brokerId,
     lead_type: clientPurpose === 'rent' ? 'tenant' : 'buyer',
     purpose,
     category: propertyType,
-    location: normalizeText(body?.location),
-    budget: normalizeText(body?.budget),
-    notes: normalizeText(body?.privateNotes ?? body?.notes),
-    // Public note stays separate from the broker's private CRM note.
+    location: normalizeText(body?.location || existingLead?.location),
+    budget: normalizeText(body?.budget || existingLead?.budget),
+    notes: normalizeText(body?.privateNotes ?? body?.notes ?? existingLead?.notes),
     public_general_notes: publicGeneralNotes,
-    source: normalizeText(body?.source || 'Manual'),
-    priority: normalizeText(body?.priority || 'normal').toLowerCase(),
-    status: normalizeText(body?.status || 'new').toLowerCase(),
-    meeting_date: body?.meetingDate || null,
-    meeting_time: body?.meetingTime || null,
-    follow_up_notes: serializedMeta,
-    next_action: normalizeText(body?.nextAction),
-    rent_booking: normalizeBool(body?.rentChecklist?.booking),
-    rent_agreement_signed: normalizeBool(body?.rentChecklist?.agreementSigned),
-    rent_handover_done: normalizeBool(body?.rentChecklist?.handoverDone),
-    sale_contract_a: normalizeBool(body?.saleChecklist?.contractA),
-    sale_contract_b: normalizeBool(body?.saleChecklist?.contractB),
-    sale_contract_f: normalizeBool(body?.saleChecklist?.contractF),
-    owner_name: normalizeText(body?.ownerName),
-    owner_phone: normalizePhoneNumber(body?.ownerPhone),
-    client_name: normalizeText(body?.clientName),
-    client_phone: normalizePhoneNumber(body?.clientPhone),
-    is_listed_public: normalizeBool(body?.isListedPublic),
-    public_listing_status: normalizeBool(body?.isListedPublic) ? 'listed' : 'private',
-    updated_at: new Date().toISOString()
+    source: normalizeText(body?.source || existingLead?.source || 'Manual'),
+    priority: normalizeText(body?.priority || existingLead?.priority || 'normal').toLowerCase(),
+    status: normalizeLeadStatus(body?.status ?? existingLead?.status),
+    meeting_date: body?.meetingDate !== undefined ? body?.meetingDate || null : existingLead?.meeting_date || null,
+    meeting_time: body?.meetingTime !== undefined ? body?.meetingTime || null : existingLead?.meeting_time || null,
+    follow_up_notes: serializeLeadMeta(meta),
+    next_action: normalizeText(body?.nextAction || existingLead?.next_action),
+    rent_booking: body?.rentChecklist ? normalizeBool(body?.rentChecklist?.booking) : Boolean(existingLead?.rent_booking),
+    rent_agreement_signed: body?.rentChecklist ? normalizeBool(body?.rentChecklist?.agreementSigned) : Boolean(existingLead?.rent_agreement_signed),
+    rent_handover_done: body?.rentChecklist ? normalizeBool(body?.rentChecklist?.handoverDone) : Boolean(existingLead?.rent_handover_done),
+    sale_contract_a: body?.saleChecklist ? normalizeBool(body?.saleChecklist?.contractA) : Boolean(existingLead?.sale_contract_a),
+    sale_contract_b: body?.saleChecklist ? normalizeBool(body?.saleChecklist?.contractB) : Boolean(existingLead?.sale_contract_b),
+    sale_contract_f: body?.saleChecklist ? normalizeBool(body?.saleChecklist?.contractF) : Boolean(existingLead?.sale_contract_f),
+    owner_name: normalizeText(body?.ownerName ?? existingLead?.owner_name),
+    owner_phone: normalizePhoneNumber(body?.ownerPhone ?? existingLead?.owner_phone),
+    client_name: normalizeText(body?.clientName ?? existingLead?.client_name),
+    client_phone: normalizePhoneNumber(body?.clientPhone ?? existingLead?.client_phone),
+    is_listed_public: isListedPublic,
+    public_listing_status: isListedPublic ? 'listed' : 'private',
+    updated_at: nowIso()
   };
 }
 
-function getPropertyPayload(body, brokerId) {
-  const purpose = normalizeText(body?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
-  const propertyType = normalizeText(body?.propertyType);
-  const serializedMeta = serializePropertyMeta({
-    buildingName: normalizeText(body?.buildingName),
-    floorLevel: normalizeText(body?.floorLevel),
-    furnishing: purpose === 'rent' ? normalizeText(body?.furnishing) : '',
-    cheques: purpose === 'rent' ? normalizeText(body?.cheques) : '',
-    chiller: purpose === 'rent' ? normalizeText(body?.chiller) : '',
-    mortgageStatus: purpose === 'sale' ? normalizeText(body?.mortgageStatus) : '',
-    leasehold: normalizeBool(body?.leasehold),
-    legacyDescription: normalizeText(body?.legacyDescription)
-  });
+function getPropertyPayload(body, brokerId, existingProperty = null, overrides = {}) {
+  const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const propertyType = normalizeText(body?.propertyType || existingProperty?.property_type || existingProperty?.category);
+  const meta = getPropertyMeta(body, existingProperty, overrides);
+  const isListedPublic = body?.isListedPublic !== undefined
+    ? normalizeBool(body?.isListedPublic)
+    : Boolean(existingProperty?.is_listed_public);
 
   return {
     broker_uuid: brokerId,
     purpose,
     property_type: propertyType,
     category: propertyType,
-    location: normalizeText(body?.location),
-    price: normalizeText(body?.price || body?.rentPrice || body?.ownerAskingPrice),
-    size: normalizeText(body?.size || body?.sizeSqft),
-    bedrooms: body?.bedrooms ?? null,
-    bathrooms: body?.bathrooms ?? null,
-    description: serializedMeta,
-    public_notes: normalizeText(body?.publicNotes),
-    internal_notes: normalizeText(body?.internalNotes),
-    owner_name: normalizeText(body?.ownerName),
-    owner_phone: normalizePhoneNumber(body?.ownerPhone),
-    status: normalizeText(body?.status || 'available').toLowerCase(),
+    location: normalizeText(body?.location || existingProperty?.location),
+    price: normalizeText(body?.price || body?.rentPrice || body?.ownerAskingPrice || existingProperty?.price),
+    size: normalizeText(body?.size || body?.sizeSqft || existingProperty?.size),
+    bedrooms: body?.bedrooms ?? existingProperty?.bedrooms ?? null,
+    bathrooms: body?.bathrooms ?? existingProperty?.bathrooms ?? null,
+    description: serializePropertyMeta(meta),
+    public_notes: normalizeText(body?.publicNotes ?? existingProperty?.public_notes),
+    internal_notes: normalizeText(body?.internalNotes ?? existingProperty?.internal_notes),
+    owner_name: normalizeText(body?.ownerName ?? existingProperty?.owner_name),
+    owner_phone: normalizePhoneNumber(body?.ownerPhone ?? existingProperty?.owner_phone),
+    status: normalizeListingStatus(body?.status ?? existingProperty?.status),
     is_urgent: false,
-    is_distress: normalizeBool(body?.isDistress),
-    is_listed_public: normalizeBool(body?.isListedPublic),
-    public_listing_status: normalizeBool(body?.isListedPublic) ? 'listed' : 'private',
-    updated_at: new Date().toISOString()
+    is_distress: body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress),
+    is_listed_public: isListedPublic,
+    public_listing_status: isListedPublic ? 'listed' : 'private',
+    updated_at: nowIso()
   };
 }
 
@@ -122,32 +322,7 @@ function getFollowUpPayload(body, brokerId) {
     meeting_time: body?.meetingTime || null,
     note: normalizeText(body?.note),
     next_action: normalizeText(body?.nextAction),
-    created_at: new Date().toISOString()
-  };
-}
-
-function buildOverview(leads, properties, followUps, sharedListings, broker) {
-  const activeLeads = leads.filter(item => !['closed', 'cancelled'].includes(String(item.status || '').toLowerCase()));
-  const activeProperties = properties.filter(item => !['closed', 'unlisted'].includes(String(item.status || '').toLowerCase()));
-  const upcomingMeetings = [...leads, ...followUps].filter(item => item.meetingDate || item.meeting_date).length;
-
-  return {
-    broker: {
-      fullName: broker.full_name,
-      brokerIdNumber: broker.broker_id_number,
-      mobileNumber: broker.mobile_number,
-      email: broker.email,
-      companyName: broker.company_name || '',
-      isVerified: Boolean(broker.is_verified)
-    },
-    totals: {
-      leads: leads.length,
-      properties: properties.length,
-      sharedListings: sharedListings.length,
-      activeLeads: activeLeads.length,
-      activeProperties: activeProperties.length,
-      meetings: upcomingMeetings
-    }
+    created_at: nowIso()
   };
 }
 
@@ -163,15 +338,25 @@ async function selectOptionalBrokerRows(context, table) {
     });
   } catch (error) {
     const message = String(error?.message || '').toLowerCase();
-    if (
-      message.includes('could not find') ||
-      message.includes('relation') ||
-      message.includes('does not exist')
-    ) {
+    if (message.includes('could not find') || message.includes('relation') || message.includes('does not exist')) {
       return [];
     }
     throw error;
   }
+}
+
+async function fetchBrokerRow(context, table, id) {
+  const { supabaseUrl, serviceRoleKey, broker } = context;
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table,
+    filters: {
+      id,
+      broker_uuid: broker.id
+    }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
 }
 
 async function syncPublicListing(context, sourceType, item, broker) {
@@ -204,7 +389,7 @@ async function syncPublicListing(context, sourceType, item, broker) {
     table: 'public_listings',
     payload: [{
       ...payload,
-      created_at: new Date().toISOString()
+      created_at: nowIso()
     }]
   });
 }
@@ -220,6 +405,221 @@ async function removePublicListing(context, sourceType, sourceId) {
       source_id: sourceId
     }
   });
+}
+
+function getFollowUpState(record) {
+  const rawDate = normalizeText(record?.nextFollowUpDate);
+  if (!rawDate) {
+    return { key: 'none', label: 'No follow-up set', overdueDays: 0 };
+  }
+
+  const today = formatDateInDubai();
+  if (rawDate === today) {
+    return { key: 'today', label: 'Follow-up today', overdueDays: 0 };
+  }
+
+  const start = new Date(`${rawDate}T00:00:00`);
+  const todayDate = new Date(`${today}T00:00:00`);
+  const diffDays = Math.round((start - todayDate) / 86400000);
+  if (diffDays < 0) {
+    return { key: 'overdue', label: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`, overdueDays: Math.abs(diffDays) };
+  }
+  if (diffDays === 1) {
+    return { key: 'upcoming', label: 'Due tomorrow', overdueDays: 0 };
+  }
+  return { key: 'upcoming', label: `Upcoming on ${rawDate}`, overdueDays: 0 };
+}
+
+function isLeadOperational(lead) {
+  return !lead.isArchived && !CLOSED_LEAD_STATUSES.has(normalizeLeadStatus(lead.status));
+}
+
+function isListingOperational(property) {
+  return !property.isArchived && ACTIVE_MATCH_LISTING_STATUSES.has(normalizeListingStatus(property.status));
+}
+
+function evaluateMatch(lead, property) {
+  if (!isLeadOperational(lead) || !isListingOperational(property)) return null;
+  const leadPurpose = normalizeText(lead.clientPurpose || lead.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const propertyPurpose = normalizeText(property.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  if (leadPurpose !== propertyPurpose) return null;
+
+  const leadLocation = normalizeMatchKey(lead.location);
+  const propertyLocation = normalizeMatchKey(property.location);
+  if (!leadLocation || !propertyLocation || leadLocation !== propertyLocation) return null;
+
+  const leadType = normalizeMatchKey(lead.propertyType);
+  const propertyType = normalizeMatchKey(property.propertyType);
+  if (!leadType || !propertyType || leadType !== propertyType) return null;
+
+  const leadBudget = parseMoney(lead.budget);
+  const propertyPrice = parseMoney(property.price || property.rentPrice || property.ownerAskingPrice);
+  if (!leadBudget || !propertyPrice) return null;
+
+  const buildingMatch = normalizeMatchKey(lead.preferredBuildingProject) && normalizeMatchKey(lead.preferredBuildingProject) === normalizeMatchKey(property.buildingName);
+  const strictBudgetMatch = propertyPrice <= leadBudget;
+  const nearBudgetMatch = !strictBudgetMatch && propertyPrice <= Math.round(leadBudget * 1.1);
+  if (!strictBudgetMatch && !nearBudgetMatch) return null;
+
+  const confidence = strictBudgetMatch ? 'strong' : 'partial';
+  const score = strictBudgetMatch ? (buildingMatch ? 97 : 90) : (buildingMatch ? 79 : 72);
+  const reasons = [
+    `${formatStatusLabel(leadPurpose)} match`,
+    'Location aligned',
+    'Property type aligned',
+    strictBudgetMatch ? 'Budget aligned' : 'Near-budget fit',
+    buildingMatch ? 'Building matched' : ''
+  ].filter(Boolean);
+
+  return {
+    leadId: lead.id,
+    propertyId: property.id,
+    confidence,
+    matchScore: score,
+    matchReason: reasons.join(' · ')
+  };
+}
+
+function computeMatchData(leads, properties) {
+  const leadMap = new Map(leads.map(lead => [lead.id, { ...lead, matchingListings: [], matchCount: 0, strongMatchCount: 0 }]));
+  const propertyMap = new Map(properties.map(property => [property.id, { ...property, matchingLeads: [], matchCount: 0, strongMatchCount: 0 }]));
+  const aiMatches = [];
+
+  leadMap.forEach(lead => {
+    propertyMap.forEach(property => {
+      const match = evaluateMatch(lead, property);
+      if (!match) return;
+
+      aiMatches.push({
+        id: `${match.leadId}-${match.propertyId}`,
+        requirement_id: match.leadId,
+        property_id: match.propertyId,
+        match_score: match.matchScore,
+        match_reason: match.matchReason,
+        status: match.confidence,
+        created_at: nowIso(),
+        updated_at: nowIso()
+      });
+
+      const leadMatchSummary = {
+        id: property.id,
+        propertyType: property.propertyType,
+        location: property.location,
+        price: property.price || property.rentPrice || property.ownerAskingPrice,
+        buildingName: property.buildingName || '',
+        status: property.status,
+        confidence: match.confidence,
+        matchReason: match.matchReason
+      };
+      const propertyMatchSummary = {
+        id: lead.id,
+        clientPurpose: lead.clientPurpose,
+        propertyType: lead.propertyType,
+        location: lead.location,
+        budget: lead.budget,
+        preferredBuildingProject: lead.preferredBuildingProject || '',
+        status: lead.status,
+        confidence: match.confidence,
+        matchReason: match.matchReason
+      };
+
+      lead.matchingListings.push(leadMatchSummary);
+      property.matchingLeads.push(propertyMatchSummary);
+      lead.matchCount += 1;
+      property.matchCount += 1;
+      if (match.confidence === 'strong') {
+        lead.strongMatchCount += 1;
+        property.strongMatchCount += 1;
+      }
+    });
+  });
+
+  return {
+    leads: [...leadMap.values()],
+    properties: [...propertyMap.values()],
+    aiMatches: aiMatches.map(sanitizeAiMatch)
+  };
+}
+
+function buildDynamicNotifications(leads, properties, existingNotifications = []) {
+  const notifications = [];
+  const makeNotification = (id, type, title, message, relatedSourceType, relatedSourceId) => ({
+    id,
+    notification_type: type,
+    title,
+    message,
+    related_source_type: relatedSourceType,
+    related_source_id: relatedSourceId,
+    status: 'unread',
+    created_at: nowIso(),
+    updated_at: nowIso()
+  });
+
+  leads.forEach(lead => {
+    if (lead.isArchived) return;
+    const followUpState = getFollowUpState(lead);
+    if (followUpState.key === 'overdue') {
+      notifications.push(makeNotification(`lead-overdue-${lead.id}`, 'follow-up', `Lead #${lead.id} follow-up overdue`, followUpState.label, 'lead', lead.id));
+    } else if (followUpState.key === 'today') {
+      notifications.push(makeNotification(`lead-today-${lead.id}`, 'follow-up', `Lead #${lead.id} follow-up due today`, followUpState.label, 'lead', lead.id));
+    }
+    if (lead.matchCount) {
+      notifications.push(makeNotification(`lead-match-${lead.id}`, 'match', `${lead.matchCount} matching listings found`, `Lead #${lead.id} has ${lead.matchCount} possible listing match${lead.matchCount === 1 ? '' : 'es'}.`, 'lead', lead.id));
+    }
+  });
+
+  properties.forEach(property => {
+    if (property.isArchived) return;
+    const followUpState = getFollowUpState(property);
+    if (followUpState.key === 'overdue') {
+      notifications.push(makeNotification(`property-overdue-${property.id}`, 'follow-up', `Listing #${property.id} follow-up overdue`, followUpState.label, 'property', property.id));
+    } else if (followUpState.key === 'today') {
+      notifications.push(makeNotification(`property-today-${property.id}`, 'follow-up', `Listing #${property.id} follow-up due today`, followUpState.label, 'property', property.id));
+    }
+    if (property.matchCount) {
+      notifications.push(makeNotification(`property-match-${property.id}`, 'match', `${property.matchCount} matching leads found`, `Listing #${property.id} has ${property.matchCount} possible lead match${property.matchCount === 1 ? '' : 'es'}.`, 'property', property.id));
+    }
+  });
+
+  const merged = [
+    ...(Array.isArray(existingNotifications) ? existingNotifications : []),
+    ...notifications
+  ];
+
+  return merged
+    .sort((a, b) => new Date(b.createdAt || b.created_at || 0).getTime() - new Date(a.createdAt || a.created_at || 0).getTime())
+    .slice(0, 20)
+    .map(sanitizeNotification);
+}
+
+function buildOverview(leads, properties, sharedListings, broker, aiMatches) {
+  const activeLeads = leads.filter(lead => !lead.isArchived && !CLOSED_LEAD_STATUSES.has(normalizeLeadStatus(lead.status)));
+  const activeListings = properties.filter(property => !property.isArchived && !INACTIVE_LISTING_STATUSES.has(normalizeListingStatus(property.status)));
+  const followUpToday = [...leads, ...properties].filter(item => getFollowUpState(item).key === 'today').length;
+  const overdueFollowUps = [...leads, ...properties].filter(item => getFollowUpState(item).key === 'overdue').length;
+
+  return {
+    broker: {
+      fullName: broker.full_name,
+      brokerIdNumber: broker.broker_id_number,
+      mobileNumber: broker.mobile_number,
+      email: broker.email,
+      companyName: broker.company_name || '',
+      isVerified: Boolean(broker.is_verified)
+    },
+    totals: {
+      leads: activeLeads.length,
+      properties: activeListings.length,
+      sharedListings: sharedListings.length,
+      activeLeads: activeLeads.length,
+      activeProperties: activeListings.length,
+      followUpsDueToday: followUpToday,
+      overdueFollowUps,
+      possibleMatches: Array.isArray(aiMatches) ? aiMatches.length : 0,
+      archivedLeads: leads.filter(lead => lead.isArchived).length,
+      archivedListings: properties.filter(property => property.isArchived).length
+    }
+  };
 }
 
 async function fetchBrokerDataset(context) {
@@ -259,22 +659,68 @@ async function fetchBrokerDataset(context) {
     selectOptionalBrokerRows(context, 'broker_ai_matches')
   ]);
 
-  const leads = (Array.isArray(leadRows) ? leadRows : []).map(sanitizeLead);
-  const properties = (Array.isArray(propertyRows) ? propertyRows : []).map(sanitizeProperty);
+  const leadRecords = (Array.isArray(leadRows) ? leadRows : []).map(sanitizeLead);
+  const propertyRecords = (Array.isArray(propertyRows) ? propertyRows : []).map(sanitizeProperty);
   const followUps = (Array.isArray(followUpRows) ? followUpRows : []).map(sanitizeFollowUp);
   const sharedListings = (Array.isArray(listingRows) ? listingRows : []).map(sanitizePublicListing);
-  const notifications = (Array.isArray(notificationRows) ? notificationRows : []).map(sanitizeNotification);
-  const aiMatches = (Array.isArray(aiMatchRows) ? aiMatchRows : []).map(sanitizeAiMatch);
+  const storedNotifications = Array.isArray(notificationRows) ? notificationRows : [];
+  const storedAiMatches = (Array.isArray(aiMatchRows) ? aiMatchRows : []).map(sanitizeAiMatch);
+
+  const computedMatches = computeMatchData(leadRecords, propertyRecords);
+  const notifications = buildDynamicNotifications(computedMatches.leads, computedMatches.properties, storedNotifications);
+  const aiMatches = computedMatches.aiMatches.length ? computedMatches.aiMatches : storedAiMatches;
 
   return {
-    overview: buildOverview(leads, properties, followUps, sharedListings, broker),
-    leads,
-    properties,
+    overview: buildOverview(computedMatches.leads, computedMatches.properties, sharedListings, broker, aiMatches),
+    leads: computedMatches.leads,
+    properties: computedMatches.properties,
     followUps,
     sharedListings,
     notifications,
     aiMatches
   };
+}
+
+async function patchLeadWorkflow(context, lead, updates = {}, activityText = '', activityType = 'system') {
+  const meta = getLeadMeta({}, lead, {
+    ...updates,
+    activityLog: activityText
+      ? prependActivityLog(parseLeadMeta(lead.follow_up_notes).activityLog, activityText, activityType)
+      : parseLeadMeta(lead.follow_up_notes).activityLog
+  });
+
+  const rows = await supabasePatch({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'broker_leads',
+    filters: { id: lead.id, broker_uuid: context.broker.id },
+    payload: {
+      follow_up_notes: serializeLeadMeta(meta),
+      updated_at: nowIso()
+    }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
+}
+
+async function patchPropertyWorkflow(context, property, updates = {}, activityText = '', activityType = 'system') {
+  const meta = getPropertyMeta({}, property, {
+    ...updates,
+    activityLog: activityText
+      ? prependActivityLog(parsePropertyMeta(property.description).activityLog, activityText, activityType)
+      : parsePropertyMeta(property.description).activityLog
+  });
+
+  const rows = await supabasePatch({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'broker_properties',
+    filters: { id: property.id, broker_uuid: context.broker.id },
+    payload: {
+      description: serializePropertyMeta(meta),
+      updated_at: nowIso()
+    }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
 }
 
 export async function GET(request) {
@@ -299,9 +745,10 @@ export async function POST(request) {
     }
 
     if (action === 'create-lead') {
+      const baseLog = prependActivityLog([], 'Lead created in the CRM workspace.', 'created');
       const payload = {
-        ...getLeadPayload(body, broker.id),
-        created_at: new Date().toISOString()
+        ...getLeadPayload(body, broker.id, null, { activityLog: baseLog }),
+        created_at: nowIso()
       };
       const rows = await supabaseInsert({
         supabaseUrl,
@@ -319,12 +766,16 @@ export async function POST(request) {
     if (action === 'update-lead') {
       const id = Number(body?.id || 0);
       if (!id) return json({ message: 'Lead id is required.' }, 400);
+      const existingLead = await fetchBrokerRow(context, 'broker_leads', id);
+      if (!existingLead) return json({ message: 'Lead not found.' }, 404);
+
+      const activityLog = buildLeadActivityLog(existingLead, body, [{ text: 'Lead details updated.', type: 'updated' }]);
       const rows = await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_leads',
         filters: { id, broker_uuid: broker.id },
-        payload: getLeadPayload(body, broker.id)
+        payload: getLeadPayload(body, broker.id, existingLead, { activityLog })
       });
       const lead = Array.isArray(rows) ? rows[0] : null;
       if (!lead) return json({ message: 'Lead not found.' }, 404);
@@ -350,9 +801,10 @@ export async function POST(request) {
     }
 
     if (action === 'create-property') {
+      const baseLog = prependActivityLog([], 'Listing created in the CRM workspace.', 'created');
       const payload = {
-        ...getPropertyPayload(body, broker.id),
-        created_at: new Date().toISOString()
+        ...getPropertyPayload(body, broker.id, null, { activityLog: baseLog }),
+        created_at: nowIso()
       };
       const rows = await supabaseInsert({
         supabaseUrl,
@@ -370,12 +822,16 @@ export async function POST(request) {
     if (action === 'update-property') {
       const id = Number(body?.id || 0);
       if (!id) return json({ message: 'Property id is required.' }, 400);
+      const existingProperty = await fetchBrokerRow(context, 'broker_properties', id);
+      if (!existingProperty) return json({ message: 'Property not found.' }, 404);
+
+      const activityLog = buildPropertyActivityLog(existingProperty, body, [{ text: 'Listing details updated.', type: 'updated' }]);
       const rows = await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_properties',
         filters: { id, broker_uuid: broker.id },
-        payload: getPropertyPayload(body, broker.id)
+        payload: getPropertyPayload(body, broker.id, existingProperty, { activityLog })
       });
       const property = Array.isArray(rows) ? rows[0] : null;
       if (!property) return json({ message: 'Property not found.' }, 404);
@@ -408,6 +864,37 @@ export async function POST(request) {
       }
 
       const table = entityType === 'lead' ? 'broker_leads' : 'broker_properties';
+      const row = await fetchBrokerRow(context, table, entityId);
+      if (!row) {
+        return json({ message: 'Item not found.' }, 404);
+      }
+
+      if (entityType === 'lead') {
+        const meta = getLeadMeta({}, row, {
+          activityLog: prependActivityLog(parseLeadMeta(row.follow_up_notes).activityLog, action === 'list-item' ? 'Listed on Broker Connector Page.' : 'Removed from Broker Connector Page.', action === 'list-item' ? 'share' : 'unshare')
+        });
+        const rows = await supabasePatch({
+          supabaseUrl,
+          serviceRoleKey,
+          table,
+          filters: { id: entityId, broker_uuid: broker.id },
+          payload: {
+            is_listed_public: action === 'list-item',
+            public_listing_status: action === 'list-item' ? 'listed' : 'private',
+            follow_up_notes: serializeLeadMeta(meta),
+            updated_at: nowIso()
+          }
+        });
+        const item = Array.isArray(rows) ? rows[0] : null;
+        if (!item) return json({ message: 'Item not found.' }, 404);
+        if (action === 'list-item') await syncPublicListing(context, entityType, item, broker);
+        else await removePublicListing(context, entityType, entityId);
+        return json({ success: true });
+      }
+
+      const meta = getPropertyMeta({}, row, {
+        activityLog: prependActivityLog(parsePropertyMeta(row.description).activityLog, action === 'list-item' ? 'Listed on Broker Connector Page.' : 'Removed from Broker Connector Page.', action === 'list-item' ? 'share' : 'unshare')
+      });
       const rows = await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
@@ -416,19 +903,207 @@ export async function POST(request) {
         payload: {
           is_listed_public: action === 'list-item',
           public_listing_status: action === 'list-item' ? 'listed' : 'private',
-          updated_at: new Date().toISOString()
+          description: serializePropertyMeta(meta),
+          updated_at: nowIso()
         }
       });
       const item = Array.isArray(rows) ? rows[0] : null;
-      if (!item) {
-        return json({ message: 'Item not found.' }, 404);
-      }
-      if (action === 'list-item') {
-        await syncPublicListing(context, entityType, item, broker);
-      } else {
-        await removePublicListing(context, entityType, entityId);
-      }
+      if (!item) return json({ message: 'Item not found.' }, 404);
+      if (action === 'list-item') await syncPublicListing(context, entityType, item, broker);
+      else await removePublicListing(context, entityType, entityId);
       return json({ success: true });
+    }
+
+    if (action === 'update-lead-status') {
+      const id = Number(body?.id || 0);
+      const lead = await fetchBrokerRow(context, 'broker_leads', id);
+      if (!lead) return json({ message: 'Lead not found.' }, 404);
+      const nextStatus = normalizeLeadStatus(body?.status);
+      const activityLog = prependActivityLog(parseLeadMeta(lead.follow_up_notes).activityLog, `Status changed from ${formatStatusLabel(lead.status)} to ${formatStatusLabel(nextStatus)}.`, 'status');
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_leads',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          status: nextStatus,
+          follow_up_notes: serializeLeadMeta(getLeadMeta({}, lead, { activityLog })),
+          updated_at: nowIso()
+        }
+      });
+      return json({ lead: sanitizeLead(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'update-property-status') {
+      const id = Number(body?.id || 0);
+      const property = await fetchBrokerRow(context, 'broker_properties', id);
+      if (!property) return json({ message: 'Listing not found.' }, 404);
+      const nextStatus = normalizeListingStatus(body?.status);
+      const activityLog = prependActivityLog(parsePropertyMeta(property.description).activityLog, `Status changed from ${formatStatusLabel(property.status)} to ${formatStatusLabel(nextStatus)}.`, 'status');
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          status: nextStatus,
+          description: serializePropertyMeta(getPropertyMeta({}, property, { activityLog })),
+          updated_at: nowIso()
+        }
+      });
+      return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'set-lead-followup') {
+      const id = Number(body?.id || 0);
+      const lead = await fetchBrokerRow(context, 'broker_leads', id);
+      if (!lead) return json({ message: 'Lead not found.' }, 404);
+      const activityLog = prependActivityLog(
+        parseLeadMeta(lead.follow_up_notes).activityLog,
+        buildFollowUpText(body?.nextFollowUpDate, body?.nextFollowUpTime, normalizeBool(body?.isUrgentFollowUp)),
+        'followup'
+      );
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_leads',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          follow_up_notes: serializeLeadMeta(getLeadMeta(body, lead, { activityLog })),
+          updated_at: nowIso()
+        }
+      });
+      return json({ lead: sanitizeLead(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'set-property-followup') {
+      const id = Number(body?.id || 0);
+      const property = await fetchBrokerRow(context, 'broker_properties', id);
+      if (!property) return json({ message: 'Listing not found.' }, 404);
+      const activityLog = prependActivityLog(
+        parsePropertyMeta(property.description).activityLog,
+        buildFollowUpText(body?.nextFollowUpDate, body?.nextFollowUpTime, normalizeBool(body?.isUrgentFollowUp)),
+        'followup'
+      );
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          description: serializePropertyMeta(getPropertyMeta(body, property, { activityLog })),
+          updated_at: nowIso()
+        }
+      });
+      return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'track-lead-contact') {
+      const id = Number(body?.id || 0);
+      const lead = await fetchBrokerRow(context, 'broker_leads', id);
+      if (!lead) return json({ message: 'Lead not found.' }, 404);
+      const meta = parseLeadMeta(lead.follow_up_notes);
+      const method = normalizeText(body?.method || 'manual');
+      const updates = {
+        callCount: method.toLowerCase() === 'call' ? meta.callCount + 1 : meta.callCount,
+        whatsappCount: method.toLowerCase() === 'whatsapp' ? meta.whatsappCount + 1 : meta.whatsappCount,
+        lastContactedAt: nowIso(),
+        lastContactMethod: method,
+        activityLog: prependActivityLog(meta.activityLog, formatContactLog(method), 'contact')
+      };
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_leads',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          follow_up_notes: serializeLeadMeta(getLeadMeta({}, lead, updates)),
+          updated_at: nowIso()
+        }
+      });
+      return json({ lead: sanitizeLead(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'track-property-contact') {
+      const id = Number(body?.id || 0);
+      const property = await fetchBrokerRow(context, 'broker_properties', id);
+      if (!property) return json({ message: 'Listing not found.' }, 404);
+      const meta = parsePropertyMeta(property.description);
+      const method = normalizeText(body?.method || 'manual');
+      const updates = {
+        ownerCallCount: method.toLowerCase() === 'call' ? meta.ownerCallCount + 1 : meta.ownerCallCount,
+        ownerWhatsappCount: method.toLowerCase() === 'whatsapp' ? meta.ownerWhatsappCount + 1 : meta.ownerWhatsappCount,
+        lastOwnerContactedAt: nowIso(),
+        lastOwnerContactMethod: method,
+        activityLog: prependActivityLog(meta.activityLog, formatContactLog(method, true), 'contact')
+      };
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          description: serializePropertyMeta(getPropertyMeta({}, property, updates)),
+          updated_at: nowIso()
+        }
+      });
+      return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'archive-lead' || action === 'restore-lead') {
+      const id = Number(body?.id || 0);
+      const lead = await fetchBrokerRow(context, 'broker_leads', id);
+      if (!lead) return json({ message: 'Lead not found.' }, 404);
+      const isArchiving = action === 'archive-lead';
+      const meta = getLeadMeta({}, lead, {
+        isArchived: isArchiving,
+        archivedAt: isArchiving ? nowIso() : '',
+        activityLog: prependActivityLog(parseLeadMeta(lead.follow_up_notes).activityLog, isArchiving ? 'Lead archived.' : 'Lead restored from archive.', isArchiving ? 'archive' : 'restore')
+      });
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_leads',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          follow_up_notes: serializeLeadMeta(meta),
+          is_listed_public: isArchiving ? false : Boolean(lead.is_listed_public),
+          public_listing_status: isArchiving ? 'private' : (lead.public_listing_status || 'private'),
+          updated_at: nowIso()
+        }
+      });
+      if (isArchiving) {
+        await removePublicListing(context, 'lead', id);
+      }
+      return json({ lead: sanitizeLead(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'archive-property' || action === 'restore-property') {
+      const id = Number(body?.id || 0);
+      const property = await fetchBrokerRow(context, 'broker_properties', id);
+      if (!property) return json({ message: 'Listing not found.' }, 404);
+      const isArchiving = action === 'archive-property';
+      const meta = getPropertyMeta({}, property, {
+        isArchived: isArchiving,
+        archivedAt: isArchiving ? nowIso() : '',
+        activityLog: prependActivityLog(parsePropertyMeta(property.description).activityLog, isArchiving ? 'Listing archived.' : 'Listing restored from archive.', isArchiving ? 'archive' : 'restore')
+      });
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        filters: { id, broker_uuid: broker.id },
+        payload: {
+          description: serializePropertyMeta(meta),
+          is_listed_public: isArchiving ? false : Boolean(property.is_listed_public),
+          public_listing_status: isArchiving ? 'private' : (property.public_listing_status || 'private'),
+          updated_at: nowIso()
+        }
+      });
+      if (isArchiving) {
+        await removePublicListing(context, 'property', id);
+      }
+      return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
     }
 
     if (action === 'save-followup') {

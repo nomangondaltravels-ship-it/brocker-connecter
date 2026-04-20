@@ -1024,6 +1024,190 @@
       background: rgba(9,18,32,0.5);
     }
 
+    .count-pill {
+      min-width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.18);
+      border: 1px solid rgba(242, 223, 152, 0.24);
+      color: var(--gold-soft);
+      font-size: 0.76rem;
+      font-weight: 800;
+    }
+
+    .workflow-insights {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .insight-card {
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(11, 21, 36, 0.94), rgba(11, 21, 36, 0.86));
+      border: 1px solid rgba(212, 175, 55, 0.12);
+    }
+
+    .insight-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+
+    .insight-head h3 {
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .insight-head p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .workflow-alert-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .workflow-alert-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(9, 18, 32, 0.72);
+      border: 1px solid rgba(212, 175, 55, 0.08);
+    }
+
+    .workflow-alert-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .workflow-alert-item small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .record-toolbar {
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(212, 175, 55, 0.1);
+      background: linear-gradient(180deg, rgba(11, 21, 36, 0.9), rgba(11, 21, 36, 0.8));
+    }
+
+    .record-filter-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .compact-toggle {
+      min-height: 56px;
+      margin-top: 23px;
+    }
+
+    .workflow-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge.badge-ghost {
+      background: rgba(148, 163, 184, 0.08);
+      color: #d2d8e3;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+
+    .badge.badge-overdue {
+      background: rgba(127, 29, 29, 0.2);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.24);
+    }
+
+    .badge.badge-match {
+      background: rgba(56, 189, 248, 0.12);
+      color: #c7f0ff;
+      border: 1px solid rgba(56, 189, 248, 0.22);
+    }
+
+    .badge.badge-archived {
+      background: rgba(148, 163, 184, 0.14);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+    }
+
+    .record-summary {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .record-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .record-actions select {
+      min-width: 170px;
+    }
+
+    .record-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .record-details-panel {
+      margin-top: 14px;
+      border-top: 1px solid rgba(212, 175, 55, 0.08);
+      padding-top: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .record-inline-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .record-inline-grid .field-block {
+      margin: 0;
+    }
+
+    .timeline-list,
+    .match-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .timeline-item,
+    .match-item {
+      padding: 11px 12px;
+      border-radius: 12px;
+      background: rgba(9, 18, 32, 0.72);
+      border: 1px solid rgba(212, 175, 55, 0.08);
+    }
+
+    .timeline-item small,
+    .match-item small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
     @media (max-width: 1080px) {
       .topbar-inner {
         grid-template-columns: 1fr;
@@ -1045,12 +1229,13 @@
       }
       .sidebar-peek { display: none; }
       .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .grid-3, .kanban, .overview-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3, .kanban, .overview-actions, .workflow-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .record-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     @media (max-width: 760px) {
-      .stats, .grid-2, .grid-3, .kanban, .detail-grid, .form-grid, .check-grid, .overview-actions {
+      .stats, .grid-2, .grid-3, .kanban, .detail-grid, .form-grid, .check-grid, .overview-actions, .workflow-insights, .record-inline-grid {
         grid-template-columns: 1fr;
       }
       .section, .hero { padding-left: 16px; padding-right: 16px; }
@@ -1062,6 +1247,8 @@
       .search-hub.compact-top-search .search-suggestions {
         width: 100%;
       }
+      .record-filter-grid { grid-template-columns: 1fr; }
+      .record-actions { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -1088,6 +1275,7 @@
         </div>
       </div>
       <div class="top-actions">
+        <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
         <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
         <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
         <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
@@ -1127,6 +1315,26 @@
           </div>
         </div>
         <div class="stats" id="overviewStats"></div>
+        <div class="grid-2 workflow-insights">
+          <div class="card insight-card" id="workflowAlertsCard">
+            <div class="insight-head">
+              <div>
+                <h3>Workflow Alerts</h3>
+                <p>Due today, overdue reminders, and fresh match signals.</p>
+              </div>
+            </div>
+            <div class="workflow-alert-list" id="workflowAlertsList"></div>
+          </div>
+          <div class="card insight-card" id="workflowMatchesCard">
+            <div class="insight-head">
+              <div>
+                <h3>Match Opportunities</h3>
+                <p>Recent strong and partial matches between your leads and listings.</p>
+              </div>
+            </div>
+            <div class="workflow-alert-list" id="workflowMatchesList"></div>
+          </div>
+        </div>
         <div class="overview-actions">
           <button class="btn quick-action-card" type="button" onclick="openLeadComposer()">
             <span class="quick-action-icon">+</span>
@@ -1248,6 +1456,46 @@
                   <label class="small">Private Notes</label>
                   <textarea id="leadPrivateNotes" placeholder="Add internal notes for your follow-up"></textarea>
                   <div class="field-error" id="leadPrivateNotesError"></div>
+                </div>
+              </div>
+
+              <div class="form-section crm-hidden" id="leadWorkflowSection">
+                <div class="form-section-head">
+                  <h4>Workflow &amp; Follow-up</h4>
+                  <p>Track pipeline status and set your next reminder without leaving the lead form.</p>
+                </div>
+                <div class="form-grid">
+                  <div class="field-block">
+                    <label class="small">Lead Status</label>
+                    <select id="leadStatus">
+                      <option value="new">New</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="follow-up">Follow-up</option>
+                      <option value="meeting scheduled">Meeting Scheduled</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="closed won">Closed Won</option>
+                      <option value="closed lost">Closed Lost</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Next Follow-up Date</label>
+                    <input id="leadNextFollowUpDate" type="date">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Next Follow-up Time</label>
+                    <input id="leadNextFollowUpTime" type="time">
+                  </div>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="leadUrgentFollowUp">
+                    <span>
+                      <strong>Urgent Reminder</strong>
+                      <small>Flag this lead for urgent follow-up.</small>
+                    </span>
+                  </label>
+                  <div class="field-block full">
+                    <label class="small">Follow-up Note</label>
+                    <textarea id="leadFollowUpNote" placeholder="Add a reminder note for your next touchpoint"></textarea>
+                  </div>
                 </div>
               </div>
 
@@ -1428,6 +1676,44 @@
                 </div>
               </div>
 
+              <div class="form-section crm-hidden" id="propertyWorkflowSection">
+                <div class="form-section-head">
+                  <h4>Workflow &amp; Follow-up</h4>
+                  <p>Keep the listing pipeline current and set reminders for owners, viewings, or negotiation steps.</p>
+                </div>
+                <div class="form-grid">
+                  <div class="field-block">
+                    <label class="small">Listing Status</label>
+                    <select id="propertyStatus">
+                      <option value="available">Available</option>
+                      <option value="reserved">Reserved</option>
+                      <option value="rented">Rented</option>
+                      <option value="sold">Sold</option>
+                      <option value="off market">Off Market</option>
+                    </select>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Next Follow-up Date</label>
+                    <input id="propertyNextFollowUpDate" type="date">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Next Follow-up Time</label>
+                    <input id="propertyNextFollowUpTime" type="time">
+                  </div>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyUrgentFollowUp">
+                    <span>
+                      <strong>Urgent Reminder</strong>
+                      <small>Highlight this listing for urgent owner follow-up.</small>
+                    </span>
+                  </label>
+                  <div class="field-block full">
+                    <label class="small">Follow-up Note</label>
+                    <textarea id="propertyFollowUpNote" placeholder="Add your reminder note for the next owner update"></textarea>
+                  </div>
+                </div>
+              </div>
+
               <div class="lead-form-actions">
                 <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Listing</button>
                 <button class="btn btn-secondary" type="button" onclick="cancelPropertyForm()">Cancel</button>
@@ -1444,6 +1730,73 @@
             <p>View and manage your private broker requirements here.</p>
           </div>
         </div>
+        <div class="record-toolbar">
+          <div class="record-filter-grid">
+            <div class="field-block">
+              <label class="small">Status</label>
+              <select id="leadStatusFilter" onchange="updateDashboardFilter('leads','status', this.value)">
+                <option value="all">All Statuses</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="follow-up">Follow-up</option>
+                <option value="meeting scheduled">Meeting Scheduled</option>
+                <option value="negotiation">Negotiation</option>
+                <option value="closed won">Closed Won</option>
+                <option value="closed lost">Closed Lost</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Purpose</label>
+              <select id="leadPurposeFilter" onchange="updateDashboardFilter('leads','purpose', this.value)">
+                <option value="all">All Purposes</option>
+                <option value="rent">Rent</option>
+                <option value="buy">Buy</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Visibility</label>
+              <select id="leadVisibilityFilter" onchange="updateDashboardFilter('leads','visibility', this.value)">
+                <option value="all">Public + Private</option>
+                <option value="listed">Listed Public</option>
+                <option value="private">Private Only</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Follow-up</label>
+              <select id="leadFollowUpFilter" onchange="updateDashboardFilter('leads','followUp', this.value)">
+                <option value="all">All Follow-up States</option>
+                <option value="today">Follow-up Today</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="overdue">Overdue</option>
+                <option value="none">No Follow-up</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Records</label>
+              <select id="leadArchiveFilter" onchange="updateDashboardFilter('leads','archive', this.value)">
+                <option value="active">Active Only</option>
+                <option value="archived">Archived Only</option>
+                <option value="all">All Records</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Urgent</label>
+              <select id="leadUrgentFilter" onchange="updateDashboardFilter('leads','urgent', this.value)">
+                <option value="all">All Leads</option>
+                <option value="urgent">Urgent Follow-up</option>
+                <option value="standard">Standard</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Matches</label>
+              <select id="leadMatchFilter" onchange="updateDashboardFilter('leads','matches', this.value)">
+                <option value="all">Matched + Unmatched</option>
+                <option value="matched">Matched</option>
+                <option value="unmatched">Unmatched</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div class="item-list" id="leadsList"></div>
       </section>
 
@@ -1452,6 +1805,71 @@
           <div>
             <h2>My Properties</h2>
             <p>View and manage your private inventory here.</p>
+          </div>
+        </div>
+        <div class="record-toolbar">
+          <div class="record-filter-grid">
+            <div class="field-block">
+              <label class="small">Status</label>
+              <select id="propertyStatusFilter" onchange="updateDashboardFilter('properties','status', this.value)">
+                <option value="all">All Statuses</option>
+                <option value="available">Available</option>
+                <option value="reserved">Reserved</option>
+                <option value="rented">Rented</option>
+                <option value="sold">Sold</option>
+                <option value="off market">Off Market</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Purpose</label>
+              <select id="propertyPurposeFilter" onchange="updateDashboardFilter('properties','purpose', this.value)">
+                <option value="all">Rent + Sale</option>
+                <option value="rent">Rent</option>
+                <option value="sale">Sale</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Visibility</label>
+              <select id="propertyVisibilityFilter" onchange="updateDashboardFilter('properties','visibility', this.value)">
+                <option value="all">Public + Private</option>
+                <option value="listed">Listed Public</option>
+                <option value="private">Private Only</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Follow-up</label>
+              <select id="propertyFollowUpFilter" onchange="updateDashboardFilter('properties','followUp', this.value)">
+                <option value="all">All Follow-up States</option>
+                <option value="today">Follow-up Today</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="overdue">Overdue</option>
+                <option value="none">No Follow-up</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Records</label>
+              <select id="propertyArchiveFilter" onchange="updateDashboardFilter('properties','archive', this.value)">
+                <option value="active">Active Only</option>
+                <option value="archived">Archived Only</option>
+                <option value="all">All Records</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Distress</label>
+              <select id="propertyDistressFilter" onchange="updateDashboardFilter('properties','distress', this.value)">
+                <option value="all">All Listings</option>
+                <option value="distress">Distress Deals</option>
+                <option value="standard">Standard</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label class="small">Matches</label>
+              <select id="propertyMatchFilter" onchange="updateDashboardFilter('properties','matches', this.value)">
+                <option value="all">Matched + Unmatched</option>
+                <option value="matched">Matched</option>
+                <option value="unmatched">Unmatched</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="item-list" id="propertiesList"></div>
@@ -1498,8 +1916,30 @@
       properties: [],
       followUps: [],
       sharedListings: [],
+      notifications: [],
+      aiMatches: [],
       activeSection: 'overview',
       dashboardSearchQuery: '',
+      filters: {
+        leads: {
+          status: 'all',
+          purpose: 'all',
+          visibility: 'all',
+          followUp: 'all',
+          archive: 'active',
+          urgent: 'all',
+          matches: 'all'
+        },
+        properties: {
+          status: 'all',
+          purpose: 'all',
+          visibility: 'all',
+          followUp: 'all',
+          archive: 'active',
+          distress: 'all',
+          matches: 'all'
+        }
+      },
       leadEditorOriginal: null,
       propertyEditorOriginal: null
     };
@@ -1661,6 +2101,7 @@
       const details = document.getElementById('leadRequirementFields');
       const clientSection = document.getElementById('leadClientSection');
       const notesSection = document.getElementById('leadNotesSection');
+      const workflowSection = document.getElementById('leadWorkflowSection');
       const paymentWrap = document.getElementById('leadPaymentMethodWrap');
       const paymentSelect = document.getElementById('leadPaymentMethod');
       const propertyTypeSelect = document.getElementById('leadPropertyType');
@@ -1675,6 +2116,7 @@
       details?.classList.toggle('crm-hidden', !showDetails);
       clientSection?.classList.toggle('crm-hidden', !showDetails);
       notesSection?.classList.toggle('crm-hidden', !showDetails);
+      workflowSection?.classList.toggle('crm-hidden', !showDetails);
       paymentWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'buy');
 
       const previousPropertyType = options.preserveValues ? propertyTypeSelect?.value || '' : '';
@@ -1985,6 +2427,7 @@
       const pricingSection = document.getElementById('propertyPricingSection');
       const contactsSection = document.getElementById('propertyContactsSection');
       const notesSection = document.getElementById('propertyNotesSection');
+      const workflowSection = document.getElementById('propertyWorkflowSection');
       const rentFields = document.getElementById('propertyRentFields');
       const saleFields = document.getElementById('propertySaleFields');
       const saleToggleRow = document.getElementById('propertySaleToggleRow');
@@ -2001,6 +2444,7 @@
       pricingSection?.classList.toggle('crm-hidden', !showSections);
       contactsSection?.classList.toggle('crm-hidden', !showSections);
       notesSection?.classList.toggle('crm-hidden', !showSections);
+      workflowSection?.classList.toggle('crm-hidden', !showSections);
       rentFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'rent');
       saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
@@ -3212,6 +3656,1373 @@
       });
     }
 
+    const DASHBOARD_LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost'];
+    const DASHBOARD_LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market'];
+
+    function formatStatusLabel(value) {
+      return String(value || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ') || 'Status';
+    }
+
+    function getDashboardTodayString() {
+      return new Intl.DateTimeFormat('sv-SE', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    }
+
+    function getFollowUpStateInfo(record) {
+      const rawDate = String(record?.nextFollowUpDate || '').trim();
+      if (!rawDate) return { key: 'none', label: 'No follow-up set', className: 'badge-ghost' };
+      const today = getDashboardTodayString();
+      if (rawDate === today) return { key: 'today', label: 'Follow-up Today', className: 'badge-yellow' };
+      const targetDate = new Date(`${rawDate}T00:00:00`);
+      const todayDate = new Date(`${today}T00:00:00`);
+      const diffDays = Math.round((targetDate - todayDate) / 86400000);
+      if (diffDays < 0) {
+        return { key: 'overdue', label: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? '' : 's'}`, className: 'badge-overdue' };
+      }
+      if (diffDays === 1) {
+        return { key: 'upcoming', label: 'Due Tomorrow', className: 'badge-blue' };
+      }
+      return { key: 'upcoming', label: `Upcoming on ${rawDate}`, className: 'badge-blue' };
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '--';
+      try {
+        return new Date(value).toLocaleString('en-AE', { dateStyle: 'medium', timeStyle: 'short' });
+      } catch (error) {
+        return String(value);
+      }
+    }
+
+    function formatDateOnly(value) {
+      if (!value) return '--';
+      try {
+        return new Date(value).toLocaleDateString('en-AE', { dateStyle: 'medium' });
+      } catch (error) {
+        return String(value);
+      }
+    }
+
+    function formatLastContactLabel(value) {
+      if (!value) return 'No contact yet';
+      try {
+        const date = new Date(value);
+        const now = new Date();
+        const diffDays = Math.floor((now - date) / 86400000);
+        if (diffDays <= 0) return 'Today';
+        if (diffDays === 1) return 'Yesterday';
+        return `${diffDays} days ago`;
+      } catch (error) {
+        return value;
+      }
+    }
+
+    function getLeadVisibility(record) {
+      return record.isListedPublic ? 'listed' : 'private';
+    }
+
+    function getPropertyVisibility(record) {
+      return record.isListedPublic ? 'listed' : 'private';
+    }
+
+    function getLeadFilterState() {
+      return state.filters?.leads || {};
+    }
+
+    function getPropertyFilterState() {
+      return state.filters?.properties || {};
+    }
+
+    function updateDashboardFilter(section, key, value) {
+      if (!state.filters?.[section]) return;
+      state.filters[section][key] = value;
+      if (section === 'leads') renderLeads();
+      if (section === 'properties') renderProperties();
+    }
+
+    function syncFilterInputs(section) {
+      const filters = state.filters?.[section];
+      if (!filters) return;
+      const prefix = section === 'leads' ? 'lead' : 'property';
+      const fieldMap = {
+        status: `${prefix}StatusFilter`,
+        purpose: `${prefix}PurposeFilter`,
+        visibility: `${prefix}VisibilityFilter`,
+        followUp: `${prefix}FollowUpFilter`,
+        archive: `${prefix}ArchiveFilter`,
+        urgent: `${prefix}UrgentFilter`,
+        distress: `${prefix}DistressFilter`,
+        matches: `${prefix}MatchFilter`
+      };
+
+      Object.entries(filters).forEach(([key, value]) => {
+        const node = document.getElementById(fieldMap[key] || `${prefix}${key.charAt(0).toUpperCase() + key.slice(1)}Filter`);
+        if (node) node.value = value;
+      });
+    }
+
+    function focusWorkflowAlerts() {
+      openSection('overview');
+      document.getElementById('workflowAlertsCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openOverviewMetric(metricKey) {
+      if (metricKey === 'activeLeads') {
+        state.filters.leads.archive = 'active';
+        syncFilterInputs('leads');
+        openSection('leads');
+        renderLeads();
+        return;
+      }
+      if (metricKey === 'activeListings') {
+        state.filters.properties.archive = 'active';
+        syncFilterInputs('properties');
+        openSection('properties');
+        renderProperties();
+        return;
+      }
+      if (metricKey === 'archivedLeads') {
+        state.filters.leads.archive = 'archived';
+        syncFilterInputs('leads');
+        openSection('leads');
+        renderLeads();
+        return;
+      }
+      if (metricKey === 'archivedListings') {
+        state.filters.properties.archive = 'archived';
+        syncFilterInputs('properties');
+        openSection('properties');
+        renderProperties();
+        return;
+      }
+      focusWorkflowAlerts();
+    }
+
+    function badgeClass(status) {
+      const value = String(status || '').toLowerCase();
+      if (['new', 'available', 'listed', 'open'].includes(value)) return 'badge-yellow';
+      if (['contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'reserved'].includes(value)) return 'badge-orange';
+      if (['closed won', 'sold', 'rented', 'resolved', 'verified'].includes(value)) return 'badge-green';
+      if (['closed lost', 'cancelled', 'rejected', 'blocked', 'off market'].includes(value)) return 'badge-red';
+      return 'badge-blue';
+    }
+
+    function getDashboardSearchText(item, type) {
+      if (type === 'lead') {
+        return [
+          'broker requirement',
+          item.clientPurpose,
+          item.propertyType,
+          item.location,
+          item.preferredBuildingProject,
+          item.budget,
+          item.paymentMethod,
+          item.privateNotes,
+          item.publicGeneralNotes,
+          item.status,
+          item.clientName,
+          item.clientPhone,
+          item.followUpNote,
+          item.lastContactMethod,
+          item.isArchived ? 'archived' : 'active'
+        ].join(' ').toLowerCase();
+      }
+      if (type === 'property') {
+        return [
+          'broker connector listing',
+          item.purpose,
+          item.propertyType,
+          item.location,
+          item.buildingName,
+          item.floorLevel,
+          item.furnishing,
+          item.cheques,
+          item.chiller,
+          item.mortgageStatus,
+          item.rentPrice,
+          item.ownerAskingPrice,
+          item.price,
+          item.sizeSqft,
+          item.size,
+          item.publicNotes,
+          item.internalNotes,
+          item.ownerName,
+          item.ownerPhone,
+          item.status,
+          item.followUpNote,
+          item.lastOwnerContactMethod,
+          item.isDistress ? 'distress deal hot listing' : '',
+          item.isArchived ? 'archived' : 'active'
+        ].join(' ').toLowerCase();
+      }
+      return [
+        item.title,
+        item.message,
+        item.matchReason,
+        item.location,
+        item.propertyType
+      ].join(' ').toLowerCase();
+    }
+
+    function matchesCommonSearch(item, type) {
+      const query = String(state.dashboardSearchQuery || '').trim().toLowerCase();
+      if (!query) return true;
+      return getDashboardSearchText(item, type).includes(query);
+    }
+
+    function getFilteredDashboardItems(items, type) {
+      const source = Array.isArray(items) ? [...items] : [];
+      if (type === 'lead') {
+        const filters = getLeadFilterState();
+        return source.filter(item => {
+          const followUpState = getFollowUpStateInfo(item);
+          const isArchived = Boolean(item.isArchived);
+          if (!matchesCommonSearch(item, type)) return false;
+          if (filters.status !== 'all' && String(item.status || '').toLowerCase() !== filters.status) return false;
+          if (filters.purpose !== 'all' && getLeadClientPurpose(item.clientPurpose) !== filters.purpose) return false;
+          if (filters.visibility !== 'all' && getLeadVisibility(item) !== filters.visibility) return false;
+          if (filters.followUp !== 'all' && followUpState.key !== filters.followUp) return false;
+          if (filters.archive === 'active' && isArchived) return false;
+          if (filters.archive === 'archived' && !isArchived) return false;
+          if (filters.urgent === 'urgent' && !item.isUrgentFollowUp) return false;
+          if (filters.urgent === 'standard' && item.isUrgentFollowUp) return false;
+          if (filters.matches === 'matched' && !item.matchCount) return false;
+          if (filters.matches === 'unmatched' && item.matchCount) return false;
+          return true;
+        });
+      }
+
+      if (type === 'property') {
+        const filters = getPropertyFilterState();
+        return source.filter(item => {
+          const followUpState = getFollowUpStateInfo(item);
+          const isArchived = Boolean(item.isArchived);
+          if (!matchesCommonSearch(item, type)) return false;
+          if (filters.status !== 'all' && String(item.status || '').toLowerCase() !== filters.status) return false;
+          if (filters.purpose !== 'all' && getPropertyPurpose(item.purpose) !== filters.purpose) return false;
+          if (filters.visibility !== 'all' && getPropertyVisibility(item) !== filters.visibility) return false;
+          if (filters.followUp !== 'all' && followUpState.key !== filters.followUp) return false;
+          if (filters.archive === 'active' && isArchived) return false;
+          if (filters.archive === 'archived' && !isArchived) return false;
+          if (filters.distress === 'distress' && !item.isDistress) return false;
+          if (filters.distress === 'standard' && item.isDistress) return false;
+          if (filters.matches === 'matched' && !item.matchCount) return false;
+          if (filters.matches === 'unmatched' && item.matchCount) return false;
+          return true;
+        });
+      }
+
+      return source.filter(item => matchesCommonSearch(item, type));
+    }
+
+    function renderWorkflowAlerts() {
+      const alertsTarget = document.getElementById('workflowAlertsList');
+      const matchesTarget = document.getElementById('workflowMatchesList');
+      const alertCount = Array.isArray(state.notifications) ? state.notifications.length : 0;
+      const countNode = document.getElementById('notificationCountBadge');
+      if (countNode) countNode.textContent = String(alertCount);
+
+      if (alertsTarget) {
+        if (!alertCount) {
+          alertsTarget.innerHTML = '<div class="empty">No alerts right now. Your workflow looks clear.</div>';
+        } else {
+          alertsTarget.innerHTML = state.notifications.slice(0, 8).map(item => `
+            <div class="workflow-alert-item">
+              <strong>${escapeHtml(item.title || 'Alert')}</strong>
+              <div class="muted">${escapeHtml(item.message || '')}</div>
+              <small>${escapeHtml(formatDateTime(item.createdAt || item.updatedAt || new Date().toISOString()))}</small>
+            </div>
+          `).join('');
+        }
+      }
+
+      if (matchesTarget) {
+        if (!Array.isArray(state.aiMatches) || !state.aiMatches.length) {
+          matchesTarget.innerHTML = '<div class="empty">No match opportunities found yet.</div>';
+        } else {
+          matchesTarget.innerHTML = state.aiMatches.slice(0, 6).map(match => {
+            const lead = state.leads.find(item => item.id === match.requirementId);
+            const property = state.properties.find(item => item.id === match.propertyId);
+            return `
+              <div class="workflow-alert-item">
+                <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
+                <div class="muted">Lead #${escapeHtml(match.requirementId)} ↔ Listing #${escapeHtml(match.propertyId)}</div>
+                <div class="muted">${escapeHtml(match.matchReason || '')}</div>
+                <small>${escapeHtml([
+                  lead?.location || property?.location || '',
+                  lead?.propertyType || property?.propertyType || ''
+                ].filter(Boolean).join(' · '))}</small>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    async function loadDashboard() {
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'GET',
+        headers: apiHeaders()
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Dashboard load failed.');
+      }
+
+      state.overview = result.overview || null;
+      state.leads = Array.isArray(result.leads) ? result.leads : [];
+      state.properties = Array.isArray(result.properties) ? result.properties : [];
+      state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
+      state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+      state.notifications = Array.isArray(result.notifications) ? result.notifications : [];
+      state.aiMatches = Array.isArray(result.aiMatches) ? result.aiMatches : [];
+
+      syncFilterInputs('leads');
+      syncFilterInputs('properties');
+      renderOverview();
+      renderWorkflowAlerts();
+      renderLeads();
+      renderProperties();
+      renderSharedListings();
+      renderFollowups();
+      renderProgress();
+      renderProfile();
+      populateFollowupEntities();
+    }
+
+    function renderOverview() {
+      const overview = state.overview || { totals: {}, broker: {} };
+      const stats = [
+        { label: 'Active Leads', value: overview.totals?.activeLeads || 0, metric: 'activeLeads' },
+        { label: 'Active Listings', value: overview.totals?.activeProperties || 0, metric: 'activeListings' },
+        { label: 'Follow-ups Due Today', value: overview.totals?.followUpsDueToday || 0, metric: 'followUpsDueToday' },
+        { label: 'Overdue Follow-ups', value: overview.totals?.overdueFollowUps || 0, metric: 'overdueFollowUps' },
+        { label: 'Possible Matches', value: overview.totals?.possibleMatches || 0, metric: 'possibleMatches' },
+        { label: 'Archived Leads', value: overview.totals?.archivedLeads || 0, metric: 'archivedLeads' },
+        { label: 'Archived Listings', value: overview.totals?.archivedListings || 0, metric: 'archivedListings' }
+      ];
+
+      document.getElementById('overviewStats').innerHTML = stats.map(item => `
+        <div
+          class="stat-card is-clickable"
+          role="button"
+          tabindex="0"
+          aria-label="Open ${item.label}"
+          onclick="openOverviewMetric('${item.metric}')"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openOverviewMetric('${item.metric}')}"
+        >
+          <small>${item.label}</small>
+          <strong>${item.value}</strong>
+        </div>
+      `).join('');
+    }
+
+    function renderActivityTimeline(entries) {
+      const activity = Array.isArray(entries) ? entries : [];
+      if (!activity.length) return '<div class="empty">No activity yet.</div>';
+      return `<div class="timeline-list">${activity.slice(0, 8).map(entry => `
+        <div class="timeline-item">
+          <strong>${escapeHtml(entry.text || 'Activity')}</strong>
+          <small>${escapeHtml(formatDateTime(entry.createdAt || new Date().toISOString()))}</small>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderLeadMatches(lead) {
+      const matches = Array.isArray(lead.matchingListings) ? lead.matchingListings : [];
+      if (!matches.length) return '<div class="empty">No matching listings yet.</div>';
+      return `<div class="match-list">${matches.slice(0, 8).map(match => `
+        <div class="match-item">
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} · Listing #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([match.propertyType, match.location, match.price].filter(Boolean).join(' · '))}</div>
+          <small>${escapeHtml(match.matchReason || '')}</small>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderPropertyMatches(property) {
+      const matches = Array.isArray(property.matchingLeads) ? property.matchingLeads : [];
+      if (!matches.length) return '<div class="empty">No matching leads yet.</div>';
+      return `<div class="match-list">${matches.slice(0, 8).map(match => `
+        <div class="match-item">
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} · Lead #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)].filter(Boolean).join(' · '))}</div>
+          <small>${escapeHtml(match.matchReason || '')}</small>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderLeads() {
+      const target = document.getElementById('leadsList');
+      const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      if (!requirements.length) {
+        target.innerHTML = `<div class="empty">No broker requirements match your current filters. Adjust your filters or add a new lead from Overview.</div>`;
+        return;
+      }
+
+      target.innerHTML = requirements.map(lead => {
+        const followUpState = getFollowUpStateInfo(lead);
+        const phoneAvailable = String(lead.clientPhone || '').trim();
+        return `
+          <div class="item-card">
+            <div class="item-top">
+              <div class="item-title">
+                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} · ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
+                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' · '))}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
+                <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
+              <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Payment / Purpose</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
+              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([lead.nextFollowUpDate || '', lead.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
+            </div>
+
+            <div class="record-summary">
+              <div class="muted"><strong>Private Notes:</strong> ${escapeHtml(lead.privateNotes || 'No private notes yet')}</div>
+              <div class="muted"><strong>Public-safe Summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary yet')}</div>
+              <div class="record-meta-row">
+                <span>Calls: ${escapeHtml(lead.callCount || 0)}</span>
+                <span>WhatsApp: ${escapeHtml(lead.whatsappCount || 0)}</span>
+                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(lead.lastContactedAt))}</span>
+                <span>Last Method: ${escapeHtml(lead.lastContactMethod || '--')}</span>
+              </div>
+            </div>
+
+            <div class="record-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')">Call</button>
+              <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
+              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+            </div>
+
+            <details class="record-details-panel">
+              <summary>Workflow tools, matches, and history</summary>
+              <div class="workflow-strip">
+                <select id="lead-status-action-${lead.id}">
+                  ${DASHBOARD_LEAD_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(lead.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                </select>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="changeLeadStatus(${lead.id})">Update Status</button>
+              </div>
+              <div class="record-inline-grid">
+                <div class="field-block">
+                  <label class="small">Next Follow-up Date</label>
+                  <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
+                </div>
+                <div class="field-block">
+                  <label class="small">Next Follow-up Time</label>
+                  <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
+                </div>
+                <div class="field-block full">
+                  <label class="small">Follow-up Note</label>
+                  <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
+                </div>
+                <label class="toggle-card compact-toggle">
+                  <input id="lead-followup-urgent-${lead.id}" type="checkbox" ${lead.isUrgentFollowUp ? 'checked' : ''}>
+                  <span><strong>Urgent Reminder</strong><small>Flag this lead as urgent.</small></span>
+                </label>
+              </div>
+              <div class="workflow-strip">
+                <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+              </div>
+              <div>
+                <h4>Matching Listings</h4>
+                ${renderLeadMatches(lead)}
+              </div>
+              <div>
+                <h4>Activity History</h4>
+                ${renderActivityTimeline(lead.activityLog)}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = `<div class="empty">No listings match your current filters. Adjust your filters or add a new listing from Overview.</div>`;
+        return;
+      }
+
+      target.innerHTML = properties.map(property => {
+        const followUpState = getFollowUpStateInfo(property);
+        const ownerPhone = String(property.ownerPhone || '').trim();
+        return `
+          <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
+            <div class="item-top">
+              <div class="item-title">
+                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} · ${escapeHtml(property.propertyType || 'Listing')}</h4>
+                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' · '))}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                ${property.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+                ${property.matchCount ? `<span class="badge badge-match">${property.matchCount} Match${property.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(property.ownerName || '--')}</strong></div>
+              <div class="detail-cell"><small>Owner Phone</small><strong>${escapeHtml(property.ownerPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
+              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([property.nextFollowUpDate || '', property.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
+            </div>
+
+            <div class="record-summary">
+              <div class="muted"><strong>Internal Notes:</strong> ${escapeHtml(property.internalNotes || 'No internal notes yet')}</div>
+              <div class="muted"><strong>Public Notes:</strong> ${escapeHtml(property.publicNotes || 'No public note added')}</div>
+              <div class="record-meta-row">
+                <span>Calls: ${escapeHtml(property.ownerCallCount || 0)}</span>
+                <span>WhatsApp: ${escapeHtml(property.ownerWhatsappCount || 0)}</span>
+                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(property.lastOwnerContactedAt))}</span>
+                <span>Last Method: ${escapeHtml(property.lastOwnerContactMethod || '--')}</span>
+              </div>
+            </div>
+
+            <div class="record-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')">Call Owner</button>
+              <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
+              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+            </div>
+
+            <details class="record-details-panel">
+              <summary>Workflow tools, matches, and history</summary>
+              <div class="workflow-strip">
+                <select id="property-status-action-${property.id}">
+                  ${DASHBOARD_LISTING_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(property.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                </select>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="changePropertyStatus(${property.id})">Update Status</button>
+              </div>
+              <div class="record-inline-grid">
+                <div class="field-block">
+                  <label class="small">Next Follow-up Date</label>
+                  <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
+                </div>
+                <div class="field-block">
+                  <label class="small">Next Follow-up Time</label>
+                  <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
+                </div>
+                <div class="field-block full">
+                  <label class="small">Follow-up Note</label>
+                  <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
+                </div>
+                <label class="toggle-card compact-toggle">
+                  <input id="property-followup-urgent-${property.id}" type="checkbox" ${property.isUrgentFollowUp ? 'checked' : ''}>
+                  <span><strong>Urgent Reminder</strong><small>Flag this listing for urgent owner follow-up.</small></span>
+                </label>
+              </div>
+              <div class="workflow-strip">
+                <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+              </div>
+              <div>
+                <h4>Matching Leads</h4>
+                ${renderPropertyMatches(property)}
+              </div>
+              <div>
+                <h4>Activity History</h4>
+                ${renderActivityTimeline(property.activityLog)}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function getLeadPreservedState() {
+      const original = state.leadEditorOriginal || {};
+      return {
+        source: original.source || 'Manual',
+        priority: original.priority || 'normal',
+        status: original.status || 'new',
+        meetingDate: original.meetingDate || '',
+        meetingTime: original.meetingTime || '',
+        nextAction: original.nextAction || '',
+        ownerName: original.ownerName || '',
+        ownerPhone: original.ownerPhone || '',
+        legacyFollowUpNotes: original.legacyFollowUpNotes || original.followUpNotes || '',
+        nextFollowUpDate: original.nextFollowUpDate || '',
+        nextFollowUpTime: original.nextFollowUpTime || '',
+        followUpNote: original.followUpNote || '',
+        isUrgentFollowUp: Boolean(original.isUrgentFollowUp),
+        rentChecklist: original.rentChecklist || {
+          booking: false,
+          agreementSigned: false,
+          handoverDone: false
+        },
+        saleChecklist: original.saleChecklist || {
+          contractA: false,
+          contractB: false,
+          contractF: false
+        }
+      };
+    }
+
+    function collectLeadFormData() {
+      const preserved = getLeadPreservedState();
+      return {
+        id: Number(document.getElementById('leadId').value || 0),
+        clientPurpose: document.getElementById('leadClientPurpose').value,
+        location: document.getElementById('leadLocation').value.trim(),
+        preferredBuildingProject: document.getElementById('leadBuildingProject').value.trim(),
+        propertyType: document.getElementById('leadPropertyType').value.trim(),
+        budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
+        paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
+        clientName: document.getElementById('leadClientName').value.trim(),
+        clientPhone: normalizeLeadPhoneInput(document.getElementById('leadClientPhone').value.trim()),
+        privateNotes: document.getElementById('leadPrivateNotes').value.trim(),
+        publicGeneralNotes: '',
+        source: preserved.source,
+        priority: preserved.priority,
+        status: document.getElementById('leadStatus').value || preserved.status,
+        meetingDate: preserved.meetingDate,
+        meetingTime: preserved.meetingTime,
+        nextAction: preserved.nextAction,
+        nextFollowUpDate: document.getElementById('leadNextFollowUpDate').value,
+        nextFollowUpTime: document.getElementById('leadNextFollowUpTime').value,
+        followUpNote: document.getElementById('leadFollowUpNote').value.trim(),
+        isUrgentFollowUp: document.getElementById('leadUrgentFollowUp').checked,
+        ownerName: preserved.ownerName,
+        ownerPhone: preserved.ownerPhone,
+        legacyFollowUpNotes: preserved.legacyFollowUpNotes,
+        rentChecklist: preserved.rentChecklist,
+        saleChecklist: preserved.saleChecklist
+      };
+    }
+
+    function validateLeadFormData(formData) {
+      const errors = {};
+      if (!formData.clientPurpose) errors.clientPurpose = 'Select client purpose';
+      if (!formData.location) errors.location = 'Enter preferred location';
+      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.budget || Number(formData.budget) <= 0) errors.budget = 'Enter budget';
+      if (getLeadClientPurpose(formData.clientPurpose) === 'buy' && !formData.paymentMethod) {
+        errors.paymentMethod = 'Select payment method';
+      }
+      if (!formData.clientName) errors.clientName = 'Enter client name';
+      const phoneDigits = formData.clientPhone.replace(/[^\d]/g, '');
+      if (!formData.clientPhone || phoneDigits.length < 8) {
+        errors.clientPhone = 'Enter client phone number';
+      }
+      return errors;
+    }
+
+    function resetLeadForm() {
+      document.getElementById('leadForm').reset();
+      document.getElementById('leadId').value = '';
+      document.getElementById('leadSubmitBtn').textContent = 'Save Lead';
+      state.leadEditorOriginal = null;
+      setLeadWorkspaceHeader('create');
+      clearLeadErrors();
+      setLeadPurpose('', { preserveValues: false });
+      document.getElementById('leadLocation').value = '';
+      document.getElementById('leadBuildingProject').value = '';
+      document.getElementById('leadBudget').value = '';
+      document.getElementById('leadClientName').value = '';
+      document.getElementById('leadClientPhone').value = '';
+      document.getElementById('leadPrivateNotes').value = '';
+      document.getElementById('leadStatus').value = 'new';
+      document.getElementById('leadNextFollowUpDate').value = '';
+      document.getElementById('leadNextFollowUpTime').value = '';
+      document.getElementById('leadFollowUpNote').value = '';
+      document.getElementById('leadUrgentFollowUp').checked = false;
+      leadAutocompleteControllers.location?.close();
+      leadAutocompleteControllers.building?.close();
+    }
+
+    function editLead(id) {
+      const lead = state.leads.find(item => item.id === id);
+      if (!lead) return;
+      state.leadEditorOriginal = lead;
+      showOverviewWorkspace('lead');
+      setLeadWorkspaceHeader('edit');
+      clearLeadErrors();
+      document.getElementById('leadId').value = lead.id;
+      const clientPurpose = getLeadClientPurposeFromRecord(lead);
+      setLeadPurpose(clientPurpose, { preserveValues: false });
+      document.getElementById('leadLocation').value = lead.location || '';
+      document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
+      populateLeadPropertyTypeOptions(lead.propertyType || '');
+      document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
+      populateLeadPaymentMethodOptions(lead.paymentMethod || '');
+      document.getElementById('leadClientName').value = lead.clientName || '';
+      document.getElementById('leadClientPhone').value = lead.clientPhone || '';
+      document.getElementById('leadPrivateNotes').value = lead.privateNotes || lead.notes || '';
+      document.getElementById('leadStatus').value = lead.status || 'new';
+      document.getElementById('leadNextFollowUpDate').value = lead.nextFollowUpDate || '';
+      document.getElementById('leadNextFollowUpTime').value = lead.nextFollowUpTime || '';
+      document.getElementById('leadFollowUpNote').value = lead.followUpNote || '';
+      document.getElementById('leadUrgentFollowUp').checked = Boolean(lead.isUrgentFollowUp);
+      document.getElementById('leadSubmitBtn').textContent = 'Update Lead';
+    }
+
+    function getPropertyPreservedState() {
+      const original = state.propertyEditorOriginal || {};
+      return {
+        status: original.status || 'available',
+        nextFollowUpDate: original.nextFollowUpDate || '',
+        nextFollowUpTime: original.nextFollowUpTime || '',
+        followUpNote: original.followUpNote || '',
+        isUrgentFollowUp: Boolean(original.isUrgentFollowUp),
+        bedrooms: original.bedrooms ?? null,
+        bathrooms: original.bathrooms ?? null
+      };
+    }
+
+    function collectPropertyFormData() {
+      const preserved = getPropertyPreservedState();
+      const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue').value);
+      return {
+        id: Number(document.getElementById('propertyId').value || 0),
+        purpose,
+        propertyType: document.getElementById('propertyType').value.trim(),
+        location: document.getElementById('propertyLocation').value.trim(),
+        buildingName: document.getElementById('propertyBuildingName').value.trim(),
+        sizeSqft: normalizeBudgetDigits(document.getElementById('propertySizeSqft').value),
+        floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
+        furnishing: document.getElementById('propertyFurnishing').value.trim(),
+        rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
+        cheques: document.getElementById('propertyCheques').value.trim(),
+        chiller: document.getElementById('propertyChiller').value.trim(),
+        ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
+        mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
+        leasehold: document.getElementById('propertyLeasehold').checked,
+        distressDeal: document.getElementById('propertyDistress').checked,
+        ownerName: document.getElementById('propertyOwnerName').value.trim(),
+        ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
+        internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
+        publicNotes: document.getElementById('propertyPublicNotes').value.trim(),
+        status: document.getElementById('propertyStatus').value || preserved.status,
+        nextFollowUpDate: document.getElementById('propertyNextFollowUpDate').value,
+        nextFollowUpTime: document.getElementById('propertyNextFollowUpTime').value,
+        followUpNote: document.getElementById('propertyFollowUpNote').value.trim(),
+        isUrgentFollowUp: document.getElementById('propertyUrgentFollowUp').checked,
+        bedrooms: preserved.bedrooms,
+        bathrooms: preserved.bathrooms
+      };
+    }
+
+    function validatePropertyFormData(formData) {
+      const errors = {};
+      if (!formData.purpose) errors.purpose = 'Select purpose';
+      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.location) errors.location = 'Enter location';
+      if (formData.purpose === 'rent' && (!formData.rentPrice || Number(formData.rentPrice) <= 0)) {
+        errors.rentPrice = 'Enter rent price';
+      }
+      if (formData.purpose === 'sale' && (!formData.ownerAskingPrice || Number(formData.ownerAskingPrice) <= 0)) {
+        errors.ownerAskingPrice = 'Enter owner asking price';
+      }
+      return errors;
+    }
+
+    function resetPropertyForm() {
+      document.getElementById('propertyForm').reset();
+      document.getElementById('propertyId').value = '';
+      state.propertyEditorOriginal = null;
+      setPropertyWorkspaceHeader('create');
+      clearPropertyErrors();
+      setPropertyPurpose('', { preserveValues: false });
+      document.getElementById('propertyLocation').value = '';
+      document.getElementById('propertyBuildingName').value = '';
+      document.getElementById('propertySizeSqft').value = '';
+      document.getElementById('propertyOwnerName').value = '';
+      document.getElementById('propertyOwnerPhone').value = '';
+      document.getElementById('propertyInternalNotes').value = '';
+      document.getElementById('propertyPublicNotes').value = '';
+      document.getElementById('propertyStatus').value = 'available';
+      document.getElementById('propertyNextFollowUpDate').value = '';
+      document.getElementById('propertyNextFollowUpTime').value = '';
+      document.getElementById('propertyFollowUpNote').value = '';
+      document.getElementById('propertyUrgentFollowUp').checked = false;
+      document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
+      propertyAutocompleteControllers.location?.close();
+      propertyAutocompleteControllers.building?.close();
+    }
+
+    function editProperty(id) {
+      const property = state.properties.find(item => item.id === id);
+      if (!property) return;
+      state.propertyEditorOriginal = property;
+      showOverviewWorkspace('property');
+      setPropertyWorkspaceHeader('edit');
+      clearPropertyErrors();
+      document.getElementById('propertyId').value = property.id;
+      setPropertyPurpose(getPropertyPurpose(property.purpose), { preserveValues: false });
+      populatePropertyTypeOptions(property.propertyType || '');
+      populatePropertyFloorOptions(property.floorLevel || '');
+      document.getElementById('propertyLocation').value = property.location || '';
+      document.getElementById('propertyBuildingName').value = property.buildingName || '';
+      document.getElementById('propertySizeSqft').value = normalizeBudgetDigits(property.sizeSqft || property.size || '');
+      document.getElementById('propertyFurnishing').value = property.furnishing || '';
+      document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
+      document.getElementById('propertyCheques').value = property.cheques || '';
+      document.getElementById('propertyChiller').value = property.chiller || '';
+      document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
+      document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
+      document.getElementById('propertyLeasehold').checked = Boolean(property.leasehold);
+      document.getElementById('propertyPublicNotes').value = property.publicNotes || '';
+      document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
+      document.getElementById('propertyOwnerName').value = property.ownerName || '';
+      document.getElementById('propertyOwnerPhone').value = property.ownerPhone || '';
+      document.getElementById('propertyDistress').checked = Boolean(property.isDistress);
+      document.getElementById('propertyStatus').value = property.status || 'available';
+      document.getElementById('propertyNextFollowUpDate').value = property.nextFollowUpDate || '';
+      document.getElementById('propertyNextFollowUpTime').value = property.nextFollowUpTime || '';
+      document.getElementById('propertyFollowUpNote').value = property.followUpNote || '';
+      document.getElementById('propertyUrgentFollowUp').checked = Boolean(property.isUrgentFollowUp);
+      document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
+    }
+
+    function wireLeadFormSubmission() {
+      const currentForm = document.getElementById('leadForm');
+      if (!currentForm || currentForm.dataset.wired === 'true') return;
+      const nextForm = currentForm.cloneNode(true);
+      currentForm.parentNode.replaceChild(nextForm, currentForm);
+      nextForm.dataset.wired = 'true';
+
+      nextForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        clearLeadErrors();
+        const formData = collectLeadFormData();
+        const validationErrors = validateLeadFormData(formData);
+        if (Object.keys(validationErrors).length) {
+          Object.entries(validationErrors).forEach(([field, message]) => setLeadFieldError(field, message));
+          setStatus('Please complete the required lead details.', 'error');
+          return;
+        }
+
+        const payload = {
+          action: formData.id ? 'update-lead' : 'create-lead',
+          id: formData.id,
+          clientPurpose: formData.clientPurpose,
+          purpose: formData.clientPurpose,
+          propertyType: formData.propertyType,
+          category: formData.propertyType,
+          location: formData.location,
+          budget: formData.budget,
+          preferredBuildingProject: formData.preferredBuildingProject,
+          paymentMethod: formData.paymentMethod,
+          privateNotes: formData.privateNotes,
+          publicGeneralNotes: buildLeadPublicSummary(formData),
+          source: formData.source,
+          priority: formData.priority,
+          status: formData.status,
+          meetingDate: formData.meetingDate,
+          meetingTime: formData.meetingTime,
+          nextAction: formData.nextAction,
+          nextFollowUpDate: formData.nextFollowUpDate,
+          nextFollowUpTime: formData.nextFollowUpTime,
+          followUpNote: formData.followUpNote,
+          isUrgentFollowUp: formData.isUrgentFollowUp,
+          ownerName: formData.ownerName,
+          ownerPhone: formData.ownerPhone,
+          clientName: formData.clientName,
+          clientPhone: formData.clientPhone,
+          legacyFollowUpNotes: formData.legacyFollowUpNotes,
+          rentChecklist: formData.rentChecklist,
+          saleChecklist: formData.saleChecklist
+        };
+
+        try {
+          await dashboardAction(payload, formData.id ? 'Broker requirement updated successfully.' : 'Broker requirement created successfully.');
+          resetLeadForm();
+          hideOverviewWorkspace();
+        } catch (error) {
+          setStatus(error.message, 'error');
+        }
+      });
+    }
+
+    function wirePropertyFormSubmission() {
+      const currentForm = document.getElementById('propertyForm');
+      if (!currentForm || currentForm.dataset.wired === 'true') return;
+      const nextForm = currentForm.cloneNode(true);
+      currentForm.parentNode.replaceChild(nextForm, currentForm);
+      nextForm.dataset.wired = 'true';
+
+      nextForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        clearPropertyErrors();
+        const formData = collectPropertyFormData();
+        const validationErrors = validatePropertyFormData(formData);
+        if (Object.keys(validationErrors).length) {
+          Object.entries(validationErrors).forEach(([field, message]) => setPropertyFieldError(field, message));
+          setStatus('Please complete the required listing details.', 'error');
+          return;
+        }
+
+        const payload = {
+          action: formData.id ? 'update-property' : 'create-property',
+          id: formData.id,
+          purpose: formData.purpose,
+          propertyType: formData.propertyType,
+          location: formData.location,
+          buildingName: formData.buildingName,
+          sizeSqft: formData.sizeSqft,
+          floorLevel: formData.floorLevel,
+          furnishing: formData.furnishing,
+          rentPrice: formData.rentPrice,
+          cheques: formData.cheques,
+          chiller: formData.chiller,
+          ownerAskingPrice: formData.ownerAskingPrice,
+          mortgageStatus: formData.mortgageStatus,
+          leasehold: formData.leasehold,
+          isDistress: formData.distressDeal,
+          ownerName: formData.ownerName,
+          ownerPhone: formData.ownerPhone,
+          internalNotes: formData.internalNotes,
+          publicNotes: formData.publicNotes,
+          status: formData.status,
+          nextFollowUpDate: formData.nextFollowUpDate,
+          nextFollowUpTime: formData.nextFollowUpTime,
+          followUpNote: formData.followUpNote,
+          isUrgentFollowUp: formData.isUrgentFollowUp,
+          bedrooms: formData.bedrooms,
+          bathrooms: formData.bathrooms
+        };
+
+        try {
+          await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing created successfully.');
+          resetPropertyForm();
+          hideOverviewWorkspace();
+        } catch (error) {
+          setStatus(error.message, 'error');
+        }
+      });
+    }
+
+    async function changeLeadStatus(id) {
+      const nextStatus = document.getElementById(`lead-status-action-${id}`)?.value;
+      if (!nextStatus) return;
+      try {
+        await dashboardAction({ action: 'update-lead-status', id, status: nextStatus }, 'Lead status updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function changePropertyStatus(id) {
+      const nextStatus = document.getElementById(`property-status-action-${id}`)?.value;
+      if (!nextStatus) return;
+      try {
+        await dashboardAction({ action: 'update-property-status', id, status: nextStatus }, 'Listing status updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function saveLeadFollowUp(id) {
+      try {
+        await dashboardAction({
+          action: 'set-lead-followup',
+          id,
+          nextFollowUpDate: document.getElementById(`lead-followup-date-${id}`)?.value || '',
+          nextFollowUpTime: document.getElementById(`lead-followup-time-${id}`)?.value || '',
+          followUpNote: document.getElementById(`lead-followup-note-${id}`)?.value || '',
+          isUrgentFollowUp: Boolean(document.getElementById(`lead-followup-urgent-${id}`)?.checked)
+        }, 'Lead follow-up updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function savePropertyFollowUp(id) {
+      try {
+        await dashboardAction({
+          action: 'set-property-followup',
+          id,
+          nextFollowUpDate: document.getElementById(`property-followup-date-${id}`)?.value || '',
+          nextFollowUpTime: document.getElementById(`property-followup-time-${id}`)?.value || '',
+          followUpNote: document.getElementById(`property-followup-note-${id}`)?.value || '',
+          isUrgentFollowUp: Boolean(document.getElementById(`property-followup-urgent-${id}`)?.checked)
+        }, 'Listing follow-up updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function contactLead(id, method) {
+      const lead = state.leads.find(item => item.id === id);
+      if (!lead?.clientPhone) {
+        setStatus('Client phone number is not available for this lead.', 'error');
+        return;
+      }
+      const phoneDigits = String(lead.clientPhone).replace(/[^\d]/g, '');
+      if (method === 'call') {
+        window.location.href = `tel:${phoneDigits}`;
+      } else {
+        const message = encodeURIComponent('Hello, I am following up regarding your property requirement.');
+        window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
+      }
+      try {
+        await dashboardAction({ action: 'track-lead-contact', id, method }, `${method === 'call' ? 'Call' : 'WhatsApp'} tracked on lead.`);
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function contactPropertyOwner(id, method) {
+      const property = state.properties.find(item => item.id === id);
+      if (!property?.ownerPhone) {
+        setStatus('Owner phone number is not available for this listing.', 'error');
+        return;
+      }
+      const phoneDigits = String(property.ownerPhone).replace(/[^\d]/g, '');
+      if (method === 'call') {
+        window.location.href = `tel:${phoneDigits}`;
+      } else {
+        const message = encodeURIComponent('Hello, I am following up regarding your property listing.');
+        window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
+      }
+      try {
+        await dashboardAction({ action: 'track-property-contact', id, method }, `${method === 'call' ? 'Call' : 'WhatsApp'} tracked on listing.`);
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function archiveLead(id) {
+      try {
+        await dashboardAction({ action: 'archive-lead', id }, 'Lead archived.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function restoreLead(id) {
+      try {
+        await dashboardAction({ action: 'restore-lead', id }, 'Lead restored.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function archiveProperty(id) {
+      try {
+        await dashboardAction({ action: 'archive-property', id }, 'Listing archived.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function restoreProperty(id) {
+      try {
+        await dashboardAction({ action: 'restore-property', id }, 'Listing restored.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    function syncFilterInputs(section) {
+      const filters = state.filters?.[section];
+      if (!filters) return;
+      const prefix = section === 'leads' ? 'lead' : 'property';
+      const fieldMap = {
+        status: `${prefix}StatusFilter`,
+        purpose: `${prefix}PurposeFilter`,
+        visibility: `${prefix}VisibilityFilter`,
+        followUp: `${prefix}FollowUpFilter`,
+        archive: `${prefix}ArchiveFilter`,
+        urgent: `${prefix}UrgentFilter`,
+        distress: `${prefix}DistressFilter`,
+        matches: `${prefix}MatchFilter`
+      };
+
+      Object.entries(filters).forEach(([key, value]) => {
+        const node = document.getElementById(fieldMap[key] || `${prefix}${key.charAt(0).toUpperCase() + key.slice(1)}Filter`);
+        if (node) node.value = value;
+      });
+    }
+
+    function renderWorkflowAlerts() {
+      const alertsTarget = document.getElementById('workflowAlertsList');
+      const matchesTarget = document.getElementById('workflowMatchesList');
+      const alertCount = Array.isArray(state.notifications) ? state.notifications.length : 0;
+      const countNode = document.getElementById('notificationCountBadge');
+      if (countNode) countNode.textContent = String(alertCount);
+
+      if (alertsTarget) {
+        alertsTarget.innerHTML = alertCount
+          ? state.notifications.slice(0, 8).map(item => `
+              <div class="workflow-alert-item">
+                <strong>${escapeHtml(item.title || 'Alert')}</strong>
+                <div class="muted">${escapeHtml(item.message || '')}</div>
+                <small>${escapeHtml(formatDateTime(item.createdAt || item.updatedAt || new Date().toISOString()))}</small>
+              </div>
+            `).join('')
+          : '<div class="empty">No alerts right now. Your workflow looks clear.</div>';
+      }
+
+      if (matchesTarget) {
+        matchesTarget.innerHTML = Array.isArray(state.aiMatches) && state.aiMatches.length
+          ? state.aiMatches.slice(0, 6).map(match => {
+              const lead = state.leads.find(item => item.id === match.requirementId);
+              const property = state.properties.find(item => item.id === match.propertyId);
+              const summaryBits = [
+                lead?.location || property?.location || '',
+                lead?.propertyType || property?.propertyType || ''
+              ].filter(Boolean).join(' | ');
+              return `
+                <div class="workflow-alert-item">
+                  <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
+                  <div class="muted">Lead #${escapeHtml(match.requirementId)} &lt;-&gt; Listing #${escapeHtml(match.propertyId)}</div>
+                  <div class="muted">${escapeHtml(match.matchReason || '')}</div>
+                  <small>${escapeHtml(summaryBits)}</small>
+                </div>
+              `;
+            }).join('')
+          : '<div class="empty">No match opportunities found yet.</div>';
+      }
+    }
+
+    function renderLeadMatches(lead) {
+      const matches = Array.isArray(lead.matchingListings) ? lead.matchingListings : [];
+      if (!matches.length) return '<div class="empty">No matching listings yet.</div>';
+      return `<div class="match-list">${matches.slice(0, 8).map(match => `
+        <div class="match-item">
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} | Listing #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([match.propertyType, match.location, match.price].filter(Boolean).join(' | '))}</div>
+          <small>${escapeHtml(match.matchReason || '')}</small>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderPropertyMatches(property) {
+      const matches = Array.isArray(property.matchingLeads) ? property.matchingLeads : [];
+      if (!matches.length) return '<div class="empty">No matching leads yet.</div>';
+      return `<div class="match-list">${matches.slice(0, 8).map(match => `
+        <div class="match-item">
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} | Lead #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)].filter(Boolean).join(' | '))}</div>
+          <small>${escapeHtml(match.matchReason || '')}</small>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderLeads() {
+      const target = document.getElementById('leadsList');
+      if (!target) return;
+      const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      if (!requirements.length) {
+        target.innerHTML = '<div class="empty">No broker requirements match your current filters. Adjust your filters or add a new lead from Overview.</div>';
+        return;
+      }
+
+      target.innerHTML = requirements.map(lead => {
+        const followUpState = getFollowUpStateInfo(lead);
+        const phoneAvailable = String(lead.clientPhone || '').trim();
+        return `
+          <div class="item-card">
+            <div class="item-top">
+              <div class="item-title">
+                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} | ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
+                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' | '))}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
+                <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
+              <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Payment / Purpose</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
+              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([lead.nextFollowUpDate || '', lead.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
+            </div>
+
+            <div class="record-summary">
+              <div class="muted"><strong>Private Notes:</strong> ${escapeHtml(lead.privateNotes || 'No private notes yet')}</div>
+              <div class="muted"><strong>Public-safe Summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary yet')}</div>
+              <div class="record-meta-row">
+                <span>Calls: ${escapeHtml(lead.callCount || 0)}</span>
+                <span>WhatsApp: ${escapeHtml(lead.whatsappCount || 0)}</span>
+                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(lead.lastContactedAt))}</span>
+                <span>Last Method: ${escapeHtml(lead.lastContactMethod || '--')}</span>
+              </div>
+            </div>
+
+            <div class="record-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')">Call</button>
+              <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
+              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+            </div>
+
+            <details class="record-details-panel">
+              <summary>Workflow tools, matches, and history</summary>
+              <div class="workflow-strip">
+                <select id="lead-status-action-${lead.id}">
+                  ${DASHBOARD_LEAD_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(lead.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                </select>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="changeLeadStatus(${lead.id})">Update Status</button>
+              </div>
+              <div class="record-inline-grid">
+                <div class="field-block">
+                  <label class="small">Next Follow-up Date</label>
+                  <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
+                </div>
+                <div class="field-block">
+                  <label class="small">Next Follow-up Time</label>
+                  <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
+                </div>
+                <div class="field-block full">
+                  <label class="small">Follow-up Note</label>
+                  <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
+                </div>
+                <label class="toggle-card compact-toggle">
+                  <input id="lead-followup-urgent-${lead.id}" type="checkbox" ${lead.isUrgentFollowUp ? 'checked' : ''}>
+                  <span><strong>Urgent Reminder</strong><small>Flag this lead as urgent.</small></span>
+                </label>
+              </div>
+              <div class="workflow-strip">
+                <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+              </div>
+              <div>
+                <h4>Matching Listings</h4>
+                ${renderLeadMatches(lead)}
+              </div>
+              <div>
+                <h4>Activity History</h4>
+                ${renderActivityTimeline(lead.activityLog)}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      if (!target) return;
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = '<div class="empty">No listings match your current filters. Adjust your filters or add a new listing from Overview.</div>';
+        return;
+      }
+
+      target.innerHTML = properties.map(property => {
+        const followUpState = getFollowUpStateInfo(property);
+        const ownerPhone = String(property.ownerPhone || '').trim();
+        return `
+          <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
+            <div class="item-top">
+              <div class="item-title">
+                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} | ${escapeHtml(property.propertyType || 'Listing')}</h4>
+                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' | '))}</div>
+              </div>
+              <div class="badges">
+                <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                ${property.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+                ${property.matchCount ? `<span class="badge badge-match">${property.matchCount} Match${property.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              </div>
+            </div>
+
+            <div class="detail-grid">
+              <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(property.ownerName || '--')}</strong></div>
+              <div class="detail-cell"><small>Owner Phone</small><strong>${escapeHtml(property.ownerPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
+              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([property.nextFollowUpDate || '', property.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
+            </div>
+
+            <div class="record-summary">
+              <div class="muted"><strong>Internal Notes:</strong> ${escapeHtml(property.internalNotes || 'No internal notes yet')}</div>
+              <div class="muted"><strong>Public Notes:</strong> ${escapeHtml(property.publicNotes || 'No public note added')}</div>
+              <div class="record-meta-row">
+                <span>Calls: ${escapeHtml(property.ownerCallCount || 0)}</span>
+                <span>WhatsApp: ${escapeHtml(property.ownerWhatsappCount || 0)}</span>
+                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(property.lastOwnerContactedAt))}</span>
+                <span>Last Method: ${escapeHtml(property.lastOwnerContactMethod || '--')}</span>
+              </div>
+            </div>
+
+            <div class="record-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')">Call Owner</button>
+              <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
+              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+            </div>
+
+            <details class="record-details-panel">
+              <summary>Workflow tools, matches, and history</summary>
+              <div class="workflow-strip">
+                <select id="property-status-action-${property.id}">
+                  ${DASHBOARD_LISTING_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(property.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                </select>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="changePropertyStatus(${property.id})">Update Status</button>
+              </div>
+              <div class="record-inline-grid">
+                <div class="field-block">
+                  <label class="small">Next Follow-up Date</label>
+                  <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
+                </div>
+                <div class="field-block">
+                  <label class="small">Next Follow-up Time</label>
+                  <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
+                </div>
+                <div class="field-block full">
+                  <label class="small">Follow-up Note</label>
+                  <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
+                </div>
+                <label class="toggle-card compact-toggle">
+                  <input id="property-followup-urgent-${property.id}" type="checkbox" ${property.isUrgentFollowUp ? 'checked' : ''}>
+                  <span><strong>Urgent Reminder</strong><small>Flag this listing for urgent owner follow-up.</small></span>
+                </label>
+              </div>
+              <div class="workflow-strip">
+                <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+              </div>
+              <div>
+                <h4>Matching Leads</h4>
+                ${renderPropertyMatches(property)}
+              </div>
+              <div>
+                <h4>Activity History</h4>
+                ${renderActivityTimeline(property.activityLog)}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
+    }
+
     async function logoutBroker() {
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
@@ -3220,9 +5031,12 @@
 
     (async function init() {
       try {
+        wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
         ensurePropertyFormEnhancements();
+        syncFilterInputs('leads');
+        syncFilterInputs('properties');
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();

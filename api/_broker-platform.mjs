@@ -38,13 +38,59 @@ export function normalizeBool(value) {
 const LEAD_META_PREFIX = '__BC_LEAD_META__:';
 const PROPERTY_META_PREFIX = '__BC_PROPERTY_META__:';
 
+function normalizeActivityLog(entries) {
+  if (!Array.isArray(entries)) return [];
+  return entries
+    .map(entry => ({
+      id: normalizeText(entry?.id) || crypto.randomUUID(),
+      type: normalizeText(entry?.type || 'system').toLowerCase(),
+      text: normalizeText(entry?.text),
+      createdAt: normalizeText(entry?.createdAt || entry?.created_at) || new Date().toISOString()
+    }))
+    .filter(entry => entry.text)
+    .slice(0, 80);
+}
+
+function normalizeLeadWorkflow(rawWorkflow) {
+  return {
+    nextFollowUpDate: normalizeText(rawWorkflow?.nextFollowUpDate || rawWorkflow?.next_follow_up_date),
+    nextFollowUpTime: normalizeText(rawWorkflow?.nextFollowUpTime || rawWorkflow?.next_follow_up_time),
+    followUpNote: normalizeText(rawWorkflow?.followUpNote || rawWorkflow?.follow_up_note),
+    isUrgentFollowUp: Boolean(rawWorkflow?.isUrgentFollowUp || rawWorkflow?.is_urgent_follow_up),
+    callCount: Number(rawWorkflow?.callCount || rawWorkflow?.call_count || 0) || 0,
+    whatsappCount: Number(rawWorkflow?.whatsappCount || rawWorkflow?.whatsapp_count || 0) || 0,
+    lastContactedAt: normalizeText(rawWorkflow?.lastContactedAt || rawWorkflow?.last_contacted_at),
+    lastContactMethod: normalizeText(rawWorkflow?.lastContactMethod || rawWorkflow?.last_contact_method),
+    isArchived: Boolean(rawWorkflow?.isArchived || rawWorkflow?.is_archived),
+    archivedAt: normalizeText(rawWorkflow?.archivedAt || rawWorkflow?.archived_at),
+    activityLog: normalizeActivityLog(rawWorkflow?.activityLog || rawWorkflow?.activity_log)
+  };
+}
+
+function normalizePropertyWorkflow(rawWorkflow) {
+  return {
+    nextFollowUpDate: normalizeText(rawWorkflow?.nextFollowUpDate || rawWorkflow?.next_follow_up_date),
+    nextFollowUpTime: normalizeText(rawWorkflow?.nextFollowUpTime || rawWorkflow?.next_follow_up_time),
+    followUpNote: normalizeText(rawWorkflow?.followUpNote || rawWorkflow?.follow_up_note),
+    isUrgentFollowUp: Boolean(rawWorkflow?.isUrgentFollowUp || rawWorkflow?.is_urgent_follow_up),
+    ownerCallCount: Number(rawWorkflow?.ownerCallCount || rawWorkflow?.owner_call_count || 0) || 0,
+    ownerWhatsappCount: Number(rawWorkflow?.ownerWhatsappCount || rawWorkflow?.owner_whatsapp_count || 0) || 0,
+    lastOwnerContactedAt: normalizeText(rawWorkflow?.lastOwnerContactedAt || rawWorkflow?.last_owner_contacted_at),
+    lastOwnerContactMethod: normalizeText(rawWorkflow?.lastOwnerContactMethod || rawWorkflow?.last_owner_contact_method),
+    isArchived: Boolean(rawWorkflow?.isArchived || rawWorkflow?.is_archived),
+    archivedAt: normalizeText(rawWorkflow?.archivedAt || rawWorkflow?.archived_at),
+    activityLog: normalizeActivityLog(rawWorkflow?.activityLog || rawWorkflow?.activity_log)
+  };
+}
+
 export function parseLeadMeta(rawValue) {
   const rawText = normalizeText(rawValue);
   if (!rawText) {
     return {
       preferredBuildingProject: '',
       paymentMethod: '',
-      legacyFollowUpNotes: ''
+      legacyFollowUpNotes: '',
+      ...normalizeLeadWorkflow({})
     };
   }
 
@@ -52,7 +98,8 @@ export function parseLeadMeta(rawValue) {
     return {
       preferredBuildingProject: '',
       paymentMethod: '',
-      legacyFollowUpNotes: rawText
+      legacyFollowUpNotes: rawText,
+      ...normalizeLeadWorkflow({})
     };
   }
 
@@ -61,26 +108,44 @@ export function parseLeadMeta(rawValue) {
     return {
       preferredBuildingProject: normalizeText(parsed?.preferredBuildingProject),
       paymentMethod: normalizeText(parsed?.paymentMethod),
-      legacyFollowUpNotes: normalizeText(parsed?.legacyFollowUpNotes)
+      legacyFollowUpNotes: normalizeText(parsed?.legacyFollowUpNotes),
+      ...normalizeLeadWorkflow(parsed?.workflow || parsed)
     };
   } catch (error) {
     return {
       preferredBuildingProject: '',
       paymentMethod: '',
-      legacyFollowUpNotes: ''
+      legacyFollowUpNotes: '',
+      ...normalizeLeadWorkflow({})
     };
   }
 }
 
 export function serializeLeadMeta(meta) {
+  const workflow = normalizeLeadWorkflow(meta);
   const payload = {
     preferredBuildingProject: normalizeText(meta?.preferredBuildingProject),
     paymentMethod: normalizeText(meta?.paymentMethod),
-    legacyFollowUpNotes: normalizeText(meta?.legacyFollowUpNotes)
+    legacyFollowUpNotes: normalizeText(meta?.legacyFollowUpNotes),
+    workflow
   };
 
   if (!payload.preferredBuildingProject && !payload.paymentMethod && !payload.legacyFollowUpNotes) {
-    return '';
+    const hasWorkflowValues =
+      workflow.nextFollowUpDate ||
+      workflow.nextFollowUpTime ||
+      workflow.followUpNote ||
+      workflow.isUrgentFollowUp ||
+      workflow.callCount ||
+      workflow.whatsappCount ||
+      workflow.lastContactedAt ||
+      workflow.lastContactMethod ||
+      workflow.isArchived ||
+      workflow.archivedAt ||
+      workflow.activityLog.length;
+    if (!hasWorkflowValues) {
+      return '';
+    }
   }
 
   return `${LEAD_META_PREFIX}${JSON.stringify(payload)}`;
@@ -97,7 +162,8 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
-      legacyDescription: ''
+      legacyDescription: '',
+      ...normalizePropertyWorkflow({})
     };
   }
 
@@ -110,7 +176,8 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
-      legacyDescription: rawText
+      legacyDescription: rawText,
+      ...normalizePropertyWorkflow({})
     };
   }
 
@@ -124,7 +191,8 @@ export function parsePropertyMeta(rawValue) {
       chiller: normalizeText(parsed?.chiller),
       mortgageStatus: normalizeText(parsed?.mortgageStatus),
       leasehold: Boolean(parsed?.leasehold),
-      legacyDescription: normalizeText(parsed?.legacyDescription)
+      legacyDescription: normalizeText(parsed?.legacyDescription),
+      ...normalizePropertyWorkflow(parsed?.workflow || parsed)
     };
   } catch (error) {
     return {
@@ -135,12 +203,14 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
-      legacyDescription: ''
+      legacyDescription: '',
+      ...normalizePropertyWorkflow({})
     };
   }
 }
 
 export function serializePropertyMeta(meta) {
+  const workflow = normalizePropertyWorkflow(meta);
   const payload = {
     buildingName: normalizeText(meta?.buildingName),
     floorLevel: normalizeText(meta?.floorLevel),
@@ -149,7 +219,8 @@ export function serializePropertyMeta(meta) {
     chiller: normalizeText(meta?.chiller),
     mortgageStatus: normalizeText(meta?.mortgageStatus),
     leasehold: Boolean(meta?.leasehold),
-    legacyDescription: normalizeText(meta?.legacyDescription)
+    legacyDescription: normalizeText(meta?.legacyDescription),
+    workflow
   };
 
   if (
@@ -162,7 +233,21 @@ export function serializePropertyMeta(meta) {
     !payload.leasehold &&
     !payload.legacyDescription
   ) {
-    return '';
+    const hasWorkflowValues =
+      workflow.nextFollowUpDate ||
+      workflow.nextFollowUpTime ||
+      workflow.followUpNote ||
+      workflow.isUrgentFollowUp ||
+      workflow.ownerCallCount ||
+      workflow.ownerWhatsappCount ||
+      workflow.lastOwnerContactedAt ||
+      workflow.lastOwnerContactMethod ||
+      workflow.isArchived ||
+      workflow.archivedAt ||
+      workflow.activityLog.length;
+    if (!hasWorkflowValues) {
+      return '';
+    }
   }
 
   return `${PROPERTY_META_PREFIX}${JSON.stringify(payload)}`;
@@ -497,6 +582,17 @@ export function sanitizeLead(row) {
     nextAction: row.next_action,
     preferredBuildingProject: meta.preferredBuildingProject || '',
     paymentMethod: meta.paymentMethod || '',
+    nextFollowUpDate: meta.nextFollowUpDate || '',
+    nextFollowUpTime: meta.nextFollowUpTime || '',
+    followUpNote: meta.followUpNote || '',
+    isUrgentFollowUp: Boolean(meta.isUrgentFollowUp),
+    callCount: meta.callCount || 0,
+    whatsappCount: meta.whatsappCount || 0,
+    lastContactedAt: meta.lastContactedAt || '',
+    lastContactMethod: meta.lastContactMethod || '',
+    isArchived: Boolean(meta.isArchived),
+    archivedAt: meta.archivedAt || '',
+    activityLog: Array.isArray(meta.activityLog) ? meta.activityLog : [],
     rentChecklist: {
       booking: Boolean(row.rent_booking),
       agreementSigned: Boolean(row.rent_agreement_signed),
@@ -547,6 +643,17 @@ export function sanitizeProperty(row) {
     leasehold: Boolean(meta.leasehold),
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
+    nextFollowUpDate: meta.nextFollowUpDate || '',
+    nextFollowUpTime: meta.nextFollowUpTime || '',
+    followUpNote: meta.followUpNote || '',
+    isUrgentFollowUp: Boolean(meta.isUrgentFollowUp),
+    ownerCallCount: meta.ownerCallCount || 0,
+    ownerWhatsappCount: meta.ownerWhatsappCount || 0,
+    lastOwnerContactedAt: meta.lastOwnerContactedAt || '',
+    lastOwnerContactMethod: meta.lastOwnerContactMethod || '',
+    isArchived: Boolean(meta.isArchived),
+    archivedAt: meta.archivedAt || '',
+    activityLog: Array.isArray(meta.activityLog) ? meta.activityLog : [],
     status: row.status,
     isUrgent: Boolean(row.is_urgent),
     isDistress: Boolean(row.is_distress),
