@@ -206,7 +206,7 @@ export async function POST(request) {
   });
 
   const normalizedBrokerIdText = brokerIdNumber.toLowerCase();
-  const broker = (Array.isArray(candidates) ? candidates : []).find(item => {
+  const matchingBrokers = (Array.isArray(candidates) ? candidates : []).filter(item => {
     const candidateBrokerId = normalizeText(item?.broker_id_number);
     const candidateBrokerIdText = candidateBrokerId.toLowerCase();
     const candidateMobile = normalizePhoneNumber(item?.mobile_number);
@@ -222,27 +222,35 @@ export async function POST(request) {
     );
   });
 
-  if (!broker) {
+  if (!matchingBrokers.length) {
     return json({ message: 'Broker account not found.' }, 404);
   }
 
-  if (broker.is_blocked) {
+  let blockedMatchFound = false;
+  for (const candidate of matchingBrokers) {
+    if (candidate.is_blocked) {
+      blockedMatchFound = true;
+      continue;
+    }
+
+    const passwordOk = await verifyAndUpgradeBrokerPassword({
+      supabaseUrl,
+      serviceRoleKey,
+      broker: candidate,
+      password
+    });
+
+    if (passwordOk) {
+      return json({
+        token: buildSessionToken(candidate),
+        broker: sanitizeBroker(candidate)
+      });
+    }
+  }
+
+  if (blockedMatchFound && matchingBrokers.every(item => item.is_blocked)) {
     return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
   }
 
-  const passwordOk = await verifyAndUpgradeBrokerPassword({
-    supabaseUrl,
-    serviceRoleKey,
-    broker,
-    password
-  });
-
-  if (!passwordOk) {
-    return json({ message: 'The password is incorrect.' }, 401);
-  }
-
-  return json({
-    token: buildSessionToken(broker),
-    broker: sanitizeBroker(broker)
-  });
+  return json({ message: 'The password is incorrect.' }, 401);
 }
