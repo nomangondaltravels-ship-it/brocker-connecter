@@ -52,6 +52,7 @@
       border-bottom: 1px solid var(--line);
       background: linear-gradient(180deg, rgba(7,14,27,0.96), rgba(7,14,27,0.88));
       backdrop-filter: blur(14px);
+      overflow: visible;
     }
 
     .topbar-inner {
@@ -92,6 +93,12 @@
     }
 
     .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+    .top-search-strip {
+      width: min(1400px, 95%);
+      margin: 0 auto;
+      padding: 0 0 12px;
+    }
 
     .btn {
       display: inline-flex;
@@ -301,6 +308,79 @@
       align-items: center;
     }
 
+    .search-hub.compact-top-search {
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      position: relative;
+    }
+
+    .search-hub.compact-top-search h3,
+    .search-hub.compact-top-search p {
+      display: none;
+    }
+
+    .search-hub.compact-top-search .search-row {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-field-wrap {
+      position: relative;
+      min-width: 0;
+    }
+
+    .search-field-wrap::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      border: 2px solid rgba(242, 223, 152, 0.65);
+      border-radius: 999px;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .search-field-wrap::after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      top: calc(50% + 5px);
+      width: 8px;
+      height: 2px;
+      transform: rotate(45deg);
+      background: rgba(242, 223, 152, 0.65);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .search-hub.compact-top-search input {
+      height: 48px;
+      padding: 0 16px 0 42px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(11,21,36,0.96), rgba(9,18,32,0.92));
+      border: 1px solid rgba(212,175,55,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .search-hub.compact-top-search .btn {
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 12px;
+      font-size: 0.92rem;
+    }
+
+    .search-hub.compact-top-search .btn-secondary {
+      min-width: 46px;
+      padding-inline: 12px;
+    }
+
     .search-suggestions {
       display: grid;
       gap: 8px;
@@ -308,6 +388,19 @@
     }
 
     .search-suggestions.hidden { display: none; }
+
+    .search-hub.compact-top-search .search-suggestions {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      width: min(780px, 100%);
+      z-index: 1100;
+      padding: 10px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(11,21,36,0.98), rgba(9,18,32,0.96));
+      box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
+    }
 
     .suggestion-chip {
       justify-content: flex-start;
@@ -550,6 +643,16 @@
       .section, .hero { padding-left: 16px; padding-right: 16px; }
       .status-bar, .search-hub { margin-left: 16px; margin-right: 16px; }
       .search-row { grid-template-columns: 1fr; }
+      .top-search-strip {
+        width: min(1400px, calc(100% - 32px));
+        padding-bottom: 14px;
+      }
+      .search-hub.compact-top-search .search-row {
+        grid-template-columns: 1fr;
+      }
+      .search-hub.compact-top-search .search-suggestions {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -567,6 +670,18 @@
         <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
         <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
         <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
+      </div>
+    </div>
+    <div class="top-search-strip">
+      <div class="search-hub compact-top-search">
+        <div class="search-row" id="dashboardSearchBox">
+          <div class="search-field-wrap">
+            <input id="dashboardSearchInput" type="search" placeholder="Search" autocomplete="off">
+          </div>
+          <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
+          <button class="btn btn-secondary" type="button" onclick="clearDashboardSearch()" aria-label="Clear search">X</button>
+        </div>
+        <div class="search-suggestions hidden" id="dashboardSearchSuggestions"></div>
       </div>
     </div>
   </header>
@@ -597,16 +712,6 @@
         <h1>Private Broker Dashboard</h1>
         <p>This CRM is private to the logged-in broker. Broker requirements, properties, meetings, and progress remain private unless you explicitly choose to list a sanitized version on Broker Connector.</p>
       </section>
-      <div class="search-hub">
-        <h3>Search your CRM</h3>
-        <p>Search broker requirements, properties, listed items, locations, buildings, property types, categories, and follow-up keywords.</p>
-        <div class="search-row" id="dashboardSearchBox">
-          <input id="dashboardSearchInput" type="search" placeholder="Search broker requirements, properties, locations, buildings, or keywords" autocomplete="off">
-          <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
-          <button class="btn btn-secondary" type="button" onclick="clearDashboardSearch()">Clear</button>
-        </div>
-        <div class="search-suggestions hidden" id="dashboardSearchSuggestions"></div>
-      </div>
       <div class="status-bar" id="dashboardStatus"></div>
 
       <section class="section active" id="overview-section">
