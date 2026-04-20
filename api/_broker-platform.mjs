@@ -304,10 +304,21 @@ export function createPasswordHash(password) {
 }
 
 export function verifyPassword(password, storedHash) {
-  const [salt, expected] = String(storedHash || '').split(':');
-  if (!salt || !expected) return false;
-  const actual = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
-  return crypto.timingSafeEqual(Buffer.from(actual, 'hex'), Buffer.from(expected, 'hex'));
+  try {
+    const [salt, expected] = String(storedHash || '').split(':');
+    if (!salt || !expected || !/^[a-f0-9]{128}$/i.test(expected)) {
+      return false;
+    }
+    const actual = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
+    const actualBuffer = Buffer.from(actual, 'hex');
+    const expectedBuffer = Buffer.from(expected, 'hex');
+    if (!actualBuffer.length || actualBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(actualBuffer, expectedBuffer);
+  } catch (error) {
+    return false;
+  }
 }
 
 export function createToken(payload, secret, expiresInMs = 8 * 60 * 60 * 1000) {

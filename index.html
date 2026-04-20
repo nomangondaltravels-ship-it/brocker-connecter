@@ -1314,6 +1314,7 @@
       const message = String(result?.message || '').trim();
       if (!message) return fallback;
       if (/cannot read properties/i.test(message)) return fallback;
+      if (/the password is incorrect/i.test(message)) return 'Invalid credentials.';
       return message;
     }
 

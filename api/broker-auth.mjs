@@ -33,6 +33,12 @@ function getBrokerSessionSecret() {
   return requiredEnv('BROKER_SESSION_SECRET');
 }
 
+function debugAuth(...args) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[broker-auth]', ...args);
+  }
+}
+
 function buildSessionToken(broker) {
   return createToken({
     brokerUuid: broker.id,
@@ -192,6 +198,7 @@ export async function POST(request) {
   const email = normalizeEmail(body?.email);
   const normalizedIdentifierText = identifier.toLowerCase();
   const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
+  const normalizedIdentifierEmail = normalizeEmail(identifier);
   const password = String(body?.password || '');
 
   if (!(identifier || brokerIdNumber || mobileNumber || email) || !password) {
@@ -206,20 +213,35 @@ export async function POST(request) {
   });
 
   const normalizedBrokerIdText = brokerIdNumber.toLowerCase();
+  const hasExplicitBrokerId = Boolean(normalizedBrokerIdText);
+  const hasExplicitMobile = Boolean(mobileNumber);
+  const hasExplicitEmail = Boolean(email);
   const matchingBrokers = (Array.isArray(candidates) ? candidates : []).filter(item => {
     const candidateBrokerId = normalizeText(item?.broker_id_number);
     const candidateBrokerIdText = candidateBrokerId.toLowerCase();
     const candidateMobile = normalizePhoneNumber(item?.mobile_number);
     const candidateEmail = normalizeEmail(item?.email);
 
+    if (hasExplicitBrokerId || hasExplicitMobile || hasExplicitEmail) {
+      const brokerIdMatch = !hasExplicitBrokerId || candidateBrokerIdText === normalizedBrokerIdText;
+      const mobileMatch = !hasExplicitMobile || candidateMobile === mobileNumber;
+      const emailMatch = !hasExplicitEmail || candidateEmail === email;
+      return brokerIdMatch && mobileMatch && emailMatch;
+    }
+
     return (
-      (normalizedBrokerIdText && candidateBrokerIdText === normalizedBrokerIdText) ||
-      (mobileNumber && candidateMobile === mobileNumber) ||
-      (email && candidateEmail === email) ||
       candidateBrokerIdText === normalizedIdentifierText ||
       candidateMobile === normalizedIdentifierPhone ||
-      candidateEmail === normalizeEmail(identifier)
+      candidateEmail === normalizedIdentifierEmail
     );
+  });
+
+  debugAuth('login lookup', {
+    identifierProvided: Boolean(identifier),
+    brokerIdProvided: hasExplicitBrokerId,
+    mobileProvided: hasExplicitMobile,
+    emailProvided: hasExplicitEmail,
+    matchCount: matchingBrokers.length
   });
 
   if (!matchingBrokers.length) {
@@ -233,16 +255,36 @@ export async function POST(request) {
       continue;
     }
 
-    const passwordOk = await verifyAndUpgradeBrokerPassword({
-      supabaseUrl,
-      serviceRoleKey,
-      broker: candidate,
-      password
-    });
+    let passwordOk = false;
+    try {
+      passwordOk = await verifyAndUpgradeBrokerPassword({
+        supabaseUrl,
+        serviceRoleKey,
+        broker: candidate,
+        password
+      });
+    } catch (error) {
+      debugAuth('password verification failed for candidate', {
+        brokerIdNumber: candidate?.broker_id_number,
+        mobileNumber: candidate?.mobile_number,
+        error: error?.message || 'Unknown password verification error'
+      });
+      continue;
+    }
 
     if (passwordOk) {
+      const token = buildSessionToken(candidate);
+      if (!token) {
+        debugAuth('session token generation failed', { brokerIdNumber: candidate?.broker_id_number });
+        return json({ message: 'Session creation failed. Please try again.' }, 500);
+      }
+
+      debugAuth('login success', {
+        brokerIdNumber: candidate?.broker_id_number,
+        mobileNumber: candidate?.mobile_number
+      });
       return json({
-        token: buildSessionToken(candidate),
+        token,
         broker: sanitizeBroker(candidate)
       });
     }
@@ -252,5 +294,5 @@ export async function POST(request) {
     return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
   }
 
-  return json({ message: 'The password is incorrect.' }, 401);
+  return json({ message: 'Invalid credentials.' }, 401);
 }
