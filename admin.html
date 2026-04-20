@@ -470,6 +470,7 @@
     let deals = [];
     let complaints = [];
     let complaintsReadable = true;
+    let adminBrokerAccounts = [];
     let brokerApprovals = {};
     let blockedBrokerIds = {};
     let postStatusOverrides = {};
@@ -556,6 +557,50 @@
 
       if (!response.ok) {
         throw new Error(result?.message || 'Complaint action failed.');
+      }
+
+      return result;
+    }
+
+    async function fetchAdminBrokers() {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-brokers', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Failed to load broker accounts.');
+      }
+
+      return Array.isArray(result?.brokers) ? result.brokers : [];
+    }
+
+    async function requestBrokerAdminAction(payload) {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-brokers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Broker action failed.');
       }
 
       return result;
@@ -652,7 +697,7 @@
     function findBrokerIdByComplaint(item) {
       const brokerRef = String(item?.broker || '').trim().toLowerCase();
       if (!brokerRef) return '';
-      const accounts = safeJsonRead('broker_accounts', []);
+      const accounts = adminBrokerAccounts;
       const exact = accounts.find(account =>
         String(account.brokerId || '').trim().toLowerCase() === brokerRef ||
         String(account.name || '').trim().toLowerCase() === brokerRef
@@ -736,7 +781,16 @@
 
     async function loadAdminData() {
       loadLocalAdminState();
-      const accounts = safeJsonRead('broker_accounts', []);
+      let accounts = [];
+      try {
+        accounts = await fetchAdminBrokers();
+      } catch (error) {
+        console.error(error);
+        setAdminStatus(error?.message || 'Broker accounts could not load.', 'error');
+      }
+      adminBrokerAccounts = accounts;
+      brokerApprovals = Object.fromEntries(accounts.filter(item => item.approved).map(item => [item.brokerId, true]));
+      blockedBrokerIds = Object.fromEntries(accounts.filter(item => item.blocked).map(item => [item.brokerId, true]));
 
       const [{ data: reqData, error: reqError }, { data: dealData, error: dealError }, { data: compData, error: compError }] = await Promise.all([
         supabaseClient.from('requirements').select('*').order('created_at', { ascending: false }),
@@ -763,6 +817,8 @@
 
       if (reqError || dealError) {
         setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
+      } else if (!accounts.length) {
+        setAdminStatus('No broker accounts found yet.', complaintsReadable ? 'error' : 'error');
       } else if (!complaintsReadable) {
         setAdminStatus('Requirements and deals loaded, but complaint review is not available with current Supabase permissions.', 'error');
       } else {
@@ -807,26 +863,34 @@
 
     function renderStats(accounts) {
       document.getElementById('statAccounts').textContent = accounts.length;
-      document.getElementById('statApproved').textContent = Object.values(brokerApprovals).filter(Boolean).length;
+      document.getElementById('statApproved').textContent = accounts.filter(item => item.approved).length;
       document.getElementById('statPosts').textContent = requirements.length + deals.length;
       document.getElementById('statComplaints').textContent = complaints.length;
     }
 
-    function toggleBrokerApproval(brokerId) {
-      if (blockedBrokerIds[brokerId]) {
-        delete blockedBrokerIds[brokerId];
-        safeJsonWrite('blocked_brokers', blockedBrokerIds);
+    async function toggleBrokerApproval(brokerId) {
+      const account = adminBrokerAccounts.find(item => item.brokerId === brokerId);
+      if (!account) {
+        setAdminStatus('Broker account not found.', 'error');
+        return;
       }
-      brokerApprovals[brokerId] = !brokerApprovals[brokerId];
-      safeJsonWrite('broker_approvals', brokerApprovals);
-      const accounts = safeJsonRead('broker_accounts', []);
-      renderStats(accounts);
-      renderBrokerApprovals(accounts);
+
+      try {
+        await requestBrokerAdminAction({
+          action: account.approved ? 'unverify' : 'verify',
+          brokerId
+        });
+      } catch (error) {
+        setAdminStatus(error?.message || 'Broker verification update failed.', 'error');
+        return;
+      }
+
       setAdminStatus('Broker verification status updated successfully.', 'success');
+      loadAdminData();
     }
 
-    function toggleBrokerBlock(brokerId) {
-      const accounts = safeJsonRead('broker_accounts', []);
+    async function toggleBrokerBlock(brokerId) {
+      const accounts = adminBrokerAccounts;
       const account = accounts.find(item => item.brokerId === brokerId);
       if (!account) {
         setAdminStatus('Broker account not found.', 'error');
@@ -841,27 +905,18 @@
       );
       if (!confirmed) return;
 
-      if (willBlock) {
-        blockedBrokerIds[brokerId] = true;
-        delete brokerApprovals[brokerId];
-      } else {
-        delete blockedBrokerIds[brokerId];
+      try {
+        await requestBrokerAdminAction({
+          action: willBlock ? 'block' : 'unblock',
+          brokerId
+        });
+      } catch (error) {
+        setAdminStatus(error?.message || 'Broker block update failed.', 'error');
+        return;
       }
 
-      safeJsonWrite('blocked_brokers', blockedBrokerIds);
-      safeJsonWrite('broker_approvals', brokerApprovals);
-
-      if (localStorage.getItem('current_broker_id') === brokerId) {
-        localStorage.removeItem('current_broker');
-        localStorage.removeItem('current_broker_name');
-        localStorage.removeItem('current_broker_id');
-        localStorage.removeItem('current_phone');
-        localStorage.removeItem('current_email');
-      }
-
-      renderStats(accounts);
-      renderBrokerApprovals(accounts);
       setAdminStatus(willBlock ? 'Broker blocked successfully.' : 'Broker unblocked successfully.', 'success');
+      loadAdminData();
     }
 
     async function updateComplaintStatus(index, status) {
@@ -1113,10 +1168,9 @@
       });
     }
 
-    function updateBrokerPassword(brokerId) {
-      const accounts = safeJsonRead('broker_accounts', []);
-      const accountIndex = accounts.findIndex(account => account.brokerId === brokerId);
-      if (accountIndex === -1) {
+    async function updateBrokerPassword(brokerId) {
+      const account = adminBrokerAccounts.find(item => item.brokerId === brokerId);
+      if (!account) {
         setAdminStatus('Broker account not found.', 'error');
         return;
       }
@@ -1129,42 +1183,44 @@
         return;
       }
 
-      accounts[accountIndex].password = String(newPassword).trim();
-      safeJsonWrite('broker_accounts', accounts);
-      renderStats(accounts);
-      renderBrokerApprovals(accounts);
+      try {
+        await requestBrokerAdminAction({
+          action: 'set-password',
+          brokerId,
+          newPassword: String(newPassword).trim()
+        });
+      } catch (error) {
+        setAdminStatus(error?.message || 'Broker password update failed.', 'error');
+        return;
+      }
+
       setAdminStatus('Broker password updated successfully.', 'success');
+      loadAdminData();
     }
 
-    function deleteBrokerAccount(brokerId) {
-      const accounts = safeJsonRead('broker_accounts', []);
+    async function deleteBrokerAccount(brokerId) {
+      const accounts = adminBrokerAccounts;
       const account = accounts.find(item => item.brokerId === brokerId);
       if (!account) {
         setAdminStatus('Broker account not found.', 'error');
         return;
       }
 
-      const confirmed = window.confirm(`Delete broker ${account.name} (${account.brokerId})? This will remove the local broker account from this browser.`);
+      const confirmed = window.confirm(`Delete broker ${account.name} (${account.brokerId})? This will remove the broker account from the backend.`);
       if (!confirmed) return;
 
-      const updatedAccounts = accounts.filter(item => item.brokerId !== brokerId);
-      delete brokerApprovals[brokerId];
-      delete blockedBrokerIds[brokerId];
-      safeJsonWrite('broker_accounts', updatedAccounts);
-      safeJsonWrite('broker_approvals', brokerApprovals);
-      safeJsonWrite('blocked_brokers', blockedBrokerIds);
-
-      if (localStorage.getItem('current_broker_id') === brokerId) {
-        localStorage.removeItem('current_broker');
-        localStorage.removeItem('current_broker_name');
-        localStorage.removeItem('current_broker_id');
-        localStorage.removeItem('current_phone');
-        localStorage.removeItem('current_email');
+      try {
+        await requestBrokerAdminAction({
+          action: 'delete',
+          brokerId
+        });
+      } catch (error) {
+        setAdminStatus(error?.message || 'Broker delete failed.', 'error');
+        return;
       }
 
-      renderStats(updatedAccounts);
-      renderBrokerApprovals(updatedAccounts);
       setAdminStatus('Broker account deleted successfully.', 'success');
+      loadAdminData();
     }
 
     function renderBrokerApprovals(accounts) {
