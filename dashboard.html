@@ -2688,6 +2688,221 @@
     .page-switch-btn {
       font-size: 0.78rem !important;
     }
+
+    .record-toolbar {
+      padding: 10px 12px !important;
+      border-radius: 16px !important;
+      background: #ffffff !important;
+      border: 1px solid rgba(148, 163, 184, 0.18) !important;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.03) !important;
+    }
+
+    .record-filter-grid {
+      grid-template-columns: repeat(7, minmax(118px, 1fr)) !important;
+      gap: 8px !important;
+    }
+
+    .record-filter-grid .field-block {
+      padding: 0 !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+
+    .record-filter-grid select,
+    .record-filter-grid input {
+      min-height: 36px !important;
+      border-radius: 10px !important;
+      background: #fbfcfe !important;
+    }
+
+    .section-head p {
+      font-size: 0.84rem !important;
+      color: #6b7280 !important;
+    }
+
+    .insight-card {
+      padding: 16px !important;
+    }
+
+    .insight-head {
+      align-items: flex-start !important;
+      margin-bottom: 12px !important;
+    }
+
+    .insight-head p {
+      font-size: 0.83rem !important;
+      max-width: 360px;
+    }
+
+    .insight-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(181, 138, 29, 0.18);
+      background: rgba(181, 138, 29, 0.08);
+      color: #8f6a12;
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .workflow-alert-list {
+      gap: 8px !important;
+    }
+
+    .workflow-alert-item {
+      padding: 12px 13px !important;
+    }
+
+    .crm-sheet-head,
+    .crm-row {
+      grid-template-columns: 58px minmax(200px, 1.45fr) repeat(6, minmax(94px, 1fr)) auto !important;
+    }
+
+    .crm-sheet-head {
+      padding: 11px 14px !important;
+    }
+
+    .crm-row {
+      min-height: 68px !important;
+      padding: 10px 14px !important;
+    }
+
+    .crm-primary {
+      font-size: 0.88rem !important;
+      font-weight: 800 !important;
+    }
+
+    .crm-secondary {
+      color: #64748b !important;
+    }
+
+    .crm-quick-meta {
+      gap: 8px !important;
+      color: #64748b !important;
+    }
+
+    .crm-row-actions {
+      justify-content: flex-end !important;
+      gap: 6px !important;
+      flex-wrap: nowrap !important;
+    }
+
+    .crm-row-action-btn {
+      min-width: 34px;
+      min-height: 34px !important;
+      padding: 0 10px !important;
+      border-radius: 10px !important;
+      font-size: 0.72rem !important;
+      font-weight: 800 !important;
+      white-space: nowrap;
+    }
+
+    .crm-row-action-btn.primary-action {
+      min-width: 56px;
+    }
+
+    .crm-row-more {
+      position: relative;
+    }
+
+    .crm-row-more summary {
+      list-style: none;
+    }
+
+    .crm-row-more summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .crm-row-more-toggle {
+      min-width: 42px;
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: #ffffff;
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+
+    .crm-row-more[open] .crm-row-more-toggle,
+    .crm-row-more-toggle:hover {
+      background: #f8fafc;
+      border-color: rgba(100, 116, 139, 0.26);
+      color: #111827;
+    }
+
+    .crm-row-more-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 20;
+      min-width: 170px;
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #ffffff;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.1);
+      display: grid;
+      gap: 6px;
+    }
+
+    .crm-row-more-menu .btn {
+      justify-content: flex-start;
+      min-height: 34px !important;
+      padding-inline: 10px !important;
+      border-radius: 10px !important;
+      font-size: 0.74rem !important;
+      box-shadow: none !important;
+    }
+
+    .crm-row-panel summary {
+      font-size: 0.8rem !important;
+      font-weight: 800 !important;
+      color: #334155 !important;
+    }
+
+    .empty.crm-empty-state {
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      text-align: center;
+      padding: 26px 18px !important;
+    }
+
+    .empty.crm-empty-state strong {
+      font-size: 0.96rem;
+      color: #1f2937;
+    }
+
+    .empty.crm-empty-state span {
+      max-width: 420px;
+      color: #64748b;
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1180px) {
+      .crm-row-actions {
+        flex-wrap: wrap !important;
+      }
+
+      .crm-row-more-menu {
+        left: 0;
+        right: auto;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2769,8 +2984,9 @@
             <div class="insight-head">
               <div>
                 <h3>Workflow Alerts</h3>
-                <p>Due today, overdue reminders, and fresh match signals.</p>
+                <p>Due today, overdue reminders, and important next actions.</p>
               </div>
+              <span class="insight-count" id="workflowAlertsCount">0</span>
             </div>
             <div class="workflow-alert-list" id="workflowAlertsList"></div>
           </div>
@@ -2778,8 +2994,9 @@
             <div class="insight-head">
               <div>
                 <h3>Match Opportunities</h3>
-                <p>Recent strong and partial matches between your leads and listings.</p>
+                <p>Recent lead and listing matches that need broker attention.</p>
               </div>
+              <span class="insight-count" id="workflowMatchesCount">0</span>
             </div>
             <div class="workflow-alert-list" id="workflowMatchesList"></div>
           </div>
@@ -3194,7 +3411,7 @@
         <div class="section-head">
           <div>
             <h2>My Broker Requirements</h2>
-            <p>View and manage your private broker requirements here.</p>
+            <p>Private requirement workflow and follow-up pipeline.</p>
           </div>
         </div>
         <div class="record-toolbar">
@@ -3231,7 +3448,7 @@
             <div class="field-block">
               <label class="small">Follow-up</label>
               <select id="leadFollowUpFilter" onchange="updateDashboardFilter('leads','followUp', this.value)">
-                <option value="all">All Follow-up States</option>
+                <option value="all">All Follow-up</option>
                 <option value="today">Follow-up Today</option>
                 <option value="upcoming">Upcoming</option>
                 <option value="overdue">Overdue</option>
@@ -3257,7 +3474,7 @@
             <div class="field-block">
               <label class="small">Matches</label>
               <select id="leadMatchFilter" onchange="updateDashboardFilter('leads','matches', this.value)">
-                <option value="all">Matched + Unmatched</option>
+                <option value="all">All Match States</option>
                 <option value="matched">Matched</option>
                 <option value="unmatched">Unmatched</option>
               </select>
@@ -3271,7 +3488,7 @@
         <div class="section-head">
           <div>
             <h2>My Properties</h2>
-            <p>View and manage your private inventory here.</p>
+            <p>Private inventory pipeline and broker-ready listing workflow.</p>
           </div>
         </div>
         <div class="record-toolbar">
@@ -3290,7 +3507,7 @@
             <div class="field-block">
               <label class="small">Purpose</label>
               <select id="propertyPurposeFilter" onchange="updateDashboardFilter('properties','purpose', this.value)">
-                <option value="all">Rent + Sale</option>
+                <option value="all">All Purposes</option>
                 <option value="rent">Rent</option>
                 <option value="sale">Sale</option>
               </select>
@@ -3306,7 +3523,7 @@
             <div class="field-block">
               <label class="small">Follow-up</label>
               <select id="propertyFollowUpFilter" onchange="updateDashboardFilter('properties','followUp', this.value)">
-                <option value="all">All Follow-up States</option>
+                <option value="all">All Follow-up</option>
                 <option value="today">Follow-up Today</option>
                 <option value="upcoming">Upcoming</option>
                 <option value="overdue">Overdue</option>
@@ -3332,7 +3549,7 @@
             <div class="field-block">
               <label class="small">Matches</label>
               <select id="propertyMatchFilter" onchange="updateDashboardFilter('properties','matches', this.value)">
-                <option value="all">Matched + Unmatched</option>
+                <option value="all">All Match States</option>
                 <option value="matched">Matched</option>
                 <option value="unmatched">Unmatched</option>
               </select>
@@ -6198,8 +6415,13 @@
       const alertsTarget = document.getElementById('workflowAlertsList');
       const matchesTarget = document.getElementById('workflowMatchesList');
       const alertCount = Array.isArray(state.notifications) ? state.notifications.length : 0;
+      const matchCount = Array.isArray(state.aiMatches) ? state.aiMatches.length : 0;
       const countNode = document.getElementById('notificationCountBadge');
+      const workflowCountNode = document.getElementById('workflowAlertsCount');
+      const workflowMatchesNode = document.getElementById('workflowMatchesCount');
       if (countNode) countNode.textContent = String(alertCount);
+      if (workflowCountNode) workflowCountNode.textContent = String(alertCount);
+      if (workflowMatchesNode) workflowMatchesNode.textContent = String(matchCount);
 
       if (alertsTarget) {
         if (!alertCount) {
@@ -6330,6 +6552,23 @@
           <small>${escapeHtml(match.matchReason || '')}</small>
         </div>
       `).join('')}</div>`;
+    }
+
+    function openRecordPanel(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      panel.open = true;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function renderEmptyState(title, copy, actionLabel, actionHandler) {
+      return `
+        <div class="empty crm-empty-state">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${escapeHtml(copy)}</span>
+          <button class="btn btn-primary btn-tiny" type="button" onclick="${actionHandler}">${escapeHtml(actionLabel)}</button>
+        </div>
+      `;
     }
 
     function renderLeads() {
@@ -7087,7 +7326,7 @@
       }
 
       if (matchesTarget) {
-        matchesTarget.innerHTML = Array.isArray(state.aiMatches) && state.aiMatches.length
+        matchesTarget.innerHTML = matchCount
           ? state.aiMatches.slice(0, 6).map(match => {
               const lead = state.leads.find(item => item.id === match.requirementId);
               const property = state.properties.find(item => item.id === match.propertyId);
@@ -7137,58 +7376,102 @@
       if (!target) return;
       const requirements = getFilteredDashboardItems(state.leads, 'lead');
       if (!requirements.length) {
-        target.innerHTML = '<div class="empty">No broker requirements match your current filters. Adjust your filters or add a new lead from Overview.</div>';
+        target.innerHTML = renderEmptyState(
+          'No broker requirements yet',
+          'Adjust your filters or add your first lead from Overview to start tracking client demand.',
+          'Add New Lead',
+          'openLeadComposer()'
+        );
         return;
       }
 
-      target.innerHTML = requirements.map(lead => {
+      target.innerHTML = `
+        <div class="crm-sheet">
+          <div class="crm-sheet-head">
+            <div>Sr.</div>
+            <div>Purpose / Type</div>
+            <div>Location</div>
+            <div>Building / Project</div>
+            <div>Budget</div>
+            <div>Status</div>
+            <div>Follow-up</div>
+            <div>Visibility</div>
+            <div>Actions</div>
+          </div>
+          ${requirements.map((lead, index) => {
         const followUpState = getFollowUpStateInfo(lead);
         const phoneAvailable = String(lead.clientPhone || '').trim();
+        const lastTouched = formatCompactAge(lead.updatedAt || lead.createdAt);
         return `
-          <div class="item-card">
-            <div class="item-top">
-              <div class="item-title">
-                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} | ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
-                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' | '))}</div>
+          <div class="crm-record-group">
+            <div class="crm-row">
+              <div class="crm-col">
+                <span class="crm-col-label">Sr.</span>
+                <span class="crm-index">#${index + 1}</span>
               </div>
-              <div class="badges">
-                <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
-                <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
-                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
-                ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
-                ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
-                ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              <div class="crm-col">
+                <span class="crm-col-label">Purpose / Type</span>
+                <div class="crm-primary">${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} | ${lead.propertyType || 'Requirement'}`)}</div>
+                <div class="crm-secondary">${escapeHtml([getLeadIntentText(lead), lead.paymentMethod].filter(Boolean).join(' · '))}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Location</span>
+                <div class="crm-primary">${escapeHtml(lead.location || '--')}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Building / Project</span>
+                <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || '--')}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Budget</span>
+                <div class="crm-primary">${escapeHtml(formatBudgetLabel(lead.budget))}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Status</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
+                </div>
+                <div class="crm-quick-meta">
+                  <span>${escapeHtml(lastTouched)} ago</span>
+                </div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Follow-up</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                  ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                </div>
+                <div class="crm-quick-meta">
+                  <span>Calls ${escapeHtml(lead.callCount || 0)}</span>
+                  <span>WA ${escapeHtml(lead.whatsappCount || 0)}</span>
+                </div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Visibility</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                  ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                  ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+                </div>
+              </div>
+              <div class="crm-row-actions">
+                <button class="btn btn-secondary btn-tiny crm-row-action-btn primary-action" type="button" onclick="editLead(${lead.id})">Edit</button>
+                <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
+                <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WA</button>
+                <details class="crm-row-more">
+                  <summary class="crm-row-more-toggle">More</summary>
+                  <div class="crm-row-more-menu">
+                    <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">History</button>
+                    <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+                  </div>
+                </details>
               </div>
             </div>
 
-            <div class="detail-grid">
-              <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
-              <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
-              <div class="detail-cell"><small>Payment / Purpose</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
-              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([lead.nextFollowUpDate || '', lead.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
-            </div>
-
-            <div class="record-summary">
-              <div class="muted"><strong>Private Notes:</strong> ${escapeHtml(lead.privateNotes || 'No private notes yet')}</div>
-              <div class="muted"><strong>Public-safe Summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary yet')}</div>
-              <div class="record-meta-row">
-                <span>Calls: ${escapeHtml(lead.callCount || 0)}</span>
-                <span>WhatsApp: ${escapeHtml(lead.whatsappCount || 0)}</span>
-                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(lead.lastContactedAt))}</span>
-                <span>Last Method: ${escapeHtml(lead.lastContactMethod || '--')}</span>
-              </div>
-            </div>
-
-            <div class="record-actions">
-              <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
-              <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
-              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
-              <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
-              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
-            </div>
-
-            <details class="record-details-panel">
+            <details class="record-details-panel crm-row-panel" id="lead-panel-${lead.id}">
               <summary>Workflow tools, matches, and history</summary>
               <div class="workflow-strip">
                 <select id="lead-status-action-${lead.id}">
@@ -7228,7 +7511,9 @@
             </details>
           </div>
         `;
-      }).join('');
+      }).join('')}
+        </div>
+      `;
     }
 
     function renderProperties() {
@@ -7236,59 +7521,105 @@
       if (!target) return;
       const properties = getFilteredDashboardItems(state.properties, 'property');
       if (!properties.length) {
-        target.innerHTML = '<div class="empty">No listings match your current filters. Adjust your filters or add a new listing from Overview.</div>';
+        target.innerHTML = renderEmptyState(
+          'No listings yet',
+          'Adjust your filters or add your first listing from Overview to start managing inventory.',
+          'Add New Listing',
+          'openPropertyComposer()'
+        );
         return;
       }
 
-      target.innerHTML = properties.map(property => {
+      target.innerHTML = `
+        <div class="crm-sheet">
+          <div class="crm-sheet-head">
+            <div>Sr.</div>
+            <div>Purpose / Type</div>
+            <div>Location</div>
+            <div>Building / Project</div>
+            <div>Price</div>
+            <div>Status</div>
+            <div>Follow-up</div>
+            <div>Visibility</div>
+            <div>Actions</div>
+          </div>
+          ${properties.map((property, index) => {
         const followUpState = getFollowUpStateInfo(property);
         const ownerPhone = String(property.ownerPhone || '').trim();
+        const lastTouched = formatCompactAge(property.updatedAt || property.createdAt);
+        const distressLabel = getPropertyDistressLabel(property);
         return `
-          <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
-            <div class="item-top">
-              <div class="item-title">
-                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} | ${escapeHtml(property.propertyType || 'Listing')}</h4>
-                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' | '))}</div>
+          <div class="crm-record-group">
+            <div class="crm-row ${property.isDistress ? 'is-distress' : ''}">
+              <div class="crm-col">
+                <span class="crm-col-label">Sr.</span>
+                <span class="crm-index">#${index + 1}</span>
               </div>
-              <div class="badges">
-                <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
-                <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
-                <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
-                ${property.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
-                ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
-                ${property.matchCount ? `<span class="badge badge-match">${property.matchCount} Match${property.matchCount === 1 ? '' : 'es'}</span>` : ''}
-                ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+              <div class="crm-col">
+                <span class="crm-col-label">Purpose / Type</span>
+                <div class="crm-primary">${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</div>
+                <div class="crm-secondary">${escapeHtml(getPropertyTermsSummary(property))}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Location</span>
+                <div class="crm-primary">${escapeHtml(property.location || '--')}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Building / Project</span>
+                <div class="crm-primary">${escapeHtml(property.buildingName || '--')}</div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Price</span>
+                <div class="crm-primary">${escapeHtml(getPropertyDisplayPrice(property))}</div>
+                ${distressLabel ? `<div class="crm-secondary">${escapeHtml(distressLabel)}</div>` : ''}
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Status</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                </div>
+                <div class="crm-quick-meta">
+                  <span>${escapeHtml(lastTouched)} ago</span>
+                </div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Follow-up</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                  ${property.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                </div>
+                <div class="crm-quick-meta">
+                  <span>Calls ${escapeHtml(property.ownerCallCount || 0)}</span>
+                  <span>WA ${escapeHtml(property.ownerWhatsappCount || 0)}</span>
+                </div>
+              </div>
+              <div class="crm-col">
+                <span class="crm-col-label">Visibility</span>
+                <div class="crm-chip-stack">
+                  <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                  ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+                  ${property.matchCount ? `<span class="badge badge-match">${property.matchCount} Match${property.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                  ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+                </div>
+              </div>
+              <div class="crm-row-actions">
+                <button class="btn btn-secondary btn-tiny crm-row-action-btn primary-action" type="button" onclick="editProperty(${property.id})">Edit</button>
+                <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call</button>
+                <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WA</button>
+                <details class="crm-row-more">
+                  <summary class="crm-row-more-toggle">More</summary>
+                  <div class="crm-row-more-menu">
+                    <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">Matches</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">History</button>
+                    <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+                  </div>
+                </details>
               </div>
             </div>
 
-            <div class="detail-grid">
-              <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(property.ownerName || '--')}</strong></div>
-              <div class="detail-cell"><small>Owner Phone</small><strong>${escapeHtml(property.ownerPhone || '--')}</strong></div>
-              <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
-              <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([property.nextFollowUpDate || '', property.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
-            </div>
-
-            <div class="record-summary">
-              <div class="muted"><strong>Internal Notes:</strong> ${escapeHtml(property.internalNotes || 'No internal notes yet')}</div>
-              <div class="muted"><strong>Public Notes:</strong> ${escapeHtml(property.publicNotes || 'No public note added')}</div>
-              <div class="record-meta-row">
-                <span>Calls: ${escapeHtml(property.ownerCallCount || 0)}</span>
-                <span>WhatsApp: ${escapeHtml(property.ownerWhatsappCount || 0)}</span>
-                <span>Last Contacted: ${escapeHtml(formatLastContactLabel(property.lastOwnerContactedAt))}</span>
-                <span>Last Method: ${escapeHtml(property.lastOwnerContactMethod || '--')}</span>
-              </div>
-            </div>
-
-            <div class="record-actions">
-              <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
-              <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
-              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
-              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
-              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-            </div>
-
-            <details class="record-details-panel">
+            <details class="record-details-panel crm-row-panel" id="property-panel-${property.id}">
               <summary>Workflow tools, matches, and history</summary>
               <div class="workflow-strip">
                 <select id="property-status-action-${property.id}">
@@ -7328,7 +7659,9 @@
             </details>
           </div>
         `;
-      }).join('');
+      }).join('')}
+        </div>
+      `;
     }
 
     function renderOverview() {
