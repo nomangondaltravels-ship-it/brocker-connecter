@@ -5637,7 +5637,7 @@
         window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
       }
       try {
-        await dashboardAction({ action: 'track-lead-contact', id, method }, `${method === 'call' ? 'Call' : 'WhatsApp'} tracked on lead.`);
+        await dashboardAction({ action: 'track-lead-contact', id, method });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -5657,7 +5657,7 @@
         window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
       }
       try {
-        await dashboardAction({ action: 'track-property-contact', id, method }, `${method === 'call' ? 'Call' : 'WhatsApp'} tracked on listing.`);
+        await dashboardAction({ action: 'track-property-contact', id, method });
       } catch (error) {
         setStatus(error.message, 'error');
       }
