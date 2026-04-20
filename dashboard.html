@@ -299,6 +299,321 @@
       color: #92400e;
     }
 
+    .profile-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .profile-progress-card,
+    .profile-section-card {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .profile-progress-card {
+      padding: 18px 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .profile-progress-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .profile-progress-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .profile-progress-copy h3 {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #18212f;
+    }
+
+    .profile-progress-copy p {
+      color: #6b7280;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .profile-progress-bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .profile-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #16a34a);
+      width: 0;
+      transition: width 0.22s ease;
+    }
+
+    .profile-progress-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .profile-hint-list,
+    .profile-checklist {
+      display: grid;
+      gap: 8px;
+    }
+
+    .profile-hint-item,
+    .profile-check-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .profile-check-item.is-done {
+      color: #166534;
+      border-color: rgba(34, 197, 94, 0.2);
+      background: rgba(34, 197, 94, 0.06);
+    }
+
+    .profile-check-icon {
+      width: 18px;
+      text-align: center;
+      font-weight: 800;
+      flex: 0 0 18px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+
+    .profile-section-card {
+      padding: 18px 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .profile-header-grid {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .profile-avatar-wrap {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+
+    .profile-avatar {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: #f8fafc;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.07);
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .profile-avatar-fallback {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #8f6a12;
+    }
+
+    .profile-avatar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .profile-info-summary {
+      display: grid;
+      gap: 6px;
+    }
+
+    .profile-info-summary h3 {
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: #18212f;
+    }
+
+    .profile-meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: #6b7280;
+      font-size: 0.84rem;
+    }
+
+    .profile-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .profile-field-grid .field-block.full {
+      grid-column: 1 / -1;
+    }
+
+    .profile-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .profile-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .profile-tag button {
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
+      padding: 0;
+    }
+
+    .choice-chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .choice-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: #ffffff;
+      color: #475569;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .choice-chip input {
+      display: none;
+    }
+
+    .choice-chip.is-selected {
+      border-color: rgba(180, 138, 29, 0.28);
+      background: rgba(212, 175, 55, 0.12);
+      color: #8f6a12;
+    }
+
+    .areas-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .areas-input-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .profile-empty {
+      color: #94a3b8;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .profile-link-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .profile-link-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #f8fafc;
+    }
+
+    .profile-link-row small {
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.7rem;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .profile-link-row strong {
+      font-size: 0.85rem;
+      color: #18212f;
+      word-break: break-word;
+    }
+
+    .profile-note {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .profile-section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
     .app-shell {
       width: min(1400px, 95%);
       margin: 18px auto 24px;
@@ -1960,6 +2275,14 @@
       .settings-layout {
         grid-template-columns: 1fr;
       }
+      .profile-grid,
+      .profile-progress-meta,
+      .profile-field-grid {
+        grid-template-columns: 1fr;
+      }
+      .profile-header-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     /* CRM light-table polish */
@@ -2998,29 +3321,7 @@
             <h2>Profile / Settings</h2>
           </div>
         </div>
-        <div class="settings-layout">
-          <div class="card settings-section-card" id="profileCard"></div>
-          <div class="settings-stack">
-            <div class="card settings-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section B</div>
-                  <h3>Future Settings</h3>
-                </div>
-              </div>
-              <div class="settings-placeholder">Ready for future settings modules.</div>
-            </div>
-            <div class="card settings-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section C</div>
-                  <h3>Preferences / Controls</h3>
-                </div>
-              </div>
-              <div class="settings-placeholder">Ready for broker preferences and controls.</div>
-            </div>
-          </div>
-        </div>
+        <div id="profileCard"></div>
       </section>
     </main>
   </div>
@@ -3074,6 +3375,10 @@
       },
       leadEditorOriginal: null,
       propertyEditorOriginal: null,
+      profileExtras: null,
+      profileDraft: null,
+      profileStorageKey: '',
+      isEditingProfile: false,
       callPopover: {
         anchor: null,
         phoneRaw: '',
@@ -3086,6 +3391,8 @@
 
     const leadAutocompleteControllers = {};
     const propertyAutocompleteControllers = {};
+    const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
+    const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
 
     function escapeHtml(value) {
       return String(value || '')
@@ -3094,6 +3401,313 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeStringArray(values) {
+      if (!Array.isArray(values)) return [];
+      return values
+        .map(item => normalizeText(item))
+        .filter(Boolean)
+        .filter((item, index, arr) => arr.indexOf(item) === index)
+        .slice(0, 20);
+    }
+
+    function createEmptyProfileExtras() {
+      return {
+        avatarDataUrl: '',
+        whatsappNumber: '',
+        officeLocation: '',
+        bio: '',
+        specializations: [],
+        areasServed: [],
+        languages: [],
+        socialLinks: {
+          instagram: '',
+          facebook: '',
+          linkedin: '',
+          website: '',
+          whatsappLink: ''
+        }
+      };
+    }
+
+    function sanitizeProfileExtras(raw) {
+      const base = createEmptyProfileExtras();
+      return {
+        avatarDataUrl: normalizeText(raw?.avatarDataUrl),
+        whatsappNumber: normalizeLeadPhoneInput(raw?.whatsappNumber || ''),
+        officeLocation: normalizeText(raw?.officeLocation),
+        bio: normalizeText(raw?.bio),
+        specializations: sanitizeStringArray(raw?.specializations),
+        areasServed: sanitizeStringArray(raw?.areasServed),
+        languages: sanitizeStringArray(raw?.languages),
+        socialLinks: {
+          instagram: normalizeText(raw?.socialLinks?.instagram),
+          facebook: normalizeText(raw?.socialLinks?.facebook),
+          linkedin: normalizeText(raw?.socialLinks?.linkedin),
+          website: normalizeText(raw?.socialLinks?.website),
+          whatsappLink: normalizeText(raw?.socialLinks?.whatsappLink)
+        }
+      };
+    }
+
+    function getProfileStorageKey() {
+      const broker = state.overview?.broker || state.broker || {};
+      const keyPart = broker.id || broker.brokerIdNumber || 'default';
+      return `broker_profile_extras_${keyPart}`;
+    }
+
+    function syncProfileStorage(force = false) {
+      const nextKey = getProfileStorageKey();
+      if (!force && state.profileStorageKey === nextKey && state.profileExtras) return;
+      let parsed = createEmptyProfileExtras();
+      try {
+        const raw = localStorage.getItem(nextKey);
+        if (raw) {
+          parsed = sanitizeProfileExtras(JSON.parse(raw));
+        }
+      } catch (error) {
+        console.error('Could not load stored profile extras', error);
+      }
+      state.profileStorageKey = nextKey;
+      state.profileExtras = parsed;
+    }
+
+    function persistProfileExtras(extras) {
+      const normalized = sanitizeProfileExtras(extras);
+      syncProfileStorage();
+      state.profileExtras = normalized;
+      try {
+        localStorage.setItem(state.profileStorageKey, JSON.stringify(normalized));
+      } catch (error) {
+        console.error('Could not store broker profile extras', error);
+      }
+    }
+
+    function buildBrokerProfileModel() {
+      syncProfileStorage();
+      const broker = state.overview?.broker || state.broker || {};
+      const extras = state.profileExtras || createEmptyProfileExtras();
+      return {
+        fullName: normalizeText(broker.fullName),
+        brokerIdNumber: normalizeText(broker.brokerIdNumber),
+        mobileNumber: normalizeLeadPhoneInput(broker.mobileNumber || ''),
+        email: normalizeText(broker.email),
+        companyName: normalizeText(broker.companyName),
+        isVerified: Boolean(broker.isVerified),
+        avatarDataUrl: extras.avatarDataUrl,
+        whatsappNumber: extras.whatsappNumber,
+        officeLocation: extras.officeLocation,
+        bio: extras.bio,
+        specializations: [...extras.specializations],
+        areasServed: [...extras.areasServed],
+        languages: [...extras.languages],
+        socialLinks: { ...extras.socialLinks }
+      };
+    }
+
+    function getActiveBrokerProfile() {
+      return state.isEditingProfile && state.profileDraft ? state.profileDraft : buildBrokerProfileModel();
+    }
+
+    function cloneBrokerProfile(profile) {
+      return {
+        ...profile,
+        specializations: [...(profile?.specializations || [])],
+        areasServed: [...(profile?.areasServed || [])],
+        languages: [...(profile?.languages || [])],
+        socialLinks: { ...(profile?.socialLinks || {}) }
+      };
+    }
+
+    function getProfileCompletion(profile) {
+      const checks = [
+        { label: 'Basic info complete', done: Boolean(profile.fullName && profile.mobileNumber && profile.email && profile.companyName) },
+        { label: 'Photo added', done: Boolean(profile.avatarDataUrl) },
+        { label: 'Contact info complete', done: Boolean(profile.whatsappNumber && profile.officeLocation) },
+        { label: 'Bio added', done: Boolean(profile.bio) },
+        { label: 'Specializations added', done: Array.isArray(profile.specializations) && profile.specializations.length > 0 },
+        { label: 'Areas served added', done: Array.isArray(profile.areasServed) && profile.areasServed.length > 0 },
+        { label: 'Languages added', done: Array.isArray(profile.languages) && profile.languages.length > 0 },
+        { label: 'Social links added', done: Object.values(profile.socialLinks || {}).some(Boolean) }
+      ];
+      const percent = Math.round((checks.filter(item => item.done).length / checks.length) * 100);
+      const hints = [];
+      if (!profile.avatarDataUrl) hints.push('Add profile picture to increase trust');
+      if (!profile.bio) hints.push('Add a short professional bio');
+      if (!(profile.socialLinks && Object.values(profile.socialLinks).some(Boolean))) hints.push('Add social links to complete your profile');
+      if (!(Array.isArray(profile.areasServed) && profile.areasServed.length)) hints.push('Add communities you serve');
+      return { percent, checks, hints: hints.slice(0, 3) };
+    }
+
+    function getProfileInitials(name) {
+      const parts = normalizeText(name).split(/\s+/).filter(Boolean).slice(0, 2);
+      if (!parts.length) return 'BC';
+      return parts.map(item => item.charAt(0).toUpperCase()).join('');
+    }
+
+    function beginProfileEdit() {
+      state.profileDraft = cloneBrokerProfile(buildBrokerProfileModel());
+      state.isEditingProfile = true;
+      renderProfile();
+    }
+
+    function cancelProfileEdit() {
+      state.profileDraft = null;
+      state.isEditingProfile = false;
+      renderProfile();
+    }
+
+    function updateProfileDraftField(path, value) {
+      if (!state.profileDraft) return;
+      const keys = String(path || '').split('.');
+      let target = state.profileDraft;
+      while (keys.length > 1) {
+        const key = keys.shift();
+        if (!target[key] || typeof target[key] !== 'object') target[key] = {};
+        target = target[key];
+      }
+      target[keys[0]] = value;
+      refreshProfileCompletionUi();
+    }
+
+    function toggleProfileDraftValue(field, value) {
+      if (!state.profileDraft) return;
+      const nextValues = new Set(Array.isArray(state.profileDraft[field]) ? state.profileDraft[field] : []);
+      if (nextValues.has(value)) nextValues.delete(value);
+      else nextValues.add(value);
+      state.profileDraft[field] = Array.from(nextValues);
+      renderProfile();
+    }
+
+    function addProfileAreaTag() {
+      if (!state.profileDraft) return;
+      const input = document.getElementById('profileAreasInput');
+      const nextValue = normalizeText(input?.value);
+      if (!nextValue) return;
+      state.profileDraft.areasServed = sanitizeStringArray([...(state.profileDraft.areasServed || []), nextValue]);
+      renderProfile();
+    }
+
+    function removeProfileAreaTag(value) {
+      if (!state.profileDraft) return;
+      const normalizedValue = decodeURIComponent(String(value || ''));
+      state.profileDraft.areasServed = sanitizeStringArray((state.profileDraft.areasServed || []).filter(item => item !== normalizedValue));
+      renderProfile();
+    }
+
+    function removeProfileAvatar() {
+      if (!state.profileDraft) return;
+      state.profileDraft.avatarDataUrl = '';
+      renderProfile();
+    }
+
+    function refreshProfileCompletionUi() {
+      const profile = getActiveBrokerProfile();
+      const completion = getProfileCompletion(profile);
+      const fill = document.getElementById('profileCompletionFill');
+      const text = document.getElementById('profileCompletionText');
+      const checklist = document.getElementById('profileChecklist');
+      const hints = document.getElementById('profileHintList');
+      if (fill) fill.style.width = `${completion.percent}%`;
+      if (text) text.textContent = `Profile ${completion.percent}% complete`;
+      if (checklist) {
+        checklist.innerHTML = completion.checks.map(item => `
+          <div class="profile-check-item ${item.done ? 'is-done' : ''}">
+            <span class="profile-check-icon">${item.done ? '&#10003;' : '&#9711;'}</span>
+            <span>${escapeHtml(item.label)}</span>
+          </div>
+        `).join('');
+      }
+      if (hints) {
+        hints.innerHTML = completion.hints.length
+          ? completion.hints.map(item => `<div class="profile-hint-item"><span class="profile-check-icon">&#9675;</span><span>${escapeHtml(item)}</span></div>`).join('')
+          : '<div class="profile-hint-item"><span class="profile-check-icon">&#10003;</span><span>Your broker profile is complete and ready.</span></div>';
+      }
+    }
+
+    function handleProfileAvatarSelection(event) {
+      const file = event?.target?.files?.[0];
+      if (!file || !state.profileDraft) return;
+      const reader = new FileReader();
+      reader.onload = loadEvent => {
+        state.profileDraft.avatarDataUrl = String(loadEvent?.target?.result || '');
+        renderProfile();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function wireProfileEditor() {
+      if (!state.isEditingProfile || !state.profileDraft) return;
+      document.getElementById('profileAvatarInput')?.addEventListener('change', handleProfileAvatarSelection);
+      document.querySelectorAll('[data-profile-input]').forEach(input => {
+        input.addEventListener('input', event => {
+          const path = event.currentTarget.getAttribute('data-profile-input');
+          const value = path === 'mobileNumber' || path === 'whatsappNumber'
+            ? normalizeLeadPhoneInput(event.currentTarget.value)
+            : event.currentTarget.value;
+          event.currentTarget.value = value;
+          updateProfileDraftField(path, value);
+        });
+      });
+      document.getElementById('profileAreasInput')?.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ',') {
+          event.preventDefault();
+          addProfileAreaTag();
+        }
+      });
+      refreshProfileCompletionUi();
+    }
+
+    async function saveBrokerProfile() {
+      if (!state.profileDraft) return;
+      const draft = cloneBrokerProfile(state.profileDraft);
+      draft.fullName = normalizeText(draft.fullName);
+      draft.mobileNumber = normalizeLeadPhoneInput(draft.mobileNumber);
+      draft.email = normalizeText(draft.email);
+      draft.companyName = normalizeText(draft.companyName);
+      draft.whatsappNumber = normalizeLeadPhoneInput(draft.whatsappNumber);
+      draft.officeLocation = normalizeText(draft.officeLocation);
+      draft.bio = normalizeText(draft.bio);
+      draft.specializations = sanitizeStringArray(draft.specializations);
+      draft.areasServed = sanitizeStringArray(draft.areasServed);
+      draft.languages = sanitizeStringArray(draft.languages);
+
+      if (draft.fullName.length < 2) {
+        setStatus('Please enter the broker name.', 'error');
+        return;
+      }
+      if (!normalizeDialNumber(draft.mobileNumber)) {
+        setStatus('Please enter a valid mobile number.', 'error');
+        return;
+      }
+      if (!draft.email || !draft.email.includes('@')) {
+        setStatus('Please enter a valid email address.', 'error');
+        return;
+      }
+
+      await dashboardAction({
+        action: 'update-profile',
+        fullName: draft.fullName,
+        mobileNumber: draft.mobileNumber,
+        email: draft.email,
+        companyName: draft.companyName
+      }, 'Profile updated.');
+
+      persistProfileExtras({
+        avatarDataUrl: draft.avatarDataUrl,
+        whatsappNumber: draft.whatsappNumber,
+        officeLocation: draft.officeLocation,
+        bio: draft.bio,
+        specializations: draft.specializations,
+        areasServed: draft.areasServed,
+        languages: draft.languages,
+        socialLinks: draft.socialLinks
+      });
+
+      state.profileDraft = null;
+      state.isEditingProfile = false;
+      renderProfile();
     }
 
     function normalizeDialNumber(value) {
@@ -4019,6 +4633,12 @@
       state.properties = Array.isArray(result.properties) ? result.properties : [];
       state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
       state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+      if (result.overview?.broker) {
+        state.broker = { ...(state.broker || {}), ...result.overview.broker };
+        localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
+        document.getElementById('brokerIdentityBtn').textContent = `${result.overview.broker.fullName} (${result.overview.broker.brokerIdNumber})`;
+      }
+      syncProfileStorage();
 
       renderOverview();
       renderLeads();
@@ -4430,25 +5050,248 @@
     }
 
     function renderProfile() {
-      const broker = state.overview?.broker || state.broker || {};
-      const verificationLabel = broker.isVerified ? 'Verified' : 'Pending';
-      const verificationClass = broker.isVerified ? 'is-verified' : 'is-pending';
-      document.getElementById('profileCard').innerHTML = `
-        <div class="settings-section-head">
-          <div>
-            <div class="settings-section-kicker">Section A</div>
-            <h3>Profile Info</h3>
+      syncProfileStorage();
+      const profile = getActiveBrokerProfile();
+      const completion = getProfileCompletion(profile);
+      const verificationLabel = profile.isVerified ? 'Verified' : 'Pending';
+      const verificationClass = profile.isVerified ? 'is-verified' : 'is-pending';
+      const isEditing = state.isEditingProfile;
+      const socialEntries = [
+        ['Instagram', profile.socialLinks?.instagram],
+        ['Facebook', profile.socialLinks?.facebook],
+        ['LinkedIn', profile.socialLinks?.linkedin],
+        ['Website', profile.socialLinks?.website],
+        ['WhatsApp Link', profile.socialLinks?.whatsappLink]
+      ];
+      const target = document.getElementById('profileCard');
+      if (!target) return;
+
+      target.innerHTML = `
+        <div class="profile-shell">
+          <div class="profile-progress-card">
+            <div class="profile-progress-top">
+              <div class="profile-progress-copy">
+                <h3>Broker Profile</h3>
+                <p>Complete your broker profile to keep your CRM identity polished and ready for future public trust features.</p>
+              </div>
+              <div class="profile-section-actions">
+                ${isEditing ? `
+                  <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()">Cancel</button>
+                  <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()">Save Profile</button>
+                ` : `
+                  <button class="btn btn-primary" type="button" onclick="beginProfileEdit()">Edit Profile</button>
+                `}
+              </div>
+            </div>
+            <div class="profile-progress-bar">
+              <div class="profile-progress-fill" id="profileCompletionFill" style="width:${completion.percent}%"></div>
+            </div>
+            <div class="profile-progress-meta">
+              <div>
+                <div class="settings-section-kicker" id="profileCompletionText">Profile ${completion.percent}% complete</div>
+                <div class="profile-hint-list" id="profileHintList"></div>
+              </div>
+              <div class="profile-checklist" id="profileChecklist"></div>
+            </div>
           </div>
-          <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-cell"><small>Broker Name</small><strong>${broker.fullName || '--'}</strong></div>
-          <div class="detail-cell"><small>Broker ID</small><strong>${broker.brokerIdNumber || '--'}</strong></div>
-          <div class="detail-cell"><small>Mobile</small><strong>${broker.mobileNumber || '--'}</strong></div>
-          <div class="detail-cell"><small>Email</small><strong>${broker.email || '--'}</strong></div>
-          <div class="detail-cell"><small>Verification Status</small><strong>${verificationLabel}</strong></div>
+
+          <div class="profile-grid">
+            <div class="profile-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Section A</div>
+                  <h3>Basic Info</h3>
+                </div>
+                <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
+              </div>
+              <div class="profile-header-grid">
+                <div class="profile-avatar-wrap">
+                  <div class="profile-avatar">
+                    ${profile.avatarDataUrl
+                      ? `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`
+                      : `<span class="profile-avatar-fallback">${escapeHtml(getProfileInitials(profile.fullName))}</span>`}
+                  </div>
+                  ${isEditing ? `
+                    <div class="profile-avatar-actions">
+                      <input id="profileAvatarInput" type="file" accept="image/*" class="crm-hidden">
+                      <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('profileAvatarInput').click()">${profile.avatarDataUrl ? 'Replace' : 'Upload'} Photo</button>
+                      ${profile.avatarDataUrl ? '<button class="btn btn-secondary btn-tiny" type="button" onclick="removeProfileAvatar()">Remove</button>' : ''}
+                    </div>
+                  ` : ''}
+                </div>
+                <div class="profile-info-summary">
+                  <h3>${escapeHtml(profile.fullName || '--')}</h3>
+                  <div class="profile-meta-line">
+                    <span>Broker ID: <strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></span>
+                    <span>&bull;</span>
+                    <span>${escapeHtml(verificationLabel)}</span>
+                  </div>
+                  <div class="profile-note">Private broker profile data stays inside Broker Desk unless you intentionally decide to publish public-safe broker details in future features.</div>
+                </div>
+              </div>
+              <div class="profile-field-grid">
+                ${isEditing ? `
+                  <div class="field-block">
+                    <label class="small">Full Name</label>
+                    <input type="text" data-profile-input="fullName" value="${escapeHtml(profile.fullName)}" placeholder="Enter broker name">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Broker ID</label>
+                    <input type="text" value="${escapeHtml(profile.brokerIdNumber)}" readonly>
+                  </div>
+                ` : `
+                  <div class="detail-cell"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
+                  <div class="detail-cell"><small>Broker ID</small><strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></div>
+                `}
+              </div>
+            </div>
+
+            <div class="profile-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Section B</div>
+                  <h3>Contact Info</h3>
+                </div>
+              </div>
+              <div class="profile-field-grid">
+                ${isEditing ? `
+                  <div class="field-block">
+                    <label class="small">Mobile Number</label>
+                    <input type="tel" data-profile-input="mobileNumber" value="${escapeHtml(profile.mobileNumber)}" placeholder="Enter mobile number">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Email</label>
+                    <input type="email" data-profile-input="email" value="${escapeHtml(profile.email)}" placeholder="Enter email">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">WhatsApp Number</label>
+                    <input type="tel" data-profile-input="whatsappNumber" value="${escapeHtml(profile.whatsappNumber)}" placeholder="Enter WhatsApp number">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Office Location</label>
+                    <input type="text" data-profile-input="officeLocation" value="${escapeHtml(profile.officeLocation)}" placeholder="Enter office location">
+                  </div>
+                ` : `
+                  <div class="detail-cell"><small>Mobile</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
+                  <div class="detail-cell"><small>Email</small><strong>${escapeHtml(profile.email || '--')}</strong></div>
+                  <div class="detail-cell"><small>WhatsApp</small><strong>${escapeHtml(profile.whatsappNumber || '--')}</strong></div>
+                  <div class="detail-cell"><small>Office Location</small><strong>${escapeHtml(profile.officeLocation || '--')}</strong></div>
+                `}
+              </div>
+            </div>
+
+            <div class="profile-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Section C</div>
+                  <h3>Professional Info</h3>
+                </div>
+              </div>
+              <div class="profile-field-grid">
+                ${isEditing ? `
+                  <div class="field-block">
+                    <label class="small">Company Name</label>
+                    <input type="text" data-profile-input="companyName" value="${escapeHtml(profile.companyName)}" placeholder="Enter company name">
+                  </div>
+                  <div class="field-block full">
+                    <label class="small">Short Bio</label>
+                    <textarea data-profile-input="bio" placeholder="Add a short broker bio">${escapeHtml(profile.bio)}</textarea>
+                  </div>
+                  <div class="field-block full">
+                    <label class="small">Specialization</label>
+                    <div class="choice-chip-grid">
+                      ${PROFILE_SPECIALIZATION_OPTIONS.map(option => `
+                        <label class="choice-chip ${profile.specializations.includes(option) ? 'is-selected' : ''}">
+                          <input type="checkbox" ${profile.specializations.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('specializations', '${escapeHtml(option)}')">
+                          <span>${escapeHtml(option)}</span>
+                        </label>
+                      `).join('')}
+                    </div>
+                  </div>
+                  <div class="field-block full">
+                    <label class="small">Areas / Communities Served</label>
+                    <div class="areas-input-row">
+                      <input id="profileAreasInput" type="text" placeholder="Type an area and press Enter">
+                      <button class="btn btn-secondary btn-tiny" type="button" onclick="addProfileAreaTag()">Add</button>
+                    </div>
+                    <div class="profile-tags">
+                      ${(profile.areasServed || []).length
+                        ? profile.areasServed.map(area => `<span class="profile-tag">${escapeHtml(area)} <button type="button" onclick="removeProfileAreaTag('${encodeURIComponent(area)}')">&times;</button></span>`).join('')
+                        : '<span class="profile-empty">No communities added yet.</span>'}
+                    </div>
+                  </div>
+                  <div class="field-block full">
+                    <label class="small">Languages Spoken</label>
+                    <div class="choice-chip-grid">
+                      ${PROFILE_LANGUAGE_OPTIONS.map(option => `
+                        <label class="choice-chip ${profile.languages.includes(option) ? 'is-selected' : ''}">
+                          <input type="checkbox" ${profile.languages.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('languages', '${escapeHtml(option)}')">
+                          <span>${escapeHtml(option)}</span>
+                        </label>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : `
+                  <div class="detail-cell"><small>Company Name</small><strong>${escapeHtml(profile.companyName || '--')}</strong></div>
+                  <div class="detail-cell"><small>Specialization</small><strong>${escapeHtml((profile.specializations || []).join(', ') || '--')}</strong></div>
+                  <div class="detail-cell"><small>Areas Served</small><strong>${escapeHtml((profile.areasServed || []).join(', ') || '--')}</strong></div>
+                  <div class="detail-cell"><small>Languages</small><strong>${escapeHtml((profile.languages || []).join(', ') || '--')}</strong></div>
+                  <div class="detail-cell" style="grid-column:1 / -1;"><small>Short Bio</small><strong>${escapeHtml(profile.bio || '--')}</strong></div>
+                `}
+              </div>
+            </div>
+
+            <div class="profile-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Section D</div>
+                  <h3>Social Links</h3>
+                </div>
+              </div>
+              ${isEditing ? `
+                <div class="profile-field-grid">
+                  <div class="field-block">
+                    <label class="small">Instagram</label>
+                    <input type="url" data-profile-input="socialLinks.instagram" value="${escapeHtml(profile.socialLinks?.instagram || '')}" placeholder="https://instagram.com/...">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Facebook</label>
+                    <input type="url" data-profile-input="socialLinks.facebook" value="${escapeHtml(profile.socialLinks?.facebook || '')}" placeholder="https://facebook.com/...">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">LinkedIn</label>
+                    <input type="url" data-profile-input="socialLinks.linkedin" value="${escapeHtml(profile.socialLinks?.linkedin || '')}" placeholder="https://linkedin.com/in/...">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Website</label>
+                    <input type="url" data-profile-input="socialLinks.website" value="${escapeHtml(profile.socialLinks?.website || '')}" placeholder="https://yourwebsite.com">
+                  </div>
+                  <div class="field-block full">
+                    <label class="small">WhatsApp Link</label>
+                    <input type="url" data-profile-input="socialLinks.whatsappLink" value="${escapeHtml(profile.socialLinks?.whatsappLink || '')}" placeholder="https://wa.me/...">
+                  </div>
+                </div>
+              ` : `
+                <div class="profile-link-list">
+                  ${socialEntries.some(([, value]) => value)
+                    ? socialEntries.filter(([, value]) => value).map(([label, value]) => `
+                        <div class="profile-link-row">
+                          <div>
+                            <small>${escapeHtml(label)}</small>
+                            <strong>${escapeHtml(value)}</strong>
+                          </div>
+                        </div>
+                      `).join('')
+                    : '<div class="profile-empty">No social links added yet.</div>'}
+                </div>
+              `}
+            </div>
+          </div>
         </div>
       `;
+
+      if (isEditing) wireProfileEditor();
+      else refreshProfileCompletionUi();
     }
 
     function populateFollowupEntities() {
@@ -5381,6 +6224,12 @@
       state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
       state.notifications = Array.isArray(result.notifications) ? result.notifications : [];
       state.aiMatches = Array.isArray(result.aiMatches) ? result.aiMatches : [];
+      if (result.overview?.broker) {
+        state.broker = { ...(state.broker || {}), ...result.overview.broker };
+        localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
+        document.getElementById('brokerIdentityBtn').textContent = `${result.overview.broker.fullName} (${result.overview.broker.brokerIdNumber})`;
+      }
+      syncProfileStorage();
 
       syncFilterInputs('leads');
       syncFilterInputs('properties');

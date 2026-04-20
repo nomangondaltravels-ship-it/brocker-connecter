@@ -3,6 +3,7 @@ import {
   buildPublicListingPayload,
   json,
   normalizeBool,
+  normalizeEmail,
   normalizePhoneNumber,
   normalizeText,
   parseLeadMeta,
@@ -630,14 +631,7 @@ function buildOverview(leads, properties, sharedListings, broker, aiMatches) {
   const overdueFollowUps = [...leads, ...properties].filter(item => getFollowUpState(item).key === 'overdue').length;
 
   return {
-    broker: {
-      fullName: broker.full_name,
-      brokerIdNumber: broker.broker_id_number,
-      mobileNumber: broker.mobile_number,
-      email: broker.email,
-      companyName: broker.company_name || '',
-      isVerified: Boolean(broker.is_verified)
-    },
+    broker: sanitizeOverviewBroker(broker),
     totals: {
       leads: activeLeads.length,
       properties: activeListings.length,
@@ -650,6 +644,33 @@ function buildOverview(leads, properties, sharedListings, broker, aiMatches) {
       archivedLeads: leads.filter(lead => lead.isArchived).length,
       archivedListings: properties.filter(property => property.isArchived).length
     }
+  };
+}
+
+function sanitizeOverviewBroker(broker) {
+  return {
+    id: broker.id,
+    fullName: broker.full_name,
+    brokerIdNumber: broker.broker_id_number,
+    mobileNumber: broker.mobile_number,
+    email: broker.email,
+    companyName: broker.company_name || '',
+    isVerified: Boolean(broker.is_verified)
+  };
+}
+
+function getBrokerProfilePayload(body, broker) {
+  const fullName = normalizeText(body?.fullName || broker.full_name);
+  const mobileNumber = normalizePhoneNumber(body?.mobileNumber || broker.mobile_number);
+  const email = normalizeEmail(body?.email || broker.email);
+  const companyName = normalizeText(body?.companyName ?? broker.company_name);
+
+  return {
+    full_name: fullName,
+    mobile_number: mobileNumber,
+    email,
+    company_name: companyName,
+    updated_at: nowIso()
   };
 }
 
@@ -773,6 +794,54 @@ export async function POST(request) {
 
     if (!action) {
       return json({ message: 'Dashboard action is required.' }, 400);
+    }
+
+    if (action === 'update-profile') {
+      const payload = getBrokerProfilePayload(body, broker);
+      if (payload.full_name.length < 2) {
+        return json({ message: 'Please enter the broker name.' }, 400);
+      }
+      if (!payload.mobile_number) {
+        return json({ message: 'Please enter a valid mobile number.' }, 400);
+      }
+      if (!payload.email || !payload.email.includes('@')) {
+        return json({ message: 'Please enter a valid email address.' }, 400);
+      }
+
+      const existingRows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        select: 'id,mobile_number,email',
+        order: { column: 'created_at', ascending: false }
+      });
+
+      const duplicate = (Array.isArray(existingRows) ? existingRows : []).find(item =>
+        item.id !== broker.id && (
+          item.mobile_number === payload.mobile_number ||
+          item.email === payload.email
+        )
+      );
+
+      if (duplicate) {
+        if (duplicate.mobile_number === payload.mobile_number) {
+          return json({ message: 'This mobile number is already in use by another broker.' }, 409);
+        }
+        return json({ message: 'This email address is already in use by another broker.' }, 409);
+      }
+
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { id: broker.id },
+        payload
+      });
+      const nextBroker = Array.isArray(rows) ? rows[0] : null;
+      if (!nextBroker) {
+        return json({ message: 'Broker profile could not be updated.' }, 500);
+      }
+      return json({ broker: sanitizeOverviewBroker(nextBroker) });
     }
 
     if (action === 'create-lead') {
