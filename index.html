@@ -1223,6 +1223,8 @@
       }
     }
 
+    state.brokerProfile = safeJsonRead('broker_session_profile', null);
+
     function normalizePhoneNumber(phone) {
       const digits = String(phone || '').replace(/[^\d]/g, '');
       if (!digits) return '';
@@ -1266,6 +1268,35 @@
         return;
       }
       openAuthModal('signin');
+    }
+
+    function clearBrokerSessionState() {
+      localStorage.removeItem('broker_session_token');
+      localStorage.removeItem('broker_session_profile');
+      state.sessionToken = '';
+      state.brokerProfile = null;
+    }
+
+    function isValidAuthPayload(payload) {
+      return Boolean(payload && typeof payload === 'object' && typeof payload.token === 'string' && payload.token.trim() && payload.broker && typeof payload.broker === 'object');
+    }
+
+    function persistBrokerSession(payload) {
+      if (!isValidAuthPayload(payload)) {
+        return false;
+      }
+      localStorage.setItem('broker_session_token', payload.token);
+      localStorage.setItem('broker_session_profile', JSON.stringify(payload.broker));
+      state.sessionToken = payload.token;
+      state.brokerProfile = payload.broker;
+      return true;
+    }
+
+    function getAuthFailureMessage(result, fallback = 'Login failed, please try again.') {
+      const message = String(result?.message || '').trim();
+      if (!message) return fallback;
+      if (/cannot read properties/i.test(message)) return fallback;
+      return message;
     }
 
     function openSection(name) {
@@ -1963,12 +1994,15 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result?.authenticated) {
-        localStorage.removeItem('broker_session_token');
-        localStorage.removeItem('broker_session_profile');
-        state.sessionToken = '';
+        clearBrokerSessionState();
+        return false;
+      }
+      if (!result?.broker || typeof result.broker !== 'object') {
+        clearBrokerSessionState();
         return false;
       }
       localStorage.setItem('broker_session_profile', JSON.stringify(result.broker));
+      state.brokerProfile = result.broker;
       window.location.href = 'dashboard.html';
       return true;
     }
@@ -2009,21 +2043,23 @@
         if (!response.ok) {
           if (state.authMode === 'signin' && response.status === 404) {
             const migrated = await migrateLegacyBrokerAccount(identifierValue, passwordValue);
-            localStorage.setItem('broker_session_token', migrated.token);
-            localStorage.setItem('broker_session_profile', JSON.stringify(migrated.broker));
-            state.sessionToken = migrated.token;
+            if (!persistBrokerSession(migrated)) {
+              console.warn('Legacy migration returned invalid auth payload.', migrated);
+              throw new Error('Login failed, please try again.');
+            }
             window.location.href = 'dashboard.html';
             return;
           }
-          throw new Error(result?.message || 'Broker access request failed.');
+          throw new Error(getAuthFailureMessage(result));
         }
 
-        localStorage.setItem('broker_session_token', result.token);
-        localStorage.setItem('broker_session_profile', JSON.stringify(result.broker));
-        state.sessionToken = result.token;
+        if (!persistBrokerSession(result)) {
+          console.warn('Broker auth returned invalid payload.', result);
+          throw new Error('Login failed, please try again.');
+        }
         window.location.href = 'dashboard.html';
       } catch (error) {
-        setAuthStatus(error.message || 'Could not continue.');
+        setAuthStatus(getAuthFailureMessage({ message: error?.message }, 'Login failed, please try again.'));
       }
     });
 
