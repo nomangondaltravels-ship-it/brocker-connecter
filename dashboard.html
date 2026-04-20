@@ -1379,7 +1379,7 @@
               <div class="form-section crm-hidden" id="propertyContactsSection">
                 <div class="form-section-head">
                   <h4>Private Contacts</h4>
-                  <p>These contacts stay private inside your broker workspace and never appear on the Broker Connector Page.</p>
+                  <p>Keep owner details private inside your broker workspace.</p>
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
@@ -1390,18 +1390,10 @@
                     <label class="small">Owner Phone (Private)</label>
                     <input id="propertyOwnerPhone" type="tel" placeholder="Enter owner phone" autocomplete="off">
                   </div>
-                  <div class="field-block">
-                    <label class="small">Client Name (Private)</label>
-                    <input id="propertyClientName" type="text" placeholder="Enter client name" autocomplete="off">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Client Phone (Private)</label>
-                    <input id="propertyClientPhone" type="tel" placeholder="Enter client phone" autocomplete="off">
-                  </div>
                 </div>
                 <div class="privacy-note">
                   <strong>Private Section</strong>
-                  <p>These private contact details are never shown publicly, even if the property is published on the Broker Connector Page.</p>
+                  <p>These owner details are private and will never be shown publicly, even if the property is published on the Broker Connector Page.</p>
                 </div>
               </div>
 
@@ -1929,8 +1921,6 @@
         'propertyMortgageStatus',
         'propertyOwnerName',
         'propertyOwnerPhone',
-        'propertyClientName',
-        'propertyClientPhone',
         'propertyInternalNotes',
         'propertyPublicNotes'
       ].forEach(id => document.getElementById(id)?.classList.remove('is-invalid'));
@@ -2066,7 +2056,6 @@
         'propertyChiller',
         'propertyMortgageStatus',
         'propertyOwnerName',
-        'propertyClientName',
         'propertyInternalNotes',
         'propertyPublicNotes'
       ].forEach(id => {
@@ -2078,7 +2067,7 @@
         });
       });
 
-      ['propertyOwnerPhone', 'propertyClientPhone'].forEach(id => {
+      ['propertyOwnerPhone'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', event => {
           event.target.classList.remove('is-invalid');
         });
@@ -2119,8 +2108,6 @@
         distressDeal: document.getElementById('propertyDistress').checked,
         ownerName: document.getElementById('propertyOwnerName').value.trim(),
         ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
-        clientName: document.getElementById('propertyClientName').value.trim(),
-        clientPhone: normalizeLeadPhoneInput(document.getElementById('propertyClientPhone').value.trim()),
         internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
         publicNotes: document.getElementById('propertyPublicNotes').value.trim(),
         status: preserved.status,
@@ -2754,8 +2741,6 @@
       document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
       document.getElementById('propertyOwnerName').value = property.ownerName || '';
       document.getElementById('propertyOwnerPhone').value = property.ownerPhone || '';
-      document.getElementById('propertyClientName').value = property.clientName || '';
-      document.getElementById('propertyClientPhone').value = property.clientPhone || '';
       document.getElementById('propertyStatus').value = property.status || 'available';
       document.getElementById('propertyDistress').checked = property.isDistress;
       document.getElementById('propertyFormTitle').textContent = 'Edit Property';
@@ -2859,8 +2844,6 @@
         internalNotes: document.getElementById('propertyInternalNotes').value,
         ownerName: document.getElementById('propertyOwnerName').value,
         ownerPhone: document.getElementById('propertyOwnerPhone').value,
-        clientName: document.getElementById('propertyClientName').value,
-        clientPhone: document.getElementById('propertyClientPhone').value,
         status: document.getElementById('propertyStatus').value,
         isDistress: document.getElementById('propertyDistress').checked
       };
@@ -2948,11 +2931,8 @@
 
     function getPropertyPrivateContactSummary(property) {
       const owner = [property.ownerName, property.ownerPhone].filter(Boolean).join(' · ');
-      const client = [property.clientName, property.clientPhone].filter(Boolean).join(' · ');
-      if (owner && client) return `Owner: ${owner} | Client: ${client}`;
       if (owner) return `Owner: ${owner}`;
-      if (client) return `Client: ${client}`;
-      return 'No private contacts added';
+      return 'No owner details added';
     }
 
     function getDashboardSearchText(item, type) {
@@ -3098,8 +3078,6 @@
       document.getElementById('propertySizeSqft').value = '';
       document.getElementById('propertyOwnerName').value = '';
       document.getElementById('propertyOwnerPhone').value = '';
-      document.getElementById('propertyClientName').value = '';
-      document.getElementById('propertyClientPhone').value = '';
       document.getElementById('propertyInternalNotes').value = '';
       document.getElementById('propertyPublicNotes').value = '';
       document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
@@ -3132,8 +3110,6 @@
       document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
       document.getElementById('propertyOwnerName').value = property.ownerName || '';
       document.getElementById('propertyOwnerPhone').value = property.ownerPhone || '';
-      document.getElementById('propertyClientName').value = property.clientName || '';
-      document.getElementById('propertyClientPhone').value = property.clientPhone || '';
       document.getElementById('propertyDistress').checked = Boolean(property.isDistress);
       document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
     }
@@ -3176,8 +3152,6 @@
           isDistress: formData.distressDeal,
           ownerName: formData.ownerName,
           ownerPhone: formData.ownerPhone,
-          clientName: formData.clientName,
-          clientPhone: formData.clientPhone,
           internalNotes: formData.internalNotes,
           publicNotes: formData.publicNotes,
           status: formData.status,

@@ -547,8 +547,6 @@ export function sanitizeProperty(row) {
     leasehold: Boolean(meta.leasehold),
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
-    clientName: row.client_name || '',
-    clientPhone: row.client_phone || '',
     status: row.status,
     isUrgent: Boolean(row.is_urgent),
     isDistress: Boolean(row.is_distress),

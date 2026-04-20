@@ -103,8 +103,6 @@ function getPropertyPayload(body, brokerId) {
     internal_notes: normalizeText(body?.internalNotes),
     owner_name: normalizeText(body?.ownerName),
     owner_phone: normalizePhoneNumber(body?.ownerPhone),
-    client_name: normalizeText(body?.clientName),
-    client_phone: normalizePhoneNumber(body?.clientPhone),
     status: normalizeText(body?.status || 'available').toLowerCase(),
     is_urgent: false,
     is_distress: normalizeBool(body?.isDistress),
