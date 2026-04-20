@@ -126,8 +126,9 @@
       width: min(1400px, 95%);
       margin: 18px auto 24px;
       display: grid;
-      grid-template-columns: 260px minmax(0, 1fr);
+      grid-template-columns: 38px minmax(0, 1fr);
       gap: 16px;
+      align-items: start;
     }
 
     .panel {
@@ -139,11 +140,61 @@
       backdrop-filter: blur(10px);
     }
 
-    .sidebar {
-      padding: 18px;
+    .sidebar-dock {
       position: sticky;
       top: 92px;
       align-self: start;
+      width: 38px;
+      min-height: 640px;
+      z-index: 30;
+    }
+
+    .sidebar {
+      width: 300px;
+      min-height: calc(100vh - 126px);
+      padding: 18px;
+      position: relative;
+      transform: translateX(calc(-100% + 38px));
+      transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+      overflow: visible;
+    }
+
+    .sidebar-dock:hover .sidebar,
+    .sidebar-dock:focus-within .sidebar {
+      transform: translateX(0);
+      box-shadow: 0 28px 64px rgba(0, 0, 0, 0.42);
+      border-color: var(--line-strong);
+    }
+
+    .sidebar-peek {
+      position: absolute;
+      top: 18px;
+      right: 0;
+      width: 38px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .sidebar-peek-line {
+      width: 4px;
+      height: 118px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(242,223,152,0.95), rgba(212,175,55,0.2));
+      box-shadow: 0 0 18px rgba(212, 175, 55, 0.28);
+    }
+
+    .sidebar-peek-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      color: var(--gold-soft);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      opacity: 0.92;
     }
 
     .sidebar h2 {
@@ -475,7 +526,18 @@
 
     @media (max-width: 1080px) {
       .app-shell { grid-template-columns: 1fr; }
-      .sidebar { position: static; }
+      .sidebar-dock {
+        position: static;
+        width: auto;
+        min-height: 0;
+      }
+      .sidebar {
+        position: static;
+        width: auto;
+        min-height: 0;
+        transform: none;
+      }
+      .sidebar-peek { display: none; }
       .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .grid-3, .kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -510,19 +572,25 @@
   </header>
 
   <div class="app-shell">
-    <aside class="panel sidebar">
-      <h2>Broker CRM</h2>
-      <p>Manage private broker requirements, private inventory, meetings, and public Broker Connector listings without exposing client or owner details.</p>
-      <div class="menu">
-        <button class="btn active" data-section="overview" onclick="openSection('overview')">Overview</button>
-        <button class="btn" data-section="leads" onclick="openSection('leads')">My Broker Requirements</button>
-        <button class="btn" data-section="properties" onclick="openSection('properties')">My Properties</button>
-        <button class="btn" data-section="shared" onclick="openSection('shared')">Listed on Broker Connector</button>
-        <button class="btn" data-section="followups" onclick="openSection('followups')">Meetings / Follow-ups</button>
-        <button class="btn" data-section="progress" onclick="openSection('progress')">Deal Progress / Status</button>
-        <button class="btn" data-section="profile" onclick="openSection('profile')">Profile / Settings</button>
-      </div>
-    </aside>
+    <div class="sidebar-dock">
+      <aside class="panel sidebar">
+        <div class="sidebar-peek" aria-hidden="true">
+          <div class="sidebar-peek-line"></div>
+          <div class="sidebar-peek-label">CRM</div>
+        </div>
+        <h2>Broker CRM</h2>
+        <p>Manage private broker requirements, private inventory, meetings, and public Broker Connector listings without exposing client or owner details.</p>
+        <div class="menu">
+          <button class="btn active" data-section="overview" onclick="openSection('overview')">Overview</button>
+          <button class="btn" data-section="leads" onclick="openSection('leads')">My Broker Requirements</button>
+          <button class="btn" data-section="properties" onclick="openSection('properties')">My Properties</button>
+          <button class="btn" data-section="shared" onclick="openSection('shared')">Listed on Broker Connector</button>
+          <button class="btn" data-section="followups" onclick="openSection('followups')">Meetings / Follow-ups</button>
+          <button class="btn" data-section="progress" onclick="openSection('progress')">Deal Progress / Status</button>
+          <button class="btn" data-section="profile" onclick="openSection('profile')">Profile / Settings</button>
+        </div>
+      </aside>
+    </div>
 
     <main class="panel">
       <section class="hero">
