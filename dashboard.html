@@ -833,6 +833,46 @@
       margin-top: 2px;
     }
 
+    .property-toggle-row {
+      display: grid;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .toggle-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: linear-gradient(180deg, rgba(13,24,42,0.84), rgba(8,17,31,0.92));
+      cursor: pointer;
+    }
+
+    .toggle-card input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--gold);
+    }
+
+    .toggle-card span {
+      display: grid;
+      gap: 4px;
+    }
+
+    .toggle-card strong {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    .toggle-card small {
+      color: rgba(232, 220, 192, 0.72);
+      line-height: 1.45;
+    }
+
     .check-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1203,34 +1243,187 @@
             </form>
           </div>
           <div class="card workspace-card hidden" id="overviewPropertyCard">
-            <h3 id="propertyFormTitle">Add Property</h3>
-            <form class="form-grid" id="propertyForm">
+            <form class="lead-crm-form" id="propertyForm" novalidate>
               <input type="hidden" id="propertyId">
-              <div><label class="small">Purpose</label><select id="propertyPurpose" required><option value="">Select</option><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
-              <div><label class="small">Property Type</label><input id="propertyType" required></div>
-              <div><label class="small">Category</label><input id="propertyCategory" required></div>
-              <div><label class="small">Location</label><input id="propertyLocation" required></div>
-              <div><label class="small">Price</label><input id="propertyPrice" required></div>
-              <div><label class="small">Size</label><input id="propertySize"></div>
-              <div><label class="small">Bedrooms</label><input id="propertyBedrooms" type="number" min="0"></div>
-              <div><label class="small">Bathrooms</label><input id="propertyBathrooms" type="number" min="0"></div>
-              <div><label class="small">Status</label><select id="propertyStatus"><option value="available">Available</option><option value="reserved">Reserved</option><option value="under negotiation">Under Negotiation</option><option value="closed">Closed</option><option value="unlisted">Unlisted</option></select></div>
-              <div>
-                <label class="small">Flags</label>
-                <div class="check-grid">
-                  <label><input type="checkbox" id="propertyDistress"> Distress Deal</label>
+              <div class="form-section">
+                <div class="form-section-head">
+                  <h4>Listing Details</h4>
+                  <p>Select rent or sale first, then complete the relevant property details in a clean broker workflow.</p>
+                </div>
+                <div class="field-block full">
+                  <label class="small">Purpose</label>
+                  <div class="segmented-control" id="propertyPurposeControl">
+                    <button class="segment-btn" type="button" data-purpose="rent">Rent</button>
+                    <button class="segment-btn" type="button" data-purpose="sale">Sale</button>
+                  </div>
+                  <input type="hidden" id="propertyPurposeValue">
+                  <div class="field-error" id="propertyPurposeError"></div>
+                </div>
+                <div class="lead-dynamic-layout crm-hidden" id="propertyBaseFields">
+                  <div class="form-grid">
+                    <div class="field-block">
+                      <label class="small">Property Type</label>
+                      <select id="propertyType">
+                        <option value="">Select property type</option>
+                      </select>
+                      <div class="field-error" id="propertyTypeError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Location</label>
+                      <div class="combo-field" id="propertyLocationBox">
+                        <input id="propertyLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                        <span class="combo-icon">&#9906;</span>
+                        <div class="combo-menu hidden" id="propertyLocationMenu"></div>
+                      </div>
+                      <div class="field-error" id="propertyLocationError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Building Name / Project</label>
+                      <div class="combo-field" id="propertyBuildingBox">
+                        <input id="propertyBuildingName" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                        <span class="combo-icon">&#9906;</span>
+                        <div class="combo-menu hidden" id="propertyBuildingMenu"></div>
+                      </div>
+                      <div class="field-helper">Optional. Use a suggestion or enter any project/building manually.</div>
+                      <div class="field-error" id="propertyBuildingNameError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Size (Sqft)</label>
+                      <input id="propertySizeSqft" type="text" inputmode="numeric" placeholder="Enter size in sqft" autocomplete="off">
+                      <div class="field-error" id="propertySizeSqftError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Floor Level</label>
+                      <select id="propertyFloorLevel">
+                        <option value="">Select floor level</option>
+                      </select>
+                      <div class="field-error" id="propertyFloorLevelError"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="full"><label class="small">Description</label><textarea id="propertyDescription"></textarea></div>
-              <div class="full"><label class="small">Public Notes</label><textarea id="propertyPublicNotes" placeholder="Only this note will be shown publicly when listed."></textarea></div>
-              <div class="full"><label class="small">Internal Notes</label><textarea id="propertyInternalNotes"></textarea></div>
-              <div><label class="small">Owner Name (Private)</label><input id="propertyOwnerName"></div>
-              <div><label class="small">Owner Phone (Private)</label><input id="propertyOwnerPhone"></div>
-              <div><label class="small">Client Name (Private)</label><input id="propertyClientName"></div>
-              <div><label class="small">Client Phone (Private)</label><input id="propertyClientPhone"></div>
-              <div class="full actions">
-                <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Property</button>
-                <button class="btn btn-secondary" type="button" onclick="resetPropertyForm()">Clear</button>
+
+              <div class="form-section crm-hidden" id="propertyPricingSection">
+                <div class="form-section-head">
+                  <h4>Pricing &amp; Terms</h4>
+                  <p>Only the relevant pricing fields are shown based on whether the listing is for rent or sale.</p>
+                </div>
+                <div class="form-grid crm-hidden" id="propertyRentFields">
+                  <div class="field-block">
+                    <label class="small">Furnishing</label>
+                    <select id="propertyFurnishing">
+                      <option value="">Select furnishing</option>
+                    </select>
+                    <div class="field-error" id="propertyFurnishingError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Rent Price</label>
+                    <div class="currency-field">
+                      <span class="currency-prefix">AED</span>
+                      <input id="propertyRentPrice" type="text" inputmode="numeric" placeholder="Enter yearly rent" autocomplete="off">
+                    </div>
+                    <div class="field-error" id="propertyRentPriceError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Number of Cheques</label>
+                    <select id="propertyCheques">
+                      <option value="">Select cheques</option>
+                    </select>
+                    <div class="field-error" id="propertyChequesError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Chiller</label>
+                    <select id="propertyChiller">
+                      <option value="">Select chiller status</option>
+                    </select>
+                    <div class="field-error" id="propertyChillerError"></div>
+                  </div>
+                </div>
+                <div class="form-grid crm-hidden" id="propertySaleFields">
+                  <div class="field-block">
+                    <label class="small">Owner Asking Price</label>
+                    <div class="currency-field">
+                      <span class="currency-prefix">AED</span>
+                      <input id="propertySalePrice" type="text" inputmode="numeric" placeholder="Enter owner asking price" autocomplete="off">
+                    </div>
+                    <div class="field-error" id="propertySalePriceError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Mortgage Status</label>
+                    <select id="propertyMortgageStatus">
+                      <option value="">Select mortgage status</option>
+                    </select>
+                    <div class="field-error" id="propertyMortgageStatusError"></div>
+                  </div>
+                </div>
+                <div class="property-toggle-row crm-hidden" id="propertySaleToggleRow">
+                  <label class="toggle-card">
+                    <input type="checkbox" id="propertyLeasehold">
+                    <span>
+                      <strong>Leasehold</strong>
+                      <small>Enable this if the property is leasehold.</small>
+                    </span>
+                  </label>
+                </div>
+                <div class="property-toggle-row crm-hidden" id="propertyDistressRow">
+                  <label class="toggle-card">
+                    <input type="checkbox" id="propertyDistress">
+                    <span>
+                      <strong>Mark as Distress Deal</strong>
+                      <small>Highlight this listing as a premium high-attention deal.</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-section crm-hidden" id="propertyContactsSection">
+                <div class="form-section-head">
+                  <h4>Private Contacts</h4>
+                  <p>These contacts stay private inside your broker workspace and never appear on the Broker Connector Page.</p>
+                </div>
+                <div class="form-grid">
+                  <div class="field-block">
+                    <label class="small">Owner Name (Private)</label>
+                    <input id="propertyOwnerName" type="text" placeholder="Enter owner name" autocomplete="off">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Owner Phone (Private)</label>
+                    <input id="propertyOwnerPhone" type="tel" placeholder="Enter owner phone" autocomplete="off">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Client Name (Private)</label>
+                    <input id="propertyClientName" type="text" placeholder="Enter client name" autocomplete="off">
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Client Phone (Private)</label>
+                    <input id="propertyClientPhone" type="tel" placeholder="Enter client phone" autocomplete="off">
+                  </div>
+                </div>
+                <div class="privacy-note">
+                  <strong>Private Section</strong>
+                  <p>These private contact details are never shown publicly, even if the property is published on the Broker Connector Page.</p>
+                </div>
+              </div>
+
+              <div class="form-section crm-hidden" id="propertyNotesSection">
+                <div class="form-section-head">
+                  <h4>Internal Notes</h4>
+                  <p>Add only the private notes you need for your internal broker workflow.</p>
+                </div>
+                <div class="field-block full">
+                  <label class="small">Internal Notes</label>
+                  <textarea id="propertyInternalNotes" placeholder="Add private internal notes"></textarea>
+                </div>
+                <div class="field-block full">
+                  <label class="small">Public Notes</label>
+                  <textarea id="propertyPublicNotes" placeholder="Only this note can be shown publicly if the listing is published."></textarea>
+                  <div class="field-helper">Only this note can be shown publicly if the listing is published.</div>
+                </div>
+              </div>
+
+              <div class="lead-form-actions">
+                <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Listing</button>
+                <button class="btn btn-secondary" type="button" onclick="cancelPropertyForm()">Cancel</button>
               </div>
             </form>
           </div>
@@ -1281,7 +1474,13 @@
       uaeLocations: [],
       buildingProjects: [],
       propertyTypes: { rent: [], buy: [] },
-      paymentMethods: []
+      paymentMethods: [],
+      listingPropertyTypes: [],
+      floorLevels: [],
+      furnishingOptions: [],
+      chequeOptions: [],
+      chillerOptions: [],
+      mortgageStatuses: []
     };
 
     const state = {
@@ -1294,10 +1493,12 @@
       sharedListings: [],
       activeSection: 'overview',
       dashboardSearchQuery: '',
-      leadEditorOriginal: null
+      leadEditorOriginal: null,
+      propertyEditorOriginal: null
     };
 
     const leadAutocompleteControllers = {};
+    const propertyAutocompleteControllers = {};
 
     function escapeHtml(value) {
       return String(value || '')
@@ -1651,6 +1852,298 @@
       });
     }
 
+    function getPropertyPurpose(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (normalized === 'rent') return 'rent';
+      if (normalized === 'sale') return 'sale';
+      return '';
+    }
+
+    function getPropertyPurposeLabel(value) {
+      const normalized = getPropertyPurpose(value);
+      if (normalized === 'rent') return 'Rent';
+      if (normalized === 'sale') return 'Sale';
+      return 'Listing';
+    }
+
+    function populatePropertyTypeOptions(selectedValue = '') {
+      const select = document.getElementById('propertyType');
+      if (!select) return;
+      const options = LEAD_CONFIG.listingPropertyTypes || [];
+      select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = selectedValue && options.includes(selectedValue) ? selectedValue : '';
+    }
+
+    function populatePropertyFloorOptions(selectedValue = '') {
+      const select = document.getElementById('propertyFloorLevel');
+      if (!select) return;
+      const options = LEAD_CONFIG.floorLevels || [];
+      select.innerHTML = '<option value="">Select floor level</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = selectedValue && options.includes(selectedValue) ? selectedValue : '';
+    }
+
+    function populatePropertyRentOptions() {
+      const furnishing = document.getElementById('propertyFurnishing');
+      const cheques = document.getElementById('propertyCheques');
+      const chiller = document.getElementById('propertyChiller');
+      if (furnishing) {
+        furnishing.innerHTML = '<option value="">Select furnishing</option>' + (LEAD_CONFIG.furnishingOptions || []).map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      }
+      if (cheques) {
+        cheques.innerHTML = '<option value="">Select cheques</option>' + (LEAD_CONFIG.chequeOptions || []).map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      }
+      if (chiller) {
+        chiller.innerHTML = '<option value="">Select chiller status</option>' + (LEAD_CONFIG.chillerOptions || []).map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      }
+    }
+
+    function populatePropertySaleOptions() {
+      const mortgage = document.getElementById('propertyMortgageStatus');
+      if (!mortgage) return;
+      mortgage.innerHTML = '<option value="">Select mortgage status</option>' + (LEAD_CONFIG.mortgageStatuses || []).map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+    }
+
+    function clearPropertyErrors() {
+      [
+        'propertyPurposeError',
+        'propertyTypeError',
+        'propertyLocationError',
+        'propertyRentPriceError',
+        'propertySalePriceError'
+      ].forEach(id => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = '';
+      });
+
+      [
+        'propertyType',
+        'propertyLocation',
+        'propertyBuildingName',
+        'propertySizeSqft',
+        'propertyFloorLevel',
+        'propertyFurnishing',
+        'propertyRentPrice',
+        'propertyCheques',
+        'propertyChiller',
+        'propertySalePrice',
+        'propertyMortgageStatus',
+        'propertyOwnerName',
+        'propertyOwnerPhone',
+        'propertyClientName',
+        'propertyClientPhone',
+        'propertyInternalNotes',
+        'propertyPublicNotes'
+      ].forEach(id => document.getElementById(id)?.classList.remove('is-invalid'));
+
+      document.getElementById('propertyPurposeControl')?.classList.remove('is-invalid');
+    }
+
+    function setPropertyFieldError(field, message) {
+      const errorMap = {
+        purpose: 'propertyPurposeError',
+        propertyType: 'propertyTypeError',
+        location: 'propertyLocationError',
+        rentPrice: 'propertyRentPriceError',
+        ownerAskingPrice: 'propertySalePriceError'
+      };
+      const inputMap = {
+        purpose: 'propertyPurposeControl',
+        propertyType: 'propertyType',
+        location: 'propertyLocation',
+        rentPrice: 'propertyRentPrice',
+        ownerAskingPrice: 'propertySalePrice'
+      };
+      const errorNode = document.getElementById(errorMap[field]);
+      if (errorNode) errorNode.textContent = message;
+      document.getElementById(inputMap[field])?.classList.add('is-invalid');
+    }
+
+    function setPropertyWorkspaceHeader(mode = 'create') {
+      const workspaceTitle = document.getElementById('workspaceTitle');
+      const workspaceCopy = document.getElementById('workspaceCopy');
+      if (!workspaceTitle || !workspaceCopy) return;
+
+      if (mode === 'edit') {
+        workspaceTitle.textContent = 'Edit Listing';
+        workspaceCopy.textContent = 'Update your private property inventory below. Only non-private details can be published later on the Broker Connector Page.';
+        return;
+      }
+
+      workspaceTitle.textContent = 'Add New Listing';
+      workspaceCopy.textContent = 'Create and manage your private property inventory. You can choose later whether to publish non-private details publicly.';
+    }
+
+    function setPropertyPurpose(purpose, options = {}) {
+      const normalizedPurpose = ['rent', 'sale'].includes(String(purpose || '').toLowerCase()) ? String(purpose).toLowerCase() : '';
+      const hiddenInput = document.getElementById('propertyPurposeValue');
+      const baseFields = document.getElementById('propertyBaseFields');
+      const pricingSection = document.getElementById('propertyPricingSection');
+      const contactsSection = document.getElementById('propertyContactsSection');
+      const notesSection = document.getElementById('propertyNotesSection');
+      const rentFields = document.getElementById('propertyRentFields');
+      const saleFields = document.getElementById('propertySaleFields');
+      const saleToggleRow = document.getElementById('propertySaleToggleRow');
+      const distressRow = document.getElementById('propertyDistressRow');
+
+      if (hiddenInput) hiddenInput.value = normalizedPurpose;
+
+      document.querySelectorAll('#propertyPurposeControl .segment-btn').forEach(button => {
+        button.classList.toggle('active', button.dataset.purpose === normalizedPurpose);
+      });
+
+      const showSections = Boolean(normalizedPurpose);
+      baseFields?.classList.toggle('crm-hidden', !showSections);
+      pricingSection?.classList.toggle('crm-hidden', !showSections);
+      contactsSection?.classList.toggle('crm-hidden', !showSections);
+      notesSection?.classList.toggle('crm-hidden', !showSections);
+      rentFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'rent');
+      saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      distressRow?.classList.toggle('crm-hidden', !showSections);
+
+      if (!options.preserveValues) {
+        document.getElementById('propertyFurnishing').value = '';
+        document.getElementById('propertyRentPrice').value = '';
+        document.getElementById('propertyCheques').value = '';
+        document.getElementById('propertyChiller').value = '';
+        document.getElementById('propertySalePrice').value = '';
+        document.getElementById('propertyMortgageStatus').value = '';
+        document.getElementById('propertyLeasehold').checked = false;
+      }
+    }
+
+    function cancelPropertyForm() {
+      resetPropertyForm();
+      hideOverviewWorkspace();
+    }
+
+    function ensurePropertyFormEnhancements() {
+      if (!propertyAutocompleteControllers.location) {
+        propertyAutocompleteControllers.location = setupAutocompleteController({
+          inputId: 'propertyLocation',
+          menuId: 'propertyLocationMenu',
+          boxId: 'propertyLocationBox',
+          datasetProvider: () => LEAD_CONFIG.uaeLocations || []
+        });
+      }
+
+      if (!propertyAutocompleteControllers.building) {
+        propertyAutocompleteControllers.building = setupAutocompleteController({
+          inputId: 'propertyBuildingName',
+          menuId: 'propertyBuildingMenu',
+          boxId: 'propertyBuildingBox',
+          datasetProvider: () => LEAD_CONFIG.buildingProjects || []
+        });
+      }
+
+      document.querySelectorAll('#propertyPurposeControl .segment-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          clearPropertyErrors();
+          setPropertyPurpose(button.dataset.purpose || '', { preserveValues: true });
+        });
+      });
+
+      populatePropertyTypeOptions('');
+      populatePropertyFloorOptions('');
+      populatePropertyRentOptions();
+      populatePropertySaleOptions();
+      setPropertyPurpose('', { preserveValues: false });
+
+      ['propertySizeSqft', 'propertyRentPrice', 'propertySalePrice'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', event => {
+          event.target.value = normalizeBudgetDigits(event.target.value);
+          event.target.classList.remove('is-invalid');
+        });
+      });
+
+      [
+        'propertyType',
+        'propertyLocation',
+        'propertyBuildingName',
+        'propertyFloorLevel',
+        'propertyFurnishing',
+        'propertyCheques',
+        'propertyChiller',
+        'propertyMortgageStatus',
+        'propertyOwnerName',
+        'propertyClientName',
+        'propertyInternalNotes',
+        'propertyPublicNotes'
+      ].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', event => {
+          event.target.classList.remove('is-invalid');
+        });
+        document.getElementById(id)?.addEventListener('change', event => {
+          event.target.classList.remove('is-invalid');
+        });
+      });
+
+      ['propertyOwnerPhone', 'propertyClientPhone'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', event => {
+          event.target.classList.remove('is-invalid');
+        });
+        document.getElementById(id)?.addEventListener('blur', event => {
+          event.target.value = normalizeLeadPhoneInput(event.target.value);
+        });
+      });
+    }
+
+    function getPropertyPreservedState() {
+      const original = state.propertyEditorOriginal || {};
+      return {
+        status: original.status || 'available',
+        bedrooms: original.bedrooms ?? null,
+        bathrooms: original.bathrooms ?? null,
+        legacyDescription: original.legacyDescription || original.description || ''
+      };
+    }
+
+    function collectPropertyFormData() {
+      const preserved = getPropertyPreservedState();
+      const purpose = document.getElementById('propertyPurposeValue').value;
+      return {
+        id: Number(document.getElementById('propertyId').value || 0),
+        purpose,
+        propertyType: document.getElementById('propertyType').value.trim(),
+        location: document.getElementById('propertyLocation').value.trim(),
+        buildingName: document.getElementById('propertyBuildingName').value.trim(),
+        sizeSqft: normalizeBudgetDigits(document.getElementById('propertySizeSqft').value),
+        floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
+        furnishing: document.getElementById('propertyFurnishing').value.trim(),
+        rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
+        cheques: document.getElementById('propertyCheques').value.trim(),
+        chiller: document.getElementById('propertyChiller').value.trim(),
+        ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
+        mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
+        leasehold: document.getElementById('propertyLeasehold').checked,
+        distressDeal: document.getElementById('propertyDistress').checked,
+        ownerName: document.getElementById('propertyOwnerName').value.trim(),
+        ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
+        clientName: document.getElementById('propertyClientName').value.trim(),
+        clientPhone: normalizeLeadPhoneInput(document.getElementById('propertyClientPhone').value.trim()),
+        internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
+        publicNotes: document.getElementById('propertyPublicNotes').value.trim(),
+        status: preserved.status,
+        bedrooms: preserved.bedrooms,
+        bathrooms: preserved.bathrooms,
+        legacyDescription: preserved.legacyDescription
+      };
+    }
+
+    function validatePropertyFormData(formData) {
+      const errors = {};
+      if (!formData.purpose) errors.purpose = 'Select purpose';
+      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.location) errors.location = 'Enter location';
+      if (getPropertyPurpose(formData.purpose) === 'rent' && (!formData.rentPrice || Number(formData.rentPrice) <= 0)) {
+        errors.rentPrice = 'Enter rent price';
+      }
+      if (getPropertyPurpose(formData.purpose) === 'sale' && (!formData.ownerAskingPrice || Number(formData.ownerAskingPrice) <= 0)) {
+        errors.ownerAskingPrice = 'Enter owner asking price';
+      }
+      return errors;
+    }
+
     function setStatus(message = '', tone = 'success') {
       const el = document.getElementById('dashboardStatus');
       if (!el) return;
@@ -1767,8 +2260,7 @@
       if (showLead) {
         setLeadWorkspaceHeader(state.leadEditorOriginal ? 'edit' : 'create');
       } else {
-        title.textContent = 'Add New Listing';
-        copy.textContent = 'Create and update private inventory here. Public sharing stays optional.';
+        setPropertyWorkspaceHeader(state.propertyEditorOriginal ? 'edit' : 'create');
       }
       shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
@@ -1807,11 +2299,17 @@
           'broker connector listing',
           item.purpose,
           item.propertyType,
-          item.category,
           item.location,
+          item.buildingName,
+          item.floorLevel,
+          item.furnishing,
+          item.cheques,
+          item.chiller,
+          item.mortgageStatus,
+          item.rentPrice,
+          item.ownerAskingPrice,
           item.price,
           item.size,
-          item.description,
           item.publicNotes,
           item.internalNotes,
           item.status,
@@ -1856,9 +2354,12 @@
           item.location,
           item.propertyType || item.category,
           item.preferredBuildingProject,
+          item.buildingName,
           item.propertyType,
           item.purpose,
           item.price,
+          item.rentPrice,
+          item.ownerAskingPrice,
           item.priceLabel,
           item.sourceType === 'lead' || item.leadType ? 'Broker Requirements' : 'Broker Connector Listings',
           item.isDistress ? 'Distress Deals' : ''
@@ -2422,6 +2923,279 @@
       }
     });
 
+    function getPropertyDisplayPrice(property) {
+      const purpose = getPropertyPurpose(property.purpose);
+      const primaryPrice = normalizeBudgetDigits(property.rentPrice || property.ownerAskingPrice || property.price || '');
+      if (!primaryPrice) return '--';
+      return `AED ${primaryPrice}${purpose === 'rent' ? ' / year' : ''}`;
+    }
+
+    function getPropertyTermsSummary(property) {
+      const purpose = getPropertyPurpose(property.purpose);
+      if (purpose === 'rent') {
+        return [
+          property.furnishing,
+          property.cheques,
+          property.chiller
+        ].filter(Boolean).join(' · ') || 'Standard rent terms';
+      }
+
+      return [
+        property.leasehold ? 'Leasehold' : 'Freehold / Standard',
+        property.mortgageStatus
+      ].filter(Boolean).join(' · ') || 'Standard sale terms';
+    }
+
+    function getPropertyPrivateContactSummary(property) {
+      const owner = [property.ownerName, property.ownerPhone].filter(Boolean).join(' · ');
+      const client = [property.clientName, property.clientPhone].filter(Boolean).join(' · ');
+      if (owner && client) return `Owner: ${owner} | Client: ${client}`;
+      if (owner) return `Owner: ${owner}`;
+      if (client) return `Client: ${client}`;
+      return 'No private contacts added';
+    }
+
+    function getDashboardSearchText(item, type) {
+      if (type === 'lead') {
+        return [
+          'broker requirement',
+          item.clientPurpose,
+          item.propertyType,
+          item.location,
+          item.preferredBuildingProject,
+          item.budget,
+          item.paymentMethod,
+          item.privateNotes,
+          item.publicGeneralNotes,
+          item.status,
+          item.clientName
+        ].join(' ').toLowerCase();
+      }
+      if (type === 'property') {
+        return [
+          'broker connector listing',
+          item.purpose,
+          item.propertyType,
+          item.location,
+          item.buildingName,
+          item.floorLevel,
+          item.furnishing,
+          item.cheques,
+          item.chiller,
+          item.mortgageStatus,
+          item.rentPrice,
+          item.ownerAskingPrice,
+          item.price,
+          item.sizeSqft,
+          item.size,
+          item.publicNotes,
+          item.internalNotes,
+          item.status,
+          item.isDistress ? 'distress deal hot listing' : ''
+        ].join(' ').toLowerCase();
+      }
+      if (type === 'shared') {
+        return [
+          item.listingKind,
+          item.purpose,
+          item.propertyType,
+          item.category,
+          item.location,
+          item.priceLabel,
+          item.publicNotes,
+          item.status,
+          item.isDistress ? 'distress deal hot listing' : ''
+        ].join(' ').toLowerCase();
+      }
+      return [
+        item.followUpType,
+        item.entityType,
+        item.note,
+        item.nextAction,
+        item.meetingDate,
+        item.meetingTime
+      ].join(' ').toLowerCase();
+    }
+
+    function buildDashboardSuggestions(query) {
+      const normalized = String(query || '').trim().toLowerCase();
+      if (!normalized) return [];
+      const pool = new Set();
+      [...state.leads, ...state.properties, ...state.sharedListings].forEach(item => {
+        [
+          item.location,
+          item.propertyType || item.category,
+          item.preferredBuildingProject,
+          item.buildingName,
+          item.propertyType,
+          item.purpose,
+          item.price,
+          item.rentPrice,
+          item.ownerAskingPrice,
+          item.priceLabel,
+          item.sourceType === 'lead' || item.leadType ? 'Broker Requirements' : 'Broker Connector Listings',
+          item.isDistress ? 'Distress Deals' : ''
+        ].filter(Boolean).forEach(term => {
+          if (String(term).toLowerCase().includes(normalized)) pool.add(String(term));
+        });
+      });
+      return [...pool].slice(0, 8);
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = `<div class="empty">No properties match your current search. Add your first private property above.</div>`;
+        return;
+      }
+
+      target.innerHTML = properties.map(property => `
+        <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
+          <div class="item-top">
+            <div class="item-title">
+              <h4>${getPropertyPurposeLabel(property.purpose)} · ${property.propertyType || 'Property'}</h4>
+              <div class="muted">${[
+                property.location,
+                getPropertyDisplayPrice(property),
+                property.buildingName
+              ].filter(Boolean).join(' · ')}</div>
+            </div>
+            <div class="badges">
+              <span class="badge ${badgeClass(property.status)}">${property.status}</span>
+              ${property.isDistress ? '<span class="badge badge-red">Hot Distress</span>' : ''}
+              <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>${getPropertyPurpose(property.purpose) === 'rent' ? 'Rent Price' : 'Asking Price'}</small><strong>${getPropertyDisplayPrice(property)}</strong></div>
+            <div class="detail-cell"><small>Size</small><strong>${property.sizeSqft || property.size || '--'}</strong></div>
+            <div class="detail-cell"><small>Floor Level</small><strong>${property.floorLevel || '--'}</strong></div>
+            <div class="detail-cell"><small>Updated</small><strong>${new Date(property.updatedAt || property.createdAt || Date.now()).toLocaleDateString()}</strong></div>
+          </div>
+          <div class="muted"><strong>Terms:</strong> ${getPropertyTermsSummary(property)}</div>
+          <div class="muted"><strong>Private contacts:</strong> ${getPropertyPrivateContactSummary(property)}</div>
+          <div class="muted"><strong>Public-safe note:</strong> ${property.publicNotes || 'No public note added'}</div>
+          <div class="muted"><strong>Internal note:</strong> ${property.internalNotes || 'No internal note added'}</div>
+          <div class="actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+            <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+            <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function resetPropertyForm() {
+      document.getElementById('propertyForm').reset();
+      document.getElementById('propertyId').value = '';
+      state.propertyEditorOriginal = null;
+      setPropertyWorkspaceHeader('create');
+      clearPropertyErrors();
+      setPropertyPurpose('', { preserveValues: false });
+      document.getElementById('propertyLocation').value = '';
+      document.getElementById('propertyBuildingName').value = '';
+      document.getElementById('propertySizeSqft').value = '';
+      document.getElementById('propertyOwnerName').value = '';
+      document.getElementById('propertyOwnerPhone').value = '';
+      document.getElementById('propertyClientName').value = '';
+      document.getElementById('propertyClientPhone').value = '';
+      document.getElementById('propertyInternalNotes').value = '';
+      document.getElementById('propertyPublicNotes').value = '';
+      document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
+      propertyAutocompleteControllers.location?.close();
+      propertyAutocompleteControllers.building?.close();
+    }
+
+    function editProperty(id) {
+      const property = state.properties.find(item => item.id === id);
+      if (!property) return;
+      state.propertyEditorOriginal = property;
+      showOverviewWorkspace('property');
+      setPropertyWorkspaceHeader('edit');
+      clearPropertyErrors();
+      document.getElementById('propertyId').value = property.id;
+      setPropertyPurpose(getPropertyPurpose(property.purpose), { preserveValues: false });
+      populatePropertyTypeOptions(property.propertyType || '');
+      populatePropertyFloorOptions(property.floorLevel || '');
+      document.getElementById('propertyLocation').value = property.location || '';
+      document.getElementById('propertyBuildingName').value = property.buildingName || '';
+      document.getElementById('propertySizeSqft').value = normalizeBudgetDigits(property.sizeSqft || property.size || '');
+      document.getElementById('propertyFurnishing').value = property.furnishing || '';
+      document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
+      document.getElementById('propertyCheques').value = property.cheques || '';
+      document.getElementById('propertyChiller').value = property.chiller || '';
+      document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
+      document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
+      document.getElementById('propertyLeasehold').checked = Boolean(property.leasehold);
+      document.getElementById('propertyPublicNotes').value = property.publicNotes || '';
+      document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
+      document.getElementById('propertyOwnerName').value = property.ownerName || '';
+      document.getElementById('propertyOwnerPhone').value = property.ownerPhone || '';
+      document.getElementById('propertyClientName').value = property.clientName || '';
+      document.getElementById('propertyClientPhone').value = property.clientPhone || '';
+      document.getElementById('propertyDistress').checked = Boolean(property.isDistress);
+      document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
+    }
+
+    function wirePropertyFormSubmission() {
+      const currentForm = document.getElementById('propertyForm');
+      if (!currentForm || currentForm.dataset.wired === 'true') return;
+
+      const nextForm = currentForm.cloneNode(true);
+      currentForm.parentNode.replaceChild(nextForm, currentForm);
+      nextForm.dataset.wired = 'true';
+
+      nextForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        clearPropertyErrors();
+        const formData = collectPropertyFormData();
+        const validationErrors = validatePropertyFormData(formData);
+        if (Object.keys(validationErrors).length) {
+          Object.entries(validationErrors).forEach(([field, message]) => setPropertyFieldError(field, message));
+          setStatus('Please complete the required listing details.', 'error');
+          return;
+        }
+
+        const payload = {
+          action: formData.id ? 'update-property' : 'create-property',
+          id: formData.id,
+          purpose: formData.purpose,
+          propertyType: formData.propertyType,
+          location: formData.location,
+          buildingName: formData.buildingName,
+          sizeSqft: formData.sizeSqft,
+          floorLevel: formData.floorLevel,
+          furnishing: formData.furnishing,
+          rentPrice: formData.rentPrice,
+          cheques: formData.cheques,
+          chiller: formData.chiller,
+          ownerAskingPrice: formData.ownerAskingPrice,
+          mortgageStatus: formData.mortgageStatus,
+          leasehold: formData.leasehold,
+          isDistress: formData.distressDeal,
+          ownerName: formData.ownerName,
+          ownerPhone: formData.ownerPhone,
+          clientName: formData.clientName,
+          clientPhone: formData.clientPhone,
+          internalNotes: formData.internalNotes,
+          publicNotes: formData.publicNotes,
+          status: formData.status,
+          bedrooms: formData.bedrooms,
+          bathrooms: formData.bathrooms,
+          legacyDescription: formData.legacyDescription
+        };
+
+        try {
+          await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing created successfully.');
+          resetPropertyForm();
+          hideOverviewWorkspace();
+        } catch (error) {
+          setStatus(error.message, 'error');
+        }
+      });
+    }
+
     async function logoutBroker() {
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
@@ -2430,7 +3204,9 @@
 
     (async function init() {
       try {
+        wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
+        ensurePropertyFormEnhancements();
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();

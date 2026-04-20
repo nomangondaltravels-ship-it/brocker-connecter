@@ -36,6 +36,7 @@ export function normalizeBool(value) {
 }
 
 const LEAD_META_PREFIX = '__BC_LEAD_META__:';
+const PROPERTY_META_PREFIX = '__BC_PROPERTY_META__:';
 
 export function parseLeadMeta(rawValue) {
   const rawText = normalizeText(rawValue);
@@ -83,6 +84,88 @@ export function serializeLeadMeta(meta) {
   }
 
   return `${LEAD_META_PREFIX}${JSON.stringify(payload)}`;
+}
+
+export function parsePropertyMeta(rawValue) {
+  const rawText = normalizeText(rawValue);
+  if (!rawText) {
+    return {
+      buildingName: '',
+      floorLevel: '',
+      furnishing: '',
+      cheques: '',
+      chiller: '',
+      mortgageStatus: '',
+      leasehold: false,
+      legacyDescription: ''
+    };
+  }
+
+  if (!rawText.startsWith(PROPERTY_META_PREFIX)) {
+    return {
+      buildingName: '',
+      floorLevel: '',
+      furnishing: '',
+      cheques: '',
+      chiller: '',
+      mortgageStatus: '',
+      leasehold: false,
+      legacyDescription: rawText
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(rawText.slice(PROPERTY_META_PREFIX.length));
+    return {
+      buildingName: normalizeText(parsed?.buildingName),
+      floorLevel: normalizeText(parsed?.floorLevel),
+      furnishing: normalizeText(parsed?.furnishing),
+      cheques: normalizeText(parsed?.cheques),
+      chiller: normalizeText(parsed?.chiller),
+      mortgageStatus: normalizeText(parsed?.mortgageStatus),
+      leasehold: Boolean(parsed?.leasehold),
+      legacyDescription: normalizeText(parsed?.legacyDescription)
+    };
+  } catch (error) {
+    return {
+      buildingName: '',
+      floorLevel: '',
+      furnishing: '',
+      cheques: '',
+      chiller: '',
+      mortgageStatus: '',
+      leasehold: false,
+      legacyDescription: ''
+    };
+  }
+}
+
+export function serializePropertyMeta(meta) {
+  const payload = {
+    buildingName: normalizeText(meta?.buildingName),
+    floorLevel: normalizeText(meta?.floorLevel),
+    furnishing: normalizeText(meta?.furnishing),
+    cheques: normalizeText(meta?.cheques),
+    chiller: normalizeText(meta?.chiller),
+    mortgageStatus: normalizeText(meta?.mortgageStatus),
+    leasehold: Boolean(meta?.leasehold),
+    legacyDescription: normalizeText(meta?.legacyDescription)
+  };
+
+  if (
+    !payload.buildingName &&
+    !payload.floorLevel &&
+    !payload.furnishing &&
+    !payload.cheques &&
+    !payload.chiller &&
+    !payload.mortgageStatus &&
+    !payload.leasehold &&
+    !payload.legacyDescription
+  ) {
+    return '';
+  }
+
+  return `${PROPERTY_META_PREFIX}${JSON.stringify(payload)}`;
 }
 
 function normalizeLeadClientPurpose(value) {
@@ -356,7 +439,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const generalNotes = isLead
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
-    : normalizeText(item.public_notes || item.description);
+    : normalizeText(item.public_notes);
   const propertyType = isLead
     ? normalizeText(item.property_type || item.category || item.lead_type || '')
     : normalizeText(item.property_type || '');
@@ -437,6 +520,7 @@ export function sanitizeLead(row) {
 
 export function sanitizeProperty(row) {
   if (!row) return null;
+  const meta = parsePropertyMeta(row.description);
   return {
     id: row.id,
     purpose: row.purpose,
@@ -444,12 +528,23 @@ export function sanitizeProperty(row) {
     category: row.category,
     location: row.location,
     price: row.price,
+    rentPrice: normalizeText(row.purpose).toLowerCase() === 'rent' ? row.price || '' : '',
+    ownerAskingPrice: normalizeText(row.purpose).toLowerCase() === 'sale' ? row.price || '' : '',
     size: row.size,
+    sizeSqft: row.size || '',
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
-    description: row.description || '',
+    description: meta.legacyDescription || '',
+    legacyDescription: meta.legacyDescription || '',
     publicNotes: row.public_notes || '',
     internalNotes: row.internal_notes || '',
+    buildingName: meta.buildingName || '',
+    floorLevel: meta.floorLevel || '',
+    furnishing: meta.furnishing || '',
+    cheques: meta.cheques || '',
+    chiller: meta.chiller || '',
+    mortgageStatus: meta.mortgageStatus || '',
+    leasehold: Boolean(meta.leasehold),
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
     clientName: row.client_name || '',

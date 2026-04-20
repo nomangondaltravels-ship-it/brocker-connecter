@@ -13,6 +13,7 @@ import {
   sanitizeProperty,
   sanitizePublicListing,
   serializeLeadMeta,
+  serializePropertyMeta,
   supabaseDelete,
   supabaseInsert,
   supabasePatch,
@@ -74,18 +75,31 @@ function getLeadPayload(body, brokerId) {
 }
 
 function getPropertyPayload(body, brokerId) {
+  const purpose = normalizeText(body?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const propertyType = normalizeText(body?.propertyType);
+  const serializedMeta = serializePropertyMeta({
+    buildingName: normalizeText(body?.buildingName),
+    floorLevel: normalizeText(body?.floorLevel),
+    furnishing: purpose === 'rent' ? normalizeText(body?.furnishing) : '',
+    cheques: purpose === 'rent' ? normalizeText(body?.cheques) : '',
+    chiller: purpose === 'rent' ? normalizeText(body?.chiller) : '',
+    mortgageStatus: purpose === 'sale' ? normalizeText(body?.mortgageStatus) : '',
+    leasehold: normalizeBool(body?.leasehold),
+    legacyDescription: normalizeText(body?.legacyDescription)
+  });
+
   return {
     broker_uuid: brokerId,
-    purpose: normalizeText(body?.purpose).toLowerCase(),
-    property_type: normalizeText(body?.propertyType),
-    category: normalizeText(body?.category),
+    purpose,
+    property_type: propertyType,
+    category: propertyType,
     location: normalizeText(body?.location),
-    price: normalizeText(body?.price),
-    size: normalizeText(body?.size),
+    price: normalizeText(body?.price || body?.rentPrice || body?.ownerAskingPrice),
+    size: normalizeText(body?.size || body?.sizeSqft),
     bedrooms: body?.bedrooms ?? null,
     bathrooms: body?.bathrooms ?? null,
-    description: normalizeText(body?.description),
-    public_notes: normalizeText(body?.publicNotes || body?.description),
+    description: serializedMeta,
+    public_notes: normalizeText(body?.publicNotes),
     internal_notes: normalizeText(body?.internalNotes),
     owner_name: normalizeText(body?.ownerName),
     owner_phone: normalizePhoneNumber(body?.ownerPhone),

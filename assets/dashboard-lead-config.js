@@ -133,5 +133,51 @@ window.BROKER_DASHBOARD_LEAD_CONFIG = Object.freeze({
       'Other'
     ]
   },
-  paymentMethods: ['Cash', 'Mortgage']
+  paymentMethods: ['Cash', 'Mortgage'],
+  listingPropertyTypes: [
+    'Studio',
+    '1 BHK',
+    '2 BHK',
+    '3 BHK',
+    '4 BHK',
+    '5+ BHK',
+    'Villa',
+    'Townhouse',
+    'Penthouse',
+    'Duplex',
+    'Plot',
+    'Office',
+    'Shop',
+    'Warehouse',
+    'Full Floor',
+    'Labour Camp',
+    'Hotel Apartment',
+    'Other'
+  ],
+  floorLevels: [
+    'Low Floor',
+    'Mid Floor',
+    'High Floor'
+  ],
+  furnishingOptions: [
+    'Furnished',
+    'Unfurnished'
+  ],
+  chequeOptions: [
+    '1 Cheque',
+    '2 Cheques',
+    '3 Cheques',
+    '4 Cheques',
+    '6 Cheques',
+    '12 Cheques',
+    'Flexible'
+  ],
+  chillerOptions: [
+    'Chiller Free',
+    'Chiller Applicable'
+  ],
+  mortgageStatuses: [
+    'Mortgage',
+    'Not Mortgage'
+  ]
 });
