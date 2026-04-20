@@ -540,7 +540,7 @@
     .workspace-shell {
       display: none;
       margin-top: 16px;
-      padding: 16px;
+      padding: 20px;
       border-radius: 20px;
       border: 1px solid rgba(212,175,55,0.16);
       background: linear-gradient(180deg, rgba(11,21,36,0.96), rgba(9,18,32,0.92));
@@ -568,6 +568,10 @@
       display: none;
     }
 
+    .crm-hidden {
+      display: none !important;
+    }
+
     .card { padding: 16px; }
     .card h3 { margin-bottom: 8px; font-size: 1rem; }
     .card p { color: var(--muted); line-height: 1.5; }
@@ -575,7 +579,7 @@
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 16px;
     }
 
     .full { grid-column: 1 / -1; }
@@ -588,6 +592,13 @@
       background: rgba(9,18,32,0.86);
       color: var(--text);
       outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(212,175,55,0.42);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.08);
+      background: rgba(11, 22, 39, 0.94);
     }
 
     textarea { min-height: 110px; resize: vertical; }
@@ -598,6 +609,228 @@
       font-size: 0.78rem;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+    }
+
+    .lead-crm-form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .form-section {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(212,175,55,0.12);
+      background: linear-gradient(180deg, rgba(13,24,42,0.84), rgba(9,18,32,0.9));
+    }
+
+    .form-section-head {
+      display: grid;
+      gap: 4px;
+    }
+
+    .form-section-head h4 {
+      font-size: 1rem;
+      letter-spacing: 0.01em;
+    }
+
+    .form-section-head p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    .field-block {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .field-helper {
+      color: rgba(232, 220, 192, 0.72);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .field-error {
+      min-height: 18px;
+      color: #fca5a5;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    input.is-invalid,
+    select.is-invalid,
+    textarea.is-invalid {
+      border-color: rgba(239, 68, 68, 0.42);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+
+    .segmented-control {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: rgba(8,17,31,0.7);
+      width: min(320px, 100%);
+    }
+
+    .segmented-control.is-invalid {
+      border-color: rgba(239, 68, 68, 0.34);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+
+    .segment-btn {
+      border: 1px solid rgba(212,175,55,0.08);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      padding: 12px 14px;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .segment-btn:hover {
+      border-color: rgba(212,175,55,0.24);
+      color: var(--text);
+    }
+
+    .segment-btn.active {
+      background: linear-gradient(135deg, #f0de9b, var(--gold) 46%, #9e7415 100%);
+      color: #111827;
+      border-color: rgba(242,223,152,0.34);
+      box-shadow: 0 14px 28px rgba(143,106,18,0.22);
+    }
+
+    .lead-dynamic-layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .combo-field {
+      position: relative;
+    }
+
+    .combo-field input {
+      padding-right: 44px;
+    }
+
+    .combo-icon {
+      position: absolute;
+      top: 50%;
+      right: 14px;
+      transform: translateY(-50%);
+      color: var(--gold-soft);
+      pointer-events: none;
+      font-size: 1rem;
+      opacity: 0.92;
+    }
+
+    .combo-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: rgba(8,17,31,0.98);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.28);
+      z-index: 20;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .combo-menu.hidden {
+      display: none;
+    }
+
+    .combo-option {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: rgba(12, 24, 41, 0.96);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .combo-option:hover,
+    .combo-option.active {
+      border-color: rgba(212,175,55,0.26);
+      background: rgba(19, 33, 56, 0.98);
+    }
+
+    .currency-field {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.12);
+      background: rgba(9,18,32,0.86);
+      overflow: hidden;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .currency-field:focus-within {
+      border-color: rgba(212,175,55,0.42);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.08);
+      background: rgba(11, 22, 39, 0.94);
+    }
+
+    .currency-prefix {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 0 14px;
+      color: var(--gold-soft);
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-right: 1px solid rgba(212,175,55,0.12);
+      background: rgba(13,24,42,0.92);
+    }
+
+    .currency-field input {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      padding-left: 14px;
+    }
+
+    .privacy-note {
+      display: grid;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: linear-gradient(180deg, rgba(13,24,42,0.86), rgba(8,17,31,0.9));
+      color: rgba(245, 239, 228, 0.92);
+      line-height: 1.55;
+    }
+
+    .privacy-note strong {
+      color: var(--gold-soft);
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .lead-form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 2px;
     }
 
     .check-grid {
@@ -840,14 +1073,14 @@
         </div>
         <div class="stats" id="overviewStats"></div>
         <div class="overview-actions">
-          <button class="btn quick-action-card" type="button" onclick="showOverviewWorkspace('lead')">
+          <button class="btn quick-action-card" type="button" onclick="openLeadComposer()">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>Add New Lead</strong>
               <span>Create a new broker requirement or client demand.</span>
             </span>
           </button>
-          <button class="btn quick-action-card" type="button" onclick="showOverviewWorkspace('property')">
+          <button class="btn quick-action-card" type="button" onclick="openPropertyComposer()">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>Add New Listing</strong>
@@ -859,65 +1092,113 @@
           <div class="workspace-head">
             <div>
               <h3 id="workspaceTitle">Add New Lead</h3>
-              <p id="workspaceCopy">Create and update private CRM records here. Public sharing stays optional.</p>
+              <p id="workspaceCopy">Create a private client requirement. You can choose later whether to share only the non-private details on the Broker Connector Page.</p>
             </div>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="hideOverviewWorkspace()">Close</button>
           </div>
           <div class="card workspace-card" id="overviewLeadCard">
-            <h3 id="leadFormTitle">Add Broker Requirement</h3>
-            <form class="form-grid" id="leadForm">
+            <form class="lead-crm-form" id="leadForm" novalidate>
               <input type="hidden" id="leadId">
-              <div>
-                <label class="small">Requirement Type</label>
-                <select id="leadType" required>
-                  <option value="">Select</option>
-                  <option value="buyer">Buyer</option>
-                  <option value="tenant">Tenant</option>
-                </select>
-              </div>
-              <div>
-                <label class="small">Purpose</label>
-                <select id="leadPurpose" required>
-                  <option value="">Select</option>
-                  <option value="sale">Sale</option>
-                  <option value="rent">Rent</option>
-                </select>
-              </div>
-              <div><label class="small">Category</label><input id="leadCategory" required></div>
-              <div><label class="small">Location</label><input id="leadLocation" required></div>
-              <div><label class="small">Budget</label><input id="leadBudget" required></div>
-              <div><label class="small">Source</label><input id="leadSource"></div>
-              <div><label class="small">Priority</label><select id="leadPriority"><option value="normal">Normal</option><option value="high">High</option><option value="critical">Critical</option></select></div>
-              <div><label class="small">Status</label><select id="leadStatus"><option value="new">New</option><option value="contacted">Contacted</option><option value="demand confirmed">Demand Confirmed</option><option value="meeting scheduled">Meeting Scheduled</option><option value="negotiation">Negotiation</option><option value="closed">Closed</option><option value="cancelled">Cancelled</option></select></div>
-              <div><label class="small">Meeting Date</label><input type="date" id="leadMeetingDate"></div>
-              <div><label class="small">Meeting Time</label><input type="time" id="leadMeetingTime"></div>
-              <div class="full"><label class="small">Private Notes</label><textarea id="leadNotes"></textarea></div>
-              <div class="full"><label class="small">Public General Notes</label><textarea id="leadPublicNotes" placeholder="Only this note will be shared publicly when listed. Do not include owner or client details."></textarea></div>
-              <div class="full"><label class="small">Follow-up Notes</label><textarea id="leadFollowupNotes"></textarea></div>
-              <div class="full"><label class="small">Next Action</label><input id="leadNextAction"></div>
-              <div><label class="small">Owner Name (Private)</label><input id="leadOwnerName"></div>
-              <div><label class="small">Owner Phone (Private)</label><input id="leadOwnerPhone"></div>
-              <div><label class="small">Client Name (Private)</label><input id="leadClientName"></div>
-              <div><label class="small">Client Phone (Private)</label><input id="leadClientPhone"></div>
-              <div class="full">
-                <label class="small">Rent Checklist</label>
-                <div class="check-grid">
-                  <label><input type="checkbox" id="leadRentBooking"> Booking</label>
-                  <label><input type="checkbox" id="leadRentAgreement"> Agreement Signed</label>
-                  <label><input type="checkbox" id="leadRentHandover"> Handover Done</label>
+              <div class="form-section">
+                <div class="form-section-head">
+                  <h4>Requirement Details</h4>
+                  <p>Select whether the client wants to rent or buy, then complete only the relevant requirement details.</p>
+                </div>
+                <div class="field-block full">
+                  <label class="small">Client Purpose</label>
+                  <div class="segmented-control" id="leadPurposeControl">
+                    <button class="segment-btn" type="button" data-purpose="rent">Rent</button>
+                    <button class="segment-btn" type="button" data-purpose="buy">Buy</button>
+                  </div>
+                  <input type="hidden" id="leadClientPurpose">
+                  <div class="field-error" id="leadClientPurposeError"></div>
+                </div>
+                <div class="lead-dynamic-layout crm-hidden" id="leadRequirementFields">
+                  <div class="form-grid">
+                    <div class="field-block">
+                      <label class="small">Preferred Location</label>
+                      <div class="combo-field" id="leadLocationBox">
+                        <input id="leadLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                        <span class="combo-icon">&#9906;</span>
+                        <div class="combo-menu hidden" id="leadLocationMenu"></div>
+                      </div>
+                      <div class="field-helper">Search UAE area suggestions or type a custom location.</div>
+                      <div class="field-error" id="leadLocationError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Preferred Building / Project</label>
+                      <div class="combo-field" id="leadBuildingBox">
+                        <input id="leadBuildingProject" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                        <span class="combo-icon">&#9906;</span>
+                        <div class="combo-menu hidden" id="leadBuildingMenu"></div>
+                      </div>
+                      <div class="field-helper">Optional. Select a suggestion or enter a custom building/project.</div>
+                      <div class="field-error" id="leadBuildingProjectError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Property Type</label>
+                      <select id="leadPropertyType">
+                        <option value="">Select property type</option>
+                      </select>
+                      <div class="field-error" id="leadPropertyTypeError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Budget</label>
+                      <div class="currency-field" id="leadBudgetField">
+                        <span class="currency-prefix">AED</span>
+                        <input id="leadBudget" type="text" inputmode="numeric" placeholder="Enter budget in AED" autocomplete="off">
+                      </div>
+                      <div class="field-error" id="leadBudgetError"></div>
+                    </div>
+                    <div class="field-block crm-hidden" id="leadPaymentMethodWrap">
+                      <label class="small">Payment Method</label>
+                      <select id="leadPaymentMethod">
+                        <option value="">Select payment method</option>
+                      </select>
+                      <div class="field-error" id="leadPaymentMethodError"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div class="full">
-                <label class="small">Sale Checklist</label>
-                <div class="check-grid">
-                  <label><input type="checkbox" id="leadSaleA"> Contract A</label>
-                  <label><input type="checkbox" id="leadSaleB"> Contract B</label>
-                  <label><input type="checkbox" id="leadSaleF"> Contract F</label>
+
+              <div class="form-section crm-hidden" id="leadClientSection">
+                <div class="form-section-head">
+                  <h4>Client Private Details</h4>
+                  <p>These details stay private in the broker workspace and never appear on the Broker Connector Page.</p>
+                </div>
+                <div class="form-grid">
+                  <div class="field-block">
+                    <label class="small">Client Name</label>
+                    <input id="leadClientName" type="text" placeholder="Enter client name" autocomplete="off">
+                    <div class="field-error" id="leadClientNameError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small">Client Phone Number</label>
+                    <input id="leadClientPhone" type="tel" placeholder="Enter client phone number" autocomplete="off">
+                    <div class="field-error" id="leadClientPhoneError"></div>
+                  </div>
+                </div>
+                <div class="privacy-note">
+                  <strong>Private Section</strong>
+                  <p>This section is private. Even if you share this lead on the Broker Connector Page, the client name and phone number will never be shown publicly.</p>
                 </div>
               </div>
-              <div class="full actions">
-                <button class="btn btn-primary" type="submit" id="leadSubmitBtn">Save Requirement</button>
-                <button class="btn btn-secondary" type="button" onclick="resetLeadForm()">Clear</button>
+
+              <div class="form-section crm-hidden" id="leadNotesSection">
+                <div class="form-section-head">
+                  <h4>Internal Notes</h4>
+                  <p>Add private notes for your own follow-up and internal CRM use.</p>
+                </div>
+                <div class="field-block full">
+                  <label class="small">Private Notes</label>
+                  <textarea id="leadPrivateNotes" placeholder="Add internal notes for your follow-up"></textarea>
+                  <div class="field-error" id="leadPrivateNotesError"></div>
+                </div>
+              </div>
+
+              <div class="lead-form-actions">
+                <button class="btn btn-primary" type="submit" id="leadSubmitBtn">Save Lead</button>
+                <button class="btn btn-secondary" type="button" onclick="cancelLeadForm()">Cancel</button>
               </div>
             </form>
           </div>
@@ -994,7 +1275,15 @@
     </main>
   </div>
 
+  <script src="assets/dashboard-lead-config.js"></script>
   <script>
+    const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
+      uaeLocations: [],
+      buildingProjects: [],
+      propertyTypes: { rent: [], buy: [] },
+      paymentMethods: []
+    };
+
     const state = {
       token: localStorage.getItem('broker_session_token') || '',
       broker: null,
@@ -1004,8 +1293,363 @@
       followUps: [],
       sharedListings: [],
       activeSection: 'overview',
-      dashboardSearchQuery: ''
+      dashboardSearchQuery: '',
+      leadEditorOriginal: null
     };
+
+    const leadAutocompleteControllers = {};
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getLeadClientPurpose(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (normalized === 'rent') return 'rent';
+      if (normalized === 'buy' || normalized === 'sale') return 'buy';
+      return '';
+    }
+
+    function getLeadClientPurposeLabel(value) {
+      const normalized = getLeadClientPurpose(value);
+      if (normalized === 'rent') return 'Rent';
+      if (normalized === 'buy') return 'Buy';
+      return 'Lead';
+    }
+
+    function getLeadClientPurposeFromRecord(lead) {
+      if (lead?.clientPurpose) return getLeadClientPurpose(lead.clientPurpose);
+      return String(lead?.purpose || '').trim().toLowerCase() === 'rent' ? 'rent' : 'buy';
+    }
+
+    function normalizeBudgetDigits(value) {
+      return String(value || '').replace(/[^\d]/g, '');
+    }
+
+    function normalizeLeadPhoneInput(value) {
+      const digits = String(value || '').replace(/[^\d]/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('00971')) return `+971 ${digits.slice(5)}`;
+      if (digits.startsWith('971')) return `+${digits}`;
+      if (digits.startsWith('0')) return `+971 ${digits.slice(1)}`;
+      return digits.startsWith('+') ? digits : `+${digits}`;
+    }
+
+    function formatBudgetLabel(value) {
+      const digits = normalizeBudgetDigits(value);
+      if (!digits) return 'AED --';
+      try {
+        return `AED ${Number(digits).toLocaleString('en-AE')}`;
+      } catch (error) {
+        return `AED ${digits}`;
+      }
+    }
+
+    function buildLeadPublicSummary(formData) {
+      const purposeLabel = getLeadClientPurposeLabel(formData.clientPurpose);
+      const budgetLabel = formatBudgetLabel(formData.budget);
+      const parts = [
+        `${purposeLabel} requirement`,
+        formData.propertyType,
+        formData.location,
+        formData.preferredBuildingProject ? `Building/Project: ${formData.preferredBuildingProject}` : '',
+        budgetLabel !== 'AED --' ? `Budget: ${budgetLabel}` : '',
+        getLeadClientPurpose(formData.clientPurpose) === 'buy' && formData.paymentMethod ? `Payment: ${formData.paymentMethod}` : ''
+      ].filter(Boolean);
+      return parts.join(' | ');
+    }
+
+    function populateLeadPropertyTypeOptions(selectedValue = '') {
+      const purpose = document.getElementById('leadClientPurpose')?.value || '';
+      const select = document.getElementById('leadPropertyType');
+      if (!select) return;
+      const options = LEAD_CONFIG.propertyTypes[purpose] || [];
+      select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = selectedValue && options.includes(selectedValue) ? selectedValue : '';
+    }
+
+    function populateLeadPaymentMethodOptions(selectedValue = '') {
+      const select = document.getElementById('leadPaymentMethod');
+      if (!select) return;
+      select.innerHTML = '<option value="">Select payment method</option>' + (LEAD_CONFIG.paymentMethods || []).map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = selectedValue && (LEAD_CONFIG.paymentMethods || []).includes(selectedValue) ? selectedValue : '';
+    }
+
+    function clearLeadErrors() {
+      [
+        'leadClientPurposeError',
+        'leadLocationError',
+        'leadPropertyTypeError',
+        'leadBudgetError',
+        'leadPaymentMethodError',
+        'leadClientNameError',
+        'leadClientPhoneError'
+      ].forEach(id => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = '';
+      });
+
+      [
+        'leadLocation',
+        'leadBuildingProject',
+        'leadPropertyType',
+        'leadBudget',
+        'leadPaymentMethod',
+        'leadClientName',
+        'leadClientPhone',
+        'leadPrivateNotes'
+      ].forEach(id => document.getElementById(id)?.classList.remove('is-invalid'));
+      document.getElementById('leadPurposeControl')?.classList.remove('is-invalid');
+    }
+
+    function setLeadFieldError(field, message) {
+      const errorMap = {
+        clientPurpose: 'leadClientPurposeError',
+        location: 'leadLocationError',
+        propertyType: 'leadPropertyTypeError',
+        budget: 'leadBudgetError',
+        paymentMethod: 'leadPaymentMethodError',
+        clientName: 'leadClientNameError',
+        clientPhone: 'leadClientPhoneError'
+      };
+      const inputMap = {
+        clientPurpose: 'leadPurposeControl',
+        location: 'leadLocation',
+        propertyType: 'leadPropertyType',
+        budget: 'leadBudget',
+        paymentMethod: 'leadPaymentMethod',
+        clientName: 'leadClientName',
+        clientPhone: 'leadClientPhone'
+      };
+
+      const errorNode = document.getElementById(errorMap[field]);
+      if (errorNode) errorNode.textContent = message;
+      document.getElementById(inputMap[field])?.classList.add('is-invalid');
+    }
+
+    function setLeadWorkspaceHeader(mode = 'create') {
+      const workspaceTitle = document.getElementById('workspaceTitle');
+      const workspaceCopy = document.getElementById('workspaceCopy');
+      if (!workspaceTitle || !workspaceCopy) return;
+
+      if (mode === 'edit') {
+        workspaceTitle.textContent = 'Edit Lead';
+        workspaceCopy.textContent = 'Update the private client requirement below. Only safe, non-private details can be shared later on the Broker Connector Page.';
+        return;
+      }
+
+      workspaceTitle.textContent = 'Add New Lead';
+      workspaceCopy.textContent = 'Create a private client requirement. You can choose later whether to share only the non-private details on the Broker Connector Page.';
+    }
+
+    function setLeadPurpose(purpose, options = {}) {
+      const normalizedPurpose = ['rent', 'buy'].includes(String(purpose || '').toLowerCase()) ? String(purpose).toLowerCase() : '';
+      const hiddenInput = document.getElementById('leadClientPurpose');
+      const details = document.getElementById('leadRequirementFields');
+      const clientSection = document.getElementById('leadClientSection');
+      const notesSection = document.getElementById('leadNotesSection');
+      const paymentWrap = document.getElementById('leadPaymentMethodWrap');
+      const paymentSelect = document.getElementById('leadPaymentMethod');
+      const propertyTypeSelect = document.getElementById('leadPropertyType');
+
+      if (hiddenInput) hiddenInput.value = normalizedPurpose;
+
+      document.querySelectorAll('#leadPurposeControl .segment-btn').forEach(button => {
+        button.classList.toggle('active', button.dataset.purpose === normalizedPurpose);
+      });
+
+      const showDetails = Boolean(normalizedPurpose);
+      details?.classList.toggle('crm-hidden', !showDetails);
+      clientSection?.classList.toggle('crm-hidden', !showDetails);
+      notesSection?.classList.toggle('crm-hidden', !showDetails);
+      paymentWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'buy');
+
+      const previousPropertyType = options.preserveValues ? propertyTypeSelect?.value || '' : '';
+      populateLeadPropertyTypeOptions(previousPropertyType);
+
+      const previousPaymentMethod = options.preserveValues ? paymentSelect?.value || '' : '';
+      populateLeadPaymentMethodOptions(previousPaymentMethod);
+      if (normalizedPurpose !== 'buy' && paymentSelect) paymentSelect.value = '';
+    }
+
+    function cancelLeadForm() {
+      resetLeadForm();
+      hideOverviewWorkspace();
+    }
+
+    function openLeadComposer() {
+      resetLeadForm();
+      showOverviewWorkspace('lead');
+      setLeadWorkspaceHeader('create');
+    }
+
+    function openPropertyComposer() {
+      resetPropertyForm();
+      showOverviewWorkspace('property');
+    }
+
+    function getAutocompleteMatches(dataset, query) {
+      const normalizedQuery = String(query || '').trim().toLowerCase();
+      const values = Array.from(new Set((dataset || []).filter(Boolean)));
+      if (!normalizedQuery) return values.slice(0, 8);
+
+      const startsWith = [];
+      const contains = [];
+      values.forEach(item => {
+        const normalizedItem = item.toLowerCase();
+        if (normalizedItem.startsWith(normalizedQuery)) startsWith.push(item);
+        else if (normalizedItem.includes(normalizedQuery)) contains.push(item);
+      });
+      return [...startsWith, ...contains].slice(0, 8);
+    }
+
+    function setupAutocompleteController({ inputId, menuId, boxId, datasetProvider }) {
+      const input = document.getElementById(inputId);
+      const menu = document.getElementById(menuId);
+      const box = document.getElementById(boxId);
+      if (!input || !menu || !box) return null;
+
+      const controller = {
+        items: [],
+        highlightedIndex: -1,
+        close() {
+          menu.innerHTML = '';
+          menu.classList.add('hidden');
+          input.setAttribute('aria-expanded', 'false');
+          controller.highlightedIndex = -1;
+        },
+        select(value) {
+          input.value = value;
+          controller.close();
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+        render(query = input.value) {
+          controller.items = getAutocompleteMatches(datasetProvider(), query);
+          if (!controller.items.length) {
+            controller.close();
+            return;
+          }
+
+          menu.innerHTML = controller.items.map((item, index) => `
+            <button class="combo-option ${index === controller.highlightedIndex ? 'active' : ''}" type="button" data-index="${index}" data-value="${escapeHtml(item)}">${escapeHtml(item)}</button>
+          `).join('');
+          menu.classList.remove('hidden');
+          input.setAttribute('aria-expanded', 'true');
+        }
+      };
+
+      input.addEventListener('input', () => {
+        input.classList.remove('is-invalid');
+        controller.highlightedIndex = -1;
+        controller.render(input.value);
+      });
+
+      input.addEventListener('focus', () => controller.render(input.value));
+
+      input.addEventListener('keydown', event => {
+        if (menu.classList.contains('hidden')) {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            controller.render(input.value);
+          }
+          return;
+        }
+
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          controller.highlightedIndex = Math.min(controller.highlightedIndex + 1, controller.items.length - 1);
+          controller.render(input.value);
+        } else if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          controller.highlightedIndex = Math.max(controller.highlightedIndex - 1, 0);
+          controller.render(input.value);
+        } else if (event.key === 'Enter' && controller.highlightedIndex >= 0) {
+          event.preventDefault();
+          controller.select(controller.items[controller.highlightedIndex]);
+        } else if (event.key === 'Escape') {
+          controller.close();
+        }
+      });
+
+      menu.addEventListener('mousedown', event => {
+        event.preventDefault();
+      });
+
+      menu.addEventListener('click', event => {
+        const option = event.target.closest('.combo-option');
+        if (!option) return;
+        controller.select(option.dataset.value || '');
+      });
+
+      document.addEventListener('click', event => {
+        if (!event.target.closest(`#${boxId}`)) {
+          controller.close();
+        }
+      });
+
+      return controller;
+    }
+
+    function ensureLeadFormEnhancements() {
+      if (!leadAutocompleteControllers.location) {
+        leadAutocompleteControllers.location = setupAutocompleteController({
+          inputId: 'leadLocation',
+          menuId: 'leadLocationMenu',
+          boxId: 'leadLocationBox',
+          datasetProvider: () => LEAD_CONFIG.uaeLocations || []
+        });
+      }
+
+      if (!leadAutocompleteControllers.building) {
+        leadAutocompleteControllers.building = setupAutocompleteController({
+          inputId: 'leadBuildingProject',
+          menuId: 'leadBuildingMenu',
+          boxId: 'leadBuildingBox',
+          datasetProvider: () => LEAD_CONFIG.buildingProjects || []
+        });
+      }
+
+      document.querySelectorAll('#leadPurposeControl .segment-btn').forEach(button => {
+        button.addEventListener('click', () => {
+          clearLeadErrors();
+          setLeadPurpose(button.dataset.purpose || '', { preserveValues: true });
+        });
+      });
+
+      populateLeadPropertyTypeOptions('');
+      populateLeadPaymentMethodOptions('');
+      setLeadPurpose('', { preserveValues: false });
+
+      document.getElementById('leadBudget')?.addEventListener('input', event => {
+        event.target.value = normalizeBudgetDigits(event.target.value);
+        event.target.classList.remove('is-invalid');
+      });
+
+      ['leadLocation', 'leadBuildingProject', 'leadClientName', 'leadPrivateNotes'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', event => {
+          event.target.classList.remove('is-invalid');
+        });
+      });
+
+      ['leadPropertyType', 'leadPaymentMethod'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', event => {
+          event.target.classList.remove('is-invalid');
+        });
+      });
+
+      document.getElementById('leadClientPhone')?.addEventListener('input', event => {
+        event.target.classList.remove('is-invalid');
+      });
+
+      document.getElementById('leadClientPhone')?.addEventListener('blur', event => {
+        event.target.value = normalizeLeadPhoneInput(event.target.value);
+      });
+    }
 
     function setStatus(message = '', tone = 'success') {
       const el = document.getElementById('dashboardStatus');
@@ -1120,10 +1764,12 @@
       shell.classList.add('active');
       leadCard.classList.toggle('hidden', !showLead);
       propertyCard.classList.toggle('hidden', showLead);
-      title.textContent = showLead ? 'Add New Lead' : 'Add New Listing';
-      copy.textContent = showLead
-        ? 'Create and update private broker requirements here. Public sharing stays optional.'
-        : 'Create and update private inventory here. Public sharing stays optional.';
+      if (showLead) {
+        setLeadWorkspaceHeader(state.leadEditorOriginal ? 'edit' : 'create');
+      } else {
+        title.textContent = 'Add New Listing';
+        copy.textContent = 'Create and update private inventory here. Public sharing stays optional.';
+      }
       shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1144,17 +1790,16 @@
       if (type === 'lead') {
         return [
           'broker requirement',
-          item.leadType,
-          item.purpose,
-          item.category,
+          item.clientPurpose,
+          item.propertyType,
           item.location,
+          item.preferredBuildingProject,
           item.budget,
-          item.notes,
+          item.paymentMethod,
+          item.privateNotes,
           item.publicGeneralNotes,
-          item.source,
-          item.priority,
           item.status,
-          item.nextAction
+          item.clientName
         ].join(' ').toLowerCase();
       }
       if (type === 'property') {
@@ -1209,7 +1854,8 @@
       [...state.leads, ...state.properties, ...state.sharedListings].forEach(item => {
         [
           item.location,
-          item.category,
+          item.propertyType || item.category,
+          item.preferredBuildingProject,
           item.propertyType,
           item.purpose,
           item.price,
@@ -1303,23 +1949,23 @@
         <div class="item-card">
           <div class="item-top">
             <div class="item-title">
-              <h4>${lead.leadType || 'Lead'} · ${lead.purpose} · ${lead.category}</h4>
-              <div class="muted">${lead.location} · ${lead.budget} · Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
+              <h4>${getLeadClientPurposeLabel(lead.clientPurpose)} · ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
+              <div class="muted">${escapeHtml(lead.location || '--')} · ${escapeHtml(formatBudgetLabel(lead.budget))} · Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
             </div>
             <div class="badges">
-              <span class="badge ${badgeClass(lead.status)}">${lead.status}</span>
+              <span class="badge ${badgeClass(lead.status)}">${escapeHtml(lead.status || 'new')}</span>
               <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
             </div>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Source</small><strong>${lead.source || '--'}</strong></div>
-            <div class="detail-cell"><small>Priority</small><strong>${lead.priority || '--'}</strong></div>
-            <div class="detail-cell"><small>Meeting</small><strong>${lead.meetingDate || '--'} ${lead.meetingTime || ''}</strong></div>
-            <div class="detail-cell"><small>Next Action</small><strong>${lead.nextAction || '--'}</strong></div>
+            <div class="detail-cell"><small>Preferred Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
+            <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
+            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>${getLeadClientPurpose(lead.clientPurpose) === 'buy' ? 'Payment Method' : 'Client Purpose'}</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
           </div>
-          <div class="muted"><strong>Private CRM note:</strong> ${lead.notes || 'No private note added'}</div>
-          <div class="muted"><strong>Public-safe note:</strong> ${lead.publicGeneralNotes || 'No public note added'}</div>
-          <div class="muted"><strong>Checklist:</strong> ${leadChecklistSummary(lead)}</div>
+          <div class="muted"><strong>Private client:</strong> ${escapeHtml(lead.clientName || '--')} · ${escapeHtml(lead.clientPhone || '--')}</div>
+          <div class="muted"><strong>Private CRM note:</strong> ${escapeHtml(lead.privateNotes || 'No private note added')}</div>
+          <div class="muted"><strong>Public-safe summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary generated yet')}</div>
           <div class="actions">
             <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
             <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
@@ -1476,8 +2122,89 @@
     function resetLeadForm() {
       document.getElementById('leadForm').reset();
       document.getElementById('leadId').value = '';
-      document.getElementById('leadFormTitle').textContent = 'Add Broker Requirement';
-      document.getElementById('leadSubmitBtn').textContent = 'Save Requirement';
+      document.getElementById('leadSubmitBtn').textContent = 'Save Lead';
+      state.leadEditorOriginal = null;
+      setLeadWorkspaceHeader('create');
+      clearLeadErrors();
+      setLeadPurpose('', { preserveValues: false });
+      document.getElementById('leadLocation').value = '';
+      document.getElementById('leadBuildingProject').value = '';
+      document.getElementById('leadBudget').value = '';
+      document.getElementById('leadClientName').value = '';
+      document.getElementById('leadClientPhone').value = '';
+      document.getElementById('leadPrivateNotes').value = '';
+      leadAutocompleteControllers.location?.close();
+      leadAutocompleteControllers.building?.close();
+    }
+
+    function getLeadPreservedState() {
+      const original = state.leadEditorOriginal || {};
+      return {
+        source: original.source || 'Manual',
+        priority: original.priority || 'normal',
+        status: original.status || 'new',
+        meetingDate: original.meetingDate || '',
+        meetingTime: original.meetingTime || '',
+        nextAction: original.nextAction || '',
+        ownerName: original.ownerName || '',
+        ownerPhone: original.ownerPhone || '',
+        legacyFollowUpNotes: original.legacyFollowUpNotes || original.followUpNotes || '',
+        rentChecklist: original.rentChecklist || {
+          booking: false,
+          agreementSigned: false,
+          handoverDone: false
+        },
+        saleChecklist: original.saleChecklist || {
+          contractA: false,
+          contractB: false,
+          contractF: false
+        }
+      };
+    }
+
+    function collectLeadFormData() {
+      const preserved = getLeadPreservedState();
+      return {
+        id: Number(document.getElementById('leadId').value || 0),
+        clientPurpose: document.getElementById('leadClientPurpose').value,
+        location: document.getElementById('leadLocation').value.trim(),
+        preferredBuildingProject: document.getElementById('leadBuildingProject').value.trim(),
+        propertyType: document.getElementById('leadPropertyType').value.trim(),
+        budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
+        paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
+        clientName: document.getElementById('leadClientName').value.trim(),
+        clientPhone: normalizeLeadPhoneInput(document.getElementById('leadClientPhone').value.trim()),
+        privateNotes: document.getElementById('leadPrivateNotes').value.trim(),
+        publicGeneralNotes: '',
+        source: preserved.source,
+        priority: preserved.priority,
+        status: preserved.status,
+        meetingDate: preserved.meetingDate,
+        meetingTime: preserved.meetingTime,
+        nextAction: preserved.nextAction,
+        ownerName: preserved.ownerName,
+        ownerPhone: preserved.ownerPhone,
+        legacyFollowUpNotes: preserved.legacyFollowUpNotes,
+        rentChecklist: preserved.rentChecklist,
+        saleChecklist: preserved.saleChecklist
+      };
+    }
+
+    function validateLeadFormData(formData) {
+      const errors = {};
+      if (!formData.clientPurpose) errors.clientPurpose = 'Select client purpose';
+      if (!formData.location) errors.location = 'Enter preferred location';
+      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.budget || Number(formData.budget) <= 0) errors.budget = 'Enter budget';
+      if (getLeadClientPurpose(formData.clientPurpose) === 'buy' && !formData.paymentMethod) {
+        errors.paymentMethod = 'Select payment method';
+      }
+      if (!formData.clientName) errors.clientName = 'Enter client name';
+      const phoneDigits = formData.clientPhone.replace(/[^\d]/g, '');
+      if (!formData.clientPhone || phoneDigits.length < 8) {
+        errors.clientPhone = 'Enter client phone number';
+      }
+      return errors;
     }
 
     function resetPropertyForm() {
@@ -1490,34 +2217,22 @@
     function editLead(id) {
       const lead = state.leads.find(item => item.id === id);
       if (!lead) return;
+      state.leadEditorOriginal = lead;
       showOverviewWorkspace('lead');
+      setLeadWorkspaceHeader('edit');
+      clearLeadErrors();
       document.getElementById('leadId').value = lead.id;
-      document.getElementById('leadType').value = lead.leadType || '';
-      document.getElementById('leadPurpose').value = lead.purpose || '';
-      document.getElementById('leadCategory').value = lead.category || '';
+      const clientPurpose = getLeadClientPurposeFromRecord(lead);
+      setLeadPurpose(clientPurpose, { preserveValues: false });
       document.getElementById('leadLocation').value = lead.location || '';
-      document.getElementById('leadBudget').value = lead.budget || '';
-      document.getElementById('leadSource').value = lead.source || '';
-      document.getElementById('leadPriority').value = lead.priority || 'normal';
-      document.getElementById('leadStatus').value = lead.status || 'new';
-      document.getElementById('leadMeetingDate').value = lead.meetingDate || '';
-      document.getElementById('leadMeetingTime').value = lead.meetingTime || '';
-      document.getElementById('leadNotes').value = lead.notes || '';
-      document.getElementById('leadPublicNotes').value = lead.publicGeneralNotes || '';
-      document.getElementById('leadFollowupNotes').value = lead.followUpNotes || '';
-      document.getElementById('leadNextAction').value = lead.nextAction || '';
-      document.getElementById('leadOwnerName').value = lead.ownerName || '';
-      document.getElementById('leadOwnerPhone').value = lead.ownerPhone || '';
+      document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
+      populateLeadPropertyTypeOptions(lead.propertyType || '');
+      document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
+      populateLeadPaymentMethodOptions(lead.paymentMethod || '');
       document.getElementById('leadClientName').value = lead.clientName || '';
       document.getElementById('leadClientPhone').value = lead.clientPhone || '';
-      document.getElementById('leadRentBooking').checked = lead.rentChecklist.booking;
-      document.getElementById('leadRentAgreement').checked = lead.rentChecklist.agreementSigned;
-      document.getElementById('leadRentHandover').checked = lead.rentChecklist.handoverDone;
-      document.getElementById('leadSaleA').checked = lead.saleChecklist.contractA;
-      document.getElementById('leadSaleB').checked = lead.saleChecklist.contractB;
-      document.getElementById('leadSaleF').checked = lead.saleChecklist.contractF;
-      document.getElementById('leadFormTitle').textContent = 'Edit Broker Requirement';
-      document.getElementById('leadSubmitBtn').textContent = 'Update Requirement';
+      document.getElementById('leadPrivateNotes').value = lead.privateNotes || lead.notes || '';
+      document.getElementById('leadSubmitBtn').textContent = 'Update Lead';
     }
 
     function editProperty(id) {
@@ -1578,43 +2293,47 @@
 
     document.getElementById('leadForm').addEventListener('submit', async event => {
       event.preventDefault();
-      const id = Number(document.getElementById('leadId').value || 0);
+      clearLeadErrors();
+      const formData = collectLeadFormData();
+      const validationErrors = validateLeadFormData(formData);
+      if (Object.keys(validationErrors).length) {
+        Object.entries(validationErrors).forEach(([field, message]) => setLeadFieldError(field, message));
+        setStatus('Please complete the required lead details.', 'error');
+        return;
+      }
+
       const payload = {
-        action: id ? 'update-lead' : 'create-lead',
-        id,
-        leadType: document.getElementById('leadType').value,
-        purpose: document.getElementById('leadPurpose').value,
-        category: document.getElementById('leadCategory').value,
-        location: document.getElementById('leadLocation').value,
-        budget: document.getElementById('leadBudget').value,
-        notes: document.getElementById('leadNotes').value,
-        publicGeneralNotes: document.getElementById('leadPublicNotes').value,
-        source: document.getElementById('leadSource').value,
-        priority: document.getElementById('leadPriority').value,
-        status: document.getElementById('leadStatus').value,
-        meetingDate: document.getElementById('leadMeetingDate').value,
-        meetingTime: document.getElementById('leadMeetingTime').value,
-        followUpNotes: document.getElementById('leadFollowupNotes').value,
-        nextAction: document.getElementById('leadNextAction').value,
-        ownerName: document.getElementById('leadOwnerName').value,
-        ownerPhone: document.getElementById('leadOwnerPhone').value,
-        clientName: document.getElementById('leadClientName').value,
-        clientPhone: document.getElementById('leadClientPhone').value,
-        rentChecklist: {
-          booking: document.getElementById('leadRentBooking').checked,
-          agreementSigned: document.getElementById('leadRentAgreement').checked,
-          handoverDone: document.getElementById('leadRentHandover').checked
-        },
-        saleChecklist: {
-          contractA: document.getElementById('leadSaleA').checked,
-          contractB: document.getElementById('leadSaleB').checked,
-          contractF: document.getElementById('leadSaleF').checked
-        }
+        action: formData.id ? 'update-lead' : 'create-lead',
+        id: formData.id,
+        clientPurpose: formData.clientPurpose,
+        purpose: formData.clientPurpose,
+        propertyType: formData.propertyType,
+        category: formData.propertyType,
+        location: formData.location,
+        budget: formData.budget,
+        preferredBuildingProject: formData.preferredBuildingProject,
+        paymentMethod: formData.paymentMethod,
+        privateNotes: formData.privateNotes,
+        publicGeneralNotes: buildLeadPublicSummary(formData),
+        source: formData.source,
+        priority: formData.priority,
+        status: formData.status,
+        meetingDate: formData.meetingDate,
+        meetingTime: formData.meetingTime,
+        nextAction: formData.nextAction,
+        ownerName: formData.ownerName,
+        ownerPhone: formData.ownerPhone,
+        clientName: formData.clientName,
+        clientPhone: formData.clientPhone,
+        legacyFollowUpNotes: formData.legacyFollowUpNotes,
+        rentChecklist: formData.rentChecklist,
+        saleChecklist: formData.saleChecklist
       };
 
       try {
-        await dashboardAction(payload, id ? 'Broker requirement updated successfully.' : 'Broker requirement created successfully.');
+        await dashboardAction(payload, formData.id ? 'Broker requirement updated successfully.' : 'Broker requirement created successfully.');
         resetLeadForm();
+        hideOverviewWorkspace();
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -1711,6 +2430,7 @@
 
     (async function init() {
       try {
+        ensureLeadFormEnhancements();
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();

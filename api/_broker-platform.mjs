@@ -35,6 +35,82 @@ export function normalizeBool(value) {
   return Boolean(value);
 }
 
+const LEAD_META_PREFIX = '__BC_LEAD_META__:';
+
+export function parseLeadMeta(rawValue) {
+  const rawText = normalizeText(rawValue);
+  if (!rawText) {
+    return {
+      preferredBuildingProject: '',
+      paymentMethod: '',
+      legacyFollowUpNotes: ''
+    };
+  }
+
+  if (!rawText.startsWith(LEAD_META_PREFIX)) {
+    return {
+      preferredBuildingProject: '',
+      paymentMethod: '',
+      legacyFollowUpNotes: rawText
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(rawText.slice(LEAD_META_PREFIX.length));
+    return {
+      preferredBuildingProject: normalizeText(parsed?.preferredBuildingProject),
+      paymentMethod: normalizeText(parsed?.paymentMethod),
+      legacyFollowUpNotes: normalizeText(parsed?.legacyFollowUpNotes)
+    };
+  } catch (error) {
+    return {
+      preferredBuildingProject: '',
+      paymentMethod: '',
+      legacyFollowUpNotes: ''
+    };
+  }
+}
+
+export function serializeLeadMeta(meta) {
+  const payload = {
+    preferredBuildingProject: normalizeText(meta?.preferredBuildingProject),
+    paymentMethod: normalizeText(meta?.paymentMethod),
+    legacyFollowUpNotes: normalizeText(meta?.legacyFollowUpNotes)
+  };
+
+  if (!payload.preferredBuildingProject && !payload.paymentMethod && !payload.legacyFollowUpNotes) {
+    return '';
+  }
+
+  return `${LEAD_META_PREFIX}${JSON.stringify(payload)}`;
+}
+
+function normalizeLeadClientPurpose(value) {
+  const normalized = normalizeText(value).toLowerCase();
+  return normalized === 'rent' ? 'rent' : 'buy';
+}
+
+export function buildLeadPublicSummary(item) {
+  const meta = parseLeadMeta(item?.follow_up_notes || item?.followUpNotes);
+  const clientPurpose = normalizeLeadClientPurpose(item?.clientPurpose || item?.purpose);
+  const propertyType = normalizeText(item?.propertyType || item?.property_type || item?.category);
+  const location = normalizeText(item?.location);
+  const buildingProject = normalizeText(item?.preferredBuildingProject || meta.preferredBuildingProject);
+  const budget = normalizeText(item?.budget || item?.price_label || item?.priceLabel);
+  const paymentMethod = normalizeText(item?.paymentMethod || meta.paymentMethod);
+
+  const summaryParts = [
+    clientPurpose === 'rent' ? 'Rent requirement' : 'Buy requirement',
+    propertyType,
+    location,
+    buildingProject ? `Building/Project: ${buildingProject}` : '',
+    budget ? `Budget: AED ${budget}` : '',
+    clientPurpose === 'buy' && paymentMethod ? `Payment: ${paymentMethod}` : ''
+  ].filter(Boolean);
+
+  return summaryParts.join(' · ');
+}
+
 export function createPasswordHash(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const derived = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
@@ -279,9 +355,11 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const location = normalizeText(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const generalNotes = isLead
-    ? normalizeText(item.public_general_notes)
+    ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes || item.description);
-  const propertyType = normalizeText(item.property_type || item.lead_type || '');
+  const propertyType = isLead
+    ? normalizeText(item.property_type || item.category || item.lead_type || '')
+    : normalizeText(item.property_type || '');
   const status = normalizeText(item.status || 'active').toLowerCase();
   const isDistress = normalizeBool(item.is_distress);
 
@@ -311,13 +389,19 @@ export function buildPublicListingPayload(sourceType, broker, item) {
 
 export function sanitizeLead(row) {
   if (!row) return null;
+  const meta = parseLeadMeta(row.follow_up_notes);
+  const clientPurpose = normalizeLeadClientPurpose(row.purpose);
   return {
     id: row.id,
     purpose: row.purpose,
+    clientPurpose,
     category: row.category,
+    propertyType: row.category || '',
     location: row.location,
+    preferredLocation: row.location || '',
     budget: row.budget,
     notes: row.notes || '',
+    privateNotes: row.notes || '',
     publicGeneralNotes: row.public_general_notes || '',
     leadType: row.lead_type,
     status: row.status,
@@ -325,8 +409,11 @@ export function sanitizeLead(row) {
     source: row.source,
     meetingDate: row.meeting_date,
     meetingTime: row.meeting_time,
-    followUpNotes: row.follow_up_notes,
+    followUpNotes: meta.legacyFollowUpNotes || '',
+    legacyFollowUpNotes: meta.legacyFollowUpNotes || '',
     nextAction: row.next_action,
+    preferredBuildingProject: meta.preferredBuildingProject || '',
+    paymentMethod: meta.paymentMethod || '',
     rentChecklist: {
       booking: Boolean(row.rent_booking),
       agreementSigned: Boolean(row.rent_agreement_signed),

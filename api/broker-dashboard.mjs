@@ -1,7 +1,9 @@
 import {
+  buildLeadPublicSummary,
   buildPublicListingPayload,
   json,
   normalizeBool,
+  normalizePhoneNumber,
   normalizeText,
   requireBrokerSession,
   sanitizeAiMatch,
@@ -10,6 +12,7 @@ import {
   sanitizeNotification,
   sanitizeProperty,
   sanitizePublicListing,
+  serializeLeadMeta,
   supabaseDelete,
   supabaseInsert,
   supabasePatch,
@@ -17,23 +20,42 @@ import {
 } from './_broker-platform.mjs';
 
 function getLeadPayload(body, brokerId) {
-  const purpose = normalizeText(body?.purpose).toLowerCase();
-  return {
-    broker_uuid: brokerId,
-    lead_type: normalizeText(body?.leadType).toLowerCase(),
-    purpose,
-    category: normalizeText(body?.category),
+  const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
+  const purpose = clientPurpose === 'rent' ? 'rent' : 'sale';
+  const propertyType = normalizeText(body?.propertyType || body?.category);
+  const preferredBuildingProject = normalizeText(body?.preferredBuildingProject);
+  const paymentMethod = clientPurpose === 'buy' ? normalizeText(body?.paymentMethod) : '';
+  const legacyFollowUpNotes = normalizeText(body?.legacyFollowUpNotes);
+  const serializedMeta = serializeLeadMeta({
+    preferredBuildingProject,
+    paymentMethod,
+    legacyFollowUpNotes
+  });
+  const publicGeneralNotes = normalizeText(body?.publicGeneralNotes || buildLeadPublicSummary({
+    clientPurpose,
+    category: propertyType,
     location: normalizeText(body?.location),
     budget: normalizeText(body?.budget),
-    notes: normalizeText(body?.notes),
+    preferredBuildingProject,
+    paymentMethod
+  }));
+
+  return {
+    broker_uuid: brokerId,
+    lead_type: clientPurpose === 'rent' ? 'tenant' : 'buyer',
+    purpose,
+    category: propertyType,
+    location: normalizeText(body?.location),
+    budget: normalizeText(body?.budget),
+    notes: normalizeText(body?.privateNotes ?? body?.notes),
     // Public note stays separate from the broker's private CRM note.
-    public_general_notes: normalizeText(body?.publicGeneralNotes),
-    source: normalizeText(body?.source),
+    public_general_notes: publicGeneralNotes,
+    source: normalizeText(body?.source || 'Manual'),
     priority: normalizeText(body?.priority || 'normal').toLowerCase(),
     status: normalizeText(body?.status || 'new').toLowerCase(),
     meeting_date: body?.meetingDate || null,
     meeting_time: body?.meetingTime || null,
-    follow_up_notes: normalizeText(body?.followUpNotes),
+    follow_up_notes: serializedMeta,
     next_action: normalizeText(body?.nextAction),
     rent_booking: normalizeBool(body?.rentChecklist?.booking),
     rent_agreement_signed: normalizeBool(body?.rentChecklist?.agreementSigned),
@@ -42,9 +64,9 @@ function getLeadPayload(body, brokerId) {
     sale_contract_b: normalizeBool(body?.saleChecklist?.contractB),
     sale_contract_f: normalizeBool(body?.saleChecklist?.contractF),
     owner_name: normalizeText(body?.ownerName),
-    owner_phone: normalizeText(body?.ownerPhone),
+    owner_phone: normalizePhoneNumber(body?.ownerPhone),
     client_name: normalizeText(body?.clientName),
-    client_phone: normalizeText(body?.clientPhone),
+    client_phone: normalizePhoneNumber(body?.clientPhone),
     is_listed_public: normalizeBool(body?.isListedPublic),
     public_listing_status: normalizeBool(body?.isListedPublic) ? 'listed' : 'private',
     updated_at: new Date().toISOString()
@@ -66,9 +88,9 @@ function getPropertyPayload(body, brokerId) {
     public_notes: normalizeText(body?.publicNotes || body?.description),
     internal_notes: normalizeText(body?.internalNotes),
     owner_name: normalizeText(body?.ownerName),
-    owner_phone: normalizeText(body?.ownerPhone),
+    owner_phone: normalizePhoneNumber(body?.ownerPhone),
     client_name: normalizeText(body?.clientName),
-    client_phone: normalizeText(body?.clientPhone),
+    client_phone: normalizePhoneNumber(body?.clientPhone),
     status: normalizeText(body?.status || 'available').toLowerCase(),
     is_urgent: false,
     is_distress: normalizeBool(body?.isDistress),
