@@ -8,6 +8,7 @@ import {
   normalizePhoneNumber,
   normalizeText,
   requiredEnv,
+  supabasePatch,
   supabaseInsert,
   supabaseSelect,
   verifyPassword,
@@ -38,6 +39,30 @@ function buildSessionToken(broker) {
     brokerIdNumber: broker.broker_id_number,
     email: broker.email
   }, getBrokerSessionSecret());
+}
+
+async function verifyAndUpgradeBrokerPassword({ supabaseUrl, serviceRoleKey, broker, password }) {
+  if (verifyPassword(password, broker.password_hash)) {
+    return true;
+  }
+
+  if (String(broker.password_hash || '') === String(password || '')) {
+    const nextHash = createPasswordHash(password);
+    await supabasePatch({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'brokers',
+      filters: { id: broker.id },
+      payload: {
+        password_hash: nextHash,
+        updated_at: new Date().toISOString()
+      }
+    });
+    broker.password_hash = nextHash;
+    return true;
+  }
+
+  return false;
 }
 
 export async function GET(request) {
@@ -162,11 +187,14 @@ export async function POST(request) {
   }
 
   const identifier = normalizeText(body?.identifier);
+  const brokerIdNumber = normalizeText(body?.brokerIdNumber);
+  const mobileNumber = normalizePhoneNumber(body?.mobileNumber);
+  const email = normalizeEmail(body?.email);
   const normalizedIdentifierText = identifier.toLowerCase();
   const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
   const password = String(body?.password || '');
 
-  if (!identifier || !password) {
+  if (!(identifier || brokerIdNumber || mobileNumber || email) || !password) {
     return json({ message: 'Please enter broker ID or mobile number, and password.' }, 400);
   }
 
@@ -177,6 +205,7 @@ export async function POST(request) {
     order: { column: 'created_at', ascending: false }
   });
 
+  const normalizedBrokerIdText = brokerIdNumber.toLowerCase();
   const broker = (Array.isArray(candidates) ? candidates : []).find(item => {
     const candidateBrokerId = normalizeText(item?.broker_id_number);
     const candidateBrokerIdText = candidateBrokerId.toLowerCase();
@@ -184,6 +213,9 @@ export async function POST(request) {
     const candidateEmail = normalizeEmail(item?.email);
 
     return (
+      (normalizedBrokerIdText && candidateBrokerIdText === normalizedBrokerIdText) ||
+      (mobileNumber && candidateMobile === mobileNumber) ||
+      (email && candidateEmail === email) ||
       candidateBrokerIdText === normalizedIdentifierText ||
       candidateMobile === normalizedIdentifierPhone ||
       candidateEmail === normalizeEmail(identifier)
@@ -198,7 +230,14 @@ export async function POST(request) {
     return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
   }
 
-  if (!verifyPassword(password, broker.password_hash)) {
+  const passwordOk = await verifyAndUpgradeBrokerPassword({
+    supabaseUrl,
+    serviceRoleKey,
+    broker,
+    password
+  });
+
+  if (!passwordOk) {
     return json({ message: 'The password is incorrect.' }, 401);
   }
 
