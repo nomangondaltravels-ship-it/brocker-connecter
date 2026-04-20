@@ -156,6 +156,68 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
 
+    .call-popover {
+      position: fixed;
+      z-index: 1300;
+      width: min(280px, calc(100vw - 24px));
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+      backdrop-filter: blur(10px);
+    }
+
+    .call-popover-head {
+      font-size: 0.69rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .call-popover-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .call-popover-value {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: #f8fafc;
+      color: #111827;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      user-select: all;
+      cursor: text;
+    }
+
+    .call-popover-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .call-popover .btn {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+    }
+
+    .call-popover-copy.is-copied {
+      background: rgba(22, 163, 74, 0.08);
+      border-color: rgba(34, 197, 94, 0.24);
+      color: #166534;
+    }
+
     .app-shell {
       width: min(1400px, 95%);
       margin: 18px auto 24px;
@@ -2225,6 +2287,18 @@
     </div>
   </header>
 
+  <div class="call-popover crm-hidden" id="dashboardCallPopover" role="dialog" aria-label="Call contact popup" aria-live="polite">
+    <div class="call-popover-head" id="dashboardCallPopoverLabel">Phone number</div>
+    <div class="call-popover-row">
+      <div class="call-popover-value" id="dashboardCallPopoverValue">+971...</div>
+      <button class="btn btn-secondary btn-tiny call-popover-copy" type="button" id="dashboardCallPopoverCopy">Copy</button>
+    </div>
+    <div class="call-popover-actions">
+      <button class="btn btn-secondary btn-tiny" type="button" id="dashboardCallPopoverClose">Close</button>
+      <button class="btn btn-primary btn-tiny" type="button" id="dashboardCallPopoverAction">Call Now</button>
+    </div>
+  </div>
+
   <div class="app-shell">
     <div class="sidebar-dock">
       <aside class="panel sidebar">
@@ -2901,7 +2975,15 @@
         }
       },
       leadEditorOriginal: null,
-      propertyEditorOriginal: null
+      propertyEditorOriginal: null,
+      callPopover: {
+        anchor: null,
+        phoneRaw: '',
+        phoneDisplay: '',
+        label: 'Phone number',
+        confirmAction: null,
+        copyTimer: null
+      }
     };
 
     const leadAutocompleteControllers = {};
@@ -2914,6 +2996,175 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function normalizeDialNumber(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      if (raw.startsWith('+')) return `+${raw.slice(1).replace(/[^\d]/g, '')}`;
+      const digits = raw.replace(/[^\d]/g, '');
+      if (digits.startsWith('00')) return `+${digits.slice(2)}`;
+      return digits;
+    }
+
+    function formatPhoneDisplay(value) {
+      const raw = String(value || '').trim();
+      if (!raw) return '';
+      const normalized = normalizeDialNumber(raw);
+      return normalized || raw;
+    }
+
+    async function copyTextToClipboard(value) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+      const helper = document.createElement('textarea');
+      helper.value = value;
+      helper.setAttribute('readonly', '');
+      helper.style.position = 'absolute';
+      helper.style.left = '-9999px';
+      document.body.appendChild(helper);
+      helper.select();
+      document.execCommand('copy');
+      document.body.removeChild(helper);
+    }
+
+    function positionDashboardCallPopover(anchor, popover) {
+      if (!anchor || !popover) return;
+      const rect = anchor.getBoundingClientRect();
+      const popoverWidth = popover.offsetWidth;
+      const left = Math.max(12, Math.min(window.innerWidth - popoverWidth - 12, rect.left + (rect.width / 2) - (popoverWidth / 2)));
+      let top = rect.bottom + 10;
+      const popoverHeight = popover.offsetHeight;
+      if (top + popoverHeight > window.innerHeight - 12) {
+        top = Math.max(12, rect.top - popoverHeight - 10);
+      }
+      popover.style.left = `${left}px`;
+      popover.style.top = `${top}px`;
+    }
+
+    function closeDashboardCallPopover() {
+      const popover = document.getElementById('dashboardCallPopover');
+      const copyButton = document.getElementById('dashboardCallPopoverCopy');
+      if (!popover) return;
+      popover.classList.add('crm-hidden');
+      popover.style.left = '';
+      popover.style.top = '';
+      if (copyButton) {
+        copyButton.textContent = 'Copy';
+        copyButton.classList.remove('is-copied');
+      }
+      if (state.callPopover.copyTimer) {
+        clearTimeout(state.callPopover.copyTimer);
+      }
+      state.callPopover.anchor = null;
+      state.callPopover.phoneRaw = '';
+      state.callPopover.phoneDisplay = '';
+      state.callPopover.confirmAction = null;
+      state.callPopover.copyTimer = null;
+    }
+
+    function openDashboardCallPopover(anchor, rawPhone, options = {}) {
+      const phoneDisplay = formatPhoneDisplay(rawPhone);
+      const phoneDial = normalizeDialNumber(rawPhone);
+      if (!phoneDisplay || !phoneDial) {
+        setStatus(options.emptyMessage || 'No number available.', 'error');
+        return;
+      }
+      const popover = document.getElementById('dashboardCallPopover');
+      const valueEl = document.getElementById('dashboardCallPopoverValue');
+      const labelEl = document.getElementById('dashboardCallPopoverLabel');
+      const actionBtn = document.getElementById('dashboardCallPopoverAction');
+      const copyButton = document.getElementById('dashboardCallPopoverCopy');
+      if (!popover || !valueEl || !labelEl || !actionBtn || !copyButton) return;
+
+      closeDashboardCallPopover();
+
+      state.callPopover.anchor = anchor || null;
+      state.callPopover.phoneRaw = phoneDial;
+      state.callPopover.phoneDisplay = phoneDisplay;
+      state.callPopover.label = options.label || 'Phone number';
+      state.callPopover.confirmAction = typeof options.onConfirm === 'function' ? options.onConfirm : null;
+
+      labelEl.textContent = state.callPopover.label;
+      valueEl.textContent = state.callPopover.phoneDisplay;
+      copyButton.textContent = 'Copy';
+      copyButton.classList.remove('is-copied');
+      actionBtn.disabled = false;
+      popover.classList.remove('crm-hidden');
+      positionDashboardCallPopover(anchor, popover);
+    }
+
+    async function copyDashboardCallPopoverValue() {
+      if (!state.callPopover.phoneDisplay) return;
+      const copyButton = document.getElementById('dashboardCallPopoverCopy');
+      if (!copyButton) return;
+      try {
+        await copyTextToClipboard(state.callPopover.phoneDisplay);
+        copyButton.textContent = 'Copied';
+        copyButton.classList.add('is-copied');
+        if (state.callPopover.copyTimer) clearTimeout(state.callPopover.copyTimer);
+        state.callPopover.copyTimer = window.setTimeout(() => {
+          copyButton.textContent = 'Copy';
+          copyButton.classList.remove('is-copied');
+          state.callPopover.copyTimer = null;
+        }, 1400);
+      } catch (error) {
+        console.error('Could not copy contact number', error);
+      }
+    }
+
+    function initDashboardCallPopover() {
+      const popover = document.getElementById('dashboardCallPopover');
+      const copyButton = document.getElementById('dashboardCallPopoverCopy');
+      const closeButton = document.getElementById('dashboardCallPopoverClose');
+      const actionButton = document.getElementById('dashboardCallPopoverAction');
+      if (!popover || !copyButton || !closeButton || !actionButton || popover.dataset.ready === 'true') return;
+
+      copyButton.addEventListener('click', copyDashboardCallPopoverValue);
+      closeButton.addEventListener('click', closeDashboardCallPopover);
+      actionButton.addEventListener('click', async () => {
+        if (!state.callPopover.phoneRaw) return;
+        const confirmAction = state.callPopover.confirmAction;
+        const dialNumber = state.callPopover.phoneRaw;
+        closeDashboardCallPopover();
+        if (confirmAction) {
+          try {
+            await confirmAction();
+          } catch (error) {
+            console.error('Call tracking failed', error);
+          }
+        }
+        window.location.href = `tel:${dialNumber}`;
+      });
+
+      document.addEventListener('click', event => {
+        if (popover.classList.contains('crm-hidden')) return;
+        if (event.target.closest('#dashboardCallPopover')) return;
+        if (state.callPopover.anchor && state.callPopover.anchor.contains(event.target)) return;
+        closeDashboardCallPopover();
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          closeDashboardCallPopover();
+        }
+      });
+
+      window.addEventListener('resize', () => {
+        if (!popover.classList.contains('crm-hidden') && state.callPopover.anchor) {
+          positionDashboardCallPopover(state.callPopover.anchor, popover);
+        }
+      });
+
+      window.addEventListener('scroll', () => {
+        if (!popover.classList.contains('crm-hidden') && state.callPopover.anchor) {
+          positionDashboardCallPopover(state.callPopover.anchor, popover);
+        }
+      }, true);
+
+      popover.dataset.ready = 'true';
     }
 
     function getLeadClientPurpose(value) {
@@ -5142,7 +5393,7 @@
 
             <div class="record-actions">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')">Call</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
               <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
               <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
@@ -5241,7 +5492,7 @@
 
             <div class="record-actions">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')">Call Owner</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
               <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
               <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
@@ -5722,7 +5973,7 @@
       }
     }
 
-    async function contactLead(id, method) {
+    async function contactLead(id, method, anchor) {
       const lead = state.leads.find(item => item.id === id);
       if (!lead?.clientPhone) {
         setStatus('Client phone number is not available for this lead.', 'error');
@@ -5730,7 +5981,14 @@
       }
       const phoneDigits = String(lead.clientPhone).replace(/[^\d]/g, '');
       if (method === 'call') {
-        window.location.href = `tel:${phoneDigits}`;
+        openDashboardCallPopover(anchor, lead.clientPhone, {
+          label: 'Client phone',
+          emptyMessage: 'Client phone number is not available for this lead.',
+          onConfirm: () => dashboardAction({ action: 'track-lead-contact', id, method }).catch(error => {
+            console.error('Lead call tracking failed', error);
+          })
+        });
+        return;
       } else {
         const message = encodeURIComponent('Hello, I am following up regarding your property requirement.');
         window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
@@ -5742,7 +6000,7 @@
       }
     }
 
-    async function contactPropertyOwner(id, method) {
+    async function contactPropertyOwner(id, method, anchor) {
       const property = state.properties.find(item => item.id === id);
       if (!property?.ownerPhone) {
         setStatus('Owner phone number is not available for this listing.', 'error');
@@ -5750,7 +6008,14 @@
       }
       const phoneDigits = String(property.ownerPhone).replace(/[^\d]/g, '');
       if (method === 'call') {
-        window.location.href = `tel:${phoneDigits}`;
+        openDashboardCallPopover(anchor, property.ownerPhone, {
+          label: 'Owner phone',
+          emptyMessage: 'Owner phone number is not available for this listing.',
+          onConfirm: () => dashboardAction({ action: 'track-property-contact', id, method }).catch(error => {
+            console.error('Listing call tracking failed', error);
+          })
+        });
+        return;
       } else {
         const message = encodeURIComponent('Hello, I am following up regarding your property listing.');
         window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
@@ -5929,7 +6194,7 @@
 
             <div class="record-actions">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')">Call</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
               <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
               <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
@@ -6029,7 +6294,7 @@
 
             <div class="record-actions">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
-              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')">Call Owner</button>
+              <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
               <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
               <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
@@ -6174,7 +6439,7 @@
                   </div>
                   <div class="crm-row-actions">
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editLead(${lead.id})" title="Edit">✎ Edit</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')" title="Call">☎ Call</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)" title="Call">☎ Call</button>
                     <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')" title="WhatsApp">WA</button>
                     <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}" title="${lead.isArchived ? 'Restore' : 'Archive'}">${lead.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
@@ -6306,7 +6571,7 @@
                   </div>
                   <div class="crm-row-actions">
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">✎ Edit</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')" title="Call Owner">☎ Call</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">☎ Call</button>
                     <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
                     <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
@@ -6373,6 +6638,7 @@
 
     (async function init() {
       try {
+        initDashboardCallPopover();
         wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
