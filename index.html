@@ -116,11 +116,20 @@
       justify-content: flex-end;
     }
 
+    .broker-access-inline {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
     .top-cta {
       color: var(--gold-soft);
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.03em;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       text-align: right;
     }
 
@@ -683,7 +692,7 @@
 
     .top-actions-wrap {
       margin-left: 0;
-      gap: 10px;
+      gap: 8px;
     }
 
     .page-nav-btn {
@@ -691,6 +700,12 @@
       padding: 0 12px;
       border-radius: 999px;
       font-size: 0.88rem;
+    }
+
+    .top-actions .btn:not(.page-nav-btn):not(.menu-toggle) {
+      min-height: 38px;
+      padding-inline: 12px;
+      font-size: 0.82rem;
     }
 
     .page-nav-btn.is-active {
@@ -701,26 +716,26 @@
     }
 
     .hero-box.compact-public-hero {
-      padding: 20px 24px;
+      padding: 18px 24px;
       display: grid;
-      gap: 14px;
+      gap: 10px;
     }
 
     .hero-box.compact-public-hero h1 {
       font-size: clamp(1.9rem, 3vw, 2.8rem);
-      margin-bottom: 8px;
+      margin-bottom: 2px;
     }
 
     .hero-box.compact-public-hero p {
-      max-width: 860px;
-      font-size: 0.95rem;
-      line-height: 1.55;
+      max-width: 760px;
+      font-size: 0.92rem;
+      line-height: 1.5;
     }
 
     .hero-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .section-switch-btn {
@@ -759,17 +774,17 @@
     }
 
     .page-head.compact-head h2 {
-      font-size: 1.48rem;
-      margin-bottom: 4px;
+      font-size: 1.34rem;
+      margin-bottom: 3px;
     }
 
     .page-head.compact-head p {
-      max-width: 760px;
-      font-size: 0.92rem;
+      max-width: 640px;
+      font-size: 0.84rem;
     }
 
     .public-sheet {
-      margin-top: 14px;
+      margin-top: 10px;
       display: grid;
       gap: 10px;
     }
@@ -1258,6 +1273,10 @@
         justify-content: flex-start;
       }
 
+      .broker-access-inline {
+        justify-content: flex-start;
+      }
+
       .public-sheet-head {
         display: none;
       }
@@ -1283,7 +1302,7 @@
 
     @media (max-width: 768px) {
       .topbar-inner { align-items: flex-start; }
-      .top-actions-wrap { width: 100%; align-items: flex-end; }
+      .top-actions-wrap { width: 100%; align-items: flex-start; }
       .hero-box { padding: 22px 18px; }
       .page-head h2 { font-size: 1.7rem; }
       .search-hub { margin-inline: 18px; }
@@ -1595,7 +1614,7 @@
         <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
         <div class="brand-copy">
           <div class="brand-title">Broker <span>Connector</span></div>
-          <small>Broker Connector Page</small>
+          <small>Broker Marketplace</small>
         </div>
       </div>
       <div class="top-search-inline">
@@ -1614,40 +1633,40 @@
         <div class="top-actions">
           <button class="btn btn-secondary page-nav-btn is-active" type="button" aria-current="page">Broker Connector Page</button>
           <button class="btn btn-secondary page-nav-btn" id="dashboardBtn" type="button" onclick="handleBrokerDeskClick()">Broker Desk</button>
-          <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
-          <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
           <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
             <span>Menu</span>
             <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
           </button>
         </div>
-        <div class="top-cta" id="registerCta">Public broker marketplace with private CRM protection.</div>
+        <div class="broker-access-inline">
+          <div class="top-cta" id="registerCta">Broker Access</div>
+          <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
+          <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
+        </div>
       </div>
     </div>
   </header>
 
   <div class="layout">
     <aside class="sidebar" id="menuDrawer">
-      <div class="sidebar-title">Broker Connector Page</div>
-      <div class="sidebar-text">See shared broker requirements and listings only. Private owner, client, and CRM details stay inside Broker Desk.</div>
+      <div class="sidebar-title">Browse Marketplace</div>
+      <div class="sidebar-text">See shared broker requirements and public listings in one clean marketplace view.</div>
       <div class="menu">
         <button class="btn btn-secondary menu-btn active" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
         <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
-        <button class="btn btn-secondary menu-btn" data-target="contact" onclick="openSection('contact')">Contact</button>
       </div>
     </aside>
 
     <main class="content-panel">
       <section class="hero-box compact-public-hero">
-        <div class="hero-kicker">Broker Connector Page</div>
+        <div class="hero-kicker">Live Broker Marketplace</div>
         <h1>Broker Connector Page</h1>
-        <p>Shared broker marketplace for requirements and listings. Private owner, client, and workflow details always stay inside Broker Desk.</p>
+        <p>Browse shared broker requirements, public listings, and distress opportunities in one data-first marketplace.</p>
         <div class="hero-tabs">
           <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements <span class="tab-count" id="tabCountRequirements">0</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings <span class="tab-count" id="tabCountListings">0</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals <span class="tab-count" id="tabCountDistress">0</span></button>
-          <button class="btn btn-secondary section-switch-btn" type="button" data-target="contact" onclick="openSection('contact')">Contact</button>
         </div>
       </section>
 
@@ -1655,7 +1674,7 @@
       <section class="section" id="marketplace-section">
         <div class="page-head compact-head">
           <h2>Broker Connector Listings</h2>
-          <p>Latest shared listings from brokers in a compact list-first view.</p>
+          <p>Latest broker listings available for quick scanning and direct connection.</p>
         </div>
         <div class="public-sheet" id="marketplaceGrid"></div>
         <div class="pager hidden" id="marketplacePager"></div>
@@ -1664,7 +1683,7 @@
       <section class="section active" id="requirements-section">
         <div class="page-head compact-head">
           <h2>Broker Requirements</h2>
-          <p>Latest shared requirements from brokers looking for matching properties.</p>
+          <p>Latest shared requirements from brokers actively looking for matching properties.</p>
         </div>
         <div class="public-sheet" id="requirementsGrid"></div>
         <div class="pager hidden" id="requirementsPager"></div>
@@ -1673,29 +1692,10 @@
       <section class="section" id="distress-deals-section">
         <div class="page-head compact-head">
           <h2>Distress Deals</h2>
-          <p>High-attention shared listings with stronger pricing urgency.</p>
+          <p>High-priority listings with stronger pricing urgency and faster action potential.</p>
         </div>
         <div class="public-sheet" id="distressDealsGrid"></div>
         <div class="pager hidden" id="distressDealsPager"></div>
-      </section>
-
-      <section class="section" id="contact-section">
-        <div class="page-head compact-head">
-          <h2>Contact</h2>
-          <p>Support and platform contact details.</p>
-        </div>
-        <div class="grid-2" style="margin-top:16px;">
-          <div class="card">
-            <h3>Broker Connector Page</h3>
-            <p>Operated by Noman Properties</p>
-            <p>Sponsored by Xsite Real Estate</p>
-          </div>
-          <div class="card">
-            <h3>Direct Contact</h3>
-            <p>WhatsApp: +971 58 877 1139</p>
-            <p>Email: noman@xsite.ae</p>
-          </div>
-        </div>
       </section>
     </main>
   </div>
@@ -1898,15 +1898,22 @@
 
     function openSection(name) {
       const normalized = name === 'shared-leads' ? 'requirements' : name;
-      state.activeSection = normalized;
+      const targetSection = document.getElementById(`${normalized}-section`) ? normalized : 'requirements';
+      state.activeSection = targetSection;
       document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
       document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('active'));
       document.querySelectorAll('.section-switch-btn').forEach(button => button.classList.remove('is-active'));
-      document.getElementById(`${normalized}-section`)?.classList.add('active');
-      document.querySelector(`.menu-btn[data-target="${normalized}"]`)?.classList.add('active');
-      document.querySelector(`.section-switch-btn[data-target="${normalized}"]`)?.classList.add('is-active');
+      document.getElementById(`${targetSection}-section`)?.classList.add('active');
+      document.querySelector(`.menu-btn[data-target="${targetSection}"]`)?.classList.add('active');
+      document.querySelector(`.section-switch-btn[data-target="${targetSection}"]`)?.classList.add('is-active');
       closeMenuDrawer();
       revealSharedListingFromUrl();
+    }
+
+    function openBrokerEmail(email) {
+      const normalized = String(email || '').trim();
+      if (!normalized) return;
+      window.location.href = `mailto:${normalized}`;
     }
 
     function badgeClass(listing) {
@@ -2164,6 +2171,14 @@
               <path d="M6.9 4.5h2.6l1.3 4.2-1.7 1.7a14.5 14.5 0 0 0 4.5 4.5l1.7-1.7 4.2 1.3v2.6a1.6 1.6 0 0 1-1.8 1.6A15.8 15.8 0 0 1 5.3 6.3 1.6 1.6 0 0 1 6.9 4.5Z"></path>
             </svg>
           </button>
+          ${listing.brokerEmail ? `
+            <button class="action-icon-btn" type="button" title="Email Broker" aria-label="Email Broker" onclick="openBrokerEmail('${String(listing.brokerEmail).replace(/'/g, '%27')}')">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7.5h16v9H4z"></path>
+                <path d="m5 8 7 5 7-5"></path>
+              </svg>
+            </button>
+          ` : ''}
           <button class="action-icon-btn share" type="button" title="Share Listing" aria-label="Share Listing" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 16V5"></path>
