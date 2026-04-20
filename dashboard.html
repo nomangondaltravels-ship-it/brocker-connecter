@@ -730,9 +730,6 @@
           <button class="btn active" data-section="overview" onclick="openSection('overview')"><span class="menu-label">Overview</span></button>
           <button class="btn" data-section="leads" onclick="openSection('leads')"><span class="menu-label">My Broker Requirements</span><span class="menu-sub">Leads / Client Demand</span></button>
           <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">My Properties</span><span class="menu-sub">Inventory / Availability</span></button>
-          <button class="btn" data-section="shared" onclick="openSection('shared')"><span class="menu-label">Listed on Broker Connector</span></button>
-          <button class="btn" data-section="followups" onclick="openSection('followups')"><span class="menu-label">Meetings / Follow-ups</span></button>
-          <button class="btn" data-section="progress" onclick="openSection('progress')"><span class="menu-label">Deal Progress / Status</span></button>
           <button class="btn" data-section="profile" onclick="openSection('profile')"><span class="menu-label">Profile / Settings</span></button>
         </div>
       </aside>
@@ -901,56 +898,6 @@
           </div>
         </div>
         <div class="item-list" id="propertiesList" style="margin-top:16px;"></div>
-      </section>
-
-      <section class="section" id="shared-section">
-        <div class="section-head">
-          <div>
-            <h2>Listed on Broker Connector</h2>
-            <p>Every listed broker requirement or property appears on Broker Connector Page as a sanitized listing only.</p>
-          </div>
-        </div>
-        <div class="item-list" id="sharedListingsList"></div>
-      </section>
-
-      <section class="section" id="followups-section">
-        <div class="section-head">
-          <div>
-            <h2>Meetings / Follow-ups</h2>
-            <p>Track meetings, follow-up notes, and next actions separately from Broker Connector Page.</p>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <h3>Add Follow-up</h3>
-            <form class="form-grid" id="followupForm">
-              <div><label class="small">Entity Type</label><select id="followupEntityType"><option value="lead">Requirement</option><option value="property">Property</option></select></div>
-              <div><label class="small">Entity</label><select id="followupEntityId"></select></div>
-              <div><label class="small">Type</label><select id="followupType"><option value="follow-up">Follow-up</option><option value="meeting">Meeting</option><option value="call">Call</option><option value="negotiation">Negotiation</option></select></div>
-              <div><label class="small">Meeting Date</label><input type="date" id="followupDate"></div>
-              <div><label class="small">Meeting Time</label><input type="time" id="followupTime"></div>
-              <div class="full"><label class="small">Note</label><textarea id="followupNote"></textarea></div>
-              <div class="full"><label class="small">Next Action</label><input id="followupNextAction"></div>
-              <div class="full actions">
-                <button class="btn btn-primary" type="submit">Save Follow-up</button>
-              </div>
-            </form>
-          </div>
-          <div class="card">
-            <h3>Recent Follow-ups</h3>
-            <div class="item-list" id="followupsList"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="progress-section">
-        <div class="section-head">
-          <div>
-            <h2>Deal Progress / Status Tracker</h2>
-            <p>Track private requirement and property movement without exposing confidential CRM information.</p>
-          </div>
-        </div>
-        <div class="kanban" id="progressBoard"></div>
       </section>
 
       <section class="section" id="profile-section">
@@ -1344,6 +1291,7 @@
 
     function renderSharedListings() {
       const target = document.getElementById('sharedListingsList');
+      if (!target) return;
       const sharedListings = getFilteredDashboardItems(state.sharedListings, 'shared');
       if (!sharedListings.length) {
         target.innerHTML = `<div class="empty">No broker connector listings match your current search yet.</div>`;
@@ -1374,6 +1322,7 @@
 
     function renderFollowups() {
       const target = document.getElementById('followupsList');
+      if (!target) return;
       const followUps = getFilteredDashboardItems(state.followUps, 'followup');
       if (!followUps.length) {
         target.innerHTML = `<div class="empty">No meetings or follow-ups match your current search.</div>`;
@@ -1390,6 +1339,8 @@
     }
 
     function renderProgress() {
+      const progressBoard = document.getElementById('progressBoard');
+      if (!progressBoard) return;
       const columns = {
         new: [],
         active: [],
@@ -1406,7 +1357,7 @@
         else columns.closed.push(html);
       });
 
-      document.getElementById('progressBoard').innerHTML = `
+      progressBoard.innerHTML = `
         <div class="kanban-card"><h4>New</h4><div class="mini-list">${columns.new.join('') || '<div class="empty">No new requirements</div>'}</div></div>
         <div class="kanban-card"><h4>Active</h4><div class="mini-list">${columns.active.join('') || '<div class="empty">No active negotiations</div>'}</div></div>
         <div class="kanban-card"><h4>Meetings</h4><div class="mini-list">${columns.meetings.join('') || '<div class="empty">No scheduled meetings</div>'}</div></div>
@@ -1429,7 +1380,9 @@
 
     function populateFollowupEntities() {
       const select = document.getElementById('followupEntityId');
-      const type = document.getElementById('followupEntityType').value;
+      const typeField = document.getElementById('followupEntityType');
+      if (!select || !typeField) return;
+      const type = typeField.value;
       const source = type === 'lead' ? state.leads : state.properties;
       select.innerHTML = source.map(item => {
         const label = type === 'lead'
@@ -1622,27 +1575,33 @@
       }
     });
 
-    document.getElementById('followupForm').addEventListener('submit', async event => {
-      event.preventDefault();
-      try {
-        await dashboardAction({
-          action: 'save-followup',
-          entityType: document.getElementById('followupEntityType').value,
-          entityId: document.getElementById('followupEntityId').value,
-          followUpType: document.getElementById('followupType').value,
-          meetingDate: document.getElementById('followupDate').value,
-          meetingTime: document.getElementById('followupTime').value,
-          note: document.getElementById('followupNote').value,
-          nextAction: document.getElementById('followupNextAction').value
-        }, 'Follow-up saved.');
-        document.getElementById('followupForm').reset();
-        populateFollowupEntities();
-      } catch (error) {
-        setStatus(error.message, 'error');
-      }
-    });
+    const followupForm = document.getElementById('followupForm');
+    if (followupForm) {
+      followupForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        try {
+          await dashboardAction({
+            action: 'save-followup',
+            entityType: document.getElementById('followupEntityType').value,
+            entityId: document.getElementById('followupEntityId').value,
+            followUpType: document.getElementById('followupType').value,
+            meetingDate: document.getElementById('followupDate').value,
+            meetingTime: document.getElementById('followupTime').value,
+            note: document.getElementById('followupNote').value,
+            nextAction: document.getElementById('followupNextAction').value
+          }, 'Follow-up saved.');
+          followupForm.reset();
+          populateFollowupEntities();
+        } catch (error) {
+          setStatus(error.message, 'error');
+        }
+      });
+    }
 
-    document.getElementById('followupEntityType').addEventListener('change', populateFollowupEntities);
+    const followupEntityType = document.getElementById('followupEntityType');
+    if (followupEntityType) {
+      followupEntityType.addEventListener('change', populateFollowupEntities);
+    }
     document.getElementById('dashboardSearchInput').addEventListener('input', event => {
       renderDashboardSuggestions(event.target.value);
     });
