@@ -162,6 +162,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      marketPrice: '',
+      distressAskingPrice: '',
+      distressDiscountPercent: '',
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
     };
@@ -176,6 +179,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      marketPrice: '',
+      distressAskingPrice: '',
+      distressDiscountPercent: '',
       legacyDescription: rawText,
       ...normalizePropertyWorkflow({})
     };
@@ -191,6 +197,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: normalizeText(parsed?.chiller),
       mortgageStatus: normalizeText(parsed?.mortgageStatus),
       leasehold: Boolean(parsed?.leasehold),
+      marketPrice: normalizeText(parsed?.marketPrice),
+      distressAskingPrice: normalizeText(parsed?.distressAskingPrice),
+      distressDiscountPercent: normalizeText(parsed?.distressDiscountPercent),
       legacyDescription: normalizeText(parsed?.legacyDescription),
       ...normalizePropertyWorkflow(parsed?.workflow || parsed)
     };
@@ -203,6 +212,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      marketPrice: '',
+      distressAskingPrice: '',
+      distressDiscountPercent: '',
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
     };
@@ -219,6 +231,9 @@ export function serializePropertyMeta(meta) {
     chiller: normalizeText(meta?.chiller),
     mortgageStatus: normalizeText(meta?.mortgageStatus),
     leasehold: Boolean(meta?.leasehold),
+    marketPrice: normalizeText(meta?.marketPrice),
+    distressAskingPrice: normalizeText(meta?.distressAskingPrice),
+    distressDiscountPercent: normalizeText(meta?.distressDiscountPercent),
     legacyDescription: normalizeText(meta?.legacyDescription),
     workflow
   };
@@ -231,6 +246,9 @@ export function serializePropertyMeta(meta) {
     !payload.chiller &&
     !payload.mortgageStatus &&
     !payload.leasehold &&
+    !payload.marketPrice &&
+    !payload.distressAskingPrice &&
+    !payload.distressDiscountPercent &&
     !payload.legacyDescription
   ) {
     const hasWorkflowValues =
@@ -522,6 +540,9 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const category = normalizeText(item.category);
   const location = normalizeText(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
+  const projectOrBuilding = isLead
+    ? normalizeText(item.preferredBuildingProject)
+    : normalizeText(item.buildingName || item.size);
   const generalNotes = isLead
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes);
@@ -544,7 +565,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     category,
     location,
     price_label: priceLabel,
-    size_label: normalizeText(item.size),
+    size_label: projectOrBuilding,
     bedrooms: item.bedrooms ?? null,
     bathrooms: item.bathrooms ?? null,
     public_notes: generalNotes,
@@ -641,6 +662,9 @@ export function sanitizeProperty(row) {
     chiller: meta.chiller || '',
     mortgageStatus: meta.mortgageStatus || '',
     leasehold: Boolean(meta.leasehold),
+    marketPrice: meta.marketPrice || '',
+    distressAskingPrice: meta.distressAskingPrice || '',
+    distressDiscountPercent: meta.distressDiscountPercent || '',
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
     nextFollowUpDate: meta.nextFollowUpDate || '',

@@ -74,6 +74,14 @@ function parseMoney(value) {
   return digits ? Number(digits) : 0;
 }
 
+function calculateDistressDiscountPercent(marketPrice, askingPrice) {
+  const market = parseMoney(marketPrice);
+  const asking = parseMoney(askingPrice);
+  if (!market || !asking || asking >= market) return '';
+  const discount = Math.round(((market - asking) / market) * 100);
+  return discount > 0 ? String(discount) : '';
+}
+
 function normalizeMatchKey(value) {
   return normalizeText(value).toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -134,6 +142,18 @@ function getLeadMeta(body, existingLead = null, overrides = {}) {
 function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   const existingMeta = parsePropertyMeta(existingProperty?.description);
   const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
+  const distressAskingPrice = distressDeal
+    ? (body?.distressAskingPrice !== undefined
+        ? normalizeText(body?.distressAskingPrice)
+        : existingMeta.distressAskingPrice)
+    : '';
+  const marketPrice = distressDeal
+    ? (body?.marketPrice !== undefined ? normalizeText(body?.marketPrice) : existingMeta.marketPrice)
+    : '';
+  const distressDiscountPercent = distressDeal
+    ? calculateDistressDiscountPercent(marketPrice, distressAskingPrice || body?.rentPrice || body?.ownerAskingPrice)
+    : '';
   return {
     buildingName: body?.buildingName !== undefined ? normalizeText(body?.buildingName) : existingMeta.buildingName,
     floorLevel: body?.floorLevel !== undefined ? normalizeText(body?.floorLevel) : existingMeta.floorLevel,
@@ -152,6 +172,9 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
     leasehold: purpose === 'sale'
       ? (body?.leasehold !== undefined ? normalizeBool(body?.leasehold) : Boolean(existingMeta.leasehold))
       : false,
+    marketPrice,
+    distressAskingPrice,
+    distressDiscountPercent,
     legacyDescription: body?.legacyDescription !== undefined ? normalizeText(body?.legacyDescription) : existingMeta.legacyDescription,
     nextFollowUpDate: normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate),
     nextFollowUpTime: normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime),
@@ -284,6 +307,14 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
   const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
   const propertyType = normalizeText(body?.propertyType || existingProperty?.property_type || existingProperty?.category);
   const meta = getPropertyMeta(body, existingProperty, overrides);
+  const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
+  const effectivePrice = normalizeText(
+    body?.price ||
+    (distressDeal ? meta.distressAskingPrice : '') ||
+    body?.rentPrice ||
+    body?.ownerAskingPrice ||
+    existingProperty?.price
+  );
   const isListedPublic = body?.isListedPublic !== undefined
     ? normalizeBool(body?.isListedPublic)
     : Boolean(existingProperty?.is_listed_public);
@@ -294,7 +325,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     property_type: propertyType,
     category: propertyType,
     location: normalizeText(body?.location || existingProperty?.location),
-    price: normalizeText(body?.price || body?.rentPrice || body?.ownerAskingPrice || existingProperty?.price),
+    price: effectivePrice,
     size: normalizeText(body?.size || body?.sizeSqft || existingProperty?.size),
     bedrooms: body?.bedrooms ?? existingProperty?.bedrooms ?? null,
     bathrooms: body?.bathrooms ?? existingProperty?.bathrooms ?? null,
@@ -305,7 +336,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     owner_phone: normalizePhoneNumber(body?.ownerPhone ?? existingProperty?.owner_phone),
     status: normalizeListingStatus(body?.status ?? existingProperty?.status),
     is_urgent: false,
-    is_distress: body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress),
+    is_distress: distressDeal,
     is_listed_public: isListedPublic,
     public_listing_status: isListedPublic ? 'listed' : 'private',
     updated_at: nowIso()

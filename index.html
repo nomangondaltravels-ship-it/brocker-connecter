@@ -578,6 +578,382 @@
     .copy-icon::before { top: 2px; left: 2px; opacity: 0.7; }
     .copy-icon::after { top: 0; left: 0; background: transparent; }
 
+    .topbar-inner.public-topbar {
+      width: min(1400px, 95%);
+      display: grid;
+      grid-template-columns: auto minmax(260px, 380px) auto;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .top-search-inline {
+      min-width: 0;
+      width: 100%;
+      position: relative;
+    }
+
+    .search-hub.compact-top-search {
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      position: relative;
+      width: 100%;
+    }
+
+    .search-hub.compact-top-search .search-copy {
+      display: none;
+    }
+
+    .search-hub.compact-top-search .search-bar {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-hub.compact-top-search .search-field-wrap {
+      position: relative;
+      min-width: 0;
+    }
+
+    .search-hub.compact-top-search .search-field-wrap::before {
+      content: "";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      border: 2px solid rgba(242, 223, 152, 0.65);
+      border-radius: 999px;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .search-hub.compact-top-search .search-field-wrap::after {
+      content: "";
+      position: absolute;
+      left: 28px;
+      top: calc(50% + 5px);
+      width: 8px;
+      height: 2px;
+      transform: rotate(45deg);
+      background: rgba(242, 223, 152, 0.65);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .search-hub.compact-top-search .search-bar input {
+      min-height: 42px;
+      height: 42px;
+      padding: 0 16px 0 42px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(11,21,36,0.96), rgba(9,18,32,0.92));
+      border: 1px solid rgba(212,175,55,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      font-size: 0.95rem;
+    }
+
+    .search-hub.compact-top-search .btn {
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 11px;
+      font-size: 0.88rem;
+    }
+
+    .search-hub.compact-top-search .btn-secondary {
+      min-width: 40px;
+      padding-inline: 10px;
+    }
+
+    .search-hub.compact-top-search .search-suggestions {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      width: 100%;
+      z-index: 1100;
+      padding: 10px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(11,21,36,0.98), rgba(9,18,32,0.96));
+      box-shadow: 0 22px 44px rgba(0, 0, 0, 0.34);
+    }
+
+    .top-actions-wrap {
+      margin-left: 0;
+      gap: 10px;
+    }
+
+    .top-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .metric-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(212,175,55,0.14);
+      background: rgba(10, 20, 36, 0.82);
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .metric-chip strong {
+      color: var(--gold-soft);
+      font-size: 0.82rem;
+      letter-spacing: 0;
+    }
+
+    .page-nav-btn {
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+    }
+
+    .page-nav-btn.is-active {
+      background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(143,106,18,0.24));
+      border-color: rgba(242,223,152,0.26);
+      color: var(--gold-soft);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+
+    .hero-box.compact-public-hero {
+      padding: 20px 24px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-box.compact-public-hero h1 {
+      font-size: clamp(1.9rem, 3vw, 2.8rem);
+      margin-bottom: 8px;
+    }
+
+    .hero-box.compact-public-hero p {
+      max-width: 860px;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    .hero-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .section-switch-btn {
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+    }
+
+    .section-switch-btn.is-active {
+      background: linear-gradient(135deg, #f0de9b, var(--gold) 45%, #9e7415 100%);
+      color: #111827;
+      border-color: rgba(242,223,152,0.35);
+      box-shadow: 0 12px 28px rgba(143,106,18,0.24);
+    }
+
+    .page-head.compact-head h2 {
+      font-size: 1.48rem;
+      margin-bottom: 4px;
+    }
+
+    .page-head.compact-head p {
+      max-width: 760px;
+      font-size: 0.92rem;
+    }
+
+    .public-sheet {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .public-sheet-head,
+    .public-row {
+      display: grid;
+      grid-template-columns: 74px minmax(180px, 1.5fr) repeat(5, minmax(110px, 1fr)) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 16px;
+    }
+
+    .public-sheet-head {
+      border: 1px solid rgba(212,175,55,0.1);
+      background: rgba(9, 18, 32, 0.62);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .public-row {
+      border: 1px solid rgba(212,175,55,0.1);
+      background: linear-gradient(180deg, rgba(13,24,42,0.88), rgba(9,18,32,0.92));
+      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .public-row:hover {
+      border-color: rgba(212,175,55,0.24);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(0,0,0,0.18);
+    }
+
+    .public-row.is-distress {
+      background:
+        linear-gradient(180deg, rgba(61,18,18,0.2), rgba(13,24,42,0.94)),
+        rgba(13,24,42,0.94);
+      border-color: rgba(212,175,55,0.26);
+    }
+
+    .sheet-col {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .sheet-label {
+      display: none;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .sheet-primary {
+      color: var(--text);
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .sheet-secondary {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .sheet-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.12);
+      background: rgba(10,20,36,0.84);
+      color: var(--gold-soft);
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .row-badge-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .row-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .action-icon-btn {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: rgba(10,20,36,0.88);
+      color: var(--text);
+      cursor: pointer;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .action-icon-btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(212,175,55,0.28);
+      background: rgba(18,31,54,0.96);
+    }
+
+    .action-icon-btn.success {
+      color: #bbf7d0;
+      border-color: rgba(34,197,94,0.26);
+    }
+
+    .action-icon-btn.share {
+      color: var(--gold-soft);
+    }
+
+    .pager {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .pager.hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1180px) {
+      .topbar-inner.public-topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions-wrap {
+        width: 100%;
+        align-items: stretch;
+      }
+
+      .top-metrics,
+      .top-actions {
+        justify-content: flex-start;
+      }
+
+      .public-sheet-head {
+        display: none;
+      }
+
+      .public-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .sheet-label {
+        display: block;
+      }
+
+      .row-actions {
+        justify-content: flex-start;
+      }
+    }
+
     @media (max-width: 980px) {
       .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid-2, .grid-3, .listing-grid, .detail-grid, .search-bar { grid-template-columns: 1fr; }
@@ -589,6 +965,10 @@
       .hero-box { padding: 22px 18px; }
       .page-head h2 { font-size: 1.7rem; }
       .search-hub { margin-inline: 18px; }
+      .hero-box.compact-public-hero { padding: 18px; }
+      .public-row { grid-template-columns: 1fr; }
+      .top-metrics { justify-content: flex-start; }
+      .top-actions { justify-content: flex-start; }
       .sidebar {
         top: 78px;
         right: 12px;
@@ -602,25 +982,44 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="topbar-inner">
+    <div class="topbar-inner public-topbar">
       <div class="brand">
         <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
         <div class="brand-copy">
           <div class="brand-title">Broker <span>Connector</span></div>
-          <small>Noman Properties • Sponsored by Xsite Real Estate</small>
+          <small>Broker Connector Page</small>
+        </div>
+      </div>
+      <div class="top-search-inline">
+        <div class="search-hub compact-top-search">
+          <div class="search-bar" id="publicSearchBox">
+            <div class="search-field-wrap">
+              <input id="publicSearchInput" type="search" placeholder="Search locations, buildings, requirements, listings, or keywords" autocomplete="off">
+            </div>
+            <button class="btn btn-primary" type="button" onclick="applyPublicSearch()">Search</button>
+            <button class="btn btn-secondary" type="button" onclick="clearPublicSearch()" aria-label="Clear search">X</button>
+          </div>
+          <div class="search-suggestions hidden" id="publicSearchSuggestions"></div>
         </div>
       </div>
       <div class="top-actions-wrap">
+        <div class="top-metrics" id="publicTopMetrics">
+          <span class="metric-chip">All <strong id="metricAll">0</strong></span>
+          <span class="metric-chip">Req <strong id="metricRequirements">0</strong></span>
+          <span class="metric-chip">List <strong id="metricListings">0</strong></span>
+          <span class="metric-chip">Distress <strong id="metricDistress">0</strong></span>
+        </div>
         <div class="top-actions">
+          <button class="btn btn-secondary page-nav-btn is-active" type="button" aria-current="page">Broker Connector Page</button>
+          <button class="btn btn-secondary page-nav-btn" id="dashboardBtn" type="button" onclick="handleBrokerDeskClick()">Broker Desk</button>
           <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
           <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
-          <button class="btn btn-secondary hidden" id="dashboardBtn" type="button" onclick="window.location.href='dashboard.html'">Broker Desk</button>
           <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
             <span>Menu</span>
             <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
           </button>
         </div>
-        <div class="top-cta" id="registerCta">Register to unlock full broker access and live deal features.</div>
+        <div class="top-cta" id="registerCta">Public broker marketplace with private CRM protection.</div>
       </div>
     </div>
   </header>
@@ -628,10 +1027,9 @@
   <div class="layout">
     <aside class="sidebar" id="menuDrawer">
       <div class="sidebar-title">Broker Connector Page</div>
-      <div class="sidebar-text">Public visitors only see broker-approved marketplace content. Private owner and client details never appear here.</div>
+      <div class="sidebar-text">See shared broker requirements and listings only. Private owner, client, and CRM details stay inside Broker Desk.</div>
       <div class="menu">
-        <button class="btn btn-secondary menu-btn active" data-target="home" onclick="openSection('home')">Home</button>
-        <button class="btn btn-secondary menu-btn" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
+        <button class="btn btn-secondary menu-btn active" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
         <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
         <button class="btn btn-secondary menu-btn" data-target="contact" onclick="openSection('contact')">Contact</button>
@@ -639,94 +1037,48 @@
     </aside>
 
     <main class="content-panel">
-      <section class="hero-box">
+      <section class="hero-box compact-public-hero">
         <div class="hero-kicker">Broker Connector Page</div>
         <h1>Broker Connector Page</h1>
-        <p>Browse broker-approved broker requirements, broker connector listings, and premium distress opportunities. Only safe marketplace information appears publicly. Private owner, client, and follow-up details always stay inside the broker dashboard.</p>
-        <div class="hero-actions-label">Start Here</div>
-        <div class="hero-tags">
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('home')">Home</button>
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('requirements')">Broker Requirements</button>
-          <button class="btn btn-primary hero-action-btn primary-start" type="button" onclick="openSection('marketplace')">Broker Connector Listings</button>
-          <button class="btn btn-secondary hero-action-btn" type="button" onclick="openSection('distress-deals')">Distress Deals</button>
+        <p>Shared broker marketplace for requirements and listings. Private owner, client, and workflow details always stay inside Broker Desk.</p>
+        <div class="hero-tabs">
+          <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="contact" onclick="openSection('contact')">Contact</button>
         </div>
       </section>
 
       <div class="system-banner" id="systemBanner"></div>
-      <div class="search-hub">
-        <div class="search-copy">
-          <h3>Search Broker Connector Page</h3>
-          <p>Search broker requirements, broker connector listings, areas, buildings, property types, deal categories, and keywords.</p>
-        </div>
-        <div class="search-bar" id="publicSearchBox">
-          <input id="publicSearchInput" type="search" placeholder="Search requirements, listings, locations, buildings, property types, or keywords" autocomplete="off">
-          <button class="btn btn-primary" type="button" onclick="applyPublicSearch()">Search</button>
-          <button class="btn btn-secondary" type="button" onclick="clearPublicSearch()">Clear</button>
-        </div>
-        <div class="search-suggestions hidden" id="publicSearchSuggestions"></div>
-      </div>
-
-      <section class="section active" id="home-section">
-        <div class="page-head">
-          <h2>Broker Connector Page</h2>
-          <p>One public-facing network for broker-approved broker requirements, broker connector listings, and premium distress opportunities.</p>
-        </div>
-        <div class="page-use"><strong>Use:</strong> Browse public broker requirements and broker connector listings, then contact the listing broker if you have a match. Private CRM data stays inside the broker dashboard.</div>
-
-        <div class="stats">
-          <div class="stat-card"><small>All Public Items</small><strong id="statAll">0</strong></div>
-          <div class="stat-card"><small>Broker Requirements</small><strong id="statLeads">0</strong></div>
-          <div class="stat-card"><small>Broker Connector Listings</small><strong id="statProperties">0</strong></div>
-          <div class="stat-card"><small>Distress Deals</small><strong id="statUrgent">0</strong></div>
-        </div>
-
-        <div class="grid-3" style="margin-top:16px;">
-          <div class="card">
-            <h3>What public users can see</h3>
-            <p>Only safe shareable information appears publicly: purpose, type, category, location, price/budget, general notes, and listing broker contact actions.</p>
-          </div>
-          <div class="card">
-            <h3>What stays private</h3>
-            <p>Owner names, client names, private numbers, internal notes, meetings, follow-ups, and exact confidential CRM details never appear on public cards.</p>
-          </div>
-          <div class="card">
-            <h3>For brokers</h3>
-            <p>Register or sign in to open your separate private CRM dashboard where you can manage broker requirements, properties, meetings, and list or unlist items on Broker Connector.</p>
-          </div>
-        </div>
-
-        <div class="listing-grid" id="homeHighlights"></div>
-      </section>
-
       <section class="section" id="marketplace-section">
-        <div class="page-head">
+        <div class="page-head compact-head">
           <h2>Broker Connector Listings</h2>
-          <p>All live public listings that brokers have chosen to share.</p>
+          <p>Latest shared listings from brokers in a compact list-first view.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> Browse all public broker connector listings shared by brokers. Only broker-approved public-safe listing data appears here.</div>
-        <div class="listing-grid" id="marketplaceGrid"></div>
+        <div class="public-sheet" id="marketplaceGrid"></div>
+        <div class="pager hidden" id="marketplacePager"></div>
       </section>
 
-      <section class="section" id="requirements-section">
-        <div class="page-head">
+      <section class="section active" id="requirements-section">
+        <div class="page-head compact-head">
           <h2>Broker Requirements</h2>
-          <p>Broker and client requirements shared by brokers who are looking for matching properties.</p>
+          <p>Latest shared requirements from brokers looking for matching properties.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> If you have a matching property for a broker requirement, contact the listing broker directly.</div>
-        <div class="listing-grid" id="requirementsGrid"></div>
+        <div class="public-sheet" id="requirementsGrid"></div>
+        <div class="pager hidden" id="requirementsPager"></div>
       </section>
 
       <section class="section" id="distress-deals-section">
-        <div class="page-head">
+        <div class="page-head compact-head">
           <h2>Distress Deals</h2>
-          <p>Priority broker connector listings that need fast, serious attention and stand out as exclusive hot opportunities.</p>
+          <p>High-attention shared listings with stronger pricing urgency.</p>
         </div>
-        <div class="page-use"><strong>Use:</strong> Review premium distress opportunities without exposing hidden private CRM data.</div>
-        <div class="listing-grid" id="distressDealsGrid"></div>
+        <div class="public-sheet" id="distressDealsGrid"></div>
+        <div class="pager hidden" id="distressDealsPager"></div>
       </section>
 
       <section class="section" id="contact-section">
-        <div class="page-head">
+        <div class="page-head compact-head">
           <h2>Contact</h2>
           <p>Support and platform contact details.</p>
         </div>
@@ -823,8 +1175,13 @@
       sessionToken: localStorage.getItem('broker_session_token') || '',
       brokerProfile: null,
       listings: [],
-      activeSection: 'home',
+      activeSection: 'requirements',
       publicSearchQuery: '',
+      pagination: {
+        requirements: 1,
+        marketplace: 1,
+        'distress-deals': 1
+      },
       shareLink: '',
       contactPhone: '',
       whatsappPhone: '',
@@ -879,13 +1236,23 @@
       document.getElementById('menuBackdrop').classList.remove('active');
     }
 
+    function handleBrokerDeskClick() {
+      if (state.sessionToken || state.brokerProfile) {
+        window.location.href = 'dashboard.html';
+        return;
+      }
+      openAuthModal('signin');
+    }
+
     function openSection(name) {
       const normalized = name === 'shared-leads' ? 'requirements' : name;
       state.activeSection = normalized;
       document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
       document.querySelectorAll('.menu-btn').forEach(button => button.classList.remove('active'));
+      document.querySelectorAll('.section-switch-btn').forEach(button => button.classList.remove('is-active'));
       document.getElementById(`${normalized}-section`)?.classList.add('active');
       document.querySelector(`.menu-btn[data-target="${normalized}"]`)?.classList.add('active');
+      document.querySelector(`.section-switch-btn[data-target="${normalized}"]`)?.classList.add('is-active');
       closeMenuDrawer();
       revealSharedListingFromUrl();
     }
@@ -971,6 +1338,9 @@
 
     function applyPublicSearch(query = document.getElementById('publicSearchInput').value) {
       state.publicSearchQuery = String(query || '').trim();
+      state.pagination.requirements = 1;
+      state.pagination.marketplace = 1;
+      state.pagination['distress-deals'] = 1;
       document.getElementById('publicSearchInput').value = state.publicSearchQuery;
       renderPublicSuggestions('');
       renderPublicViews();
@@ -983,6 +1353,9 @@
 
     function clearPublicSearch() {
       state.publicSearchQuery = '';
+      state.pagination.requirements = 1;
+      state.pagination.marketplace = 1;
+      state.pagination['distress-deals'] = 1;
       document.getElementById('publicSearchInput').value = '';
       renderPublicSuggestions('');
       renderPublicViews();
@@ -1100,6 +1473,225 @@
       renderHomeHighlights();
       renderSectionGrid('marketplaceGrid', 'marketplace', marketplace);
       renderSectionGrid('requirementsGrid', 'requirements', requirements);
+      renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
+    }
+
+    function formatCompactRelativeTime(value) {
+      if (!value) return '--';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '--';
+      const diffMs = Date.now() - date.getTime();
+      const diffHours = Math.max(0, Math.floor(diffMs / 3600000));
+      if (diffHours < 24) return `${Math.max(1, diffHours)}h`;
+      return `${Math.max(1, Math.floor(diffHours / 24))}d`;
+    }
+
+    function buildPublicActionButtons(listing, sectionName) {
+      const shareLink = buildListingLink(listing, sectionName);
+      const matchText = encodeURIComponent(prefilledMatchText(listing));
+      return `
+        <div class="row-actions">
+          <button class="action-icon-btn" type="button" title="I Have Match" aria-label="I Have Match" onclick="sendMatchInterest('${listing.brokerMobile}', '${matchText}')">&#8644;</button>
+          <button class="action-icon-btn success" type="button" title="WhatsApp Broker" aria-label="WhatsApp Broker" onclick="showWhatsappPopover(this, '${listing.brokerMobile}', '${matchText}')">WA</button>
+          <button class="action-icon-btn" type="button" title="Call Broker" aria-label="Call Broker" onclick="showContactPopover(this, '${listing.brokerMobile}')">&#9742;</button>
+          <button class="action-icon-btn share" type="button" title="Share Listing" aria-label="Share Listing" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">&#10697;</button>
+        </div>
+      `;
+    }
+
+    function sortPublicListings(items) {
+      return [...items].sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime());
+    }
+
+    function paginatePublicItems(sectionName, items) {
+      const pageSize = 30;
+      const currentPage = Math.max(1, Number(state.pagination?.[sectionName] || 1));
+      const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+      const safePage = Math.min(currentPage, totalPages);
+      state.pagination[sectionName] = safePage;
+      const startIndex = (safePage - 1) * pageSize;
+      return {
+        pageItems: items.slice(startIndex, startIndex + pageSize),
+        startIndex,
+        currentPage: safePage,
+        totalPages
+      };
+    }
+
+    function renderPager(sectionName, totalItems) {
+      const pager = document.getElementById(`${sectionName}Pager`);
+      if (!pager) return;
+      const totalPages = Math.max(1, Math.ceil(totalItems / 30));
+      if (totalPages <= 1) {
+        pager.classList.add('hidden');
+        pager.innerHTML = '';
+        return;
+      }
+      const currentPage = Number(state.pagination?.[sectionName] || 1);
+      pager.classList.remove('hidden');
+      pager.innerHTML = `
+        <button class="btn btn-secondary btn-tiny" type="button" ${currentPage <= 1 ? 'disabled' : ''} onclick="changePublicPage('${sectionName}', -1)">Prev</button>
+        <span>Page ${currentPage} of ${totalPages}</span>
+        <button class="btn btn-secondary btn-tiny" type="button" ${currentPage >= totalPages ? 'disabled' : ''} onclick="changePublicPage('${sectionName}', 1)">Next</button>
+      `;
+    }
+
+    function changePublicPage(sectionName, delta) {
+      state.pagination[sectionName] = Math.max(1, Number(state.pagination?.[sectionName] || 1) + Number(delta || 0));
+      renderPublicViews();
+      document.getElementById(`${sectionName}-section`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderRequirementsSheet(items, sectionName, startIndex) {
+      return `
+        <div class="public-sheet-head">
+          <div>#</div>
+          <div>Requirement</div>
+          <div>Location</div>
+          <div>Building</div>
+          <div>Type</div>
+          <div>Budget</div>
+          <div>Status</div>
+          <div>Updated</div>
+          <div>Actions</div>
+        </div>
+        ${items.map((listing, index) => `
+          <div class="public-row" data-listing-id="${listing.id}">
+            <div class="sheet-col">
+              <span class="sheet-label">#</span>
+              <span class="sheet-index">${startIndex + index + 1}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Requirement</span>
+              <span class="sheet-primary">${listing.purpose === 'rent' ? 'My client is looking to rent' : 'My client is looking to buy'}</span>
+              <span class="sheet-secondary">${listing.publicNotes || 'Shared broker requirement'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Location</span>
+              <span class="sheet-primary">${listing.location || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Building</span>
+              <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Type</span>
+              <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Budget</span>
+              <span class="sheet-primary">${listing.priceLabel || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Status</span>
+              <div class="row-badge-stack">
+                <span class="badge badge-blue">Requirement</span>
+                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
+              </div>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Updated</span>
+              <span class="sheet-primary">${formatCompactRelativeTime(listing.updatedAt || listing.createdAt)}</span>
+            </div>
+            ${buildPublicActionButtons(listing, sectionName)}
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderListingsSheet(items, sectionName, startIndex) {
+      return `
+        <div class="public-sheet-head">
+          <div>#</div>
+          <div>Listing</div>
+          <div>Location</div>
+          <div>Building</div>
+          <div>Type</div>
+          <div>Price</div>
+          <div>Status</div>
+          <div>Updated</div>
+          <div>Actions</div>
+        </div>
+        ${items.map((listing, index) => `
+          <div class="public-row ${listing.isDistress ? 'is-distress' : ''}" data-listing-id="${listing.id}">
+            <div class="sheet-col">
+              <span class="sheet-label">#</span>
+              <span class="sheet-index">${startIndex + index + 1}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Listing</span>
+              <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${listing.propertyType || listing.category || 'Listing'}</span>
+              <span class="sheet-secondary">${listing.publicNotes || 'Shared broker connector listing'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Location</span>
+              <span class="sheet-primary">${listing.location || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Building</span>
+              <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Type</span>
+              <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Price</span>
+              <span class="sheet-primary">${listing.priceLabel || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Status</span>
+              <div class="row-badge-stack">
+                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : '<span class="badge badge-green">Public</span>'}
+                <span class="badge badge-green">Public</span>
+                ${listing.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
+              </div>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Updated</span>
+              <span class="sheet-primary">${formatCompactRelativeTime(listing.updatedAt || listing.createdAt)}</span>
+            </div>
+            ${buildPublicActionButtons(listing, sectionName)}
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderSectionGrid(targetId, sectionName, items) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      if (!items.length) {
+        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
+        renderPager(sectionName, 0);
+        return;
+      }
+      const sortedItems = sortPublicListings(items);
+      const page = paginatePublicItems(sectionName, sortedItems);
+      target.innerHTML = sectionName === 'requirements'
+        ? renderRequirementsSheet(page.pageItems, sectionName, page.startIndex)
+        : renderListingsSheet(page.pageItems, sectionName, page.startIndex);
+      renderPager(sectionName, sortedItems.length);
+    }
+
+    function updateStats() {
+      const filtered = getFilteredPublicListings();
+      const requirements = filtered.filter(item => item.sourceType === 'lead');
+      const listings = filtered.filter(item => item.sourceType === 'property');
+      const distress = listings.filter(item => item.isDistress);
+      document.getElementById('metricAll').textContent = filtered.length;
+      document.getElementById('metricRequirements').textContent = requirements.length;
+      document.getElementById('metricListings').textContent = listings.length;
+      document.getElementById('metricDistress').textContent = distress.length;
+    }
+
+    function renderPublicViews() {
+      const filtered = getFilteredPublicListings();
+      const requirements = filtered.filter(item => item.sourceType === 'lead');
+      const marketplace = filtered.filter(item => item.sourceType === 'property');
+      const distress = marketplace.filter(item => item.isDistress);
+      updateStats();
+      renderSectionGrid('requirementsGrid', 'requirements', requirements);
+      renderSectionGrid('marketplaceGrid', 'marketplace', marketplace);
       renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
     }
 
@@ -1424,7 +2016,7 @@
     (async function init() {
       try {
         const authenticated = await verifyBrokerSession();
-        const showDashboardButton = authenticated || state.forcePublicView;
+        const showDashboardButton = true;
         document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
         document.getElementById('signInBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
         document.getElementById('registerBtn').classList.toggle('hidden', authenticated || state.forcePublicView);

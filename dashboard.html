@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Broker Dashboard | Broker Connector</title>
+  <title>Broker Desk | Broker Connector</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
@@ -100,6 +100,13 @@
       justify-content: flex-end;
     }
 
+    .top-actions .btn {
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+    }
+
     .top-search-inline {
       min-width: 0;
       width: 100%;
@@ -134,6 +141,20 @@
     .btn-success { background: rgba(22, 101, 52, 0.92); color: white; }
     .btn-warning { background: rgba(146, 64, 14, 0.92); color: #fff7ed; }
     .btn-tiny { padding: 8px 11px; border-radius: 10px; font-size: 0.84rem; }
+
+    .page-switch-btn {
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+    }
+
+    .page-switch-btn.is-active {
+      background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(143,106,18,0.24));
+      border-color: rgba(242,223,152,0.26);
+      color: var(--gold-soft);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
 
     .app-shell {
       width: min(1400px, 95%);
@@ -907,6 +928,214 @@
       gap: 12px;
     }
 
+    .crm-sheet {
+      display: grid;
+      gap: 10px;
+    }
+
+    .crm-sheet-head,
+    .crm-row {
+      display: grid;
+      grid-template-columns: 64px minmax(170px, 1.25fr) repeat(5, minmax(105px, 1fr)) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 16px;
+    }
+
+    .crm-sheet-head {
+      border: 1px solid rgba(212,175,55,0.1);
+      background: rgba(9, 18, 32, 0.62);
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .crm-row {
+      border: 1px solid rgba(212,175,55,0.1);
+      background: linear-gradient(180deg, rgba(13,24,42,0.88), rgba(9,18,32,0.92));
+      transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .crm-row:hover {
+      border-color: rgba(212,175,55,0.24);
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(0,0,0,0.18);
+    }
+
+    .crm-row.is-distress {
+      background:
+        linear-gradient(180deg, rgba(61,18,18,0.2), rgba(13,24,42,0.94)),
+        rgba(13,24,42,0.94);
+      border-color: rgba(212,175,55,0.26);
+    }
+
+    .crm-col {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .crm-col-label {
+      display: none;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .crm-primary {
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .crm-secondary {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .crm-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 34px;
+      padding: 0 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(212,175,55,0.12);
+      background: rgba(10,20,36,0.84);
+      color: var(--gold-soft);
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .crm-row-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .crm-record-group {
+      display: grid;
+      gap: 0;
+    }
+
+    .crm-action-chip {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .crm-row-action-btn {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .crm-chip-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .crm-quick-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+
+    .crm-row-panel {
+      margin-top: -2px;
+      padding: 12px 14px 0;
+      border: 1px solid rgba(212, 175, 55, 0.1);
+      border-top: 0;
+      border-radius: 0 0 16px 16px;
+      background: linear-gradient(180deg, rgba(10, 20, 36, 0.9), rgba(8, 16, 28, 0.96));
+    }
+
+    .crm-row-panel summary {
+      cursor: pointer;
+      color: var(--gold-soft);
+      font-size: 0.82rem;
+      font-weight: 800;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .crm-row-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .crm-row-panel summary::after {
+      content: '+';
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(212,175,55,0.18);
+      color: var(--text);
+      font-size: 0.78rem;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .crm-row-panel[open] summary::after {
+      content: '-';
+    }
+
+    .distress-metric {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: linear-gradient(180deg, rgba(61,18,18,0.18), rgba(13,24,42,0.92));
+    }
+
+    .distress-metric.active {
+      display: flex;
+    }
+
+    .distress-metric strong {
+      color: var(--gold-soft);
+      font-size: 0.88rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .distress-metric-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .distress-metric-copy p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
     .item-card {
       padding: 16px;
       display: grid;
@@ -1232,6 +1461,23 @@
       .grid-3, .kanban, .overview-actions, .workflow-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .record-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .crm-sheet-head {
+        display: none;
+      }
+      .crm-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+      .crm-col-label {
+        display: block;
+      }
+      .crm-row-actions {
+        justify-content: flex-start;
+      }
+      .crm-row-panel {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
     }
 
     @media (max-width: 760px) {
@@ -1249,6 +1495,9 @@
       }
       .record-filter-grid { grid-template-columns: 1fr; }
       .record-actions { flex-direction: column; align-items: stretch; }
+      .crm-row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -1276,8 +1525,8 @@
       </div>
       <div class="top-actions">
         <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
-        <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
-        <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
+        <button class="btn btn-secondary page-switch-btn" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
+        <button class="btn btn-secondary page-switch-btn is-active" id="brokerIdentityBtn" type="button" aria-current="page">Broker Desk</button>
         <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
       </div>
     </div>
@@ -1302,7 +1551,7 @@
 
     <main class="panel">
       <section class="hero">
-        <h1>Private Broker Dashboard</h1>
+        <h1>Broker Desk</h1>
         <p>This dashboard is private for the logged-in broker. Your requirements, properties, and progress stay private unless you choose to share a safe public version on Broker Connector.</p>
       </section>
       <div class="status-bar" id="dashboardStatus"></div>
@@ -1580,7 +1829,7 @@
                     <div class="field-error" id="propertyFurnishingError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small">Rent Price</label>
+                    <label class="small" id="propertyRentPriceLabel">Rent Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertyRentPrice" type="text" inputmode="numeric" placeholder="Enter yearly rent" autocomplete="off">
@@ -1604,7 +1853,7 @@
                 </div>
                 <div class="form-grid crm-hidden" id="propertySaleFields">
                   <div class="field-block">
-                    <label class="small">Owner Asking Price</label>
+                    <label class="small" id="propertySalePriceLabel">Owner Asking Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertySalePrice" type="text" inputmode="numeric" placeholder="Enter owner asking price" autocomplete="off">
@@ -1636,6 +1885,24 @@
                       <small>Highlight this listing as a premium high-attention deal.</small>
                     </span>
                   </label>
+                </div>
+                <div class="form-grid crm-hidden" id="propertyDistressFields">
+                  <div class="field-block">
+                    <label class="small">Market Price</label>
+                    <div class="currency-field">
+                      <span class="currency-prefix">AED</span>
+                      <input id="propertyMarketPrice" type="text" inputmode="numeric" placeholder="Enter market price" autocomplete="off">
+                    </div>
+                    <div class="field-helper">Used only for distress comparison inside your private CRM.</div>
+                    <div class="field-error" id="propertyMarketPriceError"></div>
+                  </div>
+                </div>
+                <div class="distress-metric" id="propertyDistressMetric">
+                  <div class="distress-metric-copy">
+                    <strong>Distress Gap</strong>
+                    <p id="propertyDistressMetricText">Enable distress deal and enter market plus asking price to see the gap.</p>
+                  </div>
+                  <span class="badge badge-red" id="propertyDistressMetricBadge">--</span>
                 </div>
               </div>
 
@@ -2358,7 +2625,8 @@
         'propertyTypeError',
         'propertyLocationError',
         'propertyRentPriceError',
-        'propertySalePriceError'
+        'propertySalePriceError',
+        'propertyMarketPriceError'
       ].forEach(id => {
         const node = document.getElementById(id);
         if (node) node.textContent = '';
@@ -2375,6 +2643,7 @@
         'propertyCheques',
         'propertyChiller',
         'propertySalePrice',
+        'propertyMarketPrice',
         'propertyMortgageStatus',
         'propertyOwnerName',
         'propertyOwnerPhone',
@@ -2391,14 +2660,16 @@
         propertyType: 'propertyTypeError',
         location: 'propertyLocationError',
         rentPrice: 'propertyRentPriceError',
-        ownerAskingPrice: 'propertySalePriceError'
+        ownerAskingPrice: 'propertySalePriceError',
+        marketPrice: 'propertyMarketPriceError'
       };
       const inputMap = {
         purpose: 'propertyPurposeControl',
         propertyType: 'propertyType',
         location: 'propertyLocation',
         rentPrice: 'propertyRentPrice',
-        ownerAskingPrice: 'propertySalePrice'
+        ownerAskingPrice: 'propertySalePrice',
+        marketPrice: 'propertyMarketPrice'
       };
       const errorNode = document.getElementById(errorMap[field]);
       if (errorNode) errorNode.textContent = message;
@@ -2432,6 +2703,7 @@
       const saleFields = document.getElementById('propertySaleFields');
       const saleToggleRow = document.getElementById('propertySaleToggleRow');
       const distressRow = document.getElementById('propertyDistressRow');
+      const distressFields = document.getElementById('propertyDistressFields');
 
       if (hiddenInput) hiddenInput.value = normalizedPurpose;
 
@@ -2449,6 +2721,7 @@
       saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       distressRow?.classList.toggle('crm-hidden', !showSections);
+      distressFields?.classList.toggle('crm-hidden', !showSections || !document.getElementById('propertyDistress')?.checked);
 
       if (!options.preserveValues) {
         document.getElementById('propertyFurnishing').value = '';
@@ -2456,8 +2729,54 @@
         document.getElementById('propertyCheques').value = '';
         document.getElementById('propertyChiller').value = '';
         document.getElementById('propertySalePrice').value = '';
+        document.getElementById('propertyMarketPrice').value = '';
         document.getElementById('propertyMortgageStatus').value = '';
         document.getElementById('propertyLeasehold').checked = false;
+      }
+
+      refreshPropertyDistressUI();
+    }
+
+    function refreshPropertyDistressUI() {
+      const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
+      const distressEnabled = Boolean(document.getElementById('propertyDistress')?.checked);
+      const marketPriceField = document.getElementById('propertyMarketPrice');
+      const distressFields = document.getElementById('propertyDistressFields');
+      const distressMetric = document.getElementById('propertyDistressMetric');
+      const distressMetricText = document.getElementById('propertyDistressMetricText');
+      const distressMetricBadge = document.getElementById('propertyDistressMetricBadge');
+      const rentPriceLabel = document.getElementById('propertyRentPriceLabel');
+      const salePriceLabel = document.getElementById('propertySalePriceLabel');
+      const activePrice = purpose === 'sale'
+        ? normalizeBudgetDigits(document.getElementById('propertySalePrice')?.value || '')
+        : normalizeBudgetDigits(document.getElementById('propertyRentPrice')?.value || '');
+      const marketPrice = normalizeBudgetDigits(marketPriceField?.value || '');
+
+      if (rentPriceLabel) {
+        rentPriceLabel.textContent = distressEnabled ? 'Asking Price' : 'Rent Price';
+      }
+      if (salePriceLabel) {
+        salePriceLabel.textContent = distressEnabled ? 'Asking Price' : 'Owner Asking Price';
+      }
+
+      distressFields?.classList.toggle('crm-hidden', !purpose || !distressEnabled);
+
+      const marketValue = Number(marketPrice || 0);
+      const askingValue = Number(activePrice || 0);
+      if (distressMetric && distressMetricText && distressMetricBadge) {
+        const canShowMetric = distressEnabled && marketValue > 0 && askingValue > 0 && marketValue > askingValue;
+        distressMetric.classList.toggle('active', Boolean(distressEnabled));
+        if (!distressEnabled) {
+          distressMetricText.textContent = 'Enable distress deal and enter market plus asking price to see the gap.';
+          distressMetricBadge.textContent = '--';
+        } else if (canShowMetric) {
+          const discountPercent = Math.round(((marketValue - askingValue) / marketValue) * 100);
+          distressMetricText.textContent = `Market AED ${marketPrice} vs asking AED ${activePrice}.`;
+          distressMetricBadge.textContent = `${discountPercent}% below market`;
+        } else {
+          distressMetricText.textContent = 'Add both market and asking prices to highlight the private distress gap.';
+          distressMetricBadge.textContent = '--';
+        }
       }
     }
 
@@ -2498,11 +2817,16 @@
       populatePropertySaleOptions();
       setPropertyPurpose('', { preserveValues: false });
 
-      ['propertySizeSqft', 'propertyRentPrice', 'propertySalePrice'].forEach(id => {
+      ['propertySizeSqft', 'propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', event => {
           event.target.value = normalizeBudgetDigits(event.target.value);
           event.target.classList.remove('is-invalid');
+          refreshPropertyDistressUI();
         });
+      });
+
+      document.getElementById('propertyDistress')?.addEventListener('change', () => {
+        refreshPropertyDistressUI();
       });
 
       [
@@ -3421,6 +3745,30 @@
       return 'No owner details added';
     }
 
+    function formatCompactAge(value) {
+      if (!value) return '--';
+      try {
+        const diffMs = Date.now() - new Date(value).getTime();
+        const hours = Math.max(0, Math.floor(diffMs / 3600000));
+        if (hours < 24) return `${Math.max(1, hours)}h`;
+        return `${Math.max(1, Math.floor(hours / 24))}d`;
+      } catch (error) {
+        return '--';
+      }
+    }
+
+    function getLeadIntentText(lead) {
+      return getLeadClientPurpose(lead.clientPurpose) === 'buy'
+        ? 'My client is looking to buy'
+        : 'My client is looking to rent';
+    }
+
+    function getPropertyDistressLabel(property) {
+      const percent = Number(property?.distressDiscountPercent || 0);
+      if (!property?.isDistress || !percent) return '';
+      return `${percent}% below market`;
+    }
+
     function getDashboardSearchText(item, type) {
       if (type === 'lead') {
         return [
@@ -3633,6 +3981,8 @@
           cheques: formData.cheques,
           chiller: formData.chiller,
           ownerAskingPrice: formData.ownerAskingPrice,
+          marketPrice: formData.marketPrice,
+          distressAskingPrice: formData.distressAskingPrice,
           mortgageStatus: formData.mortgageStatus,
           leasehold: formData.leasehold,
           isDistress: formData.distressDeal,
@@ -3998,12 +4348,7 @@
       const overview = state.overview || { totals: {}, broker: {} };
       const stats = [
         { label: 'Active Leads', value: overview.totals?.activeLeads || 0, metric: 'activeLeads' },
-        { label: 'Active Listings', value: overview.totals?.activeProperties || 0, metric: 'activeListings' },
-        { label: 'Follow-ups Due Today', value: overview.totals?.followUpsDueToday || 0, metric: 'followUpsDueToday' },
-        { label: 'Overdue Follow-ups', value: overview.totals?.overdueFollowUps || 0, metric: 'overdueFollowUps' },
-        { label: 'Possible Matches', value: overview.totals?.possibleMatches || 0, metric: 'possibleMatches' },
-        { label: 'Archived Leads', value: overview.totals?.archivedLeads || 0, metric: 'archivedLeads' },
-        { label: 'Archived Listings', value: overview.totals?.archivedListings || 0, metric: 'archivedListings' }
+        { label: 'Inventory', value: overview.totals?.activeProperties || 0, metric: 'activeListings' }
       ];
 
       document.getElementById('overviewStats').innerHTML = stats.map(item => `
@@ -4396,6 +4741,14 @@
     function collectPropertyFormData() {
       const preserved = getPropertyPreservedState();
       const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue').value);
+      const distressDeal = document.getElementById('propertyDistress').checked;
+      const marketPrice = normalizeBudgetDigits(document.getElementById('propertyMarketPrice').value);
+      const activePrice = purpose === 'sale'
+        ? normalizeBudgetDigits(document.getElementById('propertySalePrice').value)
+        : normalizeBudgetDigits(document.getElementById('propertyRentPrice').value);
+      const distressDiscountPercent = distressDeal && Number(marketPrice || 0) > 0 && Number(activePrice || 0) > 0 && Number(marketPrice || 0) > Number(activePrice || 0)
+        ? Math.round(((Number(marketPrice) - Number(activePrice)) / Number(marketPrice)) * 100)
+        : '';
       return {
         id: Number(document.getElementById('propertyId').value || 0),
         purpose,
@@ -4411,7 +4764,10 @@
         ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
         mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
         leasehold: document.getElementById('propertyLeasehold').checked,
-        distressDeal: document.getElementById('propertyDistress').checked,
+        distressDeal,
+        marketPrice,
+        distressAskingPrice: distressDeal ? activePrice : '',
+        distressDiscountPercent,
         ownerName: document.getElementById('propertyOwnerName').value.trim(),
         ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
         internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
@@ -4437,6 +4793,9 @@
       if (formData.purpose === 'sale' && (!formData.ownerAskingPrice || Number(formData.ownerAskingPrice) <= 0)) {
         errors.ownerAskingPrice = 'Enter owner asking price';
       }
+      if (formData.distressDeal && (!formData.marketPrice || Number(formData.marketPrice) <= 0)) {
+        errors.marketPrice = 'Enter market price';
+      }
       return errors;
     }
 
@@ -4450,6 +4809,7 @@
       document.getElementById('propertyLocation').value = '';
       document.getElementById('propertyBuildingName').value = '';
       document.getElementById('propertySizeSqft').value = '';
+      document.getElementById('propertyMarketPrice').value = '';
       document.getElementById('propertyOwnerName').value = '';
       document.getElementById('propertyOwnerPhone').value = '';
       document.getElementById('propertyInternalNotes').value = '';
@@ -4462,6 +4822,7 @@
       document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
       propertyAutocompleteControllers.location?.close();
       propertyAutocompleteControllers.building?.close();
+      refreshPropertyDistressUI();
     }
 
     function editProperty(id) {
@@ -4483,6 +4844,7 @@
       document.getElementById('propertyCheques').value = property.cheques || '';
       document.getElementById('propertyChiller').value = property.chiller || '';
       document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
+      document.getElementById('propertyMarketPrice').value = normalizeBudgetDigits(property.marketPrice || '');
       document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
       document.getElementById('propertyLeasehold').checked = Boolean(property.leasehold);
       document.getElementById('propertyPublicNotes').value = property.publicNotes || '';
@@ -4496,6 +4858,7 @@
       document.getElementById('propertyFollowUpNote').value = property.followUpNote || '';
       document.getElementById('propertyUrgentFollowUp').checked = Boolean(property.isUrgentFollowUp);
       document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
+      refreshPropertyDistressUI();
     }
 
     function wireLeadFormSubmission() {
@@ -5021,6 +5384,292 @@
           </div>
         `;
       }).join('');
+    }
+
+    function renderOverview() {
+      const overview = state.overview || { totals: {}, broker: {} };
+      const stats = [
+        { label: 'Leads', value: overview.totals?.activeLeads || 0, metric: 'activeLeads' },
+        { label: 'Inventory', value: overview.totals?.activeProperties || 0, metric: 'activeListings' }
+      ];
+
+      document.getElementById('overviewStats').innerHTML = stats.map(item => `
+        <div
+          class="stat-card is-clickable"
+          role="button"
+          tabindex="0"
+          aria-label="Open ${item.label}"
+          onclick="openOverviewMetric('${item.metric}')"
+          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openOverviewMetric('${item.metric}')}"
+        >
+          <small>${item.label}</small>
+          <strong>${item.value}</strong>
+        </div>
+      `).join('');
+    }
+
+    function renderLeads() {
+      const target = document.getElementById('leadsList');
+      if (!target) return;
+      const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      if (!requirements.length) {
+        target.innerHTML = '<div class="empty">No broker requirements match your current filters. Adjust your filters or add a new lead from Overview.</div>';
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="crm-sheet">
+          <div class="crm-sheet-head">
+            <div>Sr.</div>
+            <div>Requirement</div>
+            <div>Location</div>
+            <div>Building / Project</div>
+            <div>Property Type</div>
+            <div>Budget</div>
+            <div>Workflow</div>
+            <div>Actions</div>
+          </div>
+          ${requirements.map((lead, index) => {
+            const followUpState = getFollowUpStateInfo(lead);
+            const phoneAvailable = String(lead.clientPhone || '').trim();
+            const lastTouched = formatCompactAge(lead.updatedAt || lead.createdAt);
+            return `
+              <div class="crm-record-group">
+                <div class="crm-row">
+                  <div class="crm-col">
+                    <span class="crm-col-label">Sr.</span>
+                    <span class="crm-index">#${index + 1}</span>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Requirement</span>
+                    <div class="crm-primary">${escapeHtml(getLeadIntentText(lead))}</div>
+                    <div class="crm-secondary">${escapeHtml([lead.clientName, lead.paymentMethod].filter(Boolean).join(' · ') || 'Private lead intake')}</div>
+                    <div class="crm-chip-stack">
+                      <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
+                      <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                      ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+                    </div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Location</span>
+                    <div class="crm-primary">${escapeHtml(lead.location || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Building / Project</span>
+                    <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Property Type</span>
+                    <div class="crm-primary">${escapeHtml(lead.propertyType || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Budget</span>
+                    <div class="crm-primary">${escapeHtml(formatBudgetLabel(lead.budget))}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Workflow</span>
+                    <div class="crm-chip-stack">
+                      <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                      ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                      ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                    </div>
+                    <div class="crm-quick-meta">
+                      <span>Calls ${escapeHtml(lead.callCount || 0)}</span>
+                      <span>WA ${escapeHtml(lead.whatsappCount || 0)}</span>
+                      <span>${escapeHtml(lastTouched)} ago</span>
+                    </div>
+                  </div>
+                  <div class="crm-row-actions">
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editLead(${lead.id})" title="Edit">✎ Edit</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call')" title="Call">☎ Call</button>
+                    <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')" title="WhatsApp">WA</button>
+                    <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}" title="${lead.isArchived ? 'Restore' : 'Archive'}">${lead.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
+                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteLead(${lead.id})" title="Delete">✕</button>
+                  </div>
+                </div>
+                <details class="record-details-panel crm-row-panel">
+                  <summary>Status, follow-up, matches, history</summary>
+                  <div class="record-summary">
+                    <div class="muted"><strong>Private Notes:</strong> ${escapeHtml(lead.privateNotes || 'No private notes yet')}</div>
+                    <div class="muted"><strong>Last Contact:</strong> ${escapeHtml(formatLastContactLabel(lead.lastContactedAt))} via ${escapeHtml(lead.lastContactMethod || '--')}</div>
+                  </div>
+                  <div class="workflow-strip">
+                    <select id="lead-status-action-${lead.id}">
+                      ${DASHBOARD_LEAD_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(lead.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="changeLeadStatus(${lead.id})">Update Status</button>
+                  </div>
+                  <div class="record-inline-grid">
+                    <div class="field-block">
+                      <label class="small">Next Follow-up Date</label>
+                      <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Next Follow-up Time</label>
+                      <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Follow-up Note</label>
+                      <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
+                    </div>
+                    <label class="toggle-card compact-toggle">
+                      <input id="lead-followup-urgent-${lead.id}" type="checkbox" ${lead.isUrgentFollowUp ? 'checked' : ''}>
+                      <span><strong>Urgent Reminder</strong><small>Flag this lead as urgent.</small></span>
+                    </label>
+                  </div>
+                  <div class="workflow-strip">
+                    <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+                  </div>
+                  <div>
+                    <h4>Matching Listings</h4>
+                    ${renderLeadMatches(lead)}
+                  </div>
+                  <div>
+                    <h4>Activity History</h4>
+                    ${renderActivityTimeline(lead.activityLog)}
+                  </div>
+                </details>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      if (!target) return;
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = '<div class="empty">No listings match your current filters. Adjust your filters or add a new listing from Overview.</div>';
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="crm-sheet">
+          <div class="crm-sheet-head">
+            <div>Sr.</div>
+            <div>Listing</div>
+            <div>Location</div>
+            <div>Building / Project</div>
+            <div>Property Type</div>
+            <div>Price</div>
+            <div>Workflow</div>
+            <div>Actions</div>
+          </div>
+          ${properties.map((property, index) => {
+            const followUpState = getFollowUpStateInfo(property);
+            const ownerPhone = String(property.ownerPhone || '').trim();
+            const lastTouched = formatCompactAge(property.updatedAt || property.createdAt);
+            const distressLabel = getPropertyDistressLabel(property);
+            return `
+              <div class="crm-record-group">
+                <div class="crm-row ${property.isDistress ? 'is-distress' : ''}">
+                  <div class="crm-col">
+                    <span class="crm-col-label">Sr.</span>
+                    <span class="crm-index">#${index + 1}</span>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Listing</span>
+                    <div class="crm-primary">${escapeHtml(getPropertyPurposeLabel(property.purpose))}</div>
+                    <div class="crm-secondary">${escapeHtml(property.status ? `Status: ${formatStatusLabel(property.status)}` : 'Private listing')}</div>
+                    <div class="crm-chip-stack">
+                      <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                      <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+                      ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+                      ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+                    </div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Location</span>
+                    <div class="crm-primary">${escapeHtml(property.location || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Building / Project</span>
+                    <div class="crm-primary">${escapeHtml(property.buildingName || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Property Type</span>
+                    <div class="crm-primary">${escapeHtml(property.propertyType || '--')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Price</span>
+                    <div class="crm-primary">${escapeHtml(getPropertyDisplayPrice(property))}</div>
+                    ${distressLabel ? `<div class="crm-secondary">${escapeHtml(distressLabel)}</div>` : ''}
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Workflow</span>
+                    <div class="crm-chip-stack">
+                      <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+                      ${property.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+                      ${property.matchCount ? `<span class="badge badge-match">${property.matchCount} Match${property.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                    </div>
+                    <div class="crm-quick-meta">
+                      <span>Calls ${escapeHtml(property.ownerCallCount || 0)}</span>
+                      <span>WA ${escapeHtml(property.ownerWhatsappCount || 0)}</span>
+                      <span>${escapeHtml(lastTouched)} ago</span>
+                    </div>
+                  </div>
+                  <div class="crm-row-actions">
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">✎ Edit</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call')" title="Call Owner">☎ Call</button>
+                    <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
+                    <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
+                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">✕</button>
+                  </div>
+                </div>
+                <details class="record-details-panel crm-row-panel">
+                  <summary>Status, follow-up, matches, history</summary>
+                  <div class="record-summary">
+                    <div class="muted"><strong>Owner:</strong> ${escapeHtml(getPropertyPrivateContactSummary(property))}</div>
+                    <div class="muted"><strong>Terms:</strong> ${escapeHtml(getPropertyTermsSummary(property))}</div>
+                    <div class="muted"><strong>Public Notes:</strong> ${escapeHtml(property.publicNotes || 'No public note added')}</div>
+                    <div class="muted"><strong>Internal Notes:</strong> ${escapeHtml(property.internalNotes || 'No internal notes yet')}</div>
+                    <div class="muted"><strong>Last Contact:</strong> ${escapeHtml(formatLastContactLabel(property.lastOwnerContactedAt))} via ${escapeHtml(property.lastOwnerContactMethod || '--')}</div>
+                  </div>
+                  <div class="workflow-strip">
+                    <select id="property-status-action-${property.id}">
+                      ${DASHBOARD_LISTING_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(property.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="changePropertyStatus(${property.id})">Update Status</button>
+                  </div>
+                  <div class="record-inline-grid">
+                    <div class="field-block">
+                      <label class="small">Next Follow-up Date</label>
+                      <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Next Follow-up Time</label>
+                      <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Follow-up Note</label>
+                      <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
+                    </div>
+                    <label class="toggle-card compact-toggle">
+                      <input id="property-followup-urgent-${property.id}" type="checkbox" ${property.isUrgentFollowUp ? 'checked' : ''}>
+                      <span><strong>Urgent Reminder</strong><small>Flag this listing for urgent owner follow-up.</small></span>
+                    </label>
+                  </div>
+                  <div class="workflow-strip">
+                    <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+                  </div>
+                  <div>
+                    <h4>Matching Leads</h4>
+                    ${renderPropertyMatches(property)}
+                  </div>
+                  <div>
+                    <h4>Activity History</h4>
+                    ${renderActivityTimeline(property.activityLog)}
+                  </div>
+                </details>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
     async function logoutBroker() {
