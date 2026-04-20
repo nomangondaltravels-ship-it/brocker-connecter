@@ -465,7 +465,10 @@
       border-radius: 18px;
     }
 
-    .stat-card { padding: 14px; }
+    .stat-card {
+      padding: 14px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
     .stat-card small {
       display: block;
       color: var(--muted);
@@ -475,6 +478,18 @@
       margin-bottom: 8px;
     }
     .stat-card strong { font-size: 1.8rem; }
+    .stat-card.is-clickable {
+      cursor: pointer;
+      user-select: none;
+    }
+    .stat-card.is-clickable:hover,
+    .stat-card.is-clickable:focus-visible {
+      transform: translateY(-2px) scale(1.02);
+      border-color: rgba(212, 175, 55, 0.42);
+      background: linear-gradient(180deg, rgba(18, 31, 54, 0.96), rgba(12, 24, 44, 0.98));
+      box-shadow: 0 14px 28px rgba(4, 10, 22, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.08);
+      outline: none;
+    }
 
     .grid-2, .grid-3 { display: grid; gap: 14px; }
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2403,17 +2418,44 @@
       applyDashboardSearch(term);
     }
 
+    function openOverviewCardSection(sectionName) {
+      openSection(sectionName);
+      document.getElementById(`${sectionName}-section`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function handleOverviewCardKeydown(event, sectionName) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openOverviewCardSection(sectionName);
+      }
+    }
+
     function renderOverview() {
       const overview = state.overview || { totals: {}, broker: {} };
       const stats = [
-        ['Leads', overview.totals?.leads || 0],
-        ['Inventory', overview.totals?.properties || 0]
+        {
+          label: 'Leads',
+          value: overview.totals?.leads || 0,
+          section: 'leads'
+        },
+        {
+          label: 'Inventory',
+          value: overview.totals?.properties || 0,
+          section: 'properties'
+        }
       ];
 
       document.getElementById('overviewStats').innerHTML = stats.map(item => `
-        <div class="stat-card">
-          <small>${item[0]}</small>
-          <strong>${item[1]}</strong>
+        <div
+          class="stat-card is-clickable"
+          role="button"
+          tabindex="0"
+          aria-label="Open ${item.label} page"
+          onclick="openOverviewCardSection('${item.section}')"
+          onkeydown="handleOverviewCardKeydown(event, '${item.section}')"
+        >
+          <small>${item.label}</small>
+          <strong>${item.value}</strong>
         </div>
       `).join('');
     }
