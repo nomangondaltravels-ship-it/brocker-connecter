@@ -537,6 +537,37 @@
       line-height: 1.4;
     }
 
+    .workspace-shell {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(212,175,55,0.16);
+      background: linear-gradient(180deg, rgba(11,21,36,0.96), rgba(9,18,32,0.92));
+    }
+
+    .workspace-shell.active {
+      display: block;
+    }
+
+    .workspace-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .workspace-head p {
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+
+    .workspace-card.hidden {
+      display: none;
+    }
+
     .card { padding: 16px; }
     .card h3 { margin-bottom: 8px; font-size: 1rem; }
     .card p { color: var(--muted); line-height: 1.5; }
@@ -809,14 +840,14 @@
         </div>
         <div class="stats" id="overviewStats"></div>
         <div class="overview-actions">
-          <button class="btn quick-action-card" type="button" onclick="openSection('leads')">
+          <button class="btn quick-action-card" type="button" onclick="showOverviewWorkspace('lead')">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>Add New Lead</strong>
               <span>Create a new broker requirement or client demand.</span>
             </span>
           </button>
-          <button class="btn quick-action-card" type="button" onclick="openSection('properties')">
+          <button class="btn quick-action-card" type="button" onclick="showOverviewWorkspace('property')">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>Add New Listing</strong>
@@ -824,17 +855,15 @@
             </span>
           </button>
         </div>
-      </section>
-
-      <section class="section" id="leads-section">
-        <div class="section-head">
-          <div>
-            <h2>My Broker Requirements</h2>
-            <p>Add buyer or tenant requirements privately, then list a sanitized version publicly only when you want to share it.</p>
+        <div class="workspace-shell" id="overviewWorkspace">
+          <div class="workspace-head">
+            <div>
+              <h3 id="workspaceTitle">Add New Lead</h3>
+              <p id="workspaceCopy">Create and update private CRM records here. Public sharing stays optional.</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="hideOverviewWorkspace()">Close</button>
           </div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
+          <div class="card workspace-card" id="overviewLeadCard">
             <h3 id="leadFormTitle">Add Broker Requirement</h3>
             <form class="form-grid" id="leadForm">
               <input type="hidden" id="leadId">
@@ -892,29 +921,7 @@
               </div>
             </form>
           </div>
-          <div class="card">
-            <h3>Requirement Privacy Rules</h3>
-            <p>Private CRM data stays here only. When you list a broker requirement publicly, Broker Connector will only publish safe fields like category, location, budget range, and public notes.</p>
-            <div class="detail-grid" style="margin-top:14px;">
-              <div class="detail-cell"><small>Public-safe</small><strong>Category, location, budget, public note</strong></div>
-              <div class="detail-cell"><small>Hidden always</small><strong>Owner name/phone, client name/phone</strong></div>
-              <div class="detail-cell"><small>Workflow</small><strong>List or unlist any requirement with one click</strong></div>
-              <div class="detail-cell"><small>Meetings</small><strong>Track meeting date, time, next action</strong></div>
-            </div>
-          </div>
-        </div>
-        <div class="item-list" id="leadsList" style="margin-top:16px;"></div>
-      </section>
-
-      <section class="section" id="properties-section">
-        <div class="section-head">
-          <div>
-            <h2>My Properties</h2>
-            <p>Keep full inventory private, and publish only the sanitized marketplace version when you choose.</p>
-          </div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
+          <div class="card workspace-card hidden" id="overviewPropertyCard">
             <h3 id="propertyFormTitle">Add Property</h3>
             <form class="form-grid" id="propertyForm">
               <input type="hidden" id="propertyId">
@@ -946,18 +953,27 @@
               </div>
             </form>
           </div>
-          <div class="card">
-            <h3>Property Sharing Rules</h3>
-            <p>Shared property cards will show only safe marketplace information: purpose, property type, category, location, price, size, general note, and broker contact actions. Owner and client details remain hidden.</p>
-            <div class="detail-grid" style="margin-top:14px;">
-              <div class="detail-cell"><small>Marketplace actions</small><strong>I Have Match, WhatsApp Broker, Call Broker, Share Listing</strong></div>
-              <div class="detail-cell"><small>Listing control</small><strong>List or unlist each property independently</strong></div>
-              <div class="detail-cell"><small>Status</small><strong>Available, reserved, negotiation, closed, unlisted</strong></div>
-              <div class="detail-cell"><small>Privacy</small><strong>Internal notes stay private</strong></div>
-            </div>
+        </div>
+      </section>
+
+      <section class="section" id="leads-section">
+        <div class="section-head">
+          <div>
+            <h2>My Broker Requirements</h2>
+            <p>View and manage your private broker requirements here.</p>
           </div>
         </div>
-        <div class="item-list" id="propertiesList" style="margin-top:16px;"></div>
+        <div class="item-list" id="leadsList"></div>
+      </section>
+
+      <section class="section" id="properties-section">
+        <div class="section-head">
+          <div>
+            <h2>My Properties</h2>
+            <p>View and manage your private inventory here.</p>
+          </div>
+        </div>
+        <div class="item-list" id="propertiesList"></div>
       </section>
 
       <section class="section" id="profile-section">
@@ -1086,6 +1102,33 @@
       document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
       document.getElementById(`${name}-section`)?.classList.add('active');
       document.querySelector(`.menu button[data-section="${name}"]`)?.classList.add('active');
+      if (name !== 'overview') {
+        hideOverviewWorkspace();
+      }
+    }
+
+    function showOverviewWorkspace(type = 'lead') {
+      openSection('overview');
+      const shell = document.getElementById('overviewWorkspace');
+      const leadCard = document.getElementById('overviewLeadCard');
+      const propertyCard = document.getElementById('overviewPropertyCard');
+      const title = document.getElementById('workspaceTitle');
+      const copy = document.getElementById('workspaceCopy');
+      if (!shell || !leadCard || !propertyCard || !title || !copy) return;
+
+      const showLead = type === 'lead';
+      shell.classList.add('active');
+      leadCard.classList.toggle('hidden', !showLead);
+      propertyCard.classList.toggle('hidden', showLead);
+      title.textContent = showLead ? 'Add New Lead' : 'Add New Listing';
+      copy.textContent = showLead
+        ? 'Create and update private broker requirements here. Public sharing stays optional.'
+        : 'Create and update private inventory here. Public sharing stays optional.';
+      shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function hideOverviewWorkspace() {
+      document.getElementById('overviewWorkspace')?.classList.remove('active');
     }
 
     function badgeClass(status) {
@@ -1447,7 +1490,7 @@
     function editLead(id) {
       const lead = state.leads.find(item => item.id === id);
       if (!lead) return;
-      openSection('leads');
+      showOverviewWorkspace('lead');
       document.getElementById('leadId').value = lead.id;
       document.getElementById('leadType').value = lead.leadType || '';
       document.getElementById('leadPurpose').value = lead.purpose || '';
@@ -1480,7 +1523,7 @@
     function editProperty(id) {
       const property = state.properties.find(item => item.id === id);
       if (!property) return;
-      openSection('properties');
+      showOverviewWorkspace('property');
       document.getElementById('propertyId').value = property.id;
       document.getElementById('propertyPurpose').value = property.purpose || '';
       document.getElementById('propertyType').value = property.propertyType || '';
