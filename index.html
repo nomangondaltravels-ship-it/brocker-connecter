@@ -1983,7 +1983,7 @@
     });
 
     document.addEventListener('click', event => {
-      if (!event.target.closest('.floating-card') && !event.target.closest('.btn-tiny')) {
+      if (!event.target.closest('.floating-card') && !event.target.closest('.btn-tiny') && !event.target.closest('.action-icon-btn')) {
         closeAllPopovers();
       }
       if (!event.target.closest('#publicSearchBox') && !event.target.closest('#publicSearchSuggestions')) {
