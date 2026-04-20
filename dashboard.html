@@ -271,7 +271,7 @@
     }
 
     .hero {
-      padding: 22px;
+      padding: 16px 22px;
       background:
         linear-gradient(rgba(7,14,27,0.72), rgba(7,14,27,0.9)),
         url('https://images.unsplash.com/photo-1460317442991-0ec209397118?auto=format&fit=crop&w=1600&q=80') center/cover;
@@ -280,14 +280,15 @@
 
     .hero h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 3vw, 3.1rem);
-      margin-bottom: 10px;
+      font-size: clamp(1.7rem, 2.4vw, 2.45rem);
+      margin-bottom: 6px;
     }
 
     .hero p {
-      max-width: 840px;
+      max-width: 760px;
       color: #e8dcc0;
-      line-height: 1.6;
+      line-height: 1.45;
+      font-size: 0.96rem;
     }
 
     .status-bar {
@@ -454,7 +455,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -478,6 +479,63 @@
     .grid-2, .grid-3 { display: grid; gap: 14px; }
     .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .overview-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .quick-action-card {
+      width: 100%;
+      justify-content: flex-start;
+      align-items: center;
+      text-align: left;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(15,27,46,0.96), rgba(10,20,36,0.96));
+      border: 1px solid rgba(212,175,55,0.16);
+      color: var(--text);
+      gap: 14px;
+    }
+
+    .quick-action-card:hover {
+      border-color: rgba(212,175,55,0.34);
+      box-shadow: 0 18px 34px rgba(0,0,0,0.22);
+    }
+
+    .quick-action-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      border: 1px solid rgba(242,223,152,0.2);
+      background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(143,106,18,0.2));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gold-soft);
+      font-size: 1.35rem;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .quick-action-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .quick-action-copy strong {
+      font-size: 1rem;
+      color: var(--text);
+    }
+
+    .quick-action-copy span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
 
     .card { padding: 16px; }
     .card h3 { margin-bottom: 8px; font-size: 1rem; }
@@ -667,13 +725,13 @@
         transform: none;
       }
       .sidebar-peek { display: none; }
-      .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .grid-3, .kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3, .kanban, .overview-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 
     @media (max-width: 760px) {
-      .stats, .grid-2, .grid-3, .kanban, .detail-grid, .form-grid, .check-grid {
+      .stats, .grid-2, .grid-3, .kanban, .detail-grid, .form-grid, .check-grid, .overview-actions {
         grid-template-columns: 1fr;
       }
       .section, .hero { padding-left: 16px; padding-right: 16px; }
@@ -750,19 +808,21 @@
           </div>
         </div>
         <div class="stats" id="overviewStats"></div>
-        <div class="grid-3" style="margin-top:16px;">
-          <div class="card">
-            <h3>Broker Summary</h3>
-            <div class="item-list" id="brokerSummaryCard"></div>
-          </div>
-          <div class="card">
-            <h3>Upcoming Meetings</h3>
-            <div class="item-list" id="meetingHighlights"></div>
-          </div>
-          <div class="card">
-            <h3>Public Exposure</h3>
-            <div class="item-list" id="sharedHighlights"></div>
-          </div>
+        <div class="overview-actions">
+          <button class="btn quick-action-card" type="button" onclick="openSection('leads')">
+            <span class="quick-action-icon">+</span>
+            <span class="quick-action-copy">
+              <strong>Add New Lead</strong>
+              <span>Create a new broker requirement or client demand.</span>
+            </span>
+          </button>
+          <button class="btn quick-action-card" type="button" onclick="openSection('properties')">
+            <span class="quick-action-icon">+</span>
+            <span class="quick-action-copy">
+              <strong>Add New Listing</strong>
+              <span>Add a new property to your private inventory.</span>
+            </span>
+          </button>
         </div>
       </section>
 
@@ -1169,12 +1229,8 @@
     function renderOverview() {
       const overview = state.overview || { totals: {}, broker: {} };
       const stats = [
-        ['Private Requirements', overview.totals?.leads || 0],
-        ['Private Properties', overview.totals?.properties || 0],
-        ['Broker Connector Listings', overview.totals?.sharedListings || 0],
-        ['Active Requirements', overview.totals?.activeLeads || 0],
-        ['Active Properties', overview.totals?.activeProperties || 0],
-        ['Meetings', overview.totals?.meetings || 0]
+        ['Leads', overview.totals?.leads || 0],
+        ['Inventory', overview.totals?.properties || 0]
       ];
 
       document.getElementById('overviewStats').innerHTML = stats.map(item => `
@@ -1183,27 +1239,6 @@
           <strong>${item[1]}</strong>
         </div>
       `).join('');
-
-      document.getElementById('brokerSummaryCard').innerHTML = `
-        <div class="mini-item"><strong>${overview.broker?.fullName || '--'}</strong><div class="muted">${overview.broker?.brokerIdNumber || '--'}</div></div>
-        <div class="mini-item"><strong>${overview.broker?.mobileNumber || '--'}</strong><div class="muted">${overview.broker?.email || '--'}</div></div>
-        <div class="mini-item"><strong>${overview.broker?.companyName || 'No company added'}</strong><div class="muted">${overview.broker?.isVerified ? 'Verified broker' : 'Verification pending'}</div></div>
-      `;
-
-      const meetings = state.followUps.slice(0, 4);
-      document.getElementById('meetingHighlights').innerHTML = meetings.length ? meetings.map(item => `
-        <div class="mini-item">
-          <strong>${item.followUpType || 'Follow-up'}</strong>
-          <div class="muted">${item.entityType} #${item.entityId}${item.meetingDate ? ` · ${item.meetingDate}` : ''}${item.meetingTime ? ` ${item.meetingTime}` : ''}</div>
-        </div>
-      `).join('') : `<div class="empty">No meetings or follow-ups yet.</div>`;
-
-      document.getElementById('sharedHighlights').innerHTML = state.sharedListings.length ? state.sharedListings.slice(0, 4).map(item => `
-        <div class="mini-item">
-          <strong>${item.purpose} · ${item.category}</strong>
-          <div class="muted">${item.location} · ${item.priceLabel}</div>
-        </div>
-      `).join('') : `<div class="empty">No broker connector listings yet. Use “List on Broker Connector” from your broker requirements or properties.</div>`;
     }
 
     function leadChecklistSummary(lead) {
