@@ -3403,6 +3403,10 @@
         .replace(/'/g, '&#39;');
     }
 
+    function normalizeText(value) {
+      return String(value || '').trim();
+    }
+
     function sanitizeStringArray(values) {
       if (!Array.isArray(values)) return [];
       return values
