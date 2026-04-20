@@ -6,12 +6,12 @@
   <title>Broker Connector Admin Portal</title>
   <style>
     :root {
-      --bg: #07111f;
-      --panel: rgba(10, 20, 35, 0.95);
-      --panel-2: rgba(14, 27, 46, 0.98);
-      --text: #e5eef8;
-      --muted: #94a3b8;
-      --line: rgba(148, 163, 184, 0.14);
+      --bg: #f6f8fc;
+      --panel: rgba(255, 255, 255, 0.96);
+      --panel-2: rgba(255, 255, 255, 0.99);
+      --text: #243041;
+      --muted: #6b7280;
+      --line: rgba(148, 163, 184, 0.22);
       --green: #22c55e;
       --green-dark: #15803d;
       --gold: #f4c542;
@@ -325,6 +325,95 @@
     }
 
     .muted { color: var(--muted); font-size: 0.82rem; }
+
+    /* Light theme overrides */
+    body {
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(244, 197, 66, 0.08), transparent 20%),
+        linear-gradient(180deg, #fbfcfe 0%, #f5f7fb 54%, #eef3f8 100%);
+    }
+
+    .topbar,
+    .panel,
+    .login-card,
+    .card,
+    .item {
+      background: var(--panel) !important;
+      color: var(--text);
+      border-color: var(--line) !important;
+      box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+    }
+
+    .topbar {
+      background: rgba(255,255,255,0.9) !important;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .hero {
+      background:
+        linear-gradient(rgba(255,255,255,0.88), rgba(248,250,252,0.94)),
+        url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1600&q=80') center/cover !important;
+    }
+
+    .hero p,
+    .brand small,
+    .login-card p,
+    .card p,
+    .muted,
+    .inline-note,
+    .stat-card small {
+      color: var(--muted) !important;
+    }
+
+    input,
+    select,
+    textarea,
+    .helper {
+      background: #ffffff !important;
+      color: var(--text) !important;
+      border-color: rgba(148, 163, 184, 0.26) !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #9aa4b2;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(180deg, #ffffff, #f4f7fb) !important;
+      color: var(--text) !important;
+      border-color: rgba(148, 163, 184, 0.24) !important;
+    }
+
+    .btn-warning {
+      background: #fff7ed !important;
+      color: #c2410c !important;
+      border-color: rgba(249, 115, 22, 0.22) !important;
+    }
+
+    .btn-success {
+      background: #f0fdf4 !important;
+      color: #166534 !important;
+      border-color: rgba(34, 197, 94, 0.22) !important;
+    }
+
+    .btn-danger {
+      background: #fef2f2 !important;
+      color: #b91c1c !important;
+    }
+
+    .status.error {
+      color: #b91c1c !important;
+      background: #fef2f2 !important;
+      border-color: rgba(239, 68, 68, 0.22) !important;
+    }
+
+    .status.success {
+      color: #166534 !important;
+      background: #f0fdf4 !important;
+      border-color: rgba(34, 197, 94, 0.22) !important;
+    }
 
     @media (max-width: 980px) {
       .grid-4, .grid-2 { grid-template-columns: 1fr; }
