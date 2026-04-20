@@ -686,34 +686,6 @@
       gap: 10px;
     }
 
-    .top-metrics {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .metric-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(212,175,55,0.14);
-      background: rgba(10, 20, 36, 0.82);
-      color: var(--muted);
-      font-size: 0.74rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .metric-chip strong {
-      color: var(--gold-soft);
-      font-size: 0.82rem;
-      letter-spacing: 0;
-    }
-
     .page-nav-btn {
       min-height: 40px;
       padding: 0 12px;
@@ -757,11 +729,33 @@
       border-radius: 999px;
     }
 
+    .section-switch-btn .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      padding: 0 7px;
+      min-height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(255,255,255,0.78);
+      color: var(--text-soft);
+      font-size: 0.72rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
     .section-switch-btn.is-active {
       background: linear-gradient(135deg, #f0de9b, var(--gold) 45%, #9e7415 100%);
       color: #111827;
       border-color: rgba(242,223,152,0.35);
       box-shadow: 0 12px 28px rgba(143,106,18,0.24);
+    }
+
+    .section-switch-btn.is-active .tab-count {
+      background: rgba(17, 24, 39, 0.08);
+      border-color: rgba(17, 24, 39, 0.12);
+      color: #111827;
     }
 
     .page-head.compact-head h2 {
@@ -979,8 +973,7 @@
     .brand-logo,
     .auth-tabs,
     .floating-card .small-pill,
-    .sheet-cell,
-    .metric-chip {
+    .sheet-cell {
       background: linear-gradient(180deg, #ffffff, #f3f6fb) !important;
       border-color: rgba(148, 163, 184, 0.22) !important;
       color: var(--text);
@@ -1151,29 +1144,6 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
     }
 
-    .top-metrics {
-      gap: 10px;
-    }
-
-    .metric-chip {
-      min-width: 98px;
-      padding: 10px 12px;
-      border-radius: 16px;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-    }
-
-    .metric-chip strong {
-      font-size: 1rem;
-      letter-spacing: -0.02em;
-      color: #1f2937;
-    }
-
-    .metric-chip small {
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      font-weight: 800;
-    }
-
     .search-hub,
     .search-hub.compact-top-search {
       padding: 16px 18px;
@@ -1284,7 +1254,6 @@
         align-items: stretch;
       }
 
-      .top-metrics,
       .top-actions {
         justify-content: flex-start;
       }
@@ -1320,7 +1289,6 @@
       .search-hub { margin-inline: 18px; }
       .hero-box.compact-public-hero { padding: 18px; }
       .public-row { grid-template-columns: 1fr; }
-      .top-metrics { justify-content: flex-start; }
       .top-actions { justify-content: flex-start; }
       .sidebar {
         top: 78px;
@@ -1356,12 +1324,6 @@
         </div>
       </div>
       <div class="top-actions-wrap">
-        <div class="top-metrics" id="publicTopMetrics">
-          <span class="metric-chip">All <strong id="metricAll">0</strong></span>
-          <span class="metric-chip">Req <strong id="metricRequirements">0</strong></span>
-          <span class="metric-chip">List <strong id="metricListings">0</strong></span>
-          <span class="metric-chip">Distress <strong id="metricDistress">0</strong></span>
-        </div>
         <div class="top-actions">
           <button class="btn btn-secondary page-nav-btn is-active" type="button" aria-current="page">Broker Connector Page</button>
           <button class="btn btn-secondary page-nav-btn" id="dashboardBtn" type="button" onclick="handleBrokerDeskClick()">Broker Desk</button>
@@ -1395,9 +1357,9 @@
         <h1>Broker Connector Page</h1>
         <p>Shared broker marketplace for requirements and listings. Private owner, client, and workflow details always stay inside Broker Desk.</p>
         <div class="hero-tabs">
-          <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
-          <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
-          <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
+          <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements <span class="tab-count" id="tabCountRequirements">0</span></button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings <span class="tab-count" id="tabCountListings">0</span></button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals <span class="tab-count" id="tabCountDistress">0</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="contact" onclick="openSection('contact')">Contact</button>
         </div>
       </section>
@@ -1846,14 +1808,12 @@
       const requirements = filtered.filter(item => item.sourceType === 'lead');
       const listings = filtered.filter(item => item.sourceType === 'property');
       const distress = listings.filter(item => item.isDistress);
-      const statAll = document.getElementById('statAll') || document.getElementById('metricAll');
-      const statLeads = document.getElementById('statLeads') || document.getElementById('metricRequirements');
-      const statProperties = document.getElementById('statProperties') || document.getElementById('metricListings');
-      const statUrgent = document.getElementById('statUrgent') || document.getElementById('metricDistress');
-      if (statAll) statAll.textContent = filtered.length;
-      if (statLeads) statLeads.textContent = requirements.length;
-      if (statProperties) statProperties.textContent = listings.length;
-      if (statUrgent) statUrgent.textContent = distress.length;
+      const requirementCount = document.getElementById('tabCountRequirements');
+      const listingCount = document.getElementById('tabCountListings');
+      const distressCount = document.getElementById('tabCountDistress');
+      if (requirementCount) requirementCount.textContent = requirements.length;
+      if (listingCount) listingCount.textContent = listings.length;
+      if (distressCount) distressCount.textContent = distress.length;
     }
 
     function renderHomeHighlights() {
@@ -2107,10 +2067,12 @@
       const requirements = filtered.filter(item => item.sourceType === 'lead');
       const listings = filtered.filter(item => item.sourceType === 'property');
       const distress = listings.filter(item => item.isDistress);
-      document.getElementById('metricAll').textContent = filtered.length;
-      document.getElementById('metricRequirements').textContent = requirements.length;
-      document.getElementById('metricListings').textContent = listings.length;
-      document.getElementById('metricDistress').textContent = distress.length;
+      const requirementCount = document.getElementById('tabCountRequirements');
+      const listingCount = document.getElementById('tabCountListings');
+      const distressCount = document.getElementById('tabCountDistress');
+      if (requirementCount) requirementCount.textContent = requirements.length;
+      if (listingCount) listingCount.textContent = listings.length;
+      if (distressCount) distressCount.textContent = distress.length;
     }
 
     function renderPublicViews() {
