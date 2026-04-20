@@ -59,11 +59,10 @@
       width: min(1400px, 95%);
       margin: 0 auto;
       padding: 14px 0;
-      display: flex;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: auto minmax(260px, 380px) auto;
       align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
     }
 
     .brand {
@@ -92,12 +91,19 @@
       letter-spacing: 0.12em;
     }
 
-    .top-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-self: end;
+      justify-content: flex-end;
+    }
 
-    .top-search-strip {
-      width: min(1400px, 95%);
-      margin: 0 auto;
-      padding: 0 0 12px;
+    .top-search-inline {
+      min-width: 0;
+      width: 100%;
+      position: relative;
     }
 
     .btn {
@@ -315,6 +321,7 @@
       border-radius: 0;
       background: transparent;
       position: relative;
+      width: 100%;
     }
 
     .search-hub.compact-top-search h3,
@@ -361,24 +368,25 @@
     }
 
     .search-hub.compact-top-search input {
-      height: 48px;
+      height: 42px;
       padding: 0 16px 0 42px;
-      border-radius: 14px;
+      border-radius: 12px;
       background: linear-gradient(180deg, rgba(11,21,36,0.96), rgba(9,18,32,0.92));
       border: 1px solid rgba(212,175,55,0.18);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      font-size: 0.95rem;
     }
 
     .search-hub.compact-top-search .btn {
-      min-height: 44px;
-      padding: 0 14px;
-      border-radius: 12px;
-      font-size: 0.92rem;
+      min-height: 40px;
+      padding: 0 12px;
+      border-radius: 11px;
+      font-size: 0.88rem;
     }
 
     .search-hub.compact-top-search .btn-secondary {
-      min-width: 46px;
-      padding-inline: 12px;
+      min-width: 40px;
+      padding-inline: 10px;
     }
 
     .search-suggestions {
@@ -393,7 +401,7 @@
       position: absolute;
       top: calc(100% + 10px);
       left: 0;
-      width: min(780px, 100%);
+      width: 100%;
       z-index: 1100;
       padding: 10px;
       border-radius: 16px;
@@ -618,6 +626,12 @@
     }
 
     @media (max-width: 1080px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+      .top-actions {
+        justify-self: stretch;
+      }
       .app-shell { grid-template-columns: 1fr; }
       .sidebar-dock {
         position: static;
@@ -643,10 +657,6 @@
       .section, .hero { padding-left: 16px; padding-right: 16px; }
       .status-bar, .search-hub { margin-left: 16px; margin-right: 16px; }
       .search-row { grid-template-columns: 1fr; }
-      .top-search-strip {
-        width: min(1400px, calc(100% - 32px));
-        padding-bottom: 14px;
-      }
       .search-hub.compact-top-search .search-row {
         grid-template-columns: 1fr;
       }
@@ -666,22 +676,22 @@
           <small>Private CRM Dashboard</small>
         </div>
       </div>
+      <div class="top-search-inline">
+        <div class="search-hub compact-top-search">
+          <div class="search-row" id="dashboardSearchBox">
+            <div class="search-field-wrap">
+              <input id="dashboardSearchInput" type="search" placeholder="Search" autocomplete="off">
+            </div>
+            <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
+            <button class="btn btn-secondary" type="button" onclick="clearDashboardSearch()" aria-label="Clear search">X</button>
+          </div>
+          <div class="search-suggestions hidden" id="dashboardSearchSuggestions"></div>
+        </div>
+      </div>
       <div class="top-actions">
         <button class="btn btn-secondary" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
         <button class="btn btn-primary" id="brokerIdentityBtn" type="button">Broker Dashboard</button>
         <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
-      </div>
-    </div>
-    <div class="top-search-strip">
-      <div class="search-hub compact-top-search">
-        <div class="search-row" id="dashboardSearchBox">
-          <div class="search-field-wrap">
-            <input id="dashboardSearchInput" type="search" placeholder="Search" autocomplete="off">
-          </div>
-          <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
-          <button class="btn btn-secondary" type="button" onclick="clearDashboardSearch()" aria-label="Clear search">X</button>
-        </div>
-        <div class="search-suggestions hidden" id="dashboardSearchSuggestions"></div>
       </div>
     </div>
   </header>
