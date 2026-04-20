@@ -516,6 +516,12 @@
       return sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
     }
 
+    function handleAdminSessionFailure(message = 'Admin session expired. Please sign in again.') {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      showLogin();
+      setLoginStatus(message, 'error');
+    }
+
     async function fetchAdminComplaints() {
       const token = getAdminToken();
       if (!token) {
@@ -577,6 +583,9 @@
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
         throw new Error(result?.message || 'Failed to load broker accounts.');
       }
 
@@ -600,6 +609,9 @@
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
         throw new Error(result?.message || 'Broker action failed.');
       }
 
@@ -782,11 +794,16 @@
     async function loadAdminData() {
       loadLocalAdminState();
       let accounts = [];
+      let brokerLoadError = '';
       try {
         accounts = await fetchAdminBrokers();
       } catch (error) {
         console.error(error);
-        setAdminStatus(error?.message || 'Broker accounts could not load.', 'error');
+        brokerLoadError = error?.message || 'Broker accounts could not load.';
+        if (/admin login required|session expired/i.test(brokerLoadError)) {
+          return;
+        }
+        setAdminStatus(brokerLoadError, 'error');
       }
       adminBrokerAccounts = accounts;
       brokerApprovals = Object.fromEntries(accounts.filter(item => item.approved).map(item => [item.brokerId, true]));
@@ -817,8 +834,10 @@
 
       if (reqError || dealError) {
         setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
+      } else if (brokerLoadError) {
+        setAdminStatus(brokerLoadError, 'error');
       } else if (!accounts.length) {
-        setAdminStatus('No broker accounts found yet.', complaintsReadable ? 'error' : 'error');
+        setAdminStatus('No broker accounts found yet.', 'error');
       } else if (!complaintsReadable) {
         setAdminStatus('Requirements and deals loaded, but complaint review is not available with current Supabase permissions.', 'error');
       } else {

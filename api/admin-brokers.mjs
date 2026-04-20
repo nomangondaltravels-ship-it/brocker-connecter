@@ -31,11 +31,13 @@ function verifyAdminToken(token, secret) {
 }
 
 function sanitizeBroker(row) {
+  const fallbackId = row.broker_id_number || `BROKER-${String(row.id || '').slice(0, 8).toUpperCase()}`;
+  const fallbackName = row.full_name || row.email || fallbackId;
   return {
     id: row.id,
-    brokerId: row.broker_id_number,
-    name: row.full_name,
-    phone: row.mobile_number,
+    brokerId: fallbackId,
+    name: fallbackName,
+    phone: row.mobile_number || '',
     email: row.email,
     company: row.company_name || '',
     approved: Boolean(row.is_verified),
