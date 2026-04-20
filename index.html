@@ -1443,14 +1443,19 @@
       const requirements = filtered.filter(item => item.sourceType === 'lead');
       const listings = filtered.filter(item => item.sourceType === 'property');
       const distress = listings.filter(item => item.isDistress);
-      document.getElementById('statAll').textContent = filtered.length;
-      document.getElementById('statLeads').textContent = requirements.length;
-      document.getElementById('statProperties').textContent = listings.length;
-      document.getElementById('statUrgent').textContent = distress.length;
+      const statAll = document.getElementById('statAll') || document.getElementById('metricAll');
+      const statLeads = document.getElementById('statLeads') || document.getElementById('metricRequirements');
+      const statProperties = document.getElementById('statProperties') || document.getElementById('metricListings');
+      const statUrgent = document.getElementById('statUrgent') || document.getElementById('metricDistress');
+      if (statAll) statAll.textContent = filtered.length;
+      if (statLeads) statLeads.textContent = requirements.length;
+      if (statProperties) statProperties.textContent = listings.length;
+      if (statUrgent) statUrgent.textContent = distress.length;
     }
 
     function renderHomeHighlights() {
       const target = document.getElementById('homeHighlights');
+      if (!target) return;
       const highlights = getFilteredPublicListings()
         .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)))
         .slice(0, 4);
