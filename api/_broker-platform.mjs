@@ -530,42 +530,6 @@ export async function supabaseAuthAdminGetUser({
   return result?.user || result;
 }
 
-export async function supabaseAuthAdminListUsers({
-  supabaseUrl,
-  serviceRoleKey,
-  page = 1,
-  perPage = 200
-}) {
-  const url = new URL(`${supabaseUrl}/auth/v1/admin/users`);
-  url.searchParams.set('page', String(page));
-  url.searchParams.set('per_page', String(perPage));
-
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const error = new Error(
-      normalizeText(result?.msg)
-      || normalizeText(result?.error_description)
-      || normalizeText(result?.message)
-      || normalizeText(result?.error)
-      || 'Supabase admin users list failed.'
-    );
-    error.status = response.status;
-    error.payload = result;
-    throw error;
-  }
-
-  return Array.isArray(result?.users) ? result.users : [];
-}
-
 export async function supabaseAuthResetPasswordForEmail({
   supabaseUrl,
   publishableKey,
