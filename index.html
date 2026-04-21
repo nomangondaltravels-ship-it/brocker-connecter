@@ -1754,15 +1754,16 @@
         <button class="auth-tab active" id="tabSignin" type="button" onclick="setAuthMode('signin')">Sign In</button>
         <button class="auth-tab" id="tabRegister" type="button" onclick="setAuthMode('register')">Register</button>
       </div>
-      <p class="auth-copy" id="authCopy">Enter your broker ID or mobile number, and password to open your private dashboard.</p>
+      <p class="auth-copy" id="authCopy">Sign in with your email address or mobile number, and password to open your private dashboard.</p>
       <div class="auth-status" id="authStatus"></div>
       <form id="authForm" class="grid-2" style="margin-top:16px;">
-        <div class="full" id="fullNameWrap"><label class="small">Broker Name</label><input id="authFullName"></div>
+        <div class="full" id="fullNameWrap"><label class="small">Full Name</label><input id="authFullName"></div>
         <div class="full" id="companyWrap"><label class="small">Company Name (Optional)</label><input id="authCompany"></div>
-        <div><label class="small">Broker ID Number</label><input id="authBrokerId"></div>
-        <div><label class="small">Mobile Number</label><input id="authMobile" placeholder="058XXXXXXX or +9715XXXXXXXX"></div>
-        <div class="full" id="emailWrap"><label class="small">Email Address</label><input id="authEmail" type="email"></div>
+        <div id="brokerIdWrap" style="display:none;"><label class="small">Broker ID Number</label><input id="authBrokerId"></div>
+        <div id="mobileWrap"><label class="small">Mobile Number (Optional)</label><input id="authMobile" placeholder="058XXXXXXX or +9715XXXXXXXX"></div>
+        <div class="full" id="emailWrap"><label class="small">Email Address</label><input id="authEmail" type="email" placeholder="name@example.com"></div>
         <div class="full"><label class="small">Password</label><input id="authPassword" type="password"></div>
+        <div class="full" id="confirmPasswordWrap"><label class="small">Confirm Password</label><input id="authConfirmPassword" type="password"></div>
         <div class="full actions">
           <button class="btn btn-primary" type="submit" id="authSubmitBtn">Sign In</button>
         </div>
@@ -1892,6 +1893,10 @@
       return String(value || '').trim();
     }
 
+    function isValidEmailAddress(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+    }
+
     function setAuthSubmitLoading(isLoading) {
       const button = document.getElementById('authSubmitBtn');
       if (!button) return;
@@ -1908,8 +1913,12 @@
       if (/cannot read properties/i.test(message)) return fallback;
       if (/invalid password/i.test(message)) return 'Invalid password';
       if (/broker not found/i.test(message)) return 'Broker not found';
-      if (/enter broker id or mobile number/i.test(message)) return 'Enter Broker ID or Mobile Number';
+      if (/enter email address or mobile number/i.test(message)) return 'Enter email address or mobile number';
+      if (/enter broker id or mobile number/i.test(message)) return 'Enter email address or mobile number';
       if (/enter password/i.test(message)) return 'Enter password';
+      if (/valid email address/i.test(message)) return 'Enter a valid email address';
+      if (/passwords do not match/i.test(message)) return 'Passwords do not match';
+      if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
       if (/session creation failed/i.test(message)) return 'Login failed, please try again.';
       return message;
     }
@@ -2519,14 +2528,17 @@
       document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
       document.getElementById('authTitle').textContent = mode === 'register' ? 'Register Broker Account' : 'Sign In Broker Account';
       document.getElementById('authCopy').textContent = mode === 'register'
-        ? 'Create your broker account, then Broker Connector will redirect you to your private CRM dashboard.'
-        : 'Sign in with your broker ID or mobile number, and password, to open your separate private dashboard.';
+        ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
+        : 'Sign in with your email address or mobile number, and password, to open your separate private dashboard.';
       document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Register and Continue' : 'Sign In and Continue';
       document.getElementById('fullNameWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('companyWrap').style.display = mode === 'register' ? 'block' : 'none';
-      document.getElementById('emailWrap').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('brokerIdWrap').style.display = 'none';
+      document.getElementById('emailWrap').style.display = 'block';
+      document.getElementById('confirmPasswordWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('authFullName').required = mode === 'register';
-      document.getElementById('authEmail').required = mode === 'register';
+      document.getElementById('authEmail').required = false;
+      document.getElementById('authConfirmPassword').required = mode === 'register';
       document.getElementById('authStatus').className = 'auth-status';
       document.getElementById('authStatus').textContent = '';
       setAuthSubmitLoading(false);
@@ -2549,8 +2561,9 @@
       return (Array.isArray(accounts) ? accounts : []).find(account => {
         const brokerIdMatch = String(account?.brokerId || '') === String(identifier || '');
         const phoneMatch = normalizePhoneNumber(account?.phone) === normalizedIdentifierPhone;
+        const emailMatch = String(account?.email || '').trim().toLowerCase() === String(identifier || '').trim().toLowerCase();
         const passwordMatch = String(account?.password || '') === String(password || '');
-        return passwordMatch && (brokerIdMatch || phoneMatch);
+        return passwordMatch && (brokerIdMatch || phoneMatch || emailMatch);
       }) || null;
     }
 
@@ -2562,10 +2575,10 @@
         action: 'register',
         fullName: account.name || 'Broker',
         companyName: account.company || '',
-        brokerIdNumber: account.brokerId || identifier,
         mobileNumber: account.phone || identifier,
         email: account.email || `${String(account.brokerId || 'broker').toLowerCase()}@brokerconnector.local`,
-        password
+        password,
+        confirmPassword: password
       };
 
       const registerResponse = await fetch('/api/broker-auth', {
@@ -2644,13 +2657,26 @@
         setAuthStatus('');
         const brokerIdValue = normalizeBrokerIdInput(document.getElementById('authBrokerId').value);
         const mobileValue = normalizePhoneNumber(document.getElementById('authMobile').value);
-        const identifierValue = brokerIdValue || mobileValue;
+        const emailValue = String(document.getElementById('authEmail').value || '').trim().toLowerCase();
+        const identifierValue = emailValue || mobileValue || brokerIdValue;
         const passwordValue = String(document.getElementById('authPassword').value || '').trim();
+        const confirmPasswordValue = String(document.getElementById('authConfirmPassword').value || '').trim();
         if (state.authMode === 'signin' && !identifierValue) {
-          throw new Error('Enter Broker ID or Mobile Number');
+          throw new Error('Enter email address or mobile number');
         }
         if (!passwordValue) {
           throw new Error('Enter password');
+        }
+        if (state.authMode === 'register') {
+          if (String(document.getElementById('authFullName').value || '').trim().length < 2) {
+            throw new Error('Enter full name');
+          }
+          if (!emailValue || !isValidEmailAddress(emailValue)) {
+            throw new Error('Enter a valid email address');
+          }
+          if (passwordValue !== confirmPasswordValue) {
+            throw new Error('Passwords do not match');
+          }
         }
         setAuthSubmitLoading(true);
         const payload = state.authMode === 'register'
@@ -2658,16 +2684,16 @@
               action: 'register',
               fullName: document.getElementById('authFullName').value,
               companyName: document.getElementById('authCompany').value,
-              brokerIdNumber: brokerIdValue,
               mobileNumber: mobileValue,
-              email: document.getElementById('authEmail').value,
-              password: passwordValue
+              email: emailValue,
+              password: passwordValue,
+              confirmPassword: confirmPasswordValue
             }
           : {
               action: 'login',
               identifier: identifierValue,
-              brokerIdNumber: brokerIdValue,
               mobileNumber: mobileValue,
+              email: emailValue,
               password: passwordValue
             };
 
@@ -2710,7 +2736,22 @@
           throw new Error(getAuthFailureMessage(result));
         }
 
+        if (state.authMode === 'register' && result?.requiresEmailConfirmation) {
+          document.getElementById('authPassword').value = '';
+          document.getElementById('authConfirmPassword').value = '';
+          setAuthMode('signin');
+          document.getElementById('authEmail').value = emailValue;
+          setAuthStatus(result?.message || 'Check your email to confirm your account.', 'success');
+          return;
+        }
+
         if (!persistBrokerSession(result)) {
+          if (state.authMode === 'register') {
+            setAuthMode('signin');
+            document.getElementById('authEmail').value = emailValue;
+            setAuthStatus(result?.message || 'Account created successfully. You can sign in now.', 'success');
+            return;
+          }
           console.warn('Broker auth returned invalid payload.', result);
           throw new Error('Login failed, please try again.');
         }

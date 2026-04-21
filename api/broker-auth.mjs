@@ -1,13 +1,17 @@
 import {
+  createPendingMobileValue,
   createPasswordHash,
   createToken,
   getBearerToken,
   getSupabaseConfig,
+  getSupabasePublishableKey,
   json,
   normalizeEmail,
   normalizePhoneNumber,
   normalizeText,
   requiredEnv,
+  supabaseAuthDeleteUser,
+  supabaseAuthSignUp,
   supabasePatch,
   supabaseInsert,
   supabaseSelect,
@@ -20,7 +24,7 @@ function sanitizeBroker(broker) {
     id: broker.id,
     fullName: broker.full_name,
     brokerIdNumber: broker.broker_id_number,
-    mobileNumber: broker.mobile_number,
+    mobileNumber: normalizePhoneNumber(broker.mobile_number),
     email: broker.email,
     companyName: broker.company_name || '',
     isVerified: Boolean(broker.is_verified),
@@ -45,6 +49,11 @@ function buildSessionToken(broker) {
     brokerIdNumber: broker.broker_id_number,
     email: broker.email
   }, getBrokerSessionSecret());
+}
+
+function buildInternalBrokerId(authUserId) {
+  const compact = normalizeText(authUserId).replace(/[^a-z0-9]/gi, '').toUpperCase();
+  return `BC-${(compact || 'BROKER').slice(0, 10)}`;
 }
 
 function findMatchingBrokers(candidates, {
@@ -152,8 +161,9 @@ export async function GET(request) {
 export async function POST(request) {
   const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
   const brokerSecret = getBrokerSessionSecret();
+  const publishableKey = getSupabasePublishableKey();
 
-  if (!supabaseUrl || !serviceRoleKey || !brokerSecret) {
+  if (!supabaseUrl || !serviceRoleKey || !brokerSecret || !publishableKey) {
     return json({ message: 'Missing required broker auth environment variables.' }, 500);
   }
 
@@ -166,26 +176,23 @@ export async function POST(request) {
 
   if (action === 'register') {
     const fullName = normalizeText(body?.fullName);
-    const brokerIdNumber = normalizeText(body?.brokerIdNumber);
     const mobileNumber = normalizePhoneNumber(body?.mobileNumber);
     const email = normalizeEmail(body?.email);
     const password = String(body?.password || '');
+    const confirmPassword = String(body?.confirmPassword || '');
     const companyName = normalizeText(body?.companyName);
 
     if (fullName.length < 2) {
-      return json({ message: 'Please enter the broker name.' }, 400);
+      return json({ message: 'Please enter full name.' }, 400);
     }
-    if (!brokerIdNumber) {
-      return json({ message: 'Please enter the broker ID number.' }, 400);
-    }
-    if (!mobileNumber) {
-      return json({ message: 'Please enter a valid UAE mobile number.' }, 400);
-    }
-    if (!email) {
+    if (!email || !email.includes('@')) {
       return json({ message: 'Please enter a valid email address.' }, 400);
     }
     if (password.length < 6) {
       return json({ message: 'Password must be at least 6 characters long.' }, 400);
+    }
+    if (password !== confirmPassword) {
+      return json({ message: 'Passwords do not match.' }, 400);
     }
 
     const existing = await supabaseSelect({
@@ -197,8 +204,7 @@ export async function POST(request) {
     });
 
     const duplicate = (Array.isArray(existing) ? existing : []).find(item =>
-      item.broker_id_number === brokerIdNumber ||
-      item.mobile_number === mobileNumber ||
+      (mobileNumber && normalizePhoneNumber(item.mobile_number) === mobileNumber) ||
       item.email === email
     );
 
@@ -206,33 +212,83 @@ export async function POST(request) {
       return json({ message: 'This broker account already exists. Please sign in instead.' }, 409);
     }
 
-    const createdRows = await supabaseInsert({
-      supabaseUrl,
-      serviceRoleKey,
-      table: 'brokers',
-      payload: [{
-        full_name: fullName,
-        broker_id_number: brokerIdNumber,
-        mobile_number: mobileNumber,
+    let authUser = null;
+    try {
+      const authResult = await supabaseAuthSignUp({
+        supabaseUrl,
+        publishableKey,
         email,
-        password_hash: createPasswordHash(password),
-        company_name: companyName,
-        is_verified: false,
-        is_blocked: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }]
-    });
+        password,
+        data: {
+          full_name: fullName,
+          mobile_number: mobileNumber,
+          company_name: companyName
+        }
+      });
 
-    const broker = Array.isArray(createdRows) ? createdRows[0] : null;
-    if (!broker) {
-      return json({ message: 'Broker registration failed.' }, 500);
+      authUser = authResult?.user || null;
+      if (!authUser?.id) {
+        return json({ message: 'Broker registration failed.' }, 500);
+      }
+
+      const createdRows = await supabaseInsert({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        payload: [{
+          id: authUser.id,
+          full_name: fullName,
+          broker_id_number: buildInternalBrokerId(authUser.id),
+          mobile_number: mobileNumber || createPendingMobileValue(authUser.id),
+          email,
+          password_hash: createPasswordHash(password),
+          company_name: companyName,
+          is_verified: false,
+          is_blocked: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]
+      });
+
+      const broker = Array.isArray(createdRows) ? createdRows[0] : null;
+      if (!broker) {
+        throw new Error('Broker profile creation failed.');
+      }
+
+      const emailConfirmationRequired = !authResult?.session?.access_token;
+      if (emailConfirmationRequired) {
+        return json({
+          broker: sanitizeBroker(broker),
+          requiresEmailConfirmation: true,
+          message: 'Check your email to confirm your account.'
+        });
+      }
+
+      return json({
+        token: buildSessionToken(broker),
+        broker: sanitizeBroker(broker),
+        message: 'Broker account created successfully.'
+      });
+    } catch (error) {
+      const message = normalizeText(error?.message).toLowerCase();
+      if (authUser?.id) {
+        try {
+          await supabaseAuthDeleteUser({
+            supabaseUrl,
+            serviceRoleKey,
+            userId: authUser.id
+          });
+        } catch (rollbackError) {
+          debugAuth('auth rollback failed', rollbackError?.message || rollbackError);
+        }
+      }
+
+      if (message.includes('already registered') || message.includes('already exists') || message.includes('duplicate')) {
+        return json({ message: 'This email address is already registered. Please sign in instead.' }, 409);
+      }
+
+      return json({ message: error?.message || 'Broker registration failed.' }, error?.status || 500);
     }
-
-    return json({
-      token: buildSessionToken(broker),
-      broker: sanitizeBroker(broker)
-    });
   }
 
   const identifier = normalizeText(body?.identifier);

@@ -15,6 +15,8 @@ export function requiredEnv(name) {
 }
 
 export function normalizePhoneNumber(phone) {
+  const rawValue = String(phone || '').trim();
+  if (!rawValue || rawValue.startsWith('__pending_mobile__:')) return '';
   const digits = String(phone || '').replace(/[^\d]/g, '');
   if (!digits) return '';
   if (digits.startsWith('00971')) return `971${digits.slice(5)}`;
@@ -357,6 +359,75 @@ export function getSupabaseConfig() {
   return { supabaseUrl, serviceRoleKey };
 }
 
+export function getSupabasePublishableKey() {
+  return requiredEnv('SUPABASE_PUBLISHABLE_KEY')
+    || requiredEnv('SUPABASE_ANON_KEY')
+    || 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
+}
+
+export function createPendingMobileValue(userId) {
+  return `__pending_mobile__:${normalizeText(userId) || crypto.randomUUID()}`;
+}
+
+export async function supabaseAuthSignUp({
+  supabaseUrl,
+  publishableKey,
+  email,
+  password,
+  data = {}
+}) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+    method: 'POST',
+    headers: {
+      apikey: publishableKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      password,
+      data
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase Auth signup failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
+export async function supabaseAuthDeleteUser({
+  supabaseUrl,
+  serviceRoleKey,
+  userId
+}) {
+  if (!normalizeText(userId)) return;
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Supabase auth delete failed: ${errorBody || response.statusText}`);
+  }
+}
+
 export function createRestUrl(baseUrl, table) {
   return new URL(`${baseUrl}/rest/v1/${table}`);
 }
@@ -567,7 +638,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     broker_uuid: broker.id,
     broker_id_number: broker.broker_id_number,
     broker_display_name: broker.full_name,
-    broker_mobile: broker.mobile_number,
+    broker_mobile: normalizePhoneNumber(broker.mobile_number),
     source_type: sourceType,
     source_id: item.id,
     listing_kind: isLead ? 'broker_requirement' : 'broker_connector_listing',
