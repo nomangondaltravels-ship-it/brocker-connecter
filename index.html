@@ -2843,7 +2843,12 @@
         }
         window.location.href = 'dashboard.html';
       } catch (error) {
-        setAuthStatus(getAuthFailureMessage({ message: error?.message }, 'Login failed, please try again.'));
+        const fallbackMessage = state.authMode === 'forgot'
+          ? 'Unable to send reset email. Please try again.'
+          : state.authMode === 'register'
+            ? 'Broker registration failed.'
+            : 'Login failed, please try again.';
+        setAuthStatus(getAuthFailureMessage({ message: error?.message }, fallbackMessage));
       } finally {
         setAuthSubmitLoading(false);
       }
