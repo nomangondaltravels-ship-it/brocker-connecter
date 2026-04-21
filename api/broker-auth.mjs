@@ -13,7 +13,6 @@ import {
   normalizeText,
   requiredEnv,
   supabaseAuthAdminCreateUser,
-  supabaseAuthDeleteUser,
   supabaseAuthResetPasswordForEmail,
   supabaseAuthSignInWithPassword,
   supabaseAuthSignUp,
@@ -60,17 +59,130 @@ function buildInternalBrokerId(authUserId) {
   return `BC-${(compact || 'BROKER').slice(0, 10)}`;
 }
 
-function findMatchingBrokers(candidates, {
-  email
+async function ensureBrokerProfileFromAuthUser({
+  supabaseUrl,
+  serviceRoleKey,
+  authUser,
+  fallbackEmail = '',
+  fallbackPassword = '',
+  fallbackCompanyName = '',
+  fallbackMobileNumber = ''
 }) {
-  const rows = Array.isArray(candidates) ? candidates : [];
-  const normalizedEmail = normalizeEmail(email);
+  if (!authUser?.id) return null;
 
-  if (normalizedEmail) {
-    return rows.filter(item => normalizeEmail(item?.email) === normalizedEmail);
+  const userMeta = authUser.user_metadata || authUser.raw_user_meta_data || {};
+  const fullName = normalizeText(userMeta.full_name || authUser.email?.split('@')[0] || 'Broker');
+  const companyName = normalizeText(userMeta.company_name || fallbackCompanyName);
+  const mobileNumber = normalizePhoneNumber(userMeta.mobile_number || fallbackMobileNumber);
+  const email = normalizeEmail(authUser.email || fallbackEmail);
+  const verificationState = Boolean(authUser.email_confirmed_at || authUser.confirmed_at);
+
+  const existingRows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'brokers',
+    filters: { id: authUser.id },
+    order: { column: 'created_at', ascending: false }
+  });
+  const existingBroker = Array.isArray(existingRows) ? existingRows[0] : null;
+  if (existingBroker) {
+    const updatePayload = {
+      full_name: fullName || existingBroker.full_name,
+      email: email || existingBroker.email,
+      company_name: companyName || existingBroker.company_name || '',
+      is_verified: verificationState || Boolean(existingBroker.is_verified),
+      updated_at: new Date().toISOString()
+    };
+    if (mobileNumber) {
+      updatePayload.mobile_number = mobileNumber;
+    }
+    await supabasePatch({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'brokers',
+      filters: { id: existingBroker.id },
+      payload: updatePayload
+    }).catch(() => []);
+    return {
+      ...existingBroker,
+      ...updatePayload,
+      mobile_number: updatePayload.mobile_number || existingBroker.mobile_number
+    };
   }
 
-  return [];
+  if (email) {
+    const existingByEmailRows = await supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'brokers',
+      filters: { email },
+      order: { column: 'created_at', ascending: false }
+    });
+    const existingByEmail = Array.isArray(existingByEmailRows) ? existingByEmailRows[0] : null;
+    if (existingByEmail) {
+      const updatePayload = {
+        full_name: fullName || existingByEmail.full_name,
+        company_name: companyName || existingByEmail.company_name || '',
+        is_verified: verificationState || Boolean(existingByEmail.is_verified),
+        updated_at: new Date().toISOString()
+      };
+      if (mobileNumber && normalizePhoneNumber(existingByEmail.mobile_number) !== mobileNumber) {
+        updatePayload.mobile_number = mobileNumber;
+      }
+      await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { id: existingByEmail.id },
+        payload: updatePayload
+      }).catch(() => []);
+      return {
+        ...existingByEmail,
+        ...updatePayload,
+        mobile_number: updatePayload.mobile_number || existingByEmail.mobile_number
+      };
+    }
+  }
+
+  const safeMobileNumber = mobileNumber || createPendingMobileValue(authUser.id);
+  const createdRows = await supabaseInsert({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'brokers',
+    payload: [{
+      id: authUser.id,
+      full_name: fullName,
+      broker_id_number: buildInternalBrokerId(authUser.id),
+      mobile_number: safeMobileNumber,
+      email,
+      password_hash: createPasswordHash(fallbackPassword || crypto.randomUUID()),
+      company_name: companyName,
+      is_verified: verificationState,
+      is_blocked: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }]
+  });
+
+  return Array.isArray(createdRows) ? createdRows[0] : null;
+}
+
+async function findBrokerByEmail({
+  supabaseUrl,
+  serviceRoleKey,
+  email
+}) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'brokers',
+    filters: { email: normalizedEmail },
+    order: { column: 'created_at', ascending: false }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
 }
 
 export async function GET(request) {
@@ -164,6 +276,7 @@ export async function POST(request) {
     }
 
     let authUser = null;
+    let emailConfirmationRequired = false;
     try {
       const authResult = await supabaseAuthSignUp({
         supabaseUrl,
@@ -182,32 +295,21 @@ export async function POST(request) {
       if (!authUser?.id) {
         return json({ message: 'Broker registration failed.' }, 500);
       }
+      emailConfirmationRequired = !authResult?.session?.access_token;
 
-      const createdRows = await supabaseInsert({
+      const broker = await ensureBrokerProfileFromAuthUser({
         supabaseUrl,
         serviceRoleKey,
-        table: 'brokers',
-        payload: [{
-          id: authUser.id,
-          full_name: fullName,
-          broker_id_number: buildInternalBrokerId(authUser.id),
-          mobile_number: mobileNumber || createPendingMobileValue(authUser.id),
-          email,
-          password_hash: createPasswordHash(password),
-          company_name: companyName,
-          is_verified: false,
-          is_blocked: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]
+        authUser,
+        fallbackEmail: email,
+        fallbackPassword: password,
+        fallbackCompanyName: companyName,
+        fallbackMobileNumber: mobileNumber
       });
-
-      const broker = Array.isArray(createdRows) ? createdRows[0] : null;
       if (!broker) {
         throw new Error('Broker profile creation failed.');
       }
 
-      const emailConfirmationRequired = !authResult?.session?.access_token;
       if (emailConfirmationRequired) {
         return json({
           broker: sanitizeBroker(broker),
@@ -223,20 +325,22 @@ export async function POST(request) {
       });
     } catch (error) {
       const message = normalizeText(error?.message).toLowerCase();
-      if (authUser?.id) {
-        try {
-          await supabaseAuthDeleteUser({
-            supabaseUrl,
-            serviceRoleKey,
-            userId: authUser.id
-          });
-        } catch (rollbackError) {
-          debugAuth('auth rollback failed', rollbackError?.message || rollbackError);
-        }
-      }
-
       if (message.includes('already registered') || message.includes('already exists') || message.includes('duplicate')) {
         return json({ message: 'This email address is already registered. Please sign in instead.' }, 409);
+      }
+
+      if (authUser?.id) {
+        debugAuth('register partial success', {
+          email,
+          authUserId: authUser.id,
+          message: error?.message || 'Unknown register error'
+        });
+        return json({
+          requiresEmailConfirmation: emailConfirmationRequired,
+          message: emailConfirmationRequired
+            ? 'Check your email to confirm your account.'
+            : 'Broker account created successfully. Please sign in.'
+        });
       }
 
       return json({ message: error?.message || 'Broker registration failed.' }, error?.status || 500);
@@ -255,64 +359,80 @@ export async function POST(request) {
     const redirectUrl = normalizeText(body?.redirectTo) || new URL('/reset-password.html', request.url).toString();
 
     try {
-      const brokers = await supabaseSelect({
-        supabaseUrl,
-        serviceRoleKey,
-        table: 'brokers',
-        filters: { email },
-        order: { column: 'created_at', ascending: false }
-      });
-      const broker = Array.isArray(brokers) ? brokers[0] : null;
-
-      debugAuth('forgot-password request', {
-        email,
-        redirectUrl,
-        brokerExists: Boolean(broker)
-      });
-
-      if (broker) {
-        try {
-          await supabaseAuthAdminCreateUser({
-            supabaseUrl,
-            serviceRoleKey,
-            email,
-            password: crypto.randomUUID(),
-            emailConfirm: true,
-            userMetadata: {
-              full_name: broker.full_name,
-              company_name: broker.company_name || '',
-              mobile_number: normalizePhoneNumber(broker.mobile_number)
-            }
-          });
-          debugAuth('forgot-password auth user created', { email });
-        } catch (error) {
-          const message = normalizeText(error?.message).toLowerCase();
-          if (!(message.includes('already') || message.includes('registered') || message.includes('exists') || message.includes('duplicate'))) {
-            throw error;
-          }
-          debugAuth('forgot-password auth user already exists', { email });
-        }
-      }
-
       await supabaseAuthResetPasswordForEmail({
         supabaseUrl,
         publishableKey,
         email,
         redirectTo: redirectUrl
       });
-      debugAuth('forgot-password recover accepted', { email, redirectUrl });
+      debugAuth('forgot-password recover accepted (direct)', { email, redirectUrl });
       return json({
         message: 'If an account exists for this email, a reset link has been sent.'
       });
     } catch (error) {
-      debugAuth('forgot-password failure', {
-        email,
-        redirectUrl,
-        message: error?.message || 'Unknown forgot-password error',
-        status: error?.status || 500,
-        payload: error?.payload || null
-      });
-      return json({ message: 'Unable to send reset email. Please try again.' }, error?.status || 500);
+      const initialError = error;
+      try {
+        const brokers = await supabaseSelect({
+          supabaseUrl,
+          serviceRoleKey,
+          table: 'brokers',
+          filters: { email },
+          order: { column: 'created_at', ascending: false }
+        });
+        const broker = Array.isArray(brokers) ? brokers[0] : null;
+
+        debugAuth('forgot-password request', {
+          email,
+          redirectUrl,
+          brokerExists: Boolean(broker),
+          initialRecoverError: initialError?.message || 'Unknown recover error'
+        });
+
+        if (broker) {
+          try {
+            await supabaseAuthAdminCreateUser({
+              supabaseUrl,
+              serviceRoleKey,
+              email,
+              password: crypto.randomUUID(),
+              emailConfirm: true,
+              userMetadata: {
+                full_name: broker.full_name,
+                company_name: broker.company_name || '',
+                mobile_number: normalizePhoneNumber(broker.mobile_number)
+              }
+            });
+            debugAuth('forgot-password auth user created', { email });
+          } catch (repairError) {
+            const repairMessage = normalizeText(repairError?.message).toLowerCase();
+            if (!(repairMessage.includes('already') || repairMessage.includes('registered') || repairMessage.includes('exists') || repairMessage.includes('duplicate'))) {
+              throw repairError;
+            }
+            debugAuth('forgot-password auth user already exists', { email });
+          }
+        }
+
+        await supabaseAuthResetPasswordForEmail({
+          supabaseUrl,
+          publishableKey,
+          email,
+          redirectTo: redirectUrl
+        });
+        debugAuth('forgot-password recover accepted (after repair)', { email, redirectUrl });
+        return json({
+          message: 'If an account exists for this email, a reset link has been sent.'
+        });
+      } catch (finalError) {
+        debugAuth('forgot-password failure', {
+          email,
+          redirectUrl,
+          initialMessage: initialError?.message || 'Unknown forgot-password error',
+          message: finalError?.message || 'Unknown forgot-password error',
+          status: finalError?.status || 500,
+          payload: finalError?.payload || null
+        });
+        return json({ message: 'Unable to send reset email. Please try again.' }, finalError?.status || 500);
+      }
     }
   }
 
@@ -329,35 +449,6 @@ export async function POST(request) {
     return json({ message: 'Enter password.' }, 400);
   }
 
-  const candidates = await supabaseSelect({
-    supabaseUrl,
-    serviceRoleKey,
-    table: 'brokers',
-    order: { column: 'created_at', ascending: false }
-  });
-
-  const matchingBrokers = findMatchingBrokers(candidates, {
-    email
-  });
-
-  debugAuth('login lookup', {
-    emailProvided: Boolean(email),
-    matchCount: matchingBrokers.length
-  });
-
-  if (!matchingBrokers.length) {
-    return json({ message: 'Account not found.' }, 404);
-  }
-
-  const candidate = matchingBrokers.find(item => !item.is_blocked) || matchingBrokers[0];
-  if (!candidate) {
-    return json({ message: 'Account not found.' }, 404);
-  }
-
-  if (candidate.is_blocked) {
-    return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
-  }
-
   try {
     const authResult = await supabaseAuthSignInWithPassword({
       supabaseUrl,
@@ -366,19 +457,48 @@ export async function POST(request) {
       password
     });
 
-    const token = buildSessionToken(candidate);
+    const candidate = await findBrokerByEmail({
+      supabaseUrl,
+      serviceRoleKey,
+      email
+    });
+
+    const broker = await ensureBrokerProfileFromAuthUser({
+      supabaseUrl,
+      serviceRoleKey,
+      authUser: authResult?.user,
+      fallbackEmail: email,
+      fallbackPassword: password,
+      fallbackCompanyName: candidate?.company_name || '',
+      fallbackMobileNumber: candidate?.mobile_number || ''
+    }) || candidate;
+
+    debugAuth('login lookup', {
+      emailProvided: Boolean(email),
+      brokerFound: Boolean(broker)
+    });
+
+    if (!broker) {
+      return json({ message: 'Account not found.' }, 404);
+    }
+
+    if (broker.is_blocked) {
+      return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
+    }
+
+    const token = buildSessionToken(broker);
     if (!token) {
-      debugAuth('session token generation failed', { brokerIdNumber: candidate?.broker_id_number });
+      debugAuth('session token generation failed', { brokerIdNumber: broker?.broker_id_number });
       return json({ message: 'Login failed, please try again.' }, 500);
     }
 
     debugAuth('login success', {
-      brokerIdNumber: candidate?.broker_id_number,
-      email: candidate?.email
+      brokerIdNumber: broker?.broker_id_number,
+      email: broker?.email
     });
     return json({
       token,
-      broker: sanitizeBroker(candidate),
+      broker: sanitizeBroker(broker),
       session: authResult?.access_token ? {
         access_token: authResult.access_token,
         refresh_token: authResult.refresh_token,
