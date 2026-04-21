@@ -2005,53 +2005,6 @@
       };
     }
 
-    async function requestEmailPasswordSignIn(emailValue, passwordValue) {
-      const response = await fetch(`${authSupabaseUrl}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: {
-          apikey: authSupabaseKey,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: emailValue,
-          password: passwordValue
-        })
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(
-          result?.msg
-          || result?.message
-          || result?.error_description
-          || result?.error
-          || 'Login failed, please try again.'
-        );
-      }
-      if (!result?.access_token) {
-        throw new Error('Login failed, please try again.');
-      }
-      return result;
-    }
-
-    async function exchangeSupabaseSessionForBrokerSession(sessionPayload) {
-      const response = await fetch('/api/broker-auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          action: 'exchange-session',
-          accessToken: sessionPayload?.access_token || '',
-          refreshToken: sessionPayload?.refresh_token || ''
-        })
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.message || 'Login failed, please try again.');
-      }
-      return result;
-    }
-
     function openSection(name) {
       const normalized = name === 'shared-leads' ? 'requirements' : name;
       const targetSection = document.getElementById(`${normalized}-section`) ? normalized : 'requirements';
@@ -2912,15 +2865,6 @@
         let result = null;
         if (modeAtSubmit === 'forgot') {
           result = await requestPasswordResetEmail(emailValue);
-        } else if (modeAtSubmit === 'signin') {
-          const supabaseSession = await requestEmailPasswordSignIn(emailValue, passwordValue);
-          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            console.debug('[broker-auth-ui] signin direct supabase ok', {
-              hasAccessToken: Boolean(supabaseSession?.access_token),
-              hasUser: Boolean(supabaseSession?.user)
-            });
-          }
-          result = await exchangeSupabaseSessionForBrokerSession(supabaseSession);
         } else {
           response = await fetch('/api/broker-auth', {
             method: 'POST',
