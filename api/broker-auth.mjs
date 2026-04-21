@@ -47,43 +47,47 @@ function buildSessionToken(broker) {
   }, getBrokerSessionSecret());
 }
 
-function getBrokerIdentifierScore(candidate, {
-  normalizedIdentifierText,
-  normalizedIdentifierPhone,
-  normalizedIdentifierEmail,
-  normalizedBrokerIdText,
+function findMatchingBrokers(candidates, {
+  identifier,
+  brokerIdNumber,
   mobileNumber,
-  email,
-  hasExplicitBrokerId,
-  hasExplicitMobile,
-  hasExplicitEmail
+  email
 }) {
-  const candidateBrokerId = normalizeText(candidate?.broker_id_number).toLowerCase();
-  const candidateMobile = normalizePhoneNumber(candidate?.mobile_number);
-  const candidateEmail = normalizeEmail(candidate?.email);
+  const rows = Array.isArray(candidates) ? candidates : [];
+  const normalizedBrokerIdText = normalizeText(brokerIdNumber).toLowerCase();
+  const normalizedMobile = normalizePhoneNumber(mobileNumber);
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedIdentifierText = normalizeText(identifier).toLowerCase();
+  const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
+  const normalizedIdentifierEmail = normalizeEmail(identifier);
 
-  let score = 0;
-
-  if (hasExplicitBrokerId && candidateBrokerId === normalizedBrokerIdText) {
-    score += 8;
-  }
-  if (hasExplicitMobile && candidateMobile === mobileNumber) {
-    score += 6;
-  }
-  if (hasExplicitEmail && candidateEmail === email) {
-    score += 6;
-  }
-  if (normalizedIdentifierText && candidateBrokerId === normalizedIdentifierText) {
-    score += 4;
-  }
-  if (normalizedIdentifierPhone && candidateMobile === normalizedIdentifierPhone) {
-    score += 4;
-  }
-  if (normalizedIdentifierEmail && candidateEmail === normalizedIdentifierEmail) {
-    score += 4;
+  if (normalizedBrokerIdText) {
+    return rows.filter(item => normalizeText(item?.broker_id_number).toLowerCase() === normalizedBrokerIdText);
   }
 
-  return score;
+  if (normalizedMobile) {
+    return rows.filter(item => normalizePhoneNumber(item?.mobile_number) === normalizedMobile);
+  }
+
+  if (normalizedEmail) {
+    return rows.filter(item => normalizeEmail(item?.email) === normalizedEmail);
+  }
+
+  if (normalizedIdentifierPhone) {
+    const phoneMatches = rows.filter(item => normalizePhoneNumber(item?.mobile_number) === normalizedIdentifierPhone);
+    if (phoneMatches.length) return phoneMatches;
+  }
+
+  if (normalizedIdentifierEmail) {
+    const emailMatches = rows.filter(item => normalizeEmail(item?.email) === normalizedIdentifierEmail);
+    if (emailMatches.length) return emailMatches;
+  }
+
+  if (normalizedIdentifierText) {
+    return rows.filter(item => normalizeText(item?.broker_id_number).toLowerCase() === normalizedIdentifierText);
+  }
+
+  return [];
 }
 
 async function verifyAndUpgradeBrokerPassword({ supabaseUrl, serviceRoleKey, broker, password }) {
@@ -235,13 +239,10 @@ export async function POST(request) {
   const brokerIdNumber = normalizeText(body?.brokerIdNumber);
   const mobileNumber = normalizePhoneNumber(body?.mobileNumber);
   const email = normalizeEmail(body?.email);
-  const normalizedIdentifierText = identifier.toLowerCase();
-  const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
-  const normalizedIdentifierEmail = normalizeEmail(identifier);
   const password = String(body?.password || '');
 
   if (!(identifier || brokerIdNumber || mobileNumber || email) || !password) {
-    return json({ message: 'Please enter broker ID or mobile number, and password.' }, 400);
+    return json({ message: 'Enter Broker ID or Mobile Number, and password.' }, 400);
   }
 
   const candidates = await supabaseSelect({
@@ -251,39 +252,23 @@ export async function POST(request) {
     order: { column: 'created_at', ascending: false }
   });
 
-  const normalizedBrokerIdText = brokerIdNumber.toLowerCase();
-  const hasExplicitBrokerId = Boolean(normalizedBrokerIdText);
-  const hasExplicitMobile = Boolean(mobileNumber);
-  const hasExplicitEmail = Boolean(email);
-  const matchingBrokers = (Array.isArray(candidates) ? candidates : [])
-    .map(item => ({
-      item,
-      score: getBrokerIdentifierScore(item, {
-        normalizedIdentifierText,
-        normalizedIdentifierPhone,
-        normalizedIdentifierEmail,
-        normalizedBrokerIdText,
-        mobileNumber,
-        email,
-        hasExplicitBrokerId,
-        hasExplicitMobile,
-        hasExplicitEmail
-      })
-    }))
-    .filter(entry => entry.score > 0)
-    .sort((left, right) => right.score - left.score)
-    .map(entry => entry.item);
+  const matchingBrokers = findMatchingBrokers(candidates, {
+    identifier,
+    brokerIdNumber,
+    mobileNumber,
+    email
+  });
 
   debugAuth('login lookup', {
     identifierProvided: Boolean(identifier),
-    brokerIdProvided: hasExplicitBrokerId,
-    mobileProvided: hasExplicitMobile,
-    emailProvided: hasExplicitEmail,
+    brokerIdProvided: Boolean(brokerIdNumber),
+    mobileProvided: Boolean(mobileNumber),
+    emailProvided: Boolean(email),
     matchCount: matchingBrokers.length
   });
 
   if (!matchingBrokers.length) {
-    return json({ message: 'Broker account not found.' }, 404);
+    return json({ message: 'Broker not found.' }, 404);
   }
 
   let blockedMatchFound = false;
@@ -332,5 +317,5 @@ export async function POST(request) {
     return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
   }
 
-  return json({ message: 'Invalid credentials.' }, 401);
+  return json({ message: 'Invalid password.' }, 401);
 }
