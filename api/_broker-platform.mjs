@@ -685,6 +685,11 @@ export function createRestUrl(baseUrl, table) {
   return new URL(`${baseUrl}/rest/v1/${table}`);
 }
 
+function isPostgrestOperatorValue(value) {
+  const normalized = normalizeText(value);
+  return /^(eq|neq|gt|gte|lt|lte|like|ilike|is|in|cs|cd|ov|fts|plfts|phfts|wfts|not)\./i.test(normalized);
+}
+
 export async function supabaseSelect({
   supabaseUrl,
   serviceRoleKey,
@@ -692,17 +697,17 @@ export async function supabaseSelect({
   select = '*',
   filters = {},
   order
-}) {
-  const url = createRestUrl(supabaseUrl, table);
-  url.searchParams.set('select', select);
-  Object.entries(filters || {}).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') return;
-    if (String(value).includes('.')) {
-      url.searchParams.set(key, value);
-      return;
-    }
-    url.searchParams.set(key, `eq.${value}`);
-  });
+  }) {
+    const url = createRestUrl(supabaseUrl, table);
+    url.searchParams.set('select', select);
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      if (isPostgrestOperatorValue(value)) {
+        url.searchParams.set(key, value);
+        return;
+      }
+      url.searchParams.set(key, `eq.${value}`);
+    });
   if (order?.column) {
     url.searchParams.set('order', `${order.column}.${order.ascending ? 'asc' : 'desc'}`);
   }
