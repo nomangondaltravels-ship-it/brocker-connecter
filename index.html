@@ -1817,6 +1817,8 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
+    const authSupabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
+    const authSupabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
 
     function safeJsonRead(key, fallback) {
       try {
@@ -1963,9 +1965,44 @@
       if (/reset link has been sent/i.test(message)) return 'If an account exists for this email, a reset link has been sent.';
       if (/unable to send reset email/i.test(message)) return 'Unable to send reset email. Please try again.';
       if (/password reset could not be sent/i.test(message)) return 'Unable to send reset email. Please try again.';
+      if (/please wait a minute/i.test(message) || /security purposes/i.test(message) || /rate limit/i.test(message)) return 'Please wait a minute before requesting another reset email.';
       if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
       if (/session creation failed/i.test(message)) return 'Login failed, please try again.';
       return message;
+    }
+
+    async function requestPasswordResetEmail(emailValue) {
+      const redirectTo = new URL('reset-password.html', window.location.origin).toString();
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.debug('[broker-auth-ui] forgot-password direct supabase', {
+          email: emailValue,
+          redirectTo,
+          supabaseUrl: authSupabaseUrl
+        });
+      }
+      const response = await fetch(`${authSupabaseUrl}/auth/v1/recover`, {
+        method: 'POST',
+        headers: {
+          apikey: authSupabaseKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: emailValue,
+          redirect_to: redirectTo
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          result?.msg
+          || result?.message
+          || result?.error_description
+          || 'Unable to send reset email. Please try again.'
+        );
+      }
+      return {
+        message: 'If an account exists for this email, a reset link has been sent.'
+      };
     }
 
     function openSection(name) {
@@ -2824,25 +2861,29 @@
           });
         }
 
-        const response = await fetch('/api/broker-auth', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json().catch(() => ({}));
+        const response = modeAtSubmit === 'forgot'
+          ? null
+          : await fetch('/api/broker-auth', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+        const result = modeAtSubmit === 'forgot'
+          ? await requestPasswordResetEmail(emailValue)
+          : await response.json().catch(() => ({}));
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
           console.debug('[broker-auth-ui] response', {
-            status: response.status,
-            ok: response.ok,
+            status: response?.status || 200,
+            ok: response ? response.ok : true,
             hasBroker: Boolean(result?.broker),
             hasToken: Boolean(result?.token || result?.access_token || result?.session?.access_token)
           });
         }
 
-        if (!response.ok) {
+        if (response && !response.ok) {
           if (modeAtSubmit === 'signin' && response.status === 404) {
             const migrated = await migrateLegacyBrokerAccount(emailValue, passwordValue);
             if (!persistBrokerSession(migrated)) {
