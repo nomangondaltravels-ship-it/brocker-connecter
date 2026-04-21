@@ -19,6 +19,7 @@ import {
   supabasePatch,
   supabaseInsert,
   supabaseSelect,
+  verifyPassword,
   verifyToken
 } from './_broker-platform.mjs';
 
@@ -183,6 +184,41 @@ async function findBrokerByEmail({
     order: { column: 'created_at', ascending: false }
   });
   return Array.isArray(rows) ? rows[0] : null;
+}
+
+async function repairAuthUserFromBroker({
+  supabaseUrl,
+  serviceRoleKey,
+  broker,
+  password
+}) {
+  if (!broker?.email) return;
+
+  try {
+    await supabaseAuthAdminCreateUser({
+      supabaseUrl,
+      serviceRoleKey,
+      email: normalizeEmail(broker.email),
+      password: password || crypto.randomUUID(),
+      emailConfirm: true,
+      userMetadata: {
+        full_name: broker.full_name,
+        company_name: broker.company_name || '',
+        mobile_number: normalizePhoneNumber(broker.mobile_number)
+      }
+    });
+    debugAuth('auth user repaired from broker', {
+      email: broker.email,
+      brokerId: broker.id
+    });
+  } catch (error) {
+    const message = normalizeText(error?.message).toLowerCase();
+    if (message.includes('already') || message.includes('registered') || message.includes('exists') || message.includes('duplicate')) {
+      debugAuth('auth user already exists during repair', { email: broker.email });
+      return;
+    }
+    throw error;
+  }
 }
 
 export async function GET(request) {
@@ -357,6 +393,26 @@ export async function POST(request) {
     }
 
     const redirectUrl = normalizeText(body?.redirectTo) || new URL('/reset-password.html', request.url).toString();
+    const broker = await findBrokerByEmail({
+      supabaseUrl,
+      serviceRoleKey,
+      email
+    });
+
+    if (broker) {
+      try {
+        await repairAuthUserFromBroker({
+          supabaseUrl,
+          serviceRoleKey,
+          broker
+        });
+      } catch (repairError) {
+        debugAuth('forgot-password repair warning', {
+          email,
+          message: repairError?.message || 'Unknown repair warning'
+        });
+      }
+    }
 
     try {
       await supabaseAuthResetPasswordForEmail({
@@ -376,15 +432,6 @@ export async function POST(request) {
         return json({ message: 'Please wait a minute before requesting another reset email.' }, 429);
       }
       try {
-        const brokers = await supabaseSelect({
-          supabaseUrl,
-          serviceRoleKey,
-          table: 'brokers',
-          filters: { email },
-          order: { column: 'created_at', ascending: false }
-        });
-        const broker = Array.isArray(brokers) ? brokers[0] : null;
-
         debugAuth('forgot-password request', {
           email,
           redirectUrl,
@@ -394,25 +441,16 @@ export async function POST(request) {
 
         if (broker) {
           try {
-            await supabaseAuthAdminCreateUser({
+            await repairAuthUserFromBroker({
               supabaseUrl,
               serviceRoleKey,
-              email,
-              password: crypto.randomUUID(),
-              emailConfirm: true,
-              userMetadata: {
-                full_name: broker.full_name,
-                company_name: broker.company_name || '',
-                mobile_number: normalizePhoneNumber(broker.mobile_number)
-              }
+              broker
             });
-            debugAuth('forgot-password auth user created', { email });
           } catch (repairError) {
-            const repairMessage = normalizeText(repairError?.message).toLowerCase();
-            if (!(repairMessage.includes('already') || repairMessage.includes('registered') || repairMessage.includes('exists') || repairMessage.includes('duplicate'))) {
-              throw repairError;
-            }
-            debugAuth('forgot-password auth user already exists', { email });
+            debugAuth('forgot-password repair retry warning', {
+              email,
+              message: repairError?.message || 'Unknown repair warning'
+            });
           }
         }
 
@@ -514,6 +552,62 @@ export async function POST(request) {
     });
   } catch (error) {
     const message = normalizeText(error?.message).toLowerCase();
+    const candidate = await findBrokerByEmail({
+      supabaseUrl,
+      serviceRoleKey,
+      email
+    });
+
+    if ((message.includes('invalid login credentials') || message.includes('invalid_grant') || message.includes('invalid')) && candidate && verifyPassword(password, candidate.password_hash)) {
+      try {
+        await repairAuthUserFromBroker({
+          supabaseUrl,
+          serviceRoleKey,
+          broker: candidate,
+          password
+        });
+
+        const repairedAuthResult = await supabaseAuthSignInWithPassword({
+          supabaseUrl,
+          publishableKey,
+          email,
+          password
+        });
+
+        const broker = await ensureBrokerProfileFromAuthUser({
+          supabaseUrl,
+          serviceRoleKey,
+          authUser: repairedAuthResult?.user,
+          fallbackEmail: email,
+          fallbackPassword: password,
+          fallbackCompanyName: candidate?.company_name || '',
+          fallbackMobileNumber: candidate?.mobile_number || ''
+        }) || candidate;
+
+        if (!broker) {
+          return json({ message: 'Account not found.' }, 404);
+        }
+        if (broker.is_blocked) {
+          return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
+        }
+
+        return json({
+          token: buildSessionToken(broker),
+          broker: sanitizeBroker(broker),
+          session: repairedAuthResult?.access_token ? {
+            access_token: repairedAuthResult.access_token,
+            refresh_token: repairedAuthResult.refresh_token,
+            expires_in: repairedAuthResult.expires_in,
+            expires_at: repairedAuthResult.expires_at,
+            token_type: repairedAuthResult.token_type,
+            user: repairedAuthResult.user || null
+          } : null
+        });
+      } catch (repairLoginError) {
+        debugAuth('login repair failure', repairLoginError?.message || repairLoginError);
+      }
+    }
+
     if (message.includes('email not confirmed') || message.includes('email not confirmed yet') || message.includes('confirm')) {
       return json({ message: 'Please verify your email first.' }, 403);
     }
