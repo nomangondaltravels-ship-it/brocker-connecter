@@ -47,6 +47,45 @@ function buildSessionToken(broker) {
   }, getBrokerSessionSecret());
 }
 
+function getBrokerIdentifierScore(candidate, {
+  normalizedIdentifierText,
+  normalizedIdentifierPhone,
+  normalizedIdentifierEmail,
+  normalizedBrokerIdText,
+  mobileNumber,
+  email,
+  hasExplicitBrokerId,
+  hasExplicitMobile,
+  hasExplicitEmail
+}) {
+  const candidateBrokerId = normalizeText(candidate?.broker_id_number).toLowerCase();
+  const candidateMobile = normalizePhoneNumber(candidate?.mobile_number);
+  const candidateEmail = normalizeEmail(candidate?.email);
+
+  let score = 0;
+
+  if (hasExplicitBrokerId && candidateBrokerId === normalizedBrokerIdText) {
+    score += 8;
+  }
+  if (hasExplicitMobile && candidateMobile === mobileNumber) {
+    score += 6;
+  }
+  if (hasExplicitEmail && candidateEmail === email) {
+    score += 6;
+  }
+  if (normalizedIdentifierText && candidateBrokerId === normalizedIdentifierText) {
+    score += 4;
+  }
+  if (normalizedIdentifierPhone && candidateMobile === normalizedIdentifierPhone) {
+    score += 4;
+  }
+  if (normalizedIdentifierEmail && candidateEmail === normalizedIdentifierEmail) {
+    score += 4;
+  }
+
+  return score;
+}
+
 async function verifyAndUpgradeBrokerPassword({ supabaseUrl, serviceRoleKey, broker, password }) {
   if (verifyPassword(password, broker.password_hash)) {
     return true;
@@ -216,25 +255,24 @@ export async function POST(request) {
   const hasExplicitBrokerId = Boolean(normalizedBrokerIdText);
   const hasExplicitMobile = Boolean(mobileNumber);
   const hasExplicitEmail = Boolean(email);
-  const matchingBrokers = (Array.isArray(candidates) ? candidates : []).filter(item => {
-    const candidateBrokerId = normalizeText(item?.broker_id_number);
-    const candidateBrokerIdText = candidateBrokerId.toLowerCase();
-    const candidateMobile = normalizePhoneNumber(item?.mobile_number);
-    const candidateEmail = normalizeEmail(item?.email);
-
-    if (hasExplicitBrokerId || hasExplicitMobile || hasExplicitEmail) {
-      const brokerIdMatch = !hasExplicitBrokerId || candidateBrokerIdText === normalizedBrokerIdText;
-      const mobileMatch = !hasExplicitMobile || candidateMobile === mobileNumber;
-      const emailMatch = !hasExplicitEmail || candidateEmail === email;
-      return brokerIdMatch && mobileMatch && emailMatch;
-    }
-
-    return (
-      candidateBrokerIdText === normalizedIdentifierText ||
-      candidateMobile === normalizedIdentifierPhone ||
-      candidateEmail === normalizedIdentifierEmail
-    );
-  });
+  const matchingBrokers = (Array.isArray(candidates) ? candidates : [])
+    .map(item => ({
+      item,
+      score: getBrokerIdentifierScore(item, {
+        normalizedIdentifierText,
+        normalizedIdentifierPhone,
+        normalizedIdentifierEmail,
+        normalizedBrokerIdText,
+        mobileNumber,
+        email,
+        hasExplicitBrokerId,
+        hasExplicitMobile,
+        hasExplicitEmail
+      })
+    }))
+    .filter(entry => entry.score > 0)
+    .sort((left, right) => right.score - left.score)
+    .map(entry => entry.item);
 
   debugAuth('login lookup', {
     identifierProvided: Boolean(identifier),
