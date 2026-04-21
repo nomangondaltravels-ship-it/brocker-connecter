@@ -5,6 +5,8 @@ import {
   json,
   normalizeText,
   requiredEnv,
+  supabaseAuthAdminUpdateUser,
+  supabaseAuthDeleteUser,
   supabaseDelete,
   supabasePatch,
   supabaseSelect
@@ -177,6 +179,12 @@ export async function POST(request) {
       if (nextPassword.length < 6) {
         return json({ message: 'Password must be at least 6 characters long.' }, 400);
       }
+      await supabaseAuthAdminUpdateUser({
+        supabaseUrl,
+        serviceRoleKey,
+        userId: broker.id,
+        password: nextPassword
+      });
       await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
@@ -191,6 +199,11 @@ export async function POST(request) {
     }
 
     if (action === 'delete') {
+      await supabaseAuthDeleteUser({
+        supabaseUrl,
+        serviceRoleKey,
+        userId: broker.id
+      }).catch(() => null);
       await supabaseDelete({
         supabaseUrl,
         serviceRoleKey,

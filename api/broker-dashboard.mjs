@@ -17,6 +17,7 @@ import {
   sanitizePublicListing,
   serializeLeadMeta,
   serializePropertyMeta,
+  supabaseAuthAdminUpdateUser,
   supabaseDelete,
   supabaseInsert,
   supabasePatch,
@@ -830,6 +831,22 @@ export async function POST(request) {
         return json({ message: 'This email address is already in use by another broker.' }, 409);
       }
 
+      try {
+        await supabaseAuthAdminUpdateUser({
+          supabaseUrl,
+          serviceRoleKey,
+          userId: broker.id,
+          email: payload.email,
+          userMetadata: {
+            full_name: payload.full_name,
+            company_name: payload.company_name || '',
+            mobile_number: payload.mobile_number || ''
+          }
+        });
+      } catch (authSyncError) {
+        return json({ message: authSyncError?.message || 'Broker profile auth sync failed.' }, authSyncError?.status || 500);
+      }
+
       const rows = await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
@@ -841,6 +858,7 @@ export async function POST(request) {
       if (!nextBroker) {
         return json({ message: 'Broker profile could not be updated.' }, 500);
       }
+
       return json({ broker: sanitizeOverviewBroker(nextBroker) });
     }
 

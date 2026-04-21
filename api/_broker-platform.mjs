@@ -582,6 +582,60 @@ export async function supabaseAuthAdminCreateUser({
   return result;
 }
 
+export async function supabaseAuthAdminUpdateUser({
+  supabaseUrl,
+  serviceRoleKey,
+  userId,
+  email,
+  password,
+  emailConfirm,
+  userMetadata = {}
+}) {
+  if (!normalizeText(userId)) {
+    throw new Error('Supabase admin user update requires a user ID.');
+  }
+
+  const payload = {};
+  if (normalizeEmail(email)) {
+    payload.email = normalizeEmail(email);
+  }
+  if (normalizeText(password)) {
+    payload.password = String(password);
+  }
+  if (typeof emailConfirm === 'boolean') {
+    payload.email_confirm = emailConfirm;
+  }
+  if (userMetadata && typeof userMetadata === 'object' && Object.keys(userMetadata).length) {
+    payload.user_metadata = userMetadata;
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'PUT',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase admin user update failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
 export function createRestUrl(baseUrl, table) {
   return new URL(`${baseUrl}/rest/v1/${table}`);
 }

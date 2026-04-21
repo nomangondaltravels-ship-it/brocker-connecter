@@ -2346,9 +2346,9 @@
       return `
         <div class="public-sheet-head">
           <div>#</div>
-          <div>Requirement</div>
+          <div>Intent</div>
           <div>Location</div>
-          <div>Building</div>
+          <div>Building / Project</div>
           <div>Type</div>
           <div>Budget</div>
           <div>Status</div>
@@ -2362,7 +2362,7 @@
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Requirement</span>
+              <span class="sheet-label">Intent</span>
               <span class="sheet-primary">${listing.purpose === 'rent' ? 'My client is looking to rent' : 'My client is looking to buy'}</span>
               <span class="sheet-secondary">${listing.publicNotes || 'Shared broker requirement'}</span>
             </div>
@@ -2371,7 +2371,7 @@
               <span class="sheet-primary">${listing.location || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Building</span>
+              <span class="sheet-label">Building / Project</span>
               <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
@@ -2403,9 +2403,9 @@
       return `
         <div class="public-sheet-head">
           <div>#</div>
-          <div>Listing</div>
+          <div>Purpose</div>
           <div>Location</div>
-          <div>Building</div>
+          <div>Building / Project</div>
           <div>Type</div>
           <div>Price</div>
           <div>Status</div>
@@ -2419,7 +2419,7 @@
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Listing</span>
+              <span class="sheet-label">Purpose</span>
               <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${listing.propertyType || listing.category || 'Listing'}</span>
               <span class="sheet-secondary">${listing.publicNotes || 'Shared broker connector listing'}</span>
             </div>
@@ -2428,7 +2428,7 @@
               <span class="sheet-primary">${listing.location || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Building</span>
+              <span class="sheet-label">Building / Project</span>
               <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
@@ -2442,8 +2442,8 @@
             <div class="sheet-col">
               <span class="sheet-label">Status</span>
               <div class="row-badge-stack">
-                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : '<span class="badge badge-green">Public</span>'}
                 <span class="badge badge-green">Public</span>
+                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
                 ${listing.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
               </div>
             </div>
