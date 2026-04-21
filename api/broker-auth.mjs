@@ -284,7 +284,7 @@ export async function POST(request) {
     try {
       const authUser = await supabaseAuthGetUser({
         supabaseUrl,
-        publishableKey,
+        publishableKey: serviceRoleKey,
         accessToken
       });
 
