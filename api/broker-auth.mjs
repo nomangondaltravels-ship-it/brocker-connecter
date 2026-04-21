@@ -128,6 +128,7 @@ export async function POST(request) {
     const password = String(body?.password || '');
     const confirmPassword = String(body?.confirmPassword || '');
     const companyName = normalizeText(body?.companyName);
+    const redirectTo = normalizeText(body?.redirectTo) || new URL('/auth-callback.html', request.url).toString();
 
     if (fullName.length < 2) {
       return json({ message: 'Please enter full name.' }, 400);
@@ -166,6 +167,7 @@ export async function POST(request) {
         publishableKey,
         email,
         password,
+        redirectTo,
         data: {
           full_name: fullName,
           mobile_number: mobileNumber,

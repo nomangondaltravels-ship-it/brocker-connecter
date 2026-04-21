@@ -374,7 +374,8 @@ export async function supabaseAuthSignUp({
   publishableKey,
   email,
   password,
-  data = {}
+  data = {},
+  redirectTo = ''
 }) {
   const response = await fetch(`${supabaseUrl}/auth/v1/signup`, {
     method: 'POST',
@@ -385,7 +386,8 @@ export async function supabaseAuthSignUp({
     body: JSON.stringify({
       email,
       password,
-      data
+      data,
+      redirect_to: redirectTo || undefined
     })
   });
 

@@ -1949,6 +1949,8 @@
       if (/valid email address/i.test(message)) return 'Enter a valid email address';
       if (/passwords do not match/i.test(message)) return 'Passwords do not match';
       if (/verify your email/i.test(message)) return 'Please verify your email first';
+      if (/email confirmed successfully/i.test(message)) return 'Email confirmed successfully. You can now sign in.';
+      if (/confirmation link is invalid or expired/i.test(message)) return 'Confirmation link is invalid or expired.';
       if (/reset link has been sent/i.test(message)) return 'If an account exists for this email, a reset link has been sent.';
       if (/password reset could not be sent/i.test(message)) return 'Password reset could not be sent. Please try again.';
       if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
@@ -2699,6 +2701,31 @@
       return true;
     }
 
+    function handleAuthReturnMessage() {
+      const params = new URLSearchParams(window.location.search);
+      const authState = String(params.get('auth') || '').trim();
+      const authMessage = String(params.get('message') || '').trim();
+      if (!authState && !authMessage) return;
+
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('auth');
+      cleanUrl.searchParams.delete('message');
+      window.history.replaceState({}, document.title, cleanUrl.toString());
+
+      openAuthModal('signin');
+      if (authState === 'confirmed') {
+        setAuthStatus('Email confirmed successfully. You can now sign in.', 'success');
+        return;
+      }
+      if (authState === 'confirmation-invalid') {
+        setAuthStatus('Confirmation link is invalid or expired.', 'error');
+        return;
+      }
+      if (authMessage) {
+        setAuthStatus(getAuthFailureMessage({ message: authMessage }), authState.includes('invalid') ? 'error' : 'success');
+      }
+    }
+
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
       try {
@@ -2736,13 +2763,14 @@
               mobileNumber: mobileValue,
               email: emailValue,
               password: passwordValue,
-              confirmPassword: confirmPasswordValue
+              confirmPassword: confirmPasswordValue,
+              redirectTo: new URL('auth-callback.html', window.location.href).toString()
             }
           : state.authMode === 'forgot'
             ? {
                 action: 'forgot-password',
                 email: emailValue,
-                redirectTo: new URL('reset-password.html', window.location.href).toString()
+                redirectTo: new URL('auth-callback.html', window.location.href).toString()
               }
           : {
               action: 'login',
@@ -2858,6 +2886,7 @@
 
     (async function init() {
       try {
+        handleAuthReturnMessage();
         const authenticated = await verifyBrokerSession();
         const showDashboardButton = true;
         document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
