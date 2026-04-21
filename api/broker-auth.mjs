@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import {
   createPendingMobileValue,
   createPasswordHash,
@@ -10,6 +12,7 @@ import {
   normalizePhoneNumber,
   normalizeText,
   requiredEnv,
+  supabaseAuthAdminCreateUser,
   supabaseAuthDeleteUser,
   supabaseAuthResetPasswordForEmail,
   supabaseAuthSignInWithPassword,
@@ -252,12 +255,52 @@ export async function POST(request) {
     const redirectUrl = normalizeText(body?.redirectTo) || new URL('/reset-password.html', request.url).toString();
 
     try {
+      const brokers = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { email },
+        order: { column: 'created_at', ascending: false }
+      });
+      const broker = Array.isArray(brokers) ? brokers[0] : null;
+
+      debugAuth('forgot-password request', {
+        email,
+        redirectUrl,
+        brokerExists: Boolean(broker)
+      });
+
+      if (broker) {
+        try {
+          await supabaseAuthAdminCreateUser({
+            supabaseUrl,
+            serviceRoleKey,
+            email,
+            password: crypto.randomUUID(),
+            emailConfirm: true,
+            userMetadata: {
+              full_name: broker.full_name,
+              company_name: broker.company_name || '',
+              mobile_number: normalizePhoneNumber(broker.mobile_number)
+            }
+          });
+          debugAuth('forgot-password auth user created', { email });
+        } catch (error) {
+          const message = normalizeText(error?.message).toLowerCase();
+          if (!(message.includes('already') || message.includes('registered') || message.includes('exists') || message.includes('duplicate'))) {
+            throw error;
+          }
+          debugAuth('forgot-password auth user already exists', { email });
+        }
+      }
+
       await supabaseAuthResetPasswordForEmail({
         supabaseUrl,
         publishableKey,
         email,
         redirectTo: redirectUrl
       });
+      debugAuth('forgot-password recover accepted', { email, redirectUrl });
       return json({
         message: 'If an account exists for this email, a reset link has been sent.'
       });

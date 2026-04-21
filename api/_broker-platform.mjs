@@ -500,6 +500,46 @@ export async function supabaseAuthDeleteUser({
   }
 }
 
+export async function supabaseAuthAdminCreateUser({
+  supabaseUrl,
+  serviceRoleKey,
+  email,
+  password,
+  emailConfirm = false,
+  userMetadata = {}
+}) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      password,
+      email_confirm: emailConfirm,
+      user_metadata: userMetadata
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase admin user create failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
 export function createRestUrl(baseUrl, table) {
   return new URL(`${baseUrl}/rest/v1/${table}`);
 }
