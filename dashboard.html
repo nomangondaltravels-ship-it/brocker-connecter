@@ -7358,8 +7358,17 @@
       const alertsTarget = document.getElementById('workflowAlertsList');
       const matchesTarget = document.getElementById('workflowMatchesList');
       const alertCount = Array.isArray(state.notifications) ? state.notifications.length : 0;
+      const aiMatches = Array.isArray(state.aiMatches) ? state.aiMatches : [];
+      const matchCount = aiMatches.length;
       const countNode = document.getElementById('notificationCountBadge');
+      const workflowCountNode = document.getElementById('workflowAlertsCount');
+      const workflowMatchesNode = document.getElementById('workflowMatchesCount');
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.debug('matchCount value:', matchCount);
+      }
       if (countNode) countNode.textContent = String(alertCount);
+      if (workflowCountNode) workflowCountNode.textContent = String(alertCount);
+      if (workflowMatchesNode) workflowMatchesNode.textContent = String(matchCount);
 
       if (alertsTarget) {
         alertsTarget.innerHTML = alertCount
@@ -7375,7 +7384,7 @@
 
       if (matchesTarget) {
         matchesTarget.innerHTML = matchCount
-          ? state.aiMatches.slice(0, 6).map(match => {
+          ? aiMatches.slice(0, 6).map(match => {
               const lead = state.leads.find(item => item.id === match.requirementId);
               const property = state.properties.find(item => item.id === match.propertyId);
               const summaryBits = [
