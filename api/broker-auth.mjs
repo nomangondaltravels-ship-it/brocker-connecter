@@ -11,6 +11,7 @@ import {
   normalizeText,
   requiredEnv,
   supabaseAuthDeleteUser,
+  supabaseAuthResetPasswordForEmail,
   supabaseAuthSignInWithPassword,
   supabaseAuthSignUp,
   supabasePatch,
@@ -116,7 +117,7 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const action = normalizeText(body?.action).toLowerCase();
 
-  if (!['register', 'login'].includes(action)) {
+  if (!['register', 'login', 'forgot-password'].includes(action)) {
     return json({ message: 'Unsupported broker auth action.' }, 400);
   }
 
@@ -234,6 +235,33 @@ export async function POST(request) {
       }
 
       return json({ message: error?.message || 'Broker registration failed.' }, error?.status || 500);
+    }
+  }
+
+  if (action === 'forgot-password') {
+    const email = normalizeEmail(body?.email);
+    if (!email) {
+      return json({ message: 'Enter email.' }, 400);
+    }
+    if (!email.includes('@')) {
+      return json({ message: 'Enter a valid email address.' }, 400);
+    }
+
+    const redirectUrl = normalizeText(body?.redirectTo) || new URL('/reset-password.html', request.url).toString();
+
+    try {
+      await supabaseAuthResetPasswordForEmail({
+        supabaseUrl,
+        publishableKey,
+        email,
+        redirectTo: redirectUrl
+      });
+      return json({
+        message: 'If an account exists for this email, a reset link has been sent.'
+      });
+    } catch (error) {
+      debugAuth('forgot-password failure', error?.message || error);
+      return json({ message: 'Password reset could not be sent. Please try again.' }, error?.status || 500);
     }
   }
 

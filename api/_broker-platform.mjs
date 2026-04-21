@@ -441,6 +441,41 @@ export async function supabaseAuthSignInWithPassword({
   return result;
 }
 
+export async function supabaseAuthResetPasswordForEmail({
+  supabaseUrl,
+  publishableKey,
+  email,
+  redirectTo
+}) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/recover`, {
+    method: 'POST',
+    headers: {
+      apikey: publishableKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      redirect_to: redirectTo
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase password reset request failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
 export async function supabaseAuthDeleteUser({
   supabaseUrl,
   serviceRoleKey,

@@ -531,6 +531,25 @@
       color: #fecaca;
     }
 
+    .auth-inline-link {
+      border: none;
+      background: transparent;
+      color: var(--gold-soft);
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .auth-inline-link:hover {
+      color: var(--gold-deep);
+      text-decoration: underline;
+    }
+
+    .auth-foot-secondary {
+      margin-top: 10px;
+    }
+
     .popover {
       display: none;
       pointer-events: none;
@@ -1754,7 +1773,7 @@
         <button class="auth-tab active" id="tabSignin" type="button" onclick="setAuthMode('signin')">Sign In</button>
         <button class="auth-tab" id="tabRegister" type="button" onclick="setAuthMode('register')">Register</button>
       </div>
-      <p class="auth-copy" id="authCopy">Sign in with your email address or mobile number, and password to open your private dashboard.</p>
+      <p class="auth-copy" id="authCopy">Sign in with your email address and password to open your private dashboard.</p>
       <div class="auth-status" id="authStatus"></div>
       <form id="authForm" class="grid-2" style="margin-top:16px;">
         <div class="full" id="fullNameWrap"><label class="small">Full Name</label><input id="authFullName"></div>
@@ -1762,12 +1781,18 @@
         <div id="brokerIdWrap" style="display:none;"><label class="small">Broker ID Number</label><input id="authBrokerId"></div>
         <div id="mobileWrap"><label class="small">Mobile Number (Optional)</label><input id="authMobile" placeholder="058XXXXXXX or +9715XXXXXXXX"></div>
         <div class="full" id="emailWrap"><label class="small">Email Address</label><input id="authEmail" type="email" placeholder="name@example.com"></div>
-        <div class="full"><label class="small">Password</label><input id="authPassword" type="password"></div>
+        <div class="full" id="passwordWrap"><label class="small">Password</label><input id="authPassword" type="password"></div>
         <div class="full" id="confirmPasswordWrap"><label class="small">Confirm Password</label><input id="authConfirmPassword" type="password"></div>
+        <div class="full" id="forgotPasswordRow">
+          <button class="auth-inline-link" type="button" onclick="setAuthMode('forgot')">Forgot Password?</button>
+        </div>
         <div class="full actions">
           <button class="btn btn-primary" type="submit" id="authSubmitBtn">Sign In</button>
         </div>
       </form>
+      <div class="auth-foot auth-foot-secondary hidden" id="authBackRow">
+        <button class="auth-inline-link" type="button" onclick="setAuthMode('signin')">Back to Sign In</button>
+      </div>
       <div class="auth-foot" style="margin-top:12px;">Public users stay on the marketplace. Signed-in brokers are redirected to their separate private dashboard.</div>
     </div>
   </div>
@@ -1907,8 +1932,8 @@
       button.disabled = Boolean(isLoading);
       button.dataset.loading = isLoading ? 'true' : 'false';
       button.textContent = isLoading
-        ? (state.authMode === 'register' ? 'Registering...' : 'Signing In...')
-        : (state.authMode === 'register' ? 'Register and Continue' : 'Sign In and Continue');
+        ? (state.authMode === 'register' ? 'Registering...' : state.authMode === 'forgot' ? 'Sending...' : 'Signing In...')
+        : (state.authMode === 'register' ? 'Register and Continue' : state.authMode === 'forgot' ? 'Send Reset Link' : 'Sign In and Continue');
     }
 
     function getAuthFailureMessage(result, fallback = 'Login failed, please try again.') {
@@ -1924,6 +1949,8 @@
       if (/valid email address/i.test(message)) return 'Enter a valid email address';
       if (/passwords do not match/i.test(message)) return 'Passwords do not match';
       if (/verify your email/i.test(message)) return 'Please verify your email first';
+      if (/reset link has been sent/i.test(message)) return 'If an account exists for this email, a reset link has been sent.';
+      if (/password reset could not be sent/i.test(message)) return 'Password reset could not be sent. Please try again.';
       if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
       if (/session creation failed/i.test(message)) return 'Login failed, please try again.';
       return message;
@@ -2532,17 +2559,30 @@
       state.authMode = mode;
       document.getElementById('tabSignin').classList.toggle('active', mode === 'signin');
       document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
-      document.getElementById('authTitle').textContent = mode === 'register' ? 'Register Broker Account' : 'Sign In Broker Account';
+      document.getElementById('authTitle').textContent = mode === 'register'
+        ? 'Register Broker Account'
+        : mode === 'forgot'
+          ? 'Forgot Password'
+          : 'Sign In Broker Account';
       document.getElementById('authCopy').textContent = mode === 'register'
         ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
-        : 'Sign in with your email address and password to open your separate private dashboard.';
-      document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Register and Continue' : 'Sign In and Continue';
+        : mode === 'forgot'
+          ? 'Enter your email address and we will send you a secure password reset link.'
+          : 'Sign in with your email address and password to open your separate private dashboard.';
+      document.getElementById('authSubmitBtn').textContent = mode === 'register'
+        ? 'Register and Continue'
+        : mode === 'forgot'
+          ? 'Send Reset Link'
+          : 'Sign In and Continue';
       document.getElementById('fullNameWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('companyWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('brokerIdWrap').style.display = 'none';
       document.getElementById('emailWrap').style.display = 'block';
       document.getElementById('mobileWrap').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('passwordWrap').style.display = mode === 'forgot' ? 'none' : 'block';
       document.getElementById('confirmPasswordWrap').style.display = mode === 'register' ? 'block' : 'none';
+      document.getElementById('forgotPasswordRow').style.display = mode === 'signin' ? 'block' : 'none';
+      document.getElementById('authBackRow').classList.toggle('hidden', mode !== 'forgot');
       document.getElementById('authFullName').required = mode === 'register';
       document.getElementById('authEmail').required = true;
       document.getElementById('authConfirmPassword').required = mode === 'register';
@@ -2673,7 +2713,7 @@
         if (!isValidEmailAddress(emailValue)) {
           throw new Error('Enter a valid email address');
         }
-        if (!passwordValue) {
+        if (state.authMode !== 'forgot' && !passwordValue) {
           throw new Error('Enter password');
         }
         if (state.authMode === 'register') {
@@ -2698,6 +2738,12 @@
               password: passwordValue,
               confirmPassword: confirmPasswordValue
             }
+          : state.authMode === 'forgot'
+            ? {
+                action: 'forgot-password',
+                email: emailValue,
+                redirectTo: new URL('reset-password.html', window.location.href).toString()
+              }
           : {
               action: 'login',
               email: emailValue,
@@ -2740,6 +2786,11 @@
             return;
           }
           throw new Error(getAuthFailureMessage(result));
+        }
+
+        if (state.authMode === 'forgot') {
+          setAuthStatus(result?.message || 'If an account exists for this email, a reset link has been sent.', 'success');
+          return;
         }
 
         if (state.authMode === 'register' && result?.requiresEmailConfirmation) {
