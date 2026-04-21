@@ -1800,6 +1800,7 @@
   <script>
     const state = {
       authMode: 'signin',
+      authRequestId: 0,
       sessionToken: localStorage.getItem('broker_session_token') || '',
       brokerProfile: null,
       listings: [],
@@ -1926,17 +1927,25 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
     }
 
-    function setAuthSubmitLoading(isLoading) {
+    function getAuthModeFallbackMessage(mode) {
+      return mode === 'forgot'
+        ? 'Unable to send reset email. Please try again.'
+        : mode === 'register'
+          ? 'Broker registration failed.'
+          : 'Login failed, please try again.';
+    }
+
+    function setAuthSubmitLoading(isLoading, mode = state.authMode) {
       const button = document.getElementById('authSubmitBtn');
       if (!button) return;
       button.disabled = Boolean(isLoading);
       button.dataset.loading = isLoading ? 'true' : 'false';
       button.textContent = isLoading
-        ? (state.authMode === 'register' ? 'Registering...' : state.authMode === 'forgot' ? 'Sending...' : 'Signing In...')
-        : (state.authMode === 'register' ? 'Register and Continue' : state.authMode === 'forgot' ? 'Send Reset Link' : 'Sign In and Continue');
+        ? (mode === 'register' ? 'Registering...' : mode === 'forgot' ? 'Sending reset link...' : 'Signing in...')
+        : (mode === 'register' ? 'Register and Continue' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In and Continue');
     }
 
-    function getAuthFailureMessage(result, fallback = 'Login failed, please try again.') {
+    function getAuthFailureMessage(result, mode = 'signin', fallback = getAuthModeFallbackMessage(mode)) {
       const message = String(result?.message || '').trim();
       if (!message) return fallback;
       if (/cannot read properties/i.test(message)) return fallback;
@@ -1944,9 +1953,9 @@
       if (/invalid password/i.test(message)) return 'Invalid email or password';
       if (/account not found/i.test(message)) return 'Account not found';
       if (/broker not found/i.test(message)) return 'Account not found';
-      if (/enter email address/i.test(message)) return 'Enter email';
+      if (/enter email address/i.test(message)) return mode === 'forgot' ? 'Enter your email address' : 'Enter email';
       if (/enter password/i.test(message)) return 'Enter password';
-      if (/valid email address/i.test(message)) return 'Enter a valid email address';
+      if (/valid email address/i.test(message)) return mode === 'forgot' ? 'Invalid email address' : 'Enter a valid email address';
       if (/passwords do not match/i.test(message)) return 'Passwords do not match';
       if (/verify your email/i.test(message)) return 'Please verify your email first';
       if (/email confirmed successfully/i.test(message)) return 'Email confirmed successfully. You can now sign in.';
@@ -2591,7 +2600,8 @@
       document.getElementById('authConfirmPassword').required = mode === 'register';
       document.getElementById('authStatus').className = 'auth-status';
       document.getElementById('authStatus').textContent = '';
-      setAuthSubmitLoading(false);
+      state.authRequestId += 1;
+      setAuthSubmitLoading(false, mode);
     }
 
     function setAuthStatus(message = '', tone = 'error') {
@@ -2729,6 +2739,9 @@
 
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
+      const modeAtSubmit = state.authMode;
+      const requestId = state.authRequestId + 1;
+      state.authRequestId = requestId;
       try {
         setAuthStatus('');
         const mobileValue = normalizePhoneNumber(document.getElementById('authMobile').value);
@@ -2736,15 +2749,15 @@
         const passwordValue = String(document.getElementById('authPassword').value || '').trim();
         const confirmPasswordValue = String(document.getElementById('authConfirmPassword').value || '').trim();
         if (!emailValue) {
-          throw new Error('Enter email');
+          throw new Error(modeAtSubmit === 'forgot' ? 'Enter your email address' : 'Enter email');
         }
         if (!isValidEmailAddress(emailValue)) {
-          throw new Error('Enter a valid email address');
+          throw new Error(modeAtSubmit === 'forgot' ? 'Invalid email address' : 'Enter a valid email address');
         }
-        if (state.authMode !== 'forgot' && !passwordValue) {
+        if (modeAtSubmit !== 'forgot' && !passwordValue) {
           throw new Error('Enter password');
         }
-        if (state.authMode === 'register') {
+        if (modeAtSubmit === 'register') {
           if (String(document.getElementById('authFullName').value || '').trim().length < 2) {
             throw new Error('Enter full name');
           }
@@ -2755,8 +2768,8 @@
             throw new Error('Passwords do not match');
           }
         }
-        setAuthSubmitLoading(true);
-        const payload = state.authMode === 'register'
+        setAuthSubmitLoading(true, modeAtSubmit);
+        const payload = modeAtSubmit === 'register'
           ? {
               action: 'register',
               fullName: document.getElementById('authFullName').value,
@@ -2767,11 +2780,11 @@
               confirmPassword: confirmPasswordValue,
               redirectTo: new URL('auth-callback.html', window.location.href).toString()
             }
-          : state.authMode === 'forgot'
+          : modeAtSubmit === 'forgot'
             ? {
                 action: 'forgot-password',
                 email: emailValue,
-                redirectTo: new URL('auth-callback.html', window.location.href).toString()
+                redirectTo: new URL('reset-password.html', window.location.href).toString()
               }
           : {
               action: 'login',
@@ -2781,7 +2794,7 @@
 
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
           console.debug('[broker-auth-ui] submit', {
-            mode: state.authMode,
+            mode: modeAtSubmit,
             hasEmail: Boolean(emailValue)
           });
         }
@@ -2805,7 +2818,7 @@
         }
 
         if (!response.ok) {
-          if (state.authMode === 'signin' && response.status === 404) {
+          if (modeAtSubmit === 'signin' && response.status === 404) {
             const migrated = await migrateLegacyBrokerAccount(emailValue, passwordValue);
             if (!persistBrokerSession(migrated)) {
               console.warn('Legacy migration returned invalid auth payload.', migrated);
@@ -2814,15 +2827,19 @@
             window.location.href = 'dashboard.html';
             return;
           }
-          throw new Error(getAuthFailureMessage(result));
+          throw new Error(getAuthFailureMessage(result, modeAtSubmit));
         }
 
-        if (state.authMode === 'forgot') {
+        if (state.authRequestId !== requestId) {
+          return;
+        }
+
+        if (modeAtSubmit === 'forgot') {
           setAuthStatus(result?.message || 'If an account exists for this email, a reset link has been sent.', 'success');
           return;
         }
 
-        if (state.authMode === 'register' && result?.requiresEmailConfirmation) {
+        if (modeAtSubmit === 'register' && result?.requiresEmailConfirmation) {
           document.getElementById('authPassword').value = '';
           document.getElementById('authConfirmPassword').value = '';
           setAuthMode('signin');
@@ -2832,7 +2849,7 @@
         }
 
         if (!persistBrokerSession(result)) {
-          if (state.authMode === 'register') {
+          if (modeAtSubmit === 'register') {
             setAuthMode('signin');
             document.getElementById('authEmail').value = emailValue;
             setAuthStatus(result?.message || 'Account created successfully. You can sign in now.', 'success');
@@ -2843,14 +2860,14 @@
         }
         window.location.href = 'dashboard.html';
       } catch (error) {
-        const fallbackMessage = state.authMode === 'forgot'
-          ? 'Unable to send reset email. Please try again.'
-          : state.authMode === 'register'
-            ? 'Broker registration failed.'
-            : 'Login failed, please try again.';
-        setAuthStatus(getAuthFailureMessage({ message: error?.message }, fallbackMessage));
+        if (state.authRequestId === requestId) {
+          const fallbackMessage = getAuthModeFallbackMessage(modeAtSubmit);
+          setAuthStatus(getAuthFailureMessage({ message: error?.message }, modeAtSubmit, fallbackMessage));
+        }
       } finally {
-        setAuthSubmitLoading(false);
+        if (state.authRequestId === requestId) {
+          setAuthSubmitLoading(false, modeAtSubmit);
+        }
       }
     });
 
