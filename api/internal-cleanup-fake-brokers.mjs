@@ -1,4 +1,5 @@
 import {
+  supabaseAuthAdminListUsers,
   getSupabaseConfig,
   json,
   normalizeEmail,
@@ -28,6 +29,10 @@ const OPTIONAL_BROKER_TABLES = [
   'broker_notifications',
   'broker_ai_matches'
 ];
+
+function isConfirmedFakeAuthEmail(email) {
+  return /@example\.com$/i.test(normalizeEmail(email));
+}
 
 function requireCleanupToken(request) {
   const token = normalizeText(request.headers.get('x-cleanup-token'));
@@ -202,6 +207,19 @@ export async function POST(request) {
       plans.push(await fetchBrokerDeletePlan({ supabaseUrl, serviceRoleKey, broker }));
     }
 
+    const authUsers = await supabaseAuthAdminListUsers({
+      supabaseUrl,
+      serviceRoleKey,
+      page: 1,
+      perPage: 200
+    });
+    const authUsersToDelete = (Array.isArray(authUsers) ? authUsers : [])
+      .filter(user => isConfirmedFakeAuthEmail(user?.email))
+      .map(user => ({
+        id: user.id,
+        email: user.email || ''
+      }));
+
     const dryRun = {
       targetedBrokers: presentTargets.map(broker => ({
         id: broker.id,
@@ -217,8 +235,10 @@ export async function POST(request) {
         publicListings: plans.reduce((sum, plan) => sum + plan.publicListings.length, 0),
         brokerFollowups: plans.reduce((sum, plan) => sum + (plan.optionalRows.broker_followups || []).length, 0),
         brokerNotifications: plans.reduce((sum, plan) => sum + (plan.optionalRows.broker_notifications || []).length, 0),
-        brokerAiMatches: plans.reduce((sum, plan) => sum + (plan.optionalRows.broker_ai_matches || []).length, 0)
+        brokerAiMatches: plans.reduce((sum, plan) => sum + (plan.optionalRows.broker_ai_matches || []).length, 0),
+        authUsers: authUsersToDelete.length
       },
+      authUsersToDelete,
       details: plans.map(plan => ({
         broker: {
           id: plan.broker.id,
@@ -315,16 +335,22 @@ export async function POST(request) {
         filters: { id: plan.broker.id }
       });
       deleted.brokers.push(...(Array.isArray(brokerDeleteResult) ? brokerDeleteResult : []));
+    }
 
+    for (const authUser of authUsersToDelete) {
       try {
         await supabaseAuthDeleteUser({
           supabaseUrl,
           serviceRoleKey,
-          userId: plan.broker.id
+          userId: authUser.id
         });
-        deleted.authUsers.push(plan.broker.id);
+        deleted.authUsers.push(authUser);
       } catch (error) {
-        deleted.authUsers.push(`${plan.broker.id}:auth-user-missing-or-delete-failed`);
+        deleted.authUsers.push({
+          id: authUser.id,
+          email: authUser.email,
+          status: 'auth-user-delete-failed'
+        });
       }
     }
 
