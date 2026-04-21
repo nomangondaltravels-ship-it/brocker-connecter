@@ -13,6 +13,7 @@ import {
   normalizeText,
   requiredEnv,
   supabaseAuthAdminCreateUser,
+  supabaseAuthGetUser,
   supabaseAuthResetPasswordForEmail,
   supabaseAuthSignInWithPassword,
   supabaseAuthSignUp,
@@ -268,8 +269,60 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const action = normalizeText(body?.action).toLowerCase();
 
-  if (!['register', 'login', 'forgot-password'].includes(action)) {
+  if (!['register', 'login', 'forgot-password', 'exchange-session'].includes(action)) {
     return json({ message: 'Unsupported broker auth action.' }, 400);
+  }
+
+  if (action === 'exchange-session') {
+    const accessToken = normalizeText(body?.accessToken);
+    const refreshToken = normalizeText(body?.refreshToken);
+
+    if (!accessToken) {
+      return json({ message: 'Missing auth session.' }, 400);
+    }
+
+    try {
+      const authUser = await supabaseAuthGetUser({
+        supabaseUrl,
+        publishableKey,
+        accessToken
+      });
+
+      const candidate = await findBrokerByEmail({
+        supabaseUrl,
+        serviceRoleKey,
+        email: authUser?.email || ''
+      });
+
+      const broker = await ensureBrokerProfileFromAuthUser({
+        supabaseUrl,
+        serviceRoleKey,
+        authUser,
+        fallbackEmail: authUser?.email || '',
+        fallbackCompanyName: candidate?.company_name || '',
+        fallbackMobileNumber: candidate?.mobile_number || ''
+      }) || candidate;
+
+      if (!broker) {
+        return json({ message: 'Account not found.' }, 404);
+      }
+      if (broker.is_blocked) {
+        return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
+      }
+
+      return json({
+        token: buildSessionToken(broker),
+        broker: sanitizeBroker(broker),
+        session: {
+          access_token: accessToken,
+          refresh_token: refreshToken || null,
+          user: authUser
+        }
+      });
+    } catch (error) {
+      debugAuth('exchange-session failure', error?.message || error);
+      return json({ message: 'Unable to complete secure sign in.' }, error?.status || 500);
+    }
   }
 
   if (action === 'register') {

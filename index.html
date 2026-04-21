@@ -2737,6 +2737,31 @@
       }
     }
 
+    function redirectIncomingAuthLink() {
+      const query = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const hasAuthTokens = Boolean(
+        hash.get('access_token')
+        || query.get('access_token')
+        || hash.get('token_hash')
+        || query.get('token_hash')
+        || hash.get('error_description')
+        || query.get('error_description')
+      );
+      if (!hasAuthTokens) return false;
+
+      const authType = query.get('type') || hash.get('type') || '';
+      const target = new URL(authType === 'recovery' ? 'reset-password.html' : 'auth-callback.html', window.location.href);
+      if (window.location.search) {
+        target.search = window.location.search;
+      }
+      if (window.location.hash) {
+        target.hash = window.location.hash;
+      }
+      window.location.replace(target.toString());
+      return true;
+    }
+
     document.getElementById('authForm').addEventListener('submit', async event => {
       event.preventDefault();
       const modeAtSubmit = state.authMode;
@@ -2909,6 +2934,9 @@
 
     (async function init() {
       try {
+        if (redirectIncomingAuthLink()) {
+          return;
+        }
         handleAuthReturnMessage();
         const authenticated = await verifyBrokerSession();
         const showDashboardButton = true;

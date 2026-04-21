@@ -454,6 +454,37 @@ export async function supabaseAuthSignInWithPassword({
   return result;
 }
 
+export async function supabaseAuthGetUser({
+  supabaseUrl,
+  publishableKey,
+  accessToken
+}) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    method: 'GET',
+    headers: {
+      apikey: publishableKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase Auth user lookup failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
 export async function supabaseAuthResetPasswordForEmail({
   supabaseUrl,
   publishableKey,
