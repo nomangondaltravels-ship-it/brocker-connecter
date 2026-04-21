@@ -21,6 +21,30 @@ const OPTIONAL_BROKER_TABLES = [
   'broker_ai_matches'
 ];
 
+async function listAuthUsers({ supabaseUrl, serviceRoleKey, page = 1, perPage = 200 }) {
+  const url = new URL(`${supabaseUrl}/auth/v1/admin/users`);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('per_page', String(perPage));
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(result?.message || result?.error || 'Failed to list auth users.');
+    error.status = response.status;
+    throw error;
+  }
+
+  return Array.isArray(result?.users) ? result.users : [];
+}
+
 function requireCleanupToken(request) {
   const token = normalizeText(request.headers.get('x-cleanup-token'));
   if (token !== CLEANUP_TOKEN) {
@@ -158,6 +182,16 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const execute = Boolean(body?.execute);
 
+    const authUsers = await listAuthUsers({
+      supabaseUrl,
+      serviceRoleKey,
+      page: 1,
+      perPage: 200
+    });
+    const authUserByEmail = (Array.isArray(authUsers) ? authUsers : []).find(
+      user => normalizeEmail(user?.email) === TARGET_BROKER.email
+    ) || null;
+
     const brokerRows = await supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
@@ -172,6 +206,8 @@ export async function POST(request) {
         mode: execute ? 'execute' : 'dry-run',
         target: TARGET_BROKER,
         found: false,
+        authUserFound: Boolean(authUserByEmail),
+        authUserId: authUserByEmail?.id || '',
         message: 'Broker row not found.'
       });
     }
@@ -197,6 +233,10 @@ export async function POST(request) {
         brokerIdNumber: broker.broker_id_number || '',
         fullName: broker.full_name || ''
       },
+      authUser: authUserByEmail ? {
+        id: authUserByEmail.id,
+        email: authUserByEmail.email || ''
+      } : null,
       counts: {
         brokerLeads: plan.leads.length,
         brokerProperties: plan.properties.length,
@@ -274,17 +314,17 @@ export async function POST(request) {
       filters: { id: broker.id }
     });
 
-    let authDelete = { status: 'deleted', userId: broker.id };
+    let authDelete = { status: 'deleted', userId: authUserByEmail?.id || broker.id };
     try {
       await supabaseAuthDeleteUser({
         supabaseUrl,
         serviceRoleKey,
-        userId: broker.id
+        userId: authUserByEmail?.id || broker.id
       });
     } catch (error) {
       authDelete = {
         status: 'auth-user-missing-or-delete-failed',
-        userId: broker.id
+        userId: authUserByEmail?.id || broker.id
       };
     }
 
