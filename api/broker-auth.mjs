@@ -11,11 +11,11 @@ import {
   normalizeText,
   requiredEnv,
   supabaseAuthDeleteUser,
+  supabaseAuthSignInWithPassword,
   supabaseAuthSignUp,
   supabasePatch,
   supabaseInsert,
   supabaseSelect,
-  verifyPassword,
   verifyToken
 } from './_broker-platform.mjs';
 
@@ -57,70 +57,16 @@ function buildInternalBrokerId(authUserId) {
 }
 
 function findMatchingBrokers(candidates, {
-  identifier,
-  brokerIdNumber,
-  mobileNumber,
   email
 }) {
   const rows = Array.isArray(candidates) ? candidates : [];
-  const normalizedBrokerIdText = normalizeText(brokerIdNumber).toLowerCase();
-  const normalizedMobile = normalizePhoneNumber(mobileNumber);
   const normalizedEmail = normalizeEmail(email);
-  const normalizedIdentifierText = normalizeText(identifier).toLowerCase();
-  const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
-  const normalizedIdentifierEmail = normalizeEmail(identifier);
-
-  if (normalizedBrokerIdText) {
-    return rows.filter(item => normalizeText(item?.broker_id_number).toLowerCase() === normalizedBrokerIdText);
-  }
-
-  if (normalizedMobile) {
-    return rows.filter(item => normalizePhoneNumber(item?.mobile_number) === normalizedMobile);
-  }
 
   if (normalizedEmail) {
     return rows.filter(item => normalizeEmail(item?.email) === normalizedEmail);
   }
 
-  if (normalizedIdentifierPhone) {
-    const phoneMatches = rows.filter(item => normalizePhoneNumber(item?.mobile_number) === normalizedIdentifierPhone);
-    if (phoneMatches.length) return phoneMatches;
-  }
-
-  if (normalizedIdentifierEmail) {
-    const emailMatches = rows.filter(item => normalizeEmail(item?.email) === normalizedIdentifierEmail);
-    if (emailMatches.length) return emailMatches;
-  }
-
-  if (normalizedIdentifierText) {
-    return rows.filter(item => normalizeText(item?.broker_id_number).toLowerCase() === normalizedIdentifierText);
-  }
-
   return [];
-}
-
-async function verifyAndUpgradeBrokerPassword({ supabaseUrl, serviceRoleKey, broker, password }) {
-  if (verifyPassword(password, broker.password_hash)) {
-    return true;
-  }
-
-  if (String(broker.password_hash || '') === String(password || '')) {
-    const nextHash = createPasswordHash(password);
-    await supabasePatch({
-      supabaseUrl,
-      serviceRoleKey,
-      table: 'brokers',
-      filters: { id: broker.id },
-      payload: {
-        password_hash: nextHash,
-        updated_at: new Date().toISOString()
-      }
-    });
-    broker.password_hash = nextHash;
-    return true;
-  }
-
-  return false;
 }
 
 export async function GET(request) {
@@ -291,14 +237,17 @@ export async function POST(request) {
     }
   }
 
-  const identifier = normalizeText(body?.identifier);
-  const brokerIdNumber = normalizeText(body?.brokerIdNumber);
-  const mobileNumber = normalizePhoneNumber(body?.mobileNumber);
   const email = normalizeEmail(body?.email);
   const password = String(body?.password || '');
 
-  if (!(identifier || brokerIdNumber || mobileNumber || email) || !password) {
-    return json({ message: 'Enter Broker ID or Mobile Number, and password.' }, 400);
+  if (!email) {
+    return json({ message: 'Enter email.' }, 400);
+  }
+  if (!email.includes('@')) {
+    return json({ message: 'Enter a valid email address.' }, 400);
+  }
+  if (!password) {
+    return json({ message: 'Enter password.' }, 400);
   }
 
   const candidates = await supabaseSelect({
@@ -309,69 +258,66 @@ export async function POST(request) {
   });
 
   const matchingBrokers = findMatchingBrokers(candidates, {
-    identifier,
-    brokerIdNumber,
-    mobileNumber,
     email
   });
 
   debugAuth('login lookup', {
-    identifierProvided: Boolean(identifier),
-    brokerIdProvided: Boolean(brokerIdNumber),
-    mobileProvided: Boolean(mobileNumber),
     emailProvided: Boolean(email),
     matchCount: matchingBrokers.length
   });
 
   if (!matchingBrokers.length) {
-    return json({ message: 'Broker not found.' }, 404);
+    return json({ message: 'Account not found.' }, 404);
   }
 
-  let blockedMatchFound = false;
-  for (const candidate of matchingBrokers) {
-    if (candidate.is_blocked) {
-      blockedMatchFound = true;
-      continue;
-    }
-
-    let passwordOk = false;
-    try {
-      passwordOk = await verifyAndUpgradeBrokerPassword({
-        supabaseUrl,
-        serviceRoleKey,
-        broker: candidate,
-        password
-      });
-    } catch (error) {
-      debugAuth('password verification failed for candidate', {
-        brokerIdNumber: candidate?.broker_id_number,
-        mobileNumber: candidate?.mobile_number,
-        error: error?.message || 'Unknown password verification error'
-      });
-      continue;
-    }
-
-    if (passwordOk) {
-      const token = buildSessionToken(candidate);
-      if (!token) {
-        debugAuth('session token generation failed', { brokerIdNumber: candidate?.broker_id_number });
-        return json({ message: 'Session creation failed. Please try again.' }, 500);
-      }
-
-      debugAuth('login success', {
-        brokerIdNumber: candidate?.broker_id_number,
-        mobileNumber: candidate?.mobile_number
-      });
-      return json({
-        token,
-        broker: sanitizeBroker(candidate)
-      });
-    }
+  const candidate = matchingBrokers.find(item => !item.is_blocked) || matchingBrokers[0];
+  if (!candidate) {
+    return json({ message: 'Account not found.' }, 404);
   }
 
-  if (blockedMatchFound && matchingBrokers.every(item => item.is_blocked)) {
+  if (candidate.is_blocked) {
     return json({ message: 'This broker account is blocked. Please contact admin support.' }, 403);
   }
 
-  return json({ message: 'Invalid password.' }, 401);
+  try {
+    const authResult = await supabaseAuthSignInWithPassword({
+      supabaseUrl,
+      publishableKey,
+      email,
+      password
+    });
+
+    const token = buildSessionToken(candidate);
+    if (!token) {
+      debugAuth('session token generation failed', { brokerIdNumber: candidate?.broker_id_number });
+      return json({ message: 'Login failed, please try again.' }, 500);
+    }
+
+    debugAuth('login success', {
+      brokerIdNumber: candidate?.broker_id_number,
+      email: candidate?.email
+    });
+    return json({
+      token,
+      broker: sanitizeBroker(candidate),
+      session: authResult?.access_token ? {
+        access_token: authResult.access_token,
+        refresh_token: authResult.refresh_token,
+        expires_in: authResult.expires_in,
+        expires_at: authResult.expires_at,
+        token_type: authResult.token_type,
+        user: authResult.user || null
+      } : null
+    });
+  } catch (error) {
+    const message = normalizeText(error?.message).toLowerCase();
+    if (message.includes('email not confirmed') || message.includes('email not confirmed yet') || message.includes('confirm')) {
+      return json({ message: 'Please verify your email first.' }, 403);
+    }
+    if (message.includes('invalid login credentials') || message.includes('invalid_grant') || message.includes('invalid')) {
+      return json({ message: 'Invalid email or password.' }, 401);
+    }
+    debugAuth('login failure', error?.message || error);
+    return json({ message: 'Login failed, please try again.' }, error?.status || 500);
+  }
 }

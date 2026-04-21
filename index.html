@@ -1852,6 +1852,7 @@
     function clearBrokerSessionState() {
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
+      localStorage.removeItem('broker_supabase_session');
       state.sessionToken = '';
       state.brokerProfile = null;
     }
@@ -1882,6 +1883,9 @@
       if (!authPayload) {
         return false;
       }
+      if (payload?.session && typeof payload.session === 'object') {
+        localStorage.setItem('broker_supabase_session', JSON.stringify(payload.session));
+      }
       localStorage.setItem('broker_session_token', authPayload.token);
       localStorage.setItem('broker_session_profile', JSON.stringify(authPayload.broker));
       state.sessionToken = authPayload.token;
@@ -1911,13 +1915,15 @@
       const message = String(result?.message || '').trim();
       if (!message) return fallback;
       if (/cannot read properties/i.test(message)) return fallback;
-      if (/invalid password/i.test(message)) return 'Invalid password';
-      if (/broker not found/i.test(message)) return 'Broker not found';
-      if (/enter email address or mobile number/i.test(message)) return 'Enter email address or mobile number';
-      if (/enter broker id or mobile number/i.test(message)) return 'Enter email address or mobile number';
+      if (/invalid email or password/i.test(message)) return 'Invalid email or password';
+      if (/invalid password/i.test(message)) return 'Invalid email or password';
+      if (/account not found/i.test(message)) return 'Account not found';
+      if (/broker not found/i.test(message)) return 'Account not found';
+      if (/enter email address/i.test(message)) return 'Enter email';
       if (/enter password/i.test(message)) return 'Enter password';
       if (/valid email address/i.test(message)) return 'Enter a valid email address';
       if (/passwords do not match/i.test(message)) return 'Passwords do not match';
+      if (/verify your email/i.test(message)) return 'Please verify your email first';
       if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
       if (/session creation failed/i.test(message)) return 'Login failed, please try again.';
       return message;
@@ -2529,15 +2535,16 @@
       document.getElementById('authTitle').textContent = mode === 'register' ? 'Register Broker Account' : 'Sign In Broker Account';
       document.getElementById('authCopy').textContent = mode === 'register'
         ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
-        : 'Sign in with your email address or mobile number, and password, to open your separate private dashboard.';
+        : 'Sign in with your email address and password to open your separate private dashboard.';
       document.getElementById('authSubmitBtn').textContent = mode === 'register' ? 'Register and Continue' : 'Sign In and Continue';
       document.getElementById('fullNameWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('companyWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('brokerIdWrap').style.display = 'none';
       document.getElementById('emailWrap').style.display = 'block';
+      document.getElementById('mobileWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('confirmPasswordWrap').style.display = mode === 'register' ? 'block' : 'none';
       document.getElementById('authFullName').required = mode === 'register';
-      document.getElementById('authEmail').required = false;
+      document.getElementById('authEmail').required = true;
       document.getElementById('authConfirmPassword').required = mode === 'register';
       document.getElementById('authStatus').className = 'auth-status';
       document.getElementById('authStatus').textContent = '';
@@ -2595,6 +2602,7 @@
       }
 
       if (registerResponse.status === 409) {
+        const loginEmail = account.email || `${String(account.brokerId || 'broker').toLowerCase()}@brokerconnector.local`;
         const loginResponse = await fetch('/api/broker-auth', {
           method: 'POST',
           headers: {
@@ -2602,7 +2610,7 @@
           },
           body: JSON.stringify({
             action: 'login',
-            identifier: account.brokerId || account.phone || identifier,
+            email: loginEmail,
             password
           })
         });
@@ -2655,14 +2663,15 @@
       event.preventDefault();
       try {
         setAuthStatus('');
-        const brokerIdValue = normalizeBrokerIdInput(document.getElementById('authBrokerId').value);
         const mobileValue = normalizePhoneNumber(document.getElementById('authMobile').value);
         const emailValue = String(document.getElementById('authEmail').value || '').trim().toLowerCase();
-        const identifierValue = emailValue || mobileValue || brokerIdValue;
         const passwordValue = String(document.getElementById('authPassword').value || '').trim();
         const confirmPasswordValue = String(document.getElementById('authConfirmPassword').value || '').trim();
-        if (state.authMode === 'signin' && !identifierValue) {
-          throw new Error('Enter email address or mobile number');
+        if (!emailValue) {
+          throw new Error('Enter email');
+        }
+        if (!isValidEmailAddress(emailValue)) {
+          throw new Error('Enter a valid email address');
         }
         if (!passwordValue) {
           throw new Error('Enter password');
@@ -2691,8 +2700,6 @@
             }
           : {
               action: 'login',
-              identifier: identifierValue,
-              mobileNumber: mobileValue,
               email: emailValue,
               password: passwordValue
             };
@@ -2700,8 +2707,7 @@
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
           console.debug('[broker-auth-ui] submit', {
             mode: state.authMode,
-            hasBrokerId: Boolean(brokerIdValue),
-            hasMobile: Boolean(mobileValue)
+            hasEmail: Boolean(emailValue)
           });
         }
 
@@ -2725,7 +2731,7 @@
 
         if (!response.ok) {
           if (state.authMode === 'signin' && response.status === 404) {
-            const migrated = await migrateLegacyBrokerAccount(identifierValue, passwordValue);
+            const migrated = await migrateLegacyBrokerAccount(emailValue, passwordValue);
             if (!persistBrokerSession(migrated)) {
               console.warn('Legacy migration returned invalid auth payload.', migrated);
               throw new Error('Login failed, please try again.');

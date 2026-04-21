@@ -406,6 +406,41 @@ export async function supabaseAuthSignUp({
   return result;
 }
 
+export async function supabaseAuthSignInWithPassword({
+  supabaseUrl,
+  publishableKey,
+  email,
+  password
+}) {
+  const response = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: {
+      apikey: publishableKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      password
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase Auth sign-in failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result;
+}
+
 export async function supabaseAuthDeleteUser({
   supabaseUrl,
   serviceRoleKey,
