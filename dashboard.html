@@ -1560,7 +1560,55 @@
       color: var(--gold-soft);
       font-size: 0.82rem;
       font-weight: 800;
-      list-style: none;
+    }
+
+    .lead-sheet .crm-sheet-head,
+    .lead-sheet .crm-row {
+      grid-template-columns:
+        52px
+        minmax(96px, 0.72fr)
+        minmax(148px, 1.18fr)
+        minmax(132px, 1.02fr)
+        minmax(108px, 0.8fr)
+        minmax(120px, 0.86fr)
+        minmax(96px, 0.74fr)
+        minmax(126px, 0.92fr)
+        92px
+        auto !important;
+    }
+
+    .lead-sheet .crm-row {
+      min-height: 60px !important;
+      padding-block: 8px !important;
+    }
+
+    .lead-sheet .crm-sheet-head > div,
+    .lead-sheet .crm-col {
+      min-width: 0;
+    }
+
+    .lead-sheet .crm-primary,
+    .lead-sheet .crm-secondary,
+    .lead-sheet .crm-quick-meta span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lead-sheet .crm-row-actions {
+      min-width: 0;
+      gap: 5px !important;
+    }
+
+    .lead-sheet .crm-row-action-btn {
+      min-width: 36px;
+      min-height: 32px !important;
+      padding-inline: 9px !important;
+    }
+
+    .lead-sheet .crm-row-action-btn.primary-action {
+      min-width: 52px;
+    }
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -5140,9 +5188,9 @@
 
     function leadChecklistSummary(lead) {
       if (String(lead.purpose).toLowerCase() === 'rent') {
-        return `Booking: ${lead.rentChecklist.booking ? 'Yes' : 'No'} · Agreement: ${lead.rentChecklist.agreementSigned ? 'Yes' : 'No'} · Handover: ${lead.rentChecklist.handoverDone ? 'Yes' : 'No'}`;
+        return `Booking: ${lead.rentChecklist.booking ? 'Yes' : 'No'} Ã‚Â· Agreement: ${lead.rentChecklist.agreementSigned ? 'Yes' : 'No'} Ã‚Â· Handover: ${lead.rentChecklist.handoverDone ? 'Yes' : 'No'}`;
       }
-      return `Contract A: ${lead.saleChecklist.contractA ? 'Yes' : 'No'} · Contract B: ${lead.saleChecklist.contractB ? 'Yes' : 'No'} · Contract F: ${lead.saleChecklist.contractF ? 'Yes' : 'No'}`;
+      return `Contract A: ${lead.saleChecklist.contractA ? 'Yes' : 'No'} Ã‚Â· Contract B: ${lead.saleChecklist.contractB ? 'Yes' : 'No'} Ã‚Â· Contract F: ${lead.saleChecklist.contractF ? 'Yes' : 'No'}`;
     }
 
     function renderLeads() {
@@ -5157,8 +5205,8 @@
         <div class="item-card">
           <div class="item-top">
             <div class="item-title">
-              <h4>${getLeadClientPurposeLabel(lead.clientPurpose)} · ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
-              <div class="muted">${escapeHtml(lead.location || '--')} · ${escapeHtml(formatBudgetLabel(lead.budget))} · Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
+              <h4>${getLeadClientPurposeLabel(lead.clientPurpose)} Ã‚Â· ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
+              <div class="muted">${escapeHtml(lead.location || '--')} Ã‚Â· ${escapeHtml(formatBudgetLabel(lead.budget))} Ã‚Â· Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(lead.status)}">${escapeHtml(lead.status || 'new')}</span>
@@ -5171,7 +5219,7 @@
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>${getLeadClientPurpose(lead.clientPurpose) === 'buy' ? 'Payment Method' : 'Client Purpose'}</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
           </div>
-          <div class="muted"><strong>Private client:</strong> ${escapeHtml(lead.clientName || '--')} · ${escapeHtml(lead.clientPhone || '--')}</div>
+          <div class="muted"><strong>Private client:</strong> ${escapeHtml(lead.clientName || '--')} Ã‚Â· ${escapeHtml(lead.clientPhone || '--')}</div>
           <div class="muted"><strong>Private CRM note:</strong> ${escapeHtml(lead.privateNotes || 'No private note added')}</div>
           <div class="muted"><strong>Public-safe summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary generated yet')}</div>
           <div class="actions">
@@ -5195,8 +5243,8 @@
         <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${property.propertyType} · ${property.category}</h4>
-              <div class="muted">${property.location} · ${property.price} · ${property.purpose}</div>
+              <h4>${property.propertyType} Ã‚Â· ${property.category}</h4>
+              <div class="muted">${property.location} Ã‚Â· ${property.price} Ã‚Â· ${property.purpose}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(property.status)}">${property.status}</span>
@@ -5236,8 +5284,8 @@
         <div class="item-card ${item.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${item.listingKind.replace('_', ' ')} · ${item.purpose} · ${item.category}</h4>
-              <div class="muted">${item.location} · ${item.priceLabel}</div>
+              <h4>${item.listingKind.replace('_', ' ')} Ã‚Â· ${item.purpose} Ã‚Â· ${item.category}</h4>
+              <div class="muted">${item.location} Ã‚Â· ${item.priceLabel}</div>
             </div>
             <div class="badges">
               <span class="badge badge-green">${item.status}</span>
@@ -5264,8 +5312,8 @@
       target.innerHTML = followUps.map(item => `
         <div class="mini-item">
           <strong>${item.followUpType}</strong>
-          <div class="muted">${item.entityType} #${item.entityId} · ${item.meetingDate || '--'} ${item.meetingTime || ''}</div>
-          <div class="muted">${item.note || 'No note'}${item.nextAction ? ` · Next: ${item.nextAction}` : ''}</div>
+          <div class="muted">${item.entityType} #${item.entityId} Ã‚Â· ${item.meetingDate || '--'} ${item.meetingTime || ''}</div>
+          <div class="muted">${item.note || 'No note'}${item.nextAction ? ` Ã‚Â· Next: ${item.nextAction}` : ''}</div>
         </div>
       `).join('');
     }
@@ -5282,7 +5330,7 @@
 
       getFilteredDashboardItems(state.leads, 'lead').forEach(lead => {
         const status = String(lead.status || '').toLowerCase();
-        const html = `<div class="mini-item"><strong>${lead.category}</strong><div class="muted">${lead.location} · ${lead.budget}</div></div>`;
+        const html = `<div class="mini-item"><strong>${lead.category}</strong><div class="muted">${lead.location} Ã‚Â· ${lead.budget}</div></div>`;
         if (status === 'new') columns.new.push(html);
         else if (['contacted', 'demand confirmed', 'negotiation'].includes(status)) columns.active.push(html);
         else if (status === 'meeting scheduled') columns.meetings.push(html);
@@ -5550,8 +5598,8 @@
       const source = type === 'lead' ? state.leads : state.properties;
       select.innerHTML = source.map(item => {
         const label = type === 'lead'
-          ? `${item.id} · ${item.category} · ${item.location}`
-          : `${item.id} · ${item.propertyType} · ${item.location}`;
+          ? `${item.id} Ã‚Â· ${item.category} Ã‚Â· ${item.location}`
+          : `${item.id} Ã‚Â· ${item.propertyType} Ã‚Â· ${item.location}`;
         return `<option value="${item.id}">${label}</option>`;
       }).join('');
       if (!source.length) {
@@ -5872,17 +5920,17 @@
           property.furnishing,
           property.cheques,
           property.chiller
-        ].filter(Boolean).join(' · ') || 'Standard rent terms';
+        ].filter(Boolean).join(' Ã‚Â· ') || 'Standard rent terms';
       }
 
       return [
         property.leasehold ? 'Leasehold' : 'Freehold / Standard',
         property.mortgageStatus
-      ].filter(Boolean).join(' · ') || 'Standard sale terms';
+      ].filter(Boolean).join(' Ã‚Â· ') || 'Standard sale terms';
     }
 
     function getPropertyPrivateContactSummary(property) {
-      const owner = [property.ownerName, property.ownerPhone].filter(Boolean).join(' · ');
+      const owner = [property.ownerName, property.ownerPhone].filter(Boolean).join(' Ã‚Â· ');
       if (owner) return `Owner: ${owner}`;
       return 'No owner details added';
     }
@@ -6010,12 +6058,12 @@
         <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${getPropertyPurposeLabel(property.purpose)} · ${property.propertyType || 'Property'}</h4>
+              <h4>${getPropertyPurposeLabel(property.purpose)} Ã‚Â· ${property.propertyType || 'Property'}</h4>
               <div class="muted">${[
                 property.location,
                 getPropertyDisplayPrice(property),
                 property.buildingName
-              ].filter(Boolean).join(' · ')}</div>
+              ].filter(Boolean).join(' Ã‚Â· ')}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(property.status)}">${property.status}</span>
@@ -6447,12 +6495,12 @@
             return `
               <div class="workflow-alert-item">
                 <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
-                <div class="muted">Lead #${escapeHtml(match.requirementId)} ↔ Listing #${escapeHtml(match.propertyId)}</div>
+                <div class="muted">Lead #${escapeHtml(match.requirementId)} Ã¢â€ â€ Listing #${escapeHtml(match.propertyId)}</div>
                 <div class="muted">${escapeHtml(match.matchReason || '')}</div>
                 <small>${escapeHtml([
                   lead?.location || property?.location || '',
                   lead?.propertyType || property?.propertyType || ''
-                ].filter(Boolean).join(' · '))}</small>
+                ].filter(Boolean).join(' Ã‚Â· '))}</small>
               </div>
             `;
           }).join('');
@@ -6535,8 +6583,8 @@
       if (!matches.length) return '<div class="empty">No matching listings yet.</div>';
       return `<div class="match-list">${matches.slice(0, 8).map(match => `
         <div class="match-item">
-          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} · Listing #${escapeHtml(match.id)}</strong>
-          <div class="muted">${escapeHtml([match.propertyType, match.location, match.price].filter(Boolean).join(' · '))}</div>
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} Ã‚Â· Listing #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([match.propertyType, match.location, match.price].filter(Boolean).join(' Ã‚Â· '))}</div>
           <small>${escapeHtml(match.matchReason || '')}</small>
         </div>
       `).join('')}</div>`;
@@ -6547,8 +6595,8 @@
       if (!matches.length) return '<div class="empty">No matching leads yet.</div>';
       return `<div class="match-list">${matches.slice(0, 8).map(match => `
         <div class="match-item">
-          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} · Lead #${escapeHtml(match.id)}</strong>
-          <div class="muted">${escapeHtml([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)].filter(Boolean).join(' · '))}</div>
+          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} Ã‚Â· Lead #${escapeHtml(match.id)}</strong>
+          <div class="muted">${escapeHtml([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)].filter(Boolean).join(' Ã‚Â· '))}</div>
           <small>${escapeHtml(match.matchReason || '')}</small>
         </div>
       `).join('')}</div>`;
@@ -6586,8 +6634,8 @@
           <div class="item-card">
             <div class="item-top">
               <div class="item-title">
-                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} · ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
-                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' · '))}</div>
+                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} Ã‚Â· ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
+                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' Ã‚Â· '))}</div>
               </div>
               <div class="badges">
                 <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
@@ -6684,8 +6732,8 @@
           <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
             <div class="item-top">
               <div class="item-title">
-                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} · ${escapeHtml(property.propertyType || 'Listing')}</h4>
-                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' · '))}</div>
+                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} Ã‚Â· ${escapeHtml(property.propertyType || 'Listing')}</h4>
+                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' Ã‚Â· '))}</div>
               </div>
               <div class="badges">
                 <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
@@ -7412,7 +7460,7 @@
               <div class="crm-col">
                 <span class="crm-col-label">Purpose / Type</span>
                 <div class="crm-primary">${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} | ${lead.propertyType || 'Requirement'}`)}</div>
-                <div class="crm-secondary">${escapeHtml([getLeadIntentText(lead), lead.paymentMethod].filter(Boolean).join(' · '))}</div>
+                <div class="crm-secondary">${escapeHtml([getLeadIntentText(lead), lead.paymentMethod].filter(Boolean).join(' Ã‚Â· '))}</div>
               </div>
               <div class="crm-col">
                 <span class="crm-col-label">Location</span>
@@ -7691,20 +7739,27 @@
       if (!target) return;
       const requirements = getFilteredDashboardItems(state.leads, 'lead');
       if (!requirements.length) {
-        target.innerHTML = '<div class="empty">No broker requirements match your current filters. Adjust your filters or add a new lead from Overview.</div>';
+        target.innerHTML = renderEmptyState(
+          'No broker requirements yet',
+          'Adjust your filters or add your first lead from Overview to start tracking client demand.',
+          'Add New Lead',
+          'openLeadComposer()'
+        );
         return;
       }
 
       target.innerHTML = `
-        <div class="crm-sheet">
+        <div class="crm-sheet lead-sheet">
           <div class="crm-sheet-head">
-            <div>Sr.</div>
-            <div>Requirement</div>
+            <div>#</div>
+            <div>Purpose</div>
             <div>Location</div>
             <div>Building / Project</div>
-            <div>Property Type</div>
+            <div>Type</div>
             <div>Budget</div>
-            <div>Workflow</div>
+            <div>Payment</div>
+            <div>Status</div>
+            <div>Updated</div>
             <div>Actions</div>
           </div>
           ${requirements.map((lead, index) => {
@@ -7715,58 +7770,69 @@
               <div class="crm-record-group">
                 <div class="crm-row">
                   <div class="crm-col">
-                    <span class="crm-col-label">Sr.</span>
-                    <span class="crm-index">#${index + 1}</span>
+                    <span class="crm-col-label">#</span>
+                    <span class="crm-index">${index + 1}</span>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Requirement</span>
-                    <div class="crm-primary">${escapeHtml(getLeadIntentText(lead))}</div>
-                    <div class="crm-secondary">${escapeHtml([lead.clientName, lead.paymentMethod].filter(Boolean).join(' · ') || 'Private lead intake')}</div>
-                    <div class="crm-chip-stack">
-                      <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
-                      <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
-                      ${lead.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
-                    </div>
+                    <span class="crm-col-label">Purpose</span>
+                    <div class="crm-primary">${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</div>
+                    <div class="crm-secondary">${escapeHtml(getLeadIntentText(lead))}</div>
                   </div>
                   <div class="crm-col">
                     <span class="crm-col-label">Location</span>
-                    <div class="crm-primary">${escapeHtml(lead.location || '--')}</div>
+                    <div class="crm-primary">${escapeHtml(lead.location || 'â€”')}</div>
                   </div>
                   <div class="crm-col">
                     <span class="crm-col-label">Building / Project</span>
-                    <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || '--')}</div>
+                    <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || 'â€”')}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Property Type</span>
-                    <div class="crm-primary">${escapeHtml(lead.propertyType || '--')}</div>
+                    <span class="crm-col-label">Type</span>
+                    <div class="crm-primary">${escapeHtml(lead.propertyType || 'â€”')}</div>
                   </div>
                   <div class="crm-col">
                     <span class="crm-col-label">Budget</span>
                     <div class="crm-primary">${escapeHtml(formatBudgetLabel(lead.budget))}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Workflow</span>
+                    <span class="crm-col-label">Payment</span>
+                    <div class="crm-primary">${escapeHtml(lead.paymentMethod || 'â€”')}</div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Status</span>
                     <div class="crm-chip-stack">
+                      <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
                       <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
                       ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
-                      ${lead.matchCount ? `<span class="badge badge-match">${lead.matchCount} Match${lead.matchCount === 1 ? '' : 'es'}</span>` : ''}
+                      ${lead.isListedPublic ? '<span class="badge badge-green">Public</span>' : '<span class="badge badge-blue">Private</span>'}
                     </div>
+                  </div>
+                  <div class="crm-col">
+                    <span class="crm-col-label">Updated</span>
+                    <div class="crm-primary">${escapeHtml(`${lastTouched} ago`)}</div>
                     <div class="crm-quick-meta">
                       <span>Calls ${escapeHtml(lead.callCount || 0)}</span>
                       <span>WA ${escapeHtml(lead.whatsappCount || 0)}</span>
-                      <span>${escapeHtml(lastTouched)} ago</span>
+                      ${lead.matchCount ? `<span>${escapeHtml(`${lead.matchCount} matches`)}</span>` : ''}
                     </div>
                   </div>
                   <div class="crm-row-actions">
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editLead(${lead.id})" title="Edit">✎ Edit</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)" title="Call">☎ Call</button>
-                    <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')" title="WhatsApp">WA</button>
-                    <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}" title="${lead.isArchived ? 'Restore' : 'Archive'}">${lead.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
-                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteLead(${lead.id})" title="Delete">✕</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn primary-action" type="button" onclick="editLead(${lead.id})">Edit</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
+                    <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WA</button>
+                    <details class="crm-row-more">
+                      <summary class="crm-row-more-toggle">More</summary>
+                      <div class="crm-row-more-menu">
+                        <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                        <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+                        <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
+                        <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">History</button>
+                        <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+                      </div>
+                    </details>
                   </div>
                 </div>
-                <details class="record-details-panel crm-row-panel">
+                <details class="record-details-panel crm-row-panel" id="lead-panel-${lead.id}">
                   <summary>Status, follow-up, matches, history</summary>
                   <div class="record-summary">
                     <div class="muted"><strong>Private Notes:</strong> ${escapeHtml(lead.privateNotes || 'No private notes yet')}</div>
@@ -7890,12 +7956,12 @@
                     </div>
                   </div>
                   <div class="crm-row-actions">
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">✎ Edit</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">☎ Call</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">Ã¢Å“Å½ Edit</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">Ã¢ËœÅ½ Call</button>
                     <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
                     <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '↺ Restore' : '🗄 Archive'}</button>
-                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">✕</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? 'Ã¢â€ Âº Restore' : 'Ã°Å¸â€”â€ž Archive'}</button>
+                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">Ã¢Å“â€¢</button>
                   </div>
                 </div>
                 <details class="record-details-panel crm-row-panel">
