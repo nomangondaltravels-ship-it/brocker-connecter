@@ -485,6 +485,51 @@ export async function supabaseAuthGetUser({
   return result;
 }
 
+export function decodeJwtPayload(token) {
+  const parts = String(token || '').split('.');
+  if (parts.length < 2) return null;
+  try {
+    return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+  } catch (error) {
+    return null;
+  }
+}
+
+export async function supabaseAuthAdminGetUser({
+  supabaseUrl,
+  serviceRoleKey,
+  userId
+}) {
+  if (!normalizeText(userId)) {
+    throw new Error('Supabase admin user lookup requires a user ID.');
+  }
+
+  const response = await fetch(`${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method: 'GET',
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      normalizeText(result?.msg)
+      || normalizeText(result?.error_description)
+      || normalizeText(result?.message)
+      || normalizeText(result?.error)
+      || 'Supabase admin user lookup failed.'
+    );
+    error.status = response.status;
+    error.payload = result;
+    throw error;
+  }
+
+  return result?.user || result;
+}
+
 export async function supabaseAuthResetPasswordForEmail({
   supabaseUrl,
   publishableKey,

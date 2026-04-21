@@ -4,6 +4,7 @@ import {
   createPendingMobileValue,
   createPasswordHash,
   createToken,
+  decodeJwtPayload,
   getBearerToken,
   getSupabaseConfig,
   getSupabasePublishableKey,
@@ -13,6 +14,7 @@ import {
   normalizeText,
   requiredEnv,
   supabaseAuthAdminCreateUser,
+  supabaseAuthAdminGetUser,
   supabaseAuthGetUser,
   supabaseAuthResetPasswordForEmail,
   supabaseAuthSignInWithPassword,
@@ -59,6 +61,43 @@ function buildSessionToken(broker) {
 function buildInternalBrokerId(authUserId) {
   const compact = normalizeText(authUserId).replace(/[^a-z0-9]/gi, '').toUpperCase();
   return `BC-${(compact || 'BROKER').slice(0, 10)}`;
+}
+
+async function resolveAuthUserFromSession({
+  supabaseUrl,
+  publishableKey,
+  serviceRoleKey,
+  accessToken
+}) {
+  try {
+    return await supabaseAuthGetUser({
+      supabaseUrl,
+      publishableKey,
+      accessToken
+    });
+  } catch (primaryError) {
+    const tokenPayload = decodeJwtPayload(accessToken);
+    const authUserId = normalizeText(
+      tokenPayload?.sub
+      || tokenPayload?.user_id
+      || tokenPayload?.session_id
+    );
+
+    if (!authUserId) {
+      throw primaryError;
+    }
+
+    debugAuth('exchange-session direct user lookup failed, trying admin fallback', {
+      authUserId,
+      message: primaryError?.message || 'Unknown auth lookup error'
+    });
+
+    return await supabaseAuthAdminGetUser({
+      supabaseUrl,
+      serviceRoleKey,
+      userId: authUserId
+    });
+  }
 }
 
 async function ensureBrokerProfileFromAuthUser({
@@ -282,9 +321,10 @@ export async function POST(request) {
     }
 
     try {
-      const authUser = await supabaseAuthGetUser({
+      const authUser = await resolveAuthUserFromSession({
         supabaseUrl,
-        publishableKey: serviceRoleKey,
+        publishableKey,
+        serviceRoleKey,
         accessToken
       });
 
