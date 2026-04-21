@@ -1952,7 +1952,8 @@
       if (/email confirmed successfully/i.test(message)) return 'Email confirmed successfully. You can now sign in.';
       if (/confirmation link is invalid or expired/i.test(message)) return 'Confirmation link is invalid or expired.';
       if (/reset link has been sent/i.test(message)) return 'If an account exists for this email, a reset link has been sent.';
-      if (/password reset could not be sent/i.test(message)) return 'Password reset could not be sent. Please try again.';
+      if (/unable to send reset email/i.test(message)) return 'Unable to send reset email. Please try again.';
+      if (/password reset could not be sent/i.test(message)) return 'Unable to send reset email. Please try again.';
       if (/already registered/i.test(message) || /already exists/i.test(message)) return 'This email address is already registered. Please sign in instead.';
       if (/session creation failed/i.test(message)) return 'Login failed, please try again.';
       return message;

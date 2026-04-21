@@ -48,6 +48,12 @@ For local testing add:
 
 If your production domain is different, replace the website domain above.
 
+Important:
+
+- The app now sends auth emails to `auth-callback.html`
+- `auth-callback.html` then routes recovery links to `reset-password.html`
+- So `auth-callback.html` must be allowed in Supabase Auth redirects
+
 ### 3. Paste Auth Email Templates
 
 Open:
@@ -74,12 +80,18 @@ Open:
 
 Confirm:
 
-- SMTP host is correct for Resend
-- SMTP port is correct
-- SMTP username is correct
-- SMTP password / API key is correct
+- SMTP host is `smtp.resend.com`
+- SMTP port is `587`
+- SMTP username is `resend`
+- SMTP password is your Resend API key
+- TLS is enabled if Supabase shows that option
 - Sender email belongs to your verified Resend domain/subdomain
 - Sender name is set to `Broker Connector` or your preferred production name
+- Supabase is using Custom SMTP, not the default mail provider
+
+Recommended sender:
+
+- `no-reply@nomanproperties.com`
 
 ### 5. Check Resend Domain
 
@@ -88,6 +100,14 @@ In Resend, confirm:
 - Domain status is verified
 - DKIM/SPF are passing
 - Sender email uses that verified domain
+- The same sender identity is allowed in Resend
+
+### 5A. Delivery Logs
+
+In Resend dashboard, check email activity:
+
+- If no reset email attempt appears, the issue is before delivery
+- If the attempt appears but is not delivered, the issue is sender/domain/deliverability related
 
 ### 6. Test With A Real Registered Email
 

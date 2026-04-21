@@ -305,8 +305,14 @@ export async function POST(request) {
         message: 'If an account exists for this email, a reset link has been sent.'
       });
     } catch (error) {
-      debugAuth('forgot-password failure', error?.message || error);
-      return json({ message: 'Password reset could not be sent. Please try again.' }, error?.status || 500);
+      debugAuth('forgot-password failure', {
+        email,
+        redirectUrl,
+        message: error?.message || 'Unknown forgot-password error',
+        status: error?.status || 500,
+        payload: error?.payload || null
+      });
+      return json({ message: 'Unable to send reset email. Please try again.' }, error?.status || 500);
     }
   }
 
