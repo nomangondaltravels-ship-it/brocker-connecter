@@ -798,16 +798,16 @@ export async function supabaseDelete({
   serviceRoleKey,
   table,
   filters = {}
-}) {
-  const url = createRestUrl(supabaseUrl, table);
-  url.searchParams.set('select', '*');
-  Object.entries(filters || {}).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === '') return;
-    if (String(value).includes('.')) {
-      url.searchParams.set(key, value);
-      return;
-    }
-    url.searchParams.set(key, `eq.${value}`);
+  }) {
+    const url = createRestUrl(supabaseUrl, table);
+    url.searchParams.set('select', '*');
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      if (isPostgrestOperatorValue(value)) {
+        url.searchParams.set(key, value);
+        return;
+      }
+      url.searchParams.set(key, `eq.${value}`);
   });
 
   const response = await fetch(url, {
