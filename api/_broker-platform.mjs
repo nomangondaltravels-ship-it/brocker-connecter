@@ -405,6 +405,17 @@ export async function supabaseAuthSignUp({
     throw error;
   }
 
+  if (result?.user || result?.session) {
+    return result;
+  }
+
+  if (result?.id || result?.email) {
+    return {
+      user: result,
+      session: null
+    };
+  }
+
   return result;
 }
 

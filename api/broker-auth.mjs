@@ -371,6 +371,10 @@ export async function POST(request) {
       });
     } catch (error) {
       const initialError = error;
+      const initialMessage = normalizeText(initialError?.message).toLowerCase();
+      if (initialError?.status === 429 || initialMessage.includes('rate limit') || initialMessage.includes('security purposes')) {
+        return json({ message: 'Please wait a minute before requesting another reset email.' }, 429);
+      }
       try {
         const brokers = await supabaseSelect({
           supabaseUrl,
