@@ -690,6 +690,22 @@ function isPostgrestOperatorValue(value) {
   return /^(eq|neq|gt|gte|lt|lte|like|ilike|is|in|cs|cd|ov|fts|plfts|phfts|wfts|not)\./i.test(normalized);
 }
 
+export function buildPostgrestInFilter(values = []) {
+  const normalizedValues = Array.from(new Set((Array.isArray(values) ? values : [])
+    .map(value => String(value ?? '').trim())
+    .filter(Boolean)));
+
+  if (!normalizedValues.length) return '';
+
+  const serialized = normalizedValues.map(value => (
+    /^-?\d+(\.\d+)?$/.test(value)
+      ? value
+      : `"${value.replace(/"/g, '\\"')}"`
+  ));
+
+  return `in.(${serialized.join(',')})`;
+}
+
 export async function supabaseSelect({
   supabaseUrl,
   serviceRoleKey,

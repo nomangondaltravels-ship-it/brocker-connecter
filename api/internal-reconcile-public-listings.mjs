@@ -5,27 +5,18 @@ import {
   normalizeText,
   parseLeadMeta,
   parsePropertyMeta,
-  sanitizePublicListing,
+  supabaseDelete,
   supabaseSelect
 } from './_broker-platform.mjs';
 
-function applySectionFilter(rows, section) {
-  const items = Array.isArray(rows) ? rows : [];
-  switch (section) {
-    case 'requirements':
-    case 'broker-requirements':
-    case 'shared-leads':
-      return items.filter(item => item.source_type === 'lead');
-    case 'marketplace':
-    case 'broker-connector-listings':
-    case 'shared-properties':
-      return items
-        .filter(item => item.source_type === 'property')
-        .sort((left, right) => Number(Boolean(right.is_distress)) - Number(Boolean(left.is_distress)));
-    case 'distress-deals':
-      return items.filter(item => item.source_type === 'property' && item.is_distress);
-    default:
-      return items;
+const CLEANUP_TOKEN = 'reconcile-public-20260422-X7p9L2m4Qa';
+
+function requireCleanupToken(request) {
+  const token = normalizeText(request.headers.get('x-cleanup-token'));
+  if (token !== CLEANUP_TOKEN) {
+    const error = new Error('Cleanup token is missing or invalid.');
+    error.status = 401;
+    throw error;
   }
 }
 
@@ -43,10 +34,8 @@ function isPropertyPublicSourceValid(row) {
   return !Boolean(meta.isArchived);
 }
 
-async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
+async function collectPublicListingValidity({ supabaseUrl, serviceRoleKey, rows }) {
   const items = Array.isArray(rows) ? rows : [];
-  if (!items.length) return [];
-
   const brokerIds = Array.from(new Set(items.map(item => normalizeText(item.broker_uuid)).filter(Boolean)));
   const brokerIdNumbers = Array.from(new Set(items.map(item => normalizeText(item.broker_id_number)).filter(Boolean)));
   const leadIds = Array.from(new Set(items.filter(item => item.source_type === 'lead').map(item => item.source_id).filter(value => value !== undefined && value !== null)));
@@ -91,14 +80,9 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       : []
   ]);
 
-  const brokerRows = [
-    ...(Array.isArray(brokersById) ? brokersById : []),
-    ...(Array.isArray(brokersByBrokerId) ? brokersByBrokerId : [])
-  ];
-
   const validBrokerIds = new Set();
   const validBrokerIdNumbers = new Set();
-  for (const broker of Array.isArray(brokerRows) ? brokerRows : []) {
+  for (const broker of [...(Array.isArray(brokersById) ? brokersById : []), ...(Array.isArray(brokersByBrokerId) ? brokersByBrokerId : [])]) {
     if (broker?.is_blocked) continue;
     if (normalizeText(broker.id)) validBrokerIds.add(normalizeText(broker.id));
     if (normalizeText(broker.broker_id_number)) validBrokerIdNumbers.add(normalizeText(broker.broker_id_number));
@@ -115,69 +99,105 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       .map(row => String(row.id))
   );
 
-  return items.filter(item => {
+  const validRows = [];
+  const invalidRows = [];
+  for (const item of items) {
     const brokerUuid = normalizeText(item.broker_uuid);
     const brokerIdNumber = normalizeText(item.broker_id_number);
     const brokerIsValid = (brokerUuid && validBrokerIds.has(brokerUuid))
       || (brokerIdNumber && validBrokerIdNumbers.has(brokerIdNumber));
-    if (!brokerIsValid) return false;
 
-    if (item.source_type === 'lead') {
-      return validLeadIds.has(String(item.source_id));
+    const sourceIsValid = item.source_type === 'lead'
+      ? validLeadIds.has(String(item.source_id))
+      : item.source_type === 'property'
+        ? validPropertyIds.has(String(item.source_id))
+        : false;
+
+    if (brokerIsValid && sourceIsValid) {
+      validRows.push(item);
+    } else {
+      invalidRows.push(item);
     }
-    if (item.source_type === 'property') {
-      return validPropertyIds.has(String(item.source_id));
-    }
-    return false;
-  });
+  }
+
+  return { validRows, invalidRows };
 }
 
-export async function GET(request) {
+export async function POST(request) {
   try {
+    requireCleanupToken(request);
     const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
     if (!supabaseUrl || !serviceRoleKey) {
-      return json({ message: 'Missing required environment variables for Broker Connector Page.' }, 500);
+      return json({ message: 'Missing Supabase environment variables.' }, 500);
     }
 
-    const section = new URL(request.url).searchParams.get('section') || 'all';
+    const body = await request.json().catch(() => ({}));
+    const execute = Boolean(body?.execute);
+
     const rows = await supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
       table: 'public_listings',
-      select: [
-        'id',
-        'broker_uuid',
-        'broker_display_name',
-        'broker_id_number',
-        'broker_mobile',
-        'source_type',
-        'source_id',
-        'listing_kind',
-        'purpose',
-        'property_type',
-        'category',
-        'location',
-        'price_label',
-        'size_label',
-        'bedrooms',
-        'bathrooms',
-        'public_notes',
-        'status',
-        'is_urgent',
-        'is_distress',
-        'created_at',
-        'updated_at'
-      ].join(','),
-      filters: {
-        public_listing_status: 'listed'
-      },
+      select: 'id,broker_uuid,broker_id_number,source_type,source_id,listing_kind,location,status,is_distress,public_listing_status,updated_at',
       order: { column: 'updated_at', ascending: false }
     });
 
-    const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows });
-    const filtered = applySectionFilter(validRows, section).map(sanitizePublicListing);
-    return json({ listings: filtered });
+    const { validRows, invalidRows } = await collectPublicListingValidity({
+      supabaseUrl,
+      serviceRoleKey,
+      rows
+    });
+
+    const details = invalidRows.map(item => ({
+      id: item.id,
+      brokerUuid: item.broker_uuid || '',
+      brokerIdNumber: item.broker_id_number || '',
+      sourceType: item.source_type || '',
+      sourceId: item.source_id,
+      listingKind: item.listing_kind || '',
+      location: item.location || '',
+      status: item.status || '',
+      isDistress: Boolean(item.is_distress)
+    }));
+
+    if (!execute) {
+      return json({
+        mode: 'dry-run',
+        counts: {
+          total: Array.isArray(rows) ? rows.length : 0,
+          valid: validRows.length,
+          stale: invalidRows.length
+        },
+        staleRows: details
+      });
+    }
+
+    const deleted = [];
+    for (const row of invalidRows) {
+      const result = await supabaseDelete({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'public_listings',
+        filters: { id: row.id }
+      });
+      deleted.push(...(Array.isArray(result) ? result : []));
+    }
+
+    return json({
+      mode: 'execute',
+      counts: {
+        total: Array.isArray(rows) ? rows.length : 0,
+        valid: validRows.length,
+        stale: invalidRows.length,
+        deleted: deleted.length
+      },
+      staleRows: details
+    });
   } catch (error) {
-    return json({ message: error.message || 'Broker Connector Page load failed.' }, 500);
+    return json({ message: error?.message || 'Public listing reconciliation failed.' }, error?.status || 500);
   }
+}
+
+export function GET() {
+  return json({ message: 'Method not allowed.' }, 405);
 }

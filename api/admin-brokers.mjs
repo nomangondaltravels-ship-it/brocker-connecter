@@ -48,6 +48,101 @@ function sanitizeBroker(row) {
   };
 }
 
+async function deleteOptionalTableRows({ supabaseUrl, serviceRoleKey, table, filters }) {
+  try {
+    return await supabaseDelete({
+      supabaseUrl,
+      serviceRoleKey,
+      table,
+      filters
+    });
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('does not exist') || message.includes('relation') || message.includes('could not find')) {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function clearBrokerPublicListings({ supabaseUrl, serviceRoleKey, broker }) {
+  const deletedByUuid = await deleteOptionalTableRows({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    filters: { broker_uuid: broker.id }
+  });
+  const deletedByBrokerId = broker.broker_id_number
+    ? await deleteOptionalTableRows({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'public_listings',
+        filters: { broker_id_number: broker.broker_id_number }
+      })
+    : [];
+  return [...(Array.isArray(deletedByUuid) ? deletedByUuid : []), ...(Array.isArray(deletedByBrokerId) ? deletedByBrokerId : [])];
+}
+
+async function setBrokerSourcesPrivate({ supabaseUrl, serviceRoleKey, broker }) {
+  const updatedAt = new Date().toISOString();
+  await supabasePatch({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_leads',
+    filters: { broker_uuid: broker.id },
+    payload: {
+      is_listed_public: false,
+      public_listing_status: 'private',
+      updated_at: updatedAt
+    }
+  }).catch(() => []);
+  await supabasePatch({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_properties',
+    filters: { broker_uuid: broker.id },
+    payload: {
+      is_listed_public: false,
+      public_listing_status: 'private',
+      updated_at: updatedAt
+    }
+  }).catch(() => []);
+}
+
+async function cascadeDeleteBrokerData({ supabaseUrl, serviceRoleKey, broker }) {
+  await clearBrokerPublicListings({ supabaseUrl, serviceRoleKey, broker });
+  await deleteOptionalTableRows({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_followups',
+    filters: { broker_uuid: broker.id }
+  });
+  await deleteOptionalTableRows({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_notifications',
+    filters: { broker_uuid: broker.id }
+  });
+  await deleteOptionalTableRows({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_ai_matches',
+    filters: { broker_uuid: broker.id }
+  });
+  await supabaseDelete({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_leads',
+    filters: { broker_uuid: broker.id }
+  }).catch(() => []);
+  await supabaseDelete({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'broker_properties',
+    filters: { broker_uuid: broker.id }
+  }).catch(() => []);
+}
+
 async function requireAdmin(request) {
   const sessionSecret = requiredEnv('ADMIN_SESSION_SECRET');
   const token = getBearerToken(request);
@@ -146,6 +241,8 @@ export async function POST(request) {
     }
 
     if (action === 'block') {
+      await setBrokerSourcesPrivate({ supabaseUrl, serviceRoleKey, broker });
+      await clearBrokerPublicListings({ supabaseUrl, serviceRoleKey, broker });
       const rows = await supabasePatch({
         supabaseUrl,
         serviceRoleKey,
@@ -199,6 +296,7 @@ export async function POST(request) {
     }
 
     if (action === 'delete') {
+      await cascadeDeleteBrokerData({ supabaseUrl, serviceRoleKey, broker });
       await supabaseAuthDeleteUser({
         supabaseUrl,
         serviceRoleKey,
