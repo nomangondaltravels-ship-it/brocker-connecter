@@ -641,6 +641,12 @@
       justify-content: flex-end;
     }
 
+    .profile-section-actions-bottom {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
     .app-shell {
       width: min(1400px, 95%);
       margin: 18px auto 24px;
@@ -3671,6 +3677,7 @@
       profileDraft: null,
       profileStorageKey: '',
       isEditingProfile: false,
+      profileSavePending: false,
       callPopover: {
         anchor: null,
         phoneRaw: '',
@@ -3956,7 +3963,7 @@
     }
 
     async function saveBrokerProfile() {
-      if (!state.profileDraft) return;
+      if (!state.profileDraft || state.profileSavePending) return;
       const draft = cloneBrokerProfile(state.profileDraft);
       draft.fullName = normalizeText(draft.fullName);
       draft.mobileNumber = normalizeLeadPhoneInput(draft.mobileNumber);
@@ -3982,28 +3989,47 @@
         return;
       }
 
-      await dashboardAction({
-        action: 'update-profile',
-        fullName: draft.fullName,
-        mobileNumber: draft.mobileNumber,
-        email: draft.email,
-        companyName: draft.companyName
-      }, 'Profile updated.');
-
-      persistProfileExtras({
-        avatarDataUrl: draft.avatarDataUrl,
-        whatsappNumber: draft.whatsappNumber,
-        officeLocation: draft.officeLocation,
-        bio: draft.bio,
-        specializations: draft.specializations,
-        areasServed: draft.areasServed,
-        languages: draft.languages,
-        socialLinks: draft.socialLinks
-      });
-
-      state.profileDraft = null;
-      state.isEditingProfile = false;
+      state.profileSavePending = true;
       renderProfile();
+      setStatus('Saving profile...', 'success');
+
+      try {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          console.debug('[dashboard-profile] save request', {
+            brokerId: state.broker?.id || '',
+            email: draft.email,
+            targetPath: '/api/broker-dashboard'
+          });
+        }
+
+        await dashboardAction({
+          action: 'update-profile',
+          fullName: draft.fullName,
+          mobileNumber: draft.mobileNumber,
+          email: draft.email,
+          companyName: draft.companyName,
+          authAccessToken: getStoredBrokerSupabaseAccessToken()
+        }, 'Profile updated.');
+
+        persistProfileExtras({
+          avatarDataUrl: draft.avatarDataUrl,
+          whatsappNumber: draft.whatsappNumber,
+          officeLocation: draft.officeLocation,
+          bio: draft.bio,
+          specializations: draft.specializations,
+          areasServed: draft.areasServed,
+          languages: draft.languages,
+          socialLinks: draft.socialLinks
+        });
+
+        state.profileDraft = null;
+        state.isEditingProfile = false;
+      } catch (error) {
+        setStatus(error?.message || 'Profile could not be saved.', 'error');
+      } finally {
+        state.profileSavePending = false;
+        renderProfile();
+      }
     }
 
     function normalizeDialNumber(value) {
@@ -4013,6 +4039,18 @@
       const digits = raw.replace(/[^\d]/g, '');
       if (digits.startsWith('00')) return `+${digits.slice(2)}`;
       return digits;
+    }
+
+    function getStoredBrokerSupabaseAccessToken() {
+      try {
+        const raw = localStorage.getItem('broker_supabase_session');
+        if (!raw) return '';
+        const parsed = JSON.parse(raw);
+        return String(parsed?.access_token || '').trim();
+      } catch (error) {
+        console.error('Could not read stored Supabase session', error);
+        return '';
+      }
     }
 
     function formatPhoneDisplay(value) {
@@ -5372,8 +5410,8 @@
               </div>
               <div class="profile-section-actions">
                 ${isEditing ? `
-                  <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()">Cancel</button>
-                  <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()">Save Profile</button>
+                  <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()" ${state.profileSavePending ? 'disabled' : ''}>Cancel</button>
+                  <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()" ${state.profileSavePending ? 'disabled' : ''}>${state.profileSavePending ? 'Saving...' : 'Save Profile'}</button>
                 ` : `
                   <button class="btn btn-primary" type="button" onclick="beginProfileEdit()">Edit Profile</button>
                 `}
@@ -5583,6 +5621,13 @@
               `}
             </div>
           </div>
+
+          ${isEditing ? `
+            <div class="profile-section-actions profile-section-actions-bottom">
+              <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()" ${state.profileSavePending ? 'disabled' : ''}>Cancel</button>
+              <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()" ${state.profileSavePending ? 'disabled' : ''}>${state.profileSavePending ? 'Saving...' : 'Save Profile'}</button>
+            </div>
+          ` : ''}
         </div>
       `;
 

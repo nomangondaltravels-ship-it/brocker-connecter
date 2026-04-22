@@ -1,6 +1,7 @@
 import {
   buildLeadPublicSummary,
   buildPublicListingPayload,
+  getSupabasePublishableKey,
   json,
   normalizeBool,
   normalizeEmail,
@@ -17,6 +18,8 @@ import {
   sanitizePublicListing,
   serializeLeadMeta,
   serializePropertyMeta,
+  supabaseAuthAdminGetUser,
+  supabaseAuthGetUser,
   supabaseAuthAdminUpdateUser,
   supabaseDelete,
   supabaseInsert,
@@ -675,6 +678,46 @@ function getBrokerProfilePayload(body, broker) {
   };
 }
 
+function debugProfileSave(...args) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[broker-dashboard profile]', ...args);
+  }
+}
+
+async function resolveProfileAuthUser(context, authAccessToken = '') {
+  const { supabaseUrl, serviceRoleKey, broker } = context;
+  const publishableKey = getSupabasePublishableKey();
+  const normalizedAccessToken = normalizeText(authAccessToken);
+
+  if (normalizedAccessToken) {
+    try {
+      const authUser = await supabaseAuthGetUser({
+        supabaseUrl,
+        publishableKey,
+        accessToken: normalizedAccessToken
+      });
+      if (authUser?.id) return authUser;
+    } catch (error) {
+      debugProfileSave('auth access-token lookup failed', error?.message || error);
+    }
+  }
+
+  try {
+    return await supabaseAuthAdminGetUser({
+      supabaseUrl,
+      serviceRoleKey,
+      userId: broker.id
+    });
+  } catch (error) {
+    debugProfileSave('broker.id auth lookup failed', {
+      brokerId: broker.id,
+      email: broker.email,
+      message: error?.message || error
+    });
+    return null;
+  }
+}
+
 async function fetchBrokerDataset(context) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const brokerFilter = { broker_uuid: broker.id };
@@ -799,6 +842,7 @@ export async function POST(request) {
 
     if (action === 'update-profile') {
       const payload = getBrokerProfilePayload(body, broker);
+      const authAccessToken = normalizeText(body?.authAccessToken);
       if (payload.full_name.length < 2) {
         return json({ message: 'Please enter the broker name.' }, 400);
       }
@@ -831,20 +875,36 @@ export async function POST(request) {
         return json({ message: 'This email address is already in use by another broker.' }, 409);
       }
 
-      try {
-        await supabaseAuthAdminUpdateUser({
-          supabaseUrl,
-          serviceRoleKey,
-          userId: broker.id,
-          email: payload.email,
-          userMetadata: {
-            full_name: payload.full_name,
-            company_name: payload.company_name || '',
-            mobile_number: payload.mobile_number || ''
+      const authUser = await resolveProfileAuthUser(context, authAccessToken);
+      if (authUser?.id) {
+        try {
+          await supabaseAuthAdminUpdateUser({
+            supabaseUrl,
+            serviceRoleKey,
+            userId: authUser.id,
+            email: payload.email,
+            userMetadata: {
+              full_name: payload.full_name,
+              company_name: payload.company_name || '',
+              mobile_number: payload.mobile_number || ''
+            }
+          });
+        } catch (authSyncError) {
+          const message = normalizeText(authSyncError?.message).toLowerCase();
+          if (authSyncError?.status !== 404 && !message.includes('user not found')) {
+            return json({ message: authSyncError?.message || 'Broker profile auth sync failed.' }, authSyncError?.status || 500);
           }
+          debugProfileSave('auth sync skipped because linked auth user was not found', {
+            brokerId: broker.id,
+            brokerEmail: broker.email,
+            message: authSyncError?.message || 'User not found'
+          });
+        }
+      } else {
+        debugProfileSave('no auth user resolved for profile save', {
+          brokerId: broker.id,
+          brokerEmail: broker.email
         });
-      } catch (authSyncError) {
-        return json({ message: authSyncError?.message || 'Broker profile auth sync failed.' }, authSyncError?.status || 500);
       }
 
       const rows = await supabasePatch({
