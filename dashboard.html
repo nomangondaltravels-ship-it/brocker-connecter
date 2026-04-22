@@ -5852,6 +5852,7 @@
   </div>
 
   <script src="assets/dashboard-lead-config.js"></script>
+  <script src="assets/complaint-center-ui.js"></script>
   <script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
       uaeLocations: [],
@@ -7557,6 +7558,17 @@
         setStatus('Requirement could not be loaded for reporting.', 'error');
         return;
       }
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId: state.broker?.id || '',
+        reportedUserId: state.broker?.id || '',
+        targetType: 'requirement',
+        targetId: lead.id,
+        selfDisabledText: 'You cannot report your own requirement.'
+      }) || { hidden: false, disabled: false };
+      if (buttonState.hidden || buttonState.disabled) {
+        setStatus(buttonState.disabledReason || 'You cannot report this requirement.', 'error');
+        return;
+      }
       openComplaintComposer({
         targetType: 'requirement',
         targetId: lead.id,
@@ -7576,6 +7588,17 @@
         setStatus('Listing could not be loaded for reporting.', 'error');
         return;
       }
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId: state.broker?.id || '',
+        reportedUserId: state.broker?.id || '',
+        targetType: 'listing',
+        targetId: property.id,
+        selfDisabledText: panelType === 'distress' ? 'You cannot report your own distress deal.' : 'You cannot report your own listing.'
+      }) || { hidden: false, disabled: false };
+      if (buttonState.hidden || buttonState.disabled) {
+        setStatus(buttonState.disabledReason || 'You cannot report this listing.', 'error');
+        return;
+      }
       openComplaintComposer({
         targetType: 'listing',
         targetId: property.id,
@@ -7591,6 +7614,17 @@
 
     function openBrokerComplaintFromProfile() {
       const broker = getActiveBrokerProfile();
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId: state.broker?.id || '',
+        reportedUserId: broker.id || state.broker?.id || '',
+        targetType: 'broker',
+        targetId: broker.id || state.broker?.id || '',
+        selfDisabledText: 'You cannot report your own broker profile.'
+      }) || { hidden: false, disabled: false };
+      if (buttonState.hidden || buttonState.disabled) {
+        setStatus(buttonState.disabledReason || 'You cannot report this broker profile.', 'error');
+        return;
+      }
       openComplaintComposer({
         targetType: 'broker',
         targetId: broker.id || state.broker?.id || '',
@@ -7736,55 +7770,34 @@
 
       const draft = state.complaintDraft;
       backdrop.classList.remove('hidden');
-      content.innerHTML = `
-        <form class="complaint-modal-shell" onsubmit="submitDashboardComplaint(event)">
-          <div class="complaint-modal-head">
-            <div>
-              <div class="settings-section-kicker">Complaint Center</div>
-              <h3 id="dashboardComplaintModalTitle">${escapeHtml(draft.title || 'Submit Complaint')}</h3>
-              <p class="complaint-modal-copy">${escapeHtml(draft.copy || 'Tell us what is wrong and our admin team will review it.')}</p>
-            </div>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeComplaintComposer()">Close</button>
-          </div>
-          <div class="complaint-context-grid">
-            <div class="complaint-context-card">
-              <small>Target Type</small>
-              <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
-              <span>${escapeHtml(getComplaintTargetSummary(draft))}</span>
-            </div>
-            <div class="complaint-context-card">
-              <small>Reported Broker</small>
-              <strong>${escapeHtml(draft.reportedBrokerName || 'Broker account')}</strong>
-              <span>${escapeHtml(draft.reportedBrokerIdNumber || 'No public broker ID')}</span>
-            </div>
-          </div>
-          <div class="complaint-form-grid">
-            <div class="complaint-form-section">
-              <label class="small" for="dashboardComplaintReason">Reason</label>
-              <select id="dashboardComplaintReason" onchange="updateComplaintDraftField('reason', this.value)">
-                <option value="">Select reason</option>
-                ${COMPLAINT_REASON_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${draft.reason === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
-              </select>
-            </div>
-            <div class="complaint-form-section">
-              <label class="small" for="dashboardComplaintProof">Optional Proof</label>
-              <div class="complaint-upload-row">
-                <input id="dashboardComplaintProof" type="file" accept="image/*,application/pdf" class="crm-hidden">
-                <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('dashboardComplaintProof').click()">Upload Proof</button>
-                <span class="complaint-upload-note">${escapeHtml(draft.proofAttachment?.name || 'Images or PDF up to 2 MB')}</span>
-              </div>
-            </div>
-            <div class="complaint-form-section is-full">
-              <label class="small" for="dashboardComplaintDescription">Description</label>
-              <textarea id="dashboardComplaintDescription" rows="6" placeholder="Explain the issue clearly so admin can review it quickly." oninput="updateComplaintDraftField('description', this.value)">${escapeHtml(draft.description || '')}</textarea>
-            </div>
-          </div>
-          <div class="complaint-modal-actions">
-            <button class="btn btn-secondary" type="button" onclick="closeComplaintComposer()" ${state.complaintModalSubmitting ? 'disabled' : ''}>Cancel</button>
-            <button class="btn btn-primary" type="submit" ${state.complaintModalSubmitting ? 'disabled' : ''}>${state.complaintModalSubmitting ? 'Submitting...' : 'Submit Complaint'}</button>
-          </div>
-        </form>
-      `;
+      content.innerHTML = window.ComplaintCenterUi?.renderComplaintFormModal({
+        variant: 'dashboard',
+        titleId: 'dashboardComplaintModalTitle',
+        title: draft.title || 'Submit Complaint',
+        copy: draft.copy || 'Tell us what is wrong and our admin team will review it.',
+        targetTypeLabel: getComplaintTargetTypeLabel(draft.targetType),
+        targetSummary: getComplaintTargetSummary(draft),
+        reportedUserLabel: draft.reportedBrokerName || 'Broker account',
+        reportedMeta: draft.reportedBrokerIdNumber || 'Submitted privately to admin review.',
+        reasonOptions: COMPLAINT_REASON_OPTIONS,
+        selectedReason: draft.reason,
+        proofName: draft.proofAttachment?.name || 'Images or PDF up to 2 MB',
+        description: draft.description || '',
+        closeHandler: 'closeComplaintComposer()',
+        cancelHandler: 'closeComplaintComposer()',
+        submitHandler: 'submitDashboardComplaint(event)',
+        reasonInputId: 'dashboardComplaintReason',
+        descriptionInputId: 'dashboardComplaintDescription',
+        uploadInputId: 'dashboardComplaintProof',
+        uploadInputClass: 'crm-hidden',
+        uploadHandler: "document.getElementById('dashboardComplaintProof').click()",
+        reasonChangeHandler: "updateComplaintDraftField('reason', this.value)",
+        descriptionChangeHandler: "updateComplaintDraftField('description', this.value)",
+        descriptionPlaceholder: 'Explain the issue clearly so admin can review it quickly.',
+        submitting: state.complaintModalSubmitting,
+        submitLabel: 'Submit Complaint',
+        submittingLabel: 'Submitting...'
+      }) || '';
 
       document.getElementById('dashboardComplaintProof')?.addEventListener('change', handleDashboardComplaintProofSelection);
     }
@@ -8623,7 +8636,17 @@
                   <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()" ${state.profileSavePending ? 'disabled' : ''}>Cancel</button>
                   <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()" ${state.profileSavePending ? 'disabled' : ''}>${state.profileSavePending ? 'Saving...' : 'Save Profile'}</button>
                 ` : `
-                  <button class="btn btn-secondary" type="button" onclick="openBrokerComplaintFromProfile()">Report Broker</button>
+                  ${window.ComplaintCenterUi?.renderReportButton({
+                    label: 'Report Broker',
+                    iconHtml: getRecordActionIcon('report'),
+                    className: 'btn btn-secondary',
+                    onClick: 'openBrokerComplaintFromProfile()',
+                    currentUserId: state.broker?.id || '',
+                    reportedUserId: profile.id || state.broker?.id || '',
+                    targetType: 'broker',
+                    targetId: profile.id || state.broker?.id || '',
+                    selfDisabledText: 'You cannot report your own broker profile.'
+                  }) || ''}
                   <button class="btn btn-primary" type="button" onclick="beginProfileEdit()">Edit Profile</button>
                 `}
               </div>
@@ -12517,6 +12540,17 @@
     }
 
     function renderLeadSecondaryActions(lead) {
+      const reportButton = window.ComplaintCenterUi?.renderReportButton({
+        label: 'Report',
+        iconHtml: getRecordActionIcon('report'),
+        className: 'btn btn-secondary',
+        onClick: `openLeadComplaint(${lead.id})`,
+        currentUserId: state.broker?.id || '',
+        reportedUserId: state.broker?.id || '',
+        targetType: 'requirement',
+        targetId: lead.id,
+        selfDisabledText: 'You cannot report your own requirement.'
+      }) || '';
       return `
         <div class="record-secondary-actions">
           ${renderRecordActionButton({
@@ -12537,12 +12571,7 @@
             tone: 'danger',
             onclick: `deleteLead(${lead.id})`
           })}
-          ${renderRecordActionButton({
-            label: 'Report',
-            icon: 'report',
-            tone: 'secondary',
-            onclick: `openLeadComplaint(${lead.id})`
-          })}
+          ${reportButton}
         </div>
       `;
     }
@@ -12575,6 +12604,17 @@
     }
 
     function renderPropertySecondaryActions(property) {
+      const reportButton = window.ComplaintCenterUi?.renderReportButton({
+        label: 'Report',
+        iconHtml: getRecordActionIcon('report'),
+        className: 'btn btn-secondary',
+        onClick: `openPropertyComplaint(${property.id}, '${property.isDistress ? 'distress' : 'listing'}')`,
+        currentUserId: state.broker?.id || '',
+        reportedUserId: state.broker?.id || '',
+        targetType: 'listing',
+        targetId: property.id,
+        selfDisabledText: property.isDistress ? 'You cannot report your own distress deal.' : 'You cannot report your own listing.'
+      }) || '';
       return `
         <div class="record-secondary-actions">
           ${renderRecordActionButton({
@@ -12595,12 +12635,7 @@
             tone: 'danger',
             onclick: `deleteProperty(${property.id})`
           })}
-          ${renderRecordActionButton({
-            label: 'Report',
-            icon: 'report',
-            tone: 'secondary',
-            onclick: `openPropertyComplaint(${property.id}, '${property.isDistress ? 'distress' : 'listing'}')`
-          })}
+          ${reportButton}
         </div>
       `;
     }

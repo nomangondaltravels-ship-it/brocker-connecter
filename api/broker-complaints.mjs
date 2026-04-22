@@ -17,6 +17,7 @@ import {
 
 const MAX_COMPLAINT_DESCRIPTION_LENGTH = 4000;
 const MAX_PROOF_ATTACHMENT_BYTES = 2 * 1024 * 1024;
+const DUPLICATE_COMPLAINT_WINDOW_MS = 15 * 60 * 1000;
 const ALLOWED_PROOF_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -87,6 +88,41 @@ function normalizeComplaintTargetLinks(targetType, targetId) {
   };
 }
 
+async function ensureComplaintAllowed(context, reporterIdentity, payload) {
+  const reporterId = normalizeText(reporterIdentity.reporterBrokerId || reporterIdentity.reporterUserId);
+  const reportedUserId = normalizeText(payload.reportedUserId);
+  if (reporterId && reportedUserId && reporterId === reportedUserId) {
+    const error = new Error('You cannot report yourself or your own record.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!reporterId || !payload.targetType || !payload.targetId) return;
+
+  const previousRows = await supabaseSelect({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'complaints',
+    select: 'id,created_at',
+    filters: {
+      reporter_id: reporterId,
+      target_type: payload.targetType,
+      target_id: payload.targetId
+    },
+    order: { column: 'created_at', ascending: false }
+  }).catch(() => []);
+
+  const latestCreatedAt = Array.isArray(previousRows) && previousRows[0]?.created_at
+    ? Date.parse(previousRows[0].created_at)
+    : NaN;
+
+  if (Number.isFinite(latestCreatedAt) && (Date.now() - latestCreatedAt) < DUPLICATE_COMPLAINT_WINDOW_MS) {
+    const error = new Error('You already submitted a complaint for this target recently. Please wait 15 minutes before sending another one.');
+    error.status = 429;
+    throw error;
+  }
+}
+
 async function createComplaint(context, body) {
   const reporterIdentity = getReporterIdentity(context.broker);
   const reason = normalizeComplaintReason(body?.reason);
@@ -128,6 +164,12 @@ async function createComplaint(context, body) {
     error.status = 400;
     throw error;
   }
+
+  await ensureComplaintAllowed(context, reporterIdentity, {
+    targetType,
+    targetId,
+    reportedUserId
+  });
 
   const insertPayload = {
     reporter_id: reporterIdentity.reporterBrokerId || null,

@@ -2438,6 +2438,7 @@
   </div>
 
   <script src="assets/dashboard-lead-config.js"></script>
+  <script src="assets/complaint-center-ui.js"></script>
   <script>
     const state = {
       authMode: 'signin',
@@ -2799,6 +2800,17 @@
         setSystemBanner('Record could not be loaded for complaint.', 'error');
         return;
       }
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId: state.brokerProfile?.id || '',
+        reportedUserId: listing.brokerUuid || '',
+        targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
+        targetId: listing.sourceId || listing.id,
+        selfDisabledText: 'You cannot report your own shared record.'
+      }) || { hidden: false, disabled: false };
+      if (buttonState.hidden || buttonState.disabled) {
+        setSystemBanner(buttonState.disabledReason || 'You cannot report this record.', 'error');
+        return;
+      }
       openPublicComplaintModal({
         targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
         targetId: listing.sourceId || listing.id,
@@ -2818,6 +2830,17 @@
       const listing = state.listings.find(item => String(item.id) === String(listingId));
       if (!listing) {
         setSystemBanner('Broker could not be loaded for complaint.', 'error');
+        return;
+      }
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId: state.brokerProfile?.id || '',
+        reportedUserId: listing.brokerUuid || '',
+        targetType: 'broker',
+        targetId: listing.brokerUuid || listing.brokerIdNumber || listing.id,
+        selfDisabledText: 'You cannot report your own broker account.'
+      }) || { hidden: false, disabled: false };
+      if (buttonState.hidden || buttonState.disabled) {
+        setSystemBanner(buttonState.disabledReason || 'You cannot report this broker.', 'error');
         return;
       }
       openPublicComplaintModal({
@@ -2845,55 +2868,34 @@
 
       const draft = state.complaintDraft;
       overlay.classList.remove('hidden');
-      content.innerHTML = `
-        <form class="complaint-shell" onsubmit="submitPublicComplaint(event)">
-          <div class="complaint-head">
-            <div>
-              <div class="small">Complaint Center</div>
-              <h3 id="publicComplaintModalTitle">${escapeHtml(draft.title || 'Submit Complaint')}</h3>
-              <p class="complaint-copy">${escapeHtml(draft.copy || 'Share the issue clearly so admin can review it.')}</p>
-            </div>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="closePublicComplaintModal()">Close</button>
-          </div>
-          <div class="complaint-context-grid">
-            <div class="complaint-context-card">
-              <label class="small">Target Type</label>
-              <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
-              <span>${escapeHtml(draft.targetLabel || 'Selected record')}</span>
-            </div>
-            <div class="complaint-context-card">
-              <label class="small">Broker</label>
-              <strong>${escapeHtml(draft.reportedBrokerName || 'Broker account')}</strong>
-              <span>Submitted to admin review without exposing internal broker identifiers.</span>
-            </div>
-          </div>
-          <div class="complaint-form-grid">
-            <div class="complaint-form-card">
-              <label class="small" for="publicComplaintReason">Reason</label>
-              <select id="publicComplaintReason" onchange="updatePublicComplaintDraft('reason', this.value)">
-                <option value="">Select reason</option>
-                ${COMPLAINT_REASON_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${draft.reason === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
-              </select>
-            </div>
-            <div class="complaint-form-card">
-              <label class="small" for="publicComplaintProof">Optional Proof</label>
-              <div class="complaint-upload-row">
-                <input id="publicComplaintProof" type="file" accept="image/*,application/pdf" class="hidden">
-                <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('publicComplaintProof').click()">Upload Proof</button>
-                <span class="complaint-upload-note">${escapeHtml(draft.proofAttachment?.name || 'Images or PDF up to 2 MB')}</span>
-              </div>
-            </div>
-            <div class="complaint-form-card is-full">
-              <label class="small" for="publicComplaintDescription">Description</label>
-              <textarea id="publicComplaintDescription" rows="6" placeholder="Describe what is wrong with this listing, requirement, or broker." oninput="updatePublicComplaintDraft('description', this.value)">${escapeHtml(draft.description || '')}</textarea>
-            </div>
-          </div>
-          <div class="complaint-actions-row">
-            <button class="btn btn-secondary" type="button" onclick="closePublicComplaintModal()" ${state.complaintModalSubmitting ? 'disabled' : ''}>Cancel</button>
-            <button class="btn btn-primary" type="submit" ${state.complaintModalSubmitting ? 'disabled' : ''}>${state.complaintModalSubmitting ? 'Submitting...' : 'Submit Complaint'}</button>
-          </div>
-        </form>
-      `;
+      content.innerHTML = window.ComplaintCenterUi?.renderComplaintFormModal({
+        variant: 'public',
+        titleId: 'publicComplaintModalTitle',
+        title: draft.title || 'Submit Complaint',
+        copy: draft.copy || 'Share the issue clearly so admin can review it.',
+        targetTypeLabel: getComplaintTargetTypeLabel(draft.targetType),
+        targetSummary: draft.targetLabel || 'Selected record',
+        reportedUserLabel: draft.reportedBrokerName || 'Broker account',
+        reportedMeta: 'Submitted to admin review without exposing internal broker identifiers.',
+        reasonOptions: COMPLAINT_REASON_OPTIONS,
+        selectedReason: draft.reason,
+        proofName: draft.proofAttachment?.name || 'Images or PDF up to 2 MB',
+        description: draft.description || '',
+        closeHandler: 'closePublicComplaintModal()',
+        cancelHandler: 'closePublicComplaintModal()',
+        submitHandler: 'submitPublicComplaint(event)',
+        reasonInputId: 'publicComplaintReason',
+        descriptionInputId: 'publicComplaintDescription',
+        uploadInputId: 'publicComplaintProof',
+        uploadInputClass: 'hidden',
+        uploadHandler: "document.getElementById('publicComplaintProof').click()",
+        reasonChangeHandler: "updatePublicComplaintDraft('reason', this.value)",
+        descriptionChangeHandler: "updatePublicComplaintDraft('description', this.value)",
+        descriptionPlaceholder: 'Describe what is wrong with this listing, requirement, or broker.',
+        submitting: state.complaintModalSubmitting,
+        submitLabel: 'Submit Complaint',
+        submittingLabel: 'Submitting...'
+      }) || '';
 
       document.getElementById('publicComplaintProof')?.addEventListener('change', handlePublicComplaintProofSelection);
     }
@@ -3579,6 +3581,17 @@
     }
 
     function renderConnectorDetailActions(listing, shareLink, matchText) {
+      const reportRecordButton = window.ComplaintCenterUi?.renderReportButton({
+        label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
+        iconHtml: getConnectorActionIcon('report'),
+        className: 'btn connector-action-btn btn-ghost',
+        onClick: `openRecordComplaint('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`,
+        currentUserId: state.brokerProfile?.id || '',
+        reportedUserId: listing.brokerUuid || '',
+        targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
+        targetId: listing.sourceId || listing.id,
+        selfDisabledText: 'You cannot report your own shared record.'
+      }) || '';
       return `
         <div class="connector-action-bar">
           ${renderConnectorActionButton({
@@ -3614,12 +3627,7 @@
             tone: 'ghost',
             onclick: `openBrokerEmail('${String(listing.brokerEmail).replace(/'/g, '%27')}')`
           }) : ''}
-          ${renderConnectorActionButton({
-            label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
-            icon: 'report',
-            tone: 'ghost',
-            onclick: `openRecordComplaint('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`
-          })}
+          ${reportRecordButton}
         </div>
       `;
     }
@@ -3753,12 +3761,17 @@
             <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
           </div>
           <div class="connector-detail-toolbar">
-            ${renderConnectorActionButton({
+            ${window.ComplaintCenterUi?.renderReportButton({
               label: 'Report Broker',
-              icon: 'report',
-              tone: 'ghost',
-              onclick: `openBrokerComplaint('${sectionName}', '${selected.id}')`
-            })}
+              iconHtml: getConnectorActionIcon('report'),
+              className: 'btn connector-action-btn btn-ghost',
+              onClick: `openBrokerComplaint('${sectionName}', '${selected.id}')`,
+              currentUserId: state.brokerProfile?.id || '',
+              reportedUserId: selected.brokerUuid || '',
+              targetType: 'broker',
+              targetId: selected.brokerUuid || selected.brokerIdNumber || selected.id,
+              selfDisabledText: 'You cannot report your own broker account.'
+            }) || ''}
           </div>
         </div>
       `;
