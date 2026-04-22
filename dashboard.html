@@ -3751,6 +3751,7 @@
 
     .workspace-table-scroll {
       overflow: auto;
+      scrollbar-width: thin;
     }
 
     .workspace-table-inner {
@@ -5139,6 +5140,12 @@
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
+      splitScrollMemory: {
+        leads: '',
+        properties: '',
+        distress: ''
+      },
+      pendingSplitScroll: null,
       callPopover: {
         anchor: null,
         phoneRaw: '',
@@ -10183,22 +10190,59 @@
       return records.some(item => String(item.id) === String(currentId)) ? currentId : null;
     }
 
+    function queueWorkspaceSplitScroll(sectionName, mode, rowId) {
+      state.pendingSplitScroll = {
+        sectionName,
+        mode,
+        rowId: String(rowId || '')
+      };
+      if (mode === 'restore') {
+        state.splitScrollMemory[sectionName] = String(rowId || '');
+      }
+    }
+
+    function flushWorkspaceSplitScroll(sectionName) {
+      const intent = state.pendingSplitScroll;
+      if (!intent || intent.sectionName !== sectionName) return;
+      state.pendingSplitScroll = null;
+      requestAnimationFrame(() => {
+        const section = document.getElementById(`${sectionName}-section`);
+        const listTargetId = sectionName === 'leads' ? 'leadsList' : sectionName === 'properties' ? 'propertiesList' : 'distressList';
+        const target = document.getElementById(listTargetId);
+        const shell = target?.querySelector('.workspace-split');
+        const row = intent.rowId ? target?.querySelector(`[data-workspace-row-id="${intent.rowId}"]`) : null;
+        if (intent.mode === 'open') {
+          (shell || section || target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        if (intent.mode === 'restore' && row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        (section || target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     function closeLeadRecordPanel() {
+      queueWorkspaceSplitScroll('leads', 'restore', state.selectedLeadId);
       state.selectedLeadId = null;
       renderLeads();
     }
 
     function closePropertyRecordPanel() {
+      queueWorkspaceSplitScroll('properties', 'restore', state.selectedPropertyId);
       state.selectedPropertyId = null;
       renderProperties();
     }
 
     function closeDistressRecordPanel() {
+      queueWorkspaceSplitScroll('distress', 'restore', state.selectedDistressId);
       state.selectedDistressId = null;
       renderDistressDeals();
     }
 
     function openLeadRecord(id) {
+      queueWorkspaceSplitScroll('leads', 'open', id);
       state.selectedLeadId = id;
       openSection('leads');
       renderLeads();
@@ -10206,11 +10250,13 @@
 
     function openPropertyRecord(id, section = 'properties') {
       if (section === 'distress') {
+        queueWorkspaceSplitScroll('distress', 'open', id);
         state.selectedDistressId = id;
         openSection('distress');
         renderDistressDeals();
         return;
       }
+      queueWorkspaceSplitScroll('properties', 'open', id);
       state.selectedPropertyId = id;
       openSection('properties');
       renderProperties();
@@ -10791,6 +10837,7 @@
                     return `
                       <div
                         class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        data-workspace-row-id="${lead.id}"
                         role="button"
                         tabindex="0"
                         onclick="openLeadRecord(${lead.id})"
@@ -10847,6 +10894,7 @@
           </aside>
         </div>
       `;
+      flushWorkspaceSplitScroll('leads');
     }
 
     function renderProperties() {
@@ -10891,6 +10939,7 @@
                     return `
                       <div
                         class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        data-workspace-row-id="${property.id}"
                         role="button"
                         tabindex="0"
                         onclick="openPropertyRecord(${property.id}, 'properties')"
@@ -10947,6 +10996,7 @@
           </aside>
         </div>
       `;
+      flushWorkspaceSplitScroll('properties');
     }
 
     function renderDistressDeals() {
@@ -10991,6 +11041,7 @@
                     return `
                       <div
                         class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        data-workspace-row-id="${property.id}"
                         role="button"
                         tabindex="0"
                         onclick="openPropertyRecord(${property.id}, 'distress')"
@@ -11047,6 +11098,7 @@
           </aside>
         </div>
       `;
+      flushWorkspaceSplitScroll('distress');
     }
 
     async function logoutBroker() {

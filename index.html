@@ -1314,6 +1314,10 @@
         position: static;
       }
 
+      .public-sheet {
+        min-width: 0;
+      }
+
       .public-sheet-head {
         display: none;
       }
@@ -1526,6 +1530,7 @@
       overflow: hidden;
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      min-width: 1120px;
     }
 
     .public-sheet-head {
@@ -1685,7 +1690,9 @@
     }
 
     .connector-list-panel {
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: visible;
+      scrollbar-width: thin;
     }
 
     .connector-detail-panel {
@@ -2262,6 +2269,12 @@
         marketplace: '',
         'distress-deals': ''
       },
+      publicSplitScrollMemory: {
+        requirements: '',
+        marketplace: '',
+        'distress-deals': ''
+      },
+      pendingPublicSplitScroll: null,
       revealedPublicContactKeys: {
         requirements: '',
         marketplace: '',
@@ -2744,12 +2757,47 @@
     }
 
     function selectPublicListing(sectionName, listingId) {
+      queuePublicSplitScroll(sectionName, 'open', listingId);
       state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
       state.revealedPublicContactKeys[sectionName] = '';
       renderPublicViews();
     }
 
+    function queuePublicSplitScroll(sectionName, mode, listingId) {
+      state.pendingPublicSplitScroll = {
+        sectionName,
+        mode,
+        listingId: String(listingId || '')
+      };
+      if (mode === 'restore') {
+        state.publicSplitScrollMemory[sectionName] = String(listingId || '');
+      }
+    }
+
+    function flushPublicSplitScroll(sectionName) {
+      const intent = state.pendingPublicSplitScroll;
+      if (!intent || intent.sectionName !== sectionName) return;
+      state.pendingPublicSplitScroll = null;
+      requestAnimationFrame(() => {
+        const section = document.getElementById(`${sectionName}-section`);
+        const shell = section?.querySelector('.connector-results-shell');
+        const row = intent.listingId ? section?.querySelector(`[data-listing-id="${intent.listingId}"]`) : null;
+        if (intent.mode === 'open') {
+          (shell || section)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        if (intent.mode === 'restore' && row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        (section || shell)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     function closePublicDetailPanel(sectionName) {
+      const selectedKey = state.selectedPublicListingKeys[sectionName] || '';
+      const listingId = selectedKey.includes(':') ? selectedKey.split(':').slice(1).join(':') : '';
+      queuePublicSplitScroll(sectionName, 'restore', listingId);
       state.selectedPublicListingKeys[sectionName] = '';
       state.revealedPublicContactKeys[sectionName] = '';
       renderPublicViews();
@@ -3320,6 +3368,7 @@
         renderPager(sectionName, 0);
         const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
         renderConnectorDetailPanel(detailTargetId, sectionName, []);
+        flushPublicSplitScroll(sectionName);
         return;
       }
       const sortedItems = sortPublicListings(items);
@@ -3330,6 +3379,7 @@
       renderPager(sectionName, sortedItems.length);
       const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
       renderConnectorDetailPanel(detailTargetId, sectionName, sortedItems);
+      flushPublicSplitScroll(sectionName);
     }
 
     function updateStats() {

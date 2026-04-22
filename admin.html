@@ -893,6 +893,7 @@
 
     .admin-table-wrap {
       overflow: auto;
+      scrollbar-width: thin;
       border: 1px solid #e5e7eb;
       border-radius: 16px;
       background: #ffffff;
@@ -1430,7 +1431,14 @@
       account: 'all',
       queue: 'all',
       selectedType: 'broker',
-      selectedKey: ''
+      selectedKey: '',
+      selectedRowMemory: {
+        broker: '',
+        requirement: '',
+        deal: '',
+        complaint: ''
+      },
+      pendingDetailScroll: null
     };
 
     function safeJsonRead(key, fallback) {
@@ -2389,12 +2397,44 @@
     }
 
     function setAdminSelection(type, key) {
+      queueAdminDetailScroll('open', type, key);
       adminUiState.selectedType = type;
       adminUiState.selectedKey = String(key || '');
       renderAdminWorkspace();
     }
 
+    function queueAdminDetailScroll(mode, type, key) {
+      adminUiState.pendingDetailScroll = {
+        mode,
+        type: String(type || ''),
+        key: String(key || '')
+      };
+      if (mode === 'restore' && type) {
+        adminUiState.selectedRowMemory[String(type || '')] = String(key || '');
+      }
+    }
+
+    function flushAdminDetailScroll() {
+      const intent = adminUiState.pendingDetailScroll;
+      if (!intent) return;
+      adminUiState.pendingDetailScroll = null;
+      requestAnimationFrame(() => {
+        const grid = document.getElementById('adminMainGrid');
+        const row = intent.key ? document.querySelector(`[data-admin-row-key="${intent.key}"]`) : null;
+        if (intent.mode === 'open') {
+          grid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        if (intent.mode === 'restore' && row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+        grid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     function clearAdminSelection() {
+      queueAdminDetailScroll('restore', adminUiState.selectedType, adminUiState.selectedKey);
       adminUiState.selectedType = 'broker';
       adminUiState.selectedKey = '';
       renderAdminWorkspace();
@@ -2430,6 +2470,7 @@
       renderPostLists(collections);
       renderComplaints(collections.complaints);
       renderAdminDetailPanel(collections);
+      flushAdminDetailScroll();
     }
 
     const ADMIN_TABLE_COLUMNS = {
@@ -2485,7 +2526,7 @@
             const blocked = Boolean(account.blocked);
             const selected = adminUiState.selectedType === 'broker' && adminUiState.selectedKey === account.key ? ' is-selected' : '';
             return `
-              <div class="admin-table-row${selected}" style="grid-template-columns:${columns};" onclick="setAdminSelection('broker', '${escapeHtml(account.key)}')">
+              <div class="admin-table-row${selected}" data-admin-row-key="${escapeHtml(account.key)}" style="grid-template-columns:${columns};" onclick="setAdminSelection('broker', '${escapeHtml(account.key)}')">
                 <div class="admin-cell">
                   <strong>${escapeHtml(account.name || 'Broker')}</strong>
                   <span>${escapeHtml(account.brokerId || 'No Broker ID')}</span>
@@ -2549,7 +2590,7 @@
           ${collections.requirements.map(entry => {
             const selected = adminUiState.selectedType === 'requirement' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
             return `
-              <div class="admin-table-row${selected}" style="grid-template-columns:${requirementColumns};" onclick="setAdminSelection('requirement', '${escapeHtml(entry.key)}')">
+              <div class="admin-table-row${selected}" data-admin-row-key="${escapeHtml(entry.key)}" style="grid-template-columns:${requirementColumns};" onclick="setAdminSelection('requirement', '${escapeHtml(entry.key)}')">
                 <div class="admin-cell">
                   <strong>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</strong>
                   <span>${escapeHtml(entry.item.notes || 'No notes provided')}</span>
@@ -2600,7 +2641,7 @@
           ${collections.deals.map(entry => {
             const selected = adminUiState.selectedType === 'deal' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
             return `
-              <div class="admin-table-row${selected}" style="grid-template-columns:${dealColumns};" onclick="setAdminSelection('deal', '${escapeHtml(entry.key)}')">
+              <div class="admin-table-row${selected}" data-admin-row-key="${escapeHtml(entry.key)}" style="grid-template-columns:${dealColumns};" onclick="setAdminSelection('deal', '${escapeHtml(entry.key)}')">
                 <div class="admin-cell">
                   <strong>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</strong>
                   <span>${entry.item.distress ? 'Distress listing' : 'Standard connector listing'}</span>
@@ -2665,7 +2706,7 @@
             const statusMeta = getComplaintStatusMeta(entry.item.normalizedStatus);
             const selected = adminUiState.selectedType === 'complaint' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
             return `
-              <div class="admin-table-row${selected}" style="grid-template-columns:${columns};" onclick="setAdminSelection('complaint', '${escapeHtml(entry.key)}')">
+              <div class="admin-table-row${selected}" data-admin-row-key="${escapeHtml(entry.key)}" style="grid-template-columns:${columns};" onclick="setAdminSelection('complaint', '${escapeHtml(entry.key)}')">
                 <div class="admin-cell">
                   <strong>${escapeHtml(entry.item.name || 'Anonymous')}</strong>
                   <span>${escapeHtml(entry.item.reporterEmail || 'No reporter email')}</span>
