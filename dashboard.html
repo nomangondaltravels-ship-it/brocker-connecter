@@ -107,6 +107,123 @@
       font-size: 0.82rem;
     }
 
+    .account-menu-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .account-menu-trigger {
+      min-height: 46px !important;
+      padding: 8px 12px !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .account-menu-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: #f8fafc;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #8f6a12;
+      font-size: 0.82rem;
+      font-weight: 800;
+      flex: 0 0 34px;
+    }
+
+    .account-menu-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .account-menu-copy {
+      display: grid;
+      gap: 2px;
+      text-align: left;
+      min-width: 0;
+    }
+
+    .account-menu-copy strong {
+      font-size: 0.86rem;
+      color: #0f172a;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+    }
+
+    .account-menu-copy span {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .account-menu-caret {
+      color: #64748b;
+      font-size: 0.8rem;
+      flex: 0 0 auto;
+    }
+
+    .account-menu-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 220px;
+      padding: 8px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+      display: grid;
+      gap: 4px;
+      z-index: 1200;
+    }
+
+    .account-menu-panel.hidden {
+      display: none;
+    }
+
+    .account-menu-item {
+      width: 100%;
+      min-height: 40px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 12px;
+      color: #18212f;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.16s ease, color 0.16s ease;
+    }
+
+    .account-menu-item:hover {
+      background: #f8fafc;
+    }
+
+    .account-menu-item.is-danger {
+      color: #b91c1c;
+    }
+
+    .account-menu-item.is-danger:hover {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
     .top-search-inline {
       min-width: 0;
       width: 100%;
@@ -4285,8 +4402,21 @@
       <div class="top-actions">
         <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
         <button class="btn btn-secondary page-switch-btn" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
-        <button class="btn btn-secondary page-switch-btn is-active" id="brokerIdentityBtn" type="button" aria-current="page">Broker Desk</button>
-        <button class="btn btn-danger" type="button" onclick="logoutBroker()">Logout</button>
+        <div class="account-menu-wrap">
+          <button class="btn btn-secondary page-switch-btn account-menu-trigger" id="brokerIdentityBtn" type="button" onclick="toggleAccountMenu()" aria-haspopup="menu" aria-expanded="false">
+            <span class="account-menu-avatar" id="brokerIdentityAvatar">BC</span>
+            <span class="account-menu-copy">
+              <strong id="brokerIdentityName">Broker Desk</strong>
+              <span id="brokerIdentityMeta">Broker Account</span>
+            </span>
+            <span class="account-menu-caret">▾</span>
+          </button>
+          <div class="account-menu-panel hidden" id="accountMenuPanel" role="menu" aria-label="Account menu">
+            <button class="account-menu-item" type="button" onclick="openProfilePage()" role="menuitem"><span>Profile</span><span>›</span></button>
+            <button class="account-menu-item" type="button" onclick="openSettingsPage()" role="menuitem"><span>Settings</span><span>›</span></button>
+            <button class="account-menu-item is-danger" type="button" onclick="logoutBroker()" role="menuitem"><span>Logout</span><span>›</span></button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -4316,7 +4446,7 @@
           <button class="btn" data-section="leads" onclick="openSection('leads')"><span class="menu-label">Requirements</span><span class="menu-sub">Demand / lead workflow</span></button>
           <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">Listings</span><span class="menu-sub">Inventory / availability</span></button>
           <button class="btn" data-section="distress" onclick="openSection('distress')"><span class="menu-label">Distress Deals</span><span class="menu-sub">Urgent discounted stock</span></button>
-          <button class="btn" data-section="profile" onclick="openSection('profile')"><span class="menu-label">Profile / Settings</span></button>
+          <button class="btn" data-section="settings" onclick="openSection('settings')"><span class="menu-label">Settings</span><span class="menu-sub">Account / controls</span></button>
         </div>
       </aside>
     </div>
@@ -5029,10 +5159,19 @@
       <section class="section" id="profile-section">
         <div class="section-head">
           <div>
-            <h2>Profile / Settings</h2>
+            <h2>Profile</h2>
           </div>
         </div>
         <div id="profileCard"></div>
+      </section>
+
+      <section class="section" id="settings-section">
+        <div class="section-head">
+          <div>
+            <h2>Settings</h2>
+          </div>
+        </div>
+        <div id="settingsCard"></div>
       </section>
     </main>
   </div>
@@ -6631,6 +6770,58 @@
       };
     }
 
+    function closeAccountMenu() {
+      const panel = document.getElementById('accountMenuPanel');
+      const button = document.getElementById('brokerIdentityBtn');
+      if (panel) panel.classList.add('hidden');
+      if (button) button.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleAccountMenu() {
+      const panel = document.getElementById('accountMenuPanel');
+      const button = document.getElementById('brokerIdentityBtn');
+      if (!panel || !button) return;
+      const willOpen = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !willOpen);
+      button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    }
+
+    function openProfilePage() {
+      closeAccountMenu();
+      openSection('profile');
+      document.getElementById('profile-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openSettingsPage() {
+      closeAccountMenu();
+      openSection('settings');
+      document.getElementById('settings-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function openProfileEditorFromSettings() {
+      openProfilePage();
+      beginProfileEdit();
+    }
+
+    function syncBrokerIdentityButton() {
+      const profile = getActiveBrokerProfile();
+      const trigger = document.getElementById('brokerIdentityBtn');
+      const avatar = document.getElementById('brokerIdentityAvatar');
+      const name = document.getElementById('brokerIdentityName');
+      const meta = document.getElementById('brokerIdentityMeta');
+      if (!trigger || !avatar || !name || !meta) return;
+      const fullName = profile.fullName || profile.companyName || 'Broker Account';
+      const label = profile.brokerIdNumber ? `${fullName}` : fullName;
+      const metaText = profile.brokerIdNumber ? `Broker ID ${profile.brokerIdNumber}` : 'Broker Account';
+      name.textContent = label;
+      meta.textContent = metaText;
+      if (profile.avatarDataUrl) {
+        avatar.innerHTML = `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`;
+      } else {
+        avatar.textContent = getProfileInitials(fullName);
+      }
+    }
+
     async function verifySession() {
       if (!state.token) {
         window.location.href = 'index.html';
@@ -6654,7 +6845,7 @@
 
       state.broker = result.broker;
       localStorage.setItem('broker_session_profile', JSON.stringify(result.broker));
-      document.getElementById('brokerIdentityBtn').textContent = `${result.broker.fullName} (${result.broker.brokerIdNumber})`;
+      syncBrokerIdentityButton();
       return true;
     }
 
@@ -6678,9 +6869,9 @@
       if (result.overview?.broker) {
         state.broker = { ...(state.broker || {}), ...result.overview.broker };
         localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
-        document.getElementById('brokerIdentityBtn').textContent = `${result.overview.broker.fullName} (${result.overview.broker.brokerIdNumber})`;
       }
       syncProfileStorage();
+      syncBrokerIdentityButton();
 
       renderOverview();
       renderLeads();
@@ -6689,6 +6880,7 @@
       renderFollowups();
       renderProgress();
       renderProfile();
+      renderSettings();
       populateFollowupEntities();
     }
 
@@ -6708,6 +6900,7 @@
     }
 
     function openSection(name) {
+      closeAccountMenu();
       state.activeSection = name;
       document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
       document.querySelectorAll('.menu button').forEach(button => button.classList.remove('active'));
@@ -7431,6 +7624,113 @@
       else refreshProfileCompletionUi();
     }
 
+    function renderSettings() {
+      syncProfileStorage();
+      const target = document.getElementById('settingsCard');
+      if (!target) return;
+      const profile = getActiveBrokerProfile();
+      const completion = getProfileCompletion(profile);
+      const verificationLabel = profile.isVerified ? 'Verified' : 'Pending';
+      const socialCount = Object.values(profile.socialLinks || {}).filter(Boolean).length;
+
+      target.innerHTML = `
+        <div class="settings-layout">
+          <div class="settings-stack">
+            <div class="profile-section-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Account</div>
+                  <h3>Broker Account</h3>
+                </div>
+                <span class="verification-pill ${profile.isVerified ? 'is-verified' : 'is-pending'}">${verificationLabel}</span>
+              </div>
+              <div class="profile-field-grid">
+                <div class="profile-display-cell"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
+                <div class="profile-display-cell"><small>Broker ID</small><strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></div>
+                <div class="profile-display-cell"><small>Email</small><strong>${escapeHtml(profile.email || '--')}</strong></div>
+                <div class="profile-display-cell"><small>Mobile Number</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
+              </div>
+            </div>
+
+            <div class="profile-section-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Profile</div>
+                  <h3>Profile Management</h3>
+                </div>
+                <div class="profile-section-actions">
+                  <button class="btn btn-secondary btn-tiny" type="button" onclick="openProfilePage()">View Profile</button>
+                  <button class="btn btn-primary btn-tiny" type="button" onclick="openProfileEditorFromSettings()">Edit Profile</button>
+                </div>
+              </div>
+              <div class="profile-note">Profile is now a dedicated page for identity, professional details, social links, and completion progress. Open it from the top bar account area anytime.</div>
+              <div class="profile-field-grid">
+                <div class="profile-display-cell"><small>Company / Brokerage</small><strong>${escapeHtml(profile.companyName || '--')}</strong></div>
+                <div class="profile-display-cell"><small>Office Location</small><strong>${escapeHtml(profile.officeLocation || '--')}</strong></div>
+                <div class="profile-display-cell"><small>Profile Completion</small><strong>${completion.percent}% complete</strong></div>
+                <div class="profile-display-cell"><small>Social Links</small><strong>${escapeHtml(String(socialCount))} connected</strong></div>
+              </div>
+            </div>
+
+            <div class="profile-section-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Broker Controls</div>
+                  <h3>Operational Controls</h3>
+                </div>
+              </div>
+              <div class="profile-note">Sharing and visibility controls remain inside Leads, Listings, and Distress workflows so operational logic stays unchanged.</div>
+              <div class="profile-section-actions">
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('leads')">Open Requirements</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('properties')">Open Listings</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('distress')">Open Distress Deals</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-stack">
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Privacy & Security</div>
+                  <h3>Account Safety</h3>
+                </div>
+              </div>
+              <div class="profile-side-list">
+                <div class="profile-side-item">
+                  <strong>Session Access</strong>
+                  <span>Your login session and account access continue to follow the existing Broker Desk auth flow.</span>
+                </div>
+                <div class="profile-side-item">
+                  <strong>Profile Visibility</strong>
+                  <span>Profile details remain private inside Broker Desk unless future public-safe publishing is explicitly supported.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Future Modules</div>
+                  <h3>Settings Workspace</h3>
+                </div>
+              </div>
+              <div class="profile-side-list">
+                <div class="profile-side-item">
+                  <strong>Notifications</strong>
+                  <span>This area is ready for future notification and account preference controls without changing today’s working logic.</span>
+                </div>
+                <div class="profile-side-item">
+                  <strong>Account Preferences</strong>
+                  <span>Additional broker controls can be added here later while keeping Profile focused on identity and professional information.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function populateFollowupEntities() {
       const select = document.getElementById('followupEntityId');
       const typeField = document.getElementById('followupEntityType');
@@ -7744,6 +8044,14 @@
     document.addEventListener('click', event => {
       if (!event.target.closest('#dashboardSearchBox') && !event.target.closest('#dashboardSearchSuggestions')) {
         renderDashboardSuggestions('');
+      }
+      if (!event.target.closest('.account-menu-wrap')) {
+        closeAccountMenu();
+      }
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeAccountMenu();
       }
     });
 
@@ -8372,9 +8680,9 @@
       if (result.overview?.broker) {
         state.broker = { ...(state.broker || {}), ...result.overview.broker };
         localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
-        document.getElementById('brokerIdentityBtn').textContent = `${result.overview.broker.fullName} (${result.overview.broker.brokerIdNumber})`;
       }
       syncProfileStorage();
+      syncBrokerIdentityButton();
 
       syncFilterInputs('leads');
       syncFilterInputs('properties');
@@ -8387,6 +8695,7 @@
       renderFollowups();
       renderProgress();
       renderProfile();
+      renderSettings();
       populateFollowupEntities();
     }
 
