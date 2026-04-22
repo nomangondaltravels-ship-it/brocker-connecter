@@ -2110,6 +2110,103 @@
       padding-top: 8px !important;
       padding-bottom: 8px !important;
     }
+
+    .complaint-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .complaint-dialog {
+      width: min(640px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+    }
+
+    .complaint-shell {
+      display: grid;
+      gap: 18px;
+      padding: 20px;
+    }
+
+    .complaint-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .complaint-head h3 {
+      margin: 4px 0 0;
+      color: #0F172A;
+      font-size: 1.08rem;
+    }
+
+    .complaint-copy {
+      margin: 0;
+      color: #64748B;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .complaint-context-grid,
+    .complaint-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .complaint-context-card,
+    .complaint-form-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      background: #F8FAFC;
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .complaint-form-card.is-full {
+      grid-column: 1 / -1;
+    }
+
+    .complaint-upload-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .complaint-upload-note {
+      color: #64748B;
+      font-size: 0.85rem;
+    }
+
+    .complaint-actions-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    body.complaint-modal-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 760px) {
+      .complaint-context-grid,
+      .complaint-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2334,6 +2431,12 @@
     </div>
   </div>
 
+  <div class="complaint-overlay hidden" id="publicComplaintModal" role="dialog" aria-modal="true" aria-labelledby="publicComplaintModalTitle">
+    <div class="complaint-dialog">
+      <div id="publicComplaintModalContent"></div>
+    </div>
+  </div>
+
   <script src="assets/dashboard-lead-config.js"></script>
   <script>
     const state = {
@@ -2366,6 +2469,9 @@
         marketplace: '',
         'distress-deals': ''
       },
+      complaintDraft: null,
+      complaintModalOpen: false,
+      complaintModalSubmitting: false,
       pagination: {
         requirements: 1,
         marketplace: 1,
@@ -2377,6 +2483,7 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
+    const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
     const authSupabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
     const authSupabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
 
@@ -2626,6 +2733,264 @@
       state.sessionToken = authPayload.token;
       state.brokerProfile = authPayload.broker;
       return true;
+    }
+
+    function syncPublicComplaintBodyLock() {
+      document.body.classList.toggle('complaint-modal-open', Boolean(state.complaintModalOpen));
+    }
+
+    function closePublicComplaintModal() {
+      state.complaintModalOpen = false;
+      state.complaintModalSubmitting = false;
+      state.complaintDraft = null;
+      renderPublicComplaintModal();
+      syncPublicComplaintBodyLock();
+    }
+
+    function getComplaintTargetTypeLabel(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (normalized === 'listing') return 'Listing';
+      if (normalized === 'requirement') return 'Requirement';
+      if (normalized === 'broker') return 'Broker';
+      return 'Record';
+    }
+
+    function ensureComplaintAuth() {
+      if (state.sessionToken) return true;
+      openAuthModal('signin');
+      setAuthStatus('Sign in to submit a complaint.', 'error');
+      return false;
+    }
+
+    function createPublicComplaintDraft(context = {}) {
+      return {
+        reason: '',
+        description: '',
+        proofAttachment: null,
+        targetType: String(context?.targetType || '').trim().toLowerCase(),
+        targetId: String(context?.targetId || '').trim(),
+        targetLabel: String(context?.targetLabel || '').trim(),
+        reportedUserId: String(context?.reportedUserId || '').trim(),
+        reportedBrokerIdNumber: String(context?.reportedBrokerIdNumber || '').trim(),
+        reportedBrokerName: String(context?.reportedBrokerName || '').trim(),
+        sourceSection: String(context?.sourceSection || state.activeSection || 'connector').trim().toLowerCase(),
+        title: String(context?.title || 'Submit Complaint').trim(),
+        copy: String(context?.copy || 'Share the issue clearly so the admin team can review this record.').trim()
+      };
+    }
+
+    function openPublicComplaintModal(context = {}) {
+      if (!ensureComplaintAuth()) return;
+      state.complaintDraft = createPublicComplaintDraft(context);
+      state.complaintModalOpen = true;
+      state.complaintModalSubmitting = false;
+      renderPublicComplaintModal();
+      syncPublicComplaintBodyLock();
+    }
+
+    function updatePublicComplaintDraft(field, value) {
+      if (!state.complaintDraft) return;
+      state.complaintDraft[field] = value;
+    }
+
+    function openRecordComplaint(sectionName, listingId) {
+      const listing = state.listings.find(item => String(item.id) === String(listingId));
+      if (!listing) {
+        setSystemBanner('Record could not be loaded for complaint.', 'error');
+        return;
+      }
+      openPublicComplaintModal({
+        targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
+        targetId: listing.sourceId || listing.id,
+        targetLabel: listing.sourceType === 'lead'
+          ? `${normalizeConnectorPurpose(listing.purpose, listing.sourceType) === 'rent' ? 'Rent' : 'Buy'} - ${listing.propertyType || 'Requirement'}`
+          : `${String(listing.purpose || '').toUpperCase()} - ${listing.propertyType || 'Listing'}`,
+        reportedUserId: listing.brokerUuid || '',
+        reportedBrokerIdNumber: listing.brokerIdNumber || '',
+        reportedBrokerName: listing.brokerName || '',
+        sourceSection: sectionName || state.activeSection,
+        title: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
+        copy: 'This report goes to admin review. Contact actions remain unchanged.'
+      });
+    }
+
+    function openBrokerComplaint(sectionName, listingId) {
+      const listing = state.listings.find(item => String(item.id) === String(listingId));
+      if (!listing) {
+        setSystemBanner('Broker could not be loaded for complaint.', 'error');
+        return;
+      }
+      openPublicComplaintModal({
+        targetType: 'broker',
+        targetId: listing.brokerUuid || listing.brokerIdNumber || listing.id,
+        targetLabel: listing.brokerName || 'Broker account',
+        reportedUserId: listing.brokerUuid || '',
+        reportedBrokerIdNumber: listing.brokerIdNumber || '',
+        reportedBrokerName: listing.brokerName || '',
+        sourceSection: sectionName || state.activeSection,
+        title: 'Report Broker',
+        copy: 'Report broker behavior or identity issues without changing current contact actions.'
+      });
+    }
+
+    function renderPublicComplaintModal() {
+      const overlay = document.getElementById('publicComplaintModal');
+      const content = document.getElementById('publicComplaintModalContent');
+      if (!overlay || !content) return;
+      if (!state.complaintModalOpen || !state.complaintDraft) {
+        overlay.classList.add('hidden');
+        content.innerHTML = '';
+        return;
+      }
+
+      const draft = state.complaintDraft;
+      overlay.classList.remove('hidden');
+      content.innerHTML = `
+        <form class="complaint-shell" onsubmit="submitPublicComplaint(event)">
+          <div class="complaint-head">
+            <div>
+              <div class="small">Complaint Center</div>
+              <h3 id="publicComplaintModalTitle">${escapeHtml(draft.title || 'Submit Complaint')}</h3>
+              <p class="complaint-copy">${escapeHtml(draft.copy || 'Share the issue clearly so admin can review it.')}</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closePublicComplaintModal()">Close</button>
+          </div>
+          <div class="complaint-context-grid">
+            <div class="complaint-context-card">
+              <label class="small">Target Type</label>
+              <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
+              <span>${escapeHtml(draft.targetLabel || 'Selected record')}</span>
+            </div>
+            <div class="complaint-context-card">
+              <label class="small">Broker</label>
+              <strong>${escapeHtml(draft.reportedBrokerName || 'Broker account')}</strong>
+              <span>Submitted to admin review without exposing internal broker identifiers.</span>
+            </div>
+          </div>
+          <div class="complaint-form-grid">
+            <div class="complaint-form-card">
+              <label class="small" for="publicComplaintReason">Reason</label>
+              <select id="publicComplaintReason" onchange="updatePublicComplaintDraft('reason', this.value)">
+                <option value="">Select reason</option>
+                ${COMPLAINT_REASON_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${draft.reason === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="complaint-form-card">
+              <label class="small" for="publicComplaintProof">Optional Proof</label>
+              <div class="complaint-upload-row">
+                <input id="publicComplaintProof" type="file" accept="image/*,application/pdf" class="hidden">
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('publicComplaintProof').click()">Upload Proof</button>
+                <span class="complaint-upload-note">${escapeHtml(draft.proofAttachment?.name || 'Images or PDF up to 2 MB')}</span>
+              </div>
+            </div>
+            <div class="complaint-form-card is-full">
+              <label class="small" for="publicComplaintDescription">Description</label>
+              <textarea id="publicComplaintDescription" rows="6" placeholder="Describe what is wrong with this listing, requirement, or broker." oninput="updatePublicComplaintDraft('description', this.value)">${escapeHtml(draft.description || '')}</textarea>
+            </div>
+          </div>
+          <div class="complaint-actions-row">
+            <button class="btn btn-secondary" type="button" onclick="closePublicComplaintModal()" ${state.complaintModalSubmitting ? 'disabled' : ''}>Cancel</button>
+            <button class="btn btn-primary" type="submit" ${state.complaintModalSubmitting ? 'disabled' : ''}>${state.complaintModalSubmitting ? 'Submitting...' : 'Submit Complaint'}</button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('publicComplaintProof')?.addEventListener('change', handlePublicComplaintProofSelection);
+    }
+
+    async function handlePublicComplaintProofSelection(event) {
+      const file = event?.target?.files?.[0];
+      if (!state.complaintDraft) return;
+      if (!file) {
+        state.complaintDraft.proofAttachment = null;
+        renderPublicComplaintModal();
+        return;
+      }
+      if (file.size > (2 * 1024 * 1024)) {
+        setSystemBanner('Proof upload must be 2 MB or smaller.', 'error');
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = loadEvent => {
+        state.complaintDraft.proofAttachment = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl: String(loadEvent?.target?.result || '')
+        };
+        renderPublicComplaintModal();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function submitPublicComplaint(event) {
+      event?.preventDefault?.();
+      if (!state.complaintDraft || state.complaintModalSubmitting) return;
+      const draft = state.complaintDraft;
+      if (!draft.reason) {
+        setSystemBanner('Select a complaint reason.', 'error');
+        return;
+      }
+      if (String(draft.description || '').trim().length < 10) {
+        setSystemBanner('Add a brief complaint description.', 'error');
+        return;
+      }
+      state.complaintModalSubmitting = true;
+      renderPublicComplaintModal();
+      try {
+        const response = await fetch('/api/broker-complaints', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${state.sessionToken}`
+          },
+          body: JSON.stringify({
+            action: 'create',
+            reason: draft.reason,
+            description: draft.description,
+            proofAttachment: draft.proofAttachment,
+            targetType: draft.targetType,
+            targetId: draft.targetId,
+            targetLabel: draft.targetLabel,
+            reportedUserId: draft.reportedUserId,
+            reportedBrokerIdNumber: draft.reportedBrokerIdNumber,
+            reportedBrokerName: draft.reportedBrokerName,
+            sourceSection: draft.sourceSection
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Complaint submission failed.');
+        }
+        closePublicComplaintModal();
+        setSystemBanner(result?.message || 'Complaint submitted successfully.', 'success');
+      } catch (error) {
+        state.complaintModalSubmitting = false;
+        renderPublicComplaintModal();
+        if (/missing or invalid/i.test(error?.message || '')) {
+          clearBrokerSessionState();
+          closePublicComplaintModal();
+          openAuthModal('signin');
+        }
+        setSystemBanner(error?.message || 'Complaint submission failed.', 'error');
+      }
+    }
+
+    function initPublicComplaintModal() {
+      const overlay = document.getElementById('publicComplaintModal');
+      if (!overlay || overlay.dataset.ready === 'true') return;
+      overlay.addEventListener('click', event => {
+        if (event.target === overlay) {
+          closePublicComplaintModal();
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.complaintModalOpen) {
+          closePublicComplaintModal();
+        }
+      });
+      overlay.dataset.ready = 'true';
     }
 
     function normalizeBrokerIdInput(value) {
@@ -3193,6 +3558,13 @@
               <path d="m13 6 6 6-6 6"></path>
             </svg>
           `;
+        case 'report':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4v16"></path>
+              <path d="M5 5h9l1.5 3H19l-1.5 4H5"></path>
+            </svg>
+          `;
       }
       return '';
     }
@@ -3242,6 +3614,12 @@
             tone: 'ghost',
             onclick: `openBrokerEmail('${String(listing.brokerEmail).replace(/'/g, '%27')}')`
           }) : ''}
+          ${renderConnectorActionButton({
+            label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
+            icon: 'report',
+            tone: 'ghost',
+            onclick: `openRecordComplaint('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`
+          })}
         </div>
       `;
     }
@@ -3373,6 +3751,14 @@
           ${renderBcpBrokerIdentity(selected)}
           <div class="connector-detail-grid">
             <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
+          </div>
+          <div class="connector-detail-toolbar">
+            ${renderConnectorActionButton({
+              label: 'Report Broker',
+              icon: 'report',
+              tone: 'ghost',
+              onclick: `openBrokerComplaint('${sectionName}', '${selected.id}')`
+            })}
           </div>
         </div>
       `;
@@ -4029,6 +4415,7 @@
         if (redirectIncomingAuthLink()) {
           return;
         }
+        initPublicComplaintModal();
         handleAuthReturnMessage();
         const authenticated = await verifyBrokerSession();
         const showDashboardButton = true;

@@ -1382,6 +1382,8 @@ export function sanitizePublicListing(row) {
   const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
+    brokerUuid: normalizeText(row.broker_uuid),
+    brokerIdNumber: normalizeText(row.broker_id_number),
     brokerName: row.broker_display_name,
     brokerMobile: row.broker_mobile,
     brokerLastActivity: normalizeText(row.broker_last_activity),

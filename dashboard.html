@@ -4785,6 +4785,241 @@
         width: 100%;
       }
     }
+
+    .complaint-center-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .complaint-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .complaint-summary-card,
+    .complaint-center-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      background: #FFFFFF;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .complaint-summary-card small,
+    .complaint-empty-state small,
+    .complaint-record-meta small {
+      display: block;
+      color: #64748B;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .complaint-summary-card strong {
+      display: block;
+      color: #0F172A;
+      font-size: 1.45rem;
+      font-weight: 800;
+    }
+
+    .complaint-summary-card span {
+      display: block;
+      margin-top: 6px;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+
+    .complaint-center-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .complaint-center-head-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .complaint-center-head-copy h3 {
+      margin: 0;
+      color: #0F172A;
+      font-size: 1rem;
+    }
+
+    .complaint-center-head-copy p {
+      margin: 0;
+      color: #64748B;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .complaint-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .complaint-record {
+      border: 1px solid #E5E7EB;
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: #FFFFFF;
+      display: grid;
+      gap: 12px;
+    }
+
+    .complaint-record-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .complaint-record-headline {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .complaint-record-headline strong {
+      color: #0F172A;
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+
+    .complaint-record-headline span,
+    .complaint-record-body,
+    .complaint-record-meta span {
+      color: #475569;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .complaint-record-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px 14px;
+    }
+
+    .complaint-record-proof {
+      color: #B7791F;
+      font-weight: 600;
+    }
+
+    .complaint-empty-state {
+      border: 1px dashed #D7DEE7;
+      border-radius: 16px;
+      padding: 20px;
+      background: #F8FAFC;
+      display: grid;
+      gap: 6px;
+    }
+
+    .complaint-empty-state strong {
+      color: #0F172A;
+    }
+
+    .complaint-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .complaint-modal-card {
+      width: min(680px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+    }
+
+    .complaint-modal-shell {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .complaint-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .complaint-modal-head h3 {
+      margin: 4px 0 0;
+      color: #0F172A;
+      font-size: 1.1rem;
+    }
+
+    .complaint-modal-copy {
+      margin: 0;
+      color: #64748B;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .complaint-context-grid,
+    .complaint-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .complaint-context-card,
+    .complaint-form-section {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 16px;
+      background: #F8FAFC;
+      display: grid;
+      gap: 12px;
+    }
+
+    .complaint-form-section.is-full {
+      grid-column: 1 / -1;
+    }
+
+    .complaint-upload-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .complaint-upload-note {
+      color: #64748B;
+      font-size: 0.86rem;
+    }
+
+    .complaint-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    body.complaint-modal-open {
+      overflow: hidden;
+    }
+
+    @media (max-width: 860px) {
+      .complaint-context-grid,
+      .complaint-form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -4869,6 +5104,7 @@
           <button class="btn" data-section="leads" onclick="openSection('leads')"><span class="menu-label">Requirements</span><span class="menu-sub">Demand / lead workflow</span></button>
           <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">Listings</span><span class="menu-sub">Inventory / availability</span></button>
           <button class="btn" data-section="distress" onclick="openSection('distress')"><span class="menu-label">Distress Deals</span><span class="menu-sub">Urgent discounted stock</span></button>
+          <button class="btn" data-section="complaints" onclick="openSection('complaints')"><span class="menu-label">Complaint Center</span><span class="menu-sub">Reports / review status</span></button>
           <button class="btn" data-section="settings" onclick="openSection('settings')"><span class="menu-label">Settings</span><span class="menu-sub">Account / controls</span></button>
         </div>
       </aside>
@@ -5579,6 +5815,16 @@
         <div class="item-list" id="distressList"></div>
       </section>
 
+      <section class="section" id="complaints-section">
+        <div class="section-head">
+          <div>
+            <h2>Complaint Center</h2>
+            <p>Track every report you submit for listings, requirements, and broker accounts.</p>
+          </div>
+        </div>
+        <div id="complaintsCard"></div>
+      </section>
+
       <section class="section" id="profile-section">
         <div class="section-head">
           <div>
@@ -5597,6 +5843,12 @@
         <div id="settingsCard"></div>
       </section>
     </main>
+  </div>
+
+  <div class="complaint-modal-backdrop hidden" id="dashboardComplaintModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardComplaintModalTitle">
+    <div class="complaint-modal-card" id="dashboardComplaintModalCard">
+      <div id="dashboardComplaintModalContent"></div>
+    </div>
   </div>
 
   <script src="assets/dashboard-lead-config.js"></script>
@@ -5668,6 +5920,7 @@
       properties: [],
       followUps: [],
       sharedListings: [],
+      complaints: [],
       notifications: [],
       aiMatches: [],
       brokerActivity: {
@@ -5704,6 +5957,11 @@
       profileStorageKey: '',
       isEditingProfile: false,
       profileSavePending: false,
+      complaintsLoading: false,
+      complaintsError: '',
+      complaintDraft: null,
+      complaintModalOpen: false,
+      complaintModalSubmitting: false,
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
@@ -5732,6 +5990,13 @@
     let brokerActivityHeartbeatTimer = null;
     const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
+    const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
+    const COMPLAINT_STATUS_LABELS = {
+      new: 'New',
+      'under-review': 'Under Review',
+      resolved: 'Resolved',
+      rejected: 'Rejected'
+    };
 
     const DISPLAY_SEPARATOR = ' · ';
 
@@ -7222,6 +7487,397 @@
       };
     }
 
+    function formatComplaintStatusLabel(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      return COMPLAINT_STATUS_LABELS[normalized] || 'New';
+    }
+
+    function getComplaintTargetTypeLabel(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (normalized === 'listing') return 'Listing';
+      if (normalized === 'requirement') return 'Requirement';
+      if (normalized === 'broker') return 'Broker';
+      return 'General';
+    }
+
+    function getComplaintSourceLabel(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (normalized === 'connector') return 'Broker Connector';
+      if (normalized === 'profile') return 'Profile';
+      if (normalized === 'distress') return 'Distress Deals';
+      if (normalized === 'listing') return 'Listings';
+      if (normalized === 'requirement') return 'Requirements';
+      return 'Broker Desk';
+    }
+
+    function getDefaultComplaintDraft(context = {}) {
+      return {
+        reason: '',
+        description: '',
+        proofAttachment: null,
+        targetType: String(context?.targetType || '').trim().toLowerCase(),
+        targetId: String(context?.targetId || '').trim(),
+        targetLabel: String(context?.targetLabel || '').trim(),
+        reportedUserId: String(context?.reportedUserId || '').trim(),
+        reportedBrokerIdNumber: String(context?.reportedBrokerIdNumber || '').trim(),
+        reportedBrokerName: String(context?.reportedBrokerName || '').trim(),
+        sourceSection: String(context?.sourceSection || state.activeSection || 'dashboard').trim().toLowerCase(),
+        title: String(context?.title || 'Report record').trim(),
+        copy: String(context?.copy || 'Tell us what is wrong and our admin team will review it.').trim()
+      };
+    }
+
+    function countComplaintsByStatus(status) {
+      return state.complaints.filter(item => String(item?.normalizedStatus || item?.status || '').trim().toLowerCase() === status).length;
+    }
+
+    function syncComplaintModalBodyLock() {
+      document.body.classList.toggle('complaint-modal-open', Boolean(state.complaintModalOpen));
+    }
+
+    function closeComplaintComposer() {
+      state.complaintModalOpen = false;
+      state.complaintModalSubmitting = false;
+      state.complaintDraft = null;
+      renderComplaintModal();
+      syncComplaintModalBodyLock();
+    }
+
+    function openComplaintComposer(context = {}) {
+      state.complaintDraft = getDefaultComplaintDraft(context);
+      state.complaintModalSubmitting = false;
+      state.complaintModalOpen = true;
+      renderComplaintModal();
+      syncComplaintModalBodyLock();
+    }
+
+    function openLeadComplaint(id) {
+      const lead = state.leads.find(item => String(item.id) === String(id));
+      if (!lead) {
+        setStatus('Requirement could not be loaded for reporting.', 'error');
+        return;
+      }
+      openComplaintComposer({
+        targetType: 'requirement',
+        targetId: lead.id,
+        targetLabel: `${getLeadClientPurposeLabel(lead.clientPurpose)} - ${lead.propertyType || 'Requirement'}`,
+        reportedUserId: state.broker?.id || '',
+        reportedBrokerIdNumber: state.broker?.brokerIdNumber || state.broker?.broker_id_number || '',
+        reportedBrokerName: state.broker?.fullName || state.broker?.name || '',
+        sourceSection: 'requirement',
+        title: 'Report Requirement',
+        copy: 'Submit a private complaint about this requirement. Admin will review the details without changing your workflow automatically.'
+      });
+    }
+
+    function openPropertyComplaint(id, panelType = 'listing') {
+      const property = state.properties.find(item => String(item.id) === String(id));
+      if (!property) {
+        setStatus('Listing could not be loaded for reporting.', 'error');
+        return;
+      }
+      openComplaintComposer({
+        targetType: 'listing',
+        targetId: property.id,
+        targetLabel: `${getPropertyPurposeLabel(property.purpose)} - ${property.propertyType || 'Listing'}`,
+        reportedUserId: state.broker?.id || '',
+        reportedBrokerIdNumber: state.broker?.brokerIdNumber || state.broker?.broker_id_number || '',
+        reportedBrokerName: state.broker?.fullName || state.broker?.name || '',
+        sourceSection: panelType === 'distress' ? 'distress' : 'listing',
+        title: panelType === 'distress' ? 'Report Distress Deal' : 'Report Listing',
+        copy: 'Explain the issue clearly so admin can review the record and any linked broker details.'
+      });
+    }
+
+    function openBrokerComplaintFromProfile() {
+      const broker = getActiveBrokerProfile();
+      openComplaintComposer({
+        targetType: 'broker',
+        targetId: broker.id || state.broker?.id || '',
+        targetLabel: broker.fullName || broker.email || 'Broker account',
+        reportedUserId: broker.id || state.broker?.id || '',
+        reportedBrokerIdNumber: broker.brokerIdNumber || state.broker?.brokerIdNumber || '',
+        reportedBrokerName: broker.fullName || '',
+        sourceSection: 'profile',
+        title: 'Report Broker Account',
+        copy: 'Use this only if you need admin help reviewing or flagging this broker account.'
+      });
+    }
+
+    function updateComplaintDraftField(field, value) {
+      if (!state.complaintDraft) return;
+      state.complaintDraft[field] = value;
+    }
+
+    function getComplaintTargetSummary(draft) {
+      if (!draft) return 'No target selected';
+      return draft.targetLabel || `${getComplaintTargetTypeLabel(draft.targetType)} ${draft.targetId || ''}`.trim() || 'No target selected';
+    }
+
+    function renderComplaintCenter() {
+      const target = document.getElementById('complaintsCard');
+      if (!target) return;
+
+      if (state.complaintsLoading && !state.complaints.length) {
+        target.innerHTML = `
+          <div class="complaint-center-shell">
+            <div class="complaint-summary-grid">
+              <div class="complaint-summary-card"><small>All</small><strong>--</strong><span>Loading complaints</span></div>
+              <div class="complaint-summary-card"><small>New</small><strong>--</strong><span>Loading complaints</span></div>
+              <div class="complaint-summary-card"><small>Under Review</small><strong>--</strong><span>Loading complaints</span></div>
+              <div class="complaint-summary-card"><small>Resolved</small><strong>--</strong><span>Loading complaints</span></div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.complaintsError) {
+        target.innerHTML = `
+          <div class="complaint-center-shell">
+            <div class="complaint-center-card">
+              <div class="complaint-empty-state">
+                <small>Complaint Center</small>
+                <strong>Complaints could not be loaded</strong>
+                <span>${escapeHtml(state.complaintsError)}</span>
+                <div><button class="btn btn-secondary btn-tiny" type="button" onclick="loadBrokerComplaints(true)">Retry</button></div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const complaints = Array.isArray(state.complaints) ? state.complaints : [];
+      target.innerHTML = `
+        <div class="complaint-center-shell">
+          <div class="complaint-summary-grid">
+            <div class="complaint-summary-card"><small>Total Complaints</small><strong>${complaints.length}</strong><span>All reports you submitted</span></div>
+            <div class="complaint-summary-card"><small>New</small><strong>${countComplaintsByStatus('new')}</strong><span>Waiting for review</span></div>
+            <div class="complaint-summary-card"><small>Under Review</small><strong>${countComplaintsByStatus('under-review')}</strong><span>Currently with admin</span></div>
+            <div class="complaint-summary-card"><small>Resolved</small><strong>${countComplaintsByStatus('resolved')}</strong><span>Completed reports</span></div>
+          </div>
+          <div class="complaint-center-card">
+            <div class="complaint-center-head">
+              <div class="complaint-center-head-copy">
+                <h3>Submitted Complaints</h3>
+                <p>Use report actions from listings, requirements, or your broker account to create a complaint. This center tracks the latest status.</p>
+              </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="loadBrokerComplaints(true)">${state.complaintsLoading ? 'Refreshing...' : 'Refresh'}</button>
+            </div>
+            ${complaints.length ? `
+              <div class="complaint-list">
+                ${complaints.map(item => `
+                  <div class="complaint-record">
+                    <div class="complaint-record-head">
+                      <div class="complaint-record-headline">
+                        <strong>${escapeHtml(item.reason || 'Complaint')}</strong>
+                        <span>${escapeHtml(getComplaintTargetSummary(item))}</span>
+                      </div>
+                      <span class="badge ${badgeClass(item.normalizedStatus)}">${escapeHtml(formatComplaintStatusLabel(item.normalizedStatus))}</span>
+                    </div>
+                    <div class="complaint-record-body">${escapeHtml(item.displayMessage || 'No complaint details were added.')}</div>
+                    <div class="complaint-record-meta">
+                      <div><small>Type</small><span>${escapeHtml(getComplaintTargetTypeLabel(item.targetType))}</span></div>
+                      <div><small>Submitted</small><span>${escapeHtml(formatDate(item.created_at || item.createdAt || ''))}</span></div>
+                      <div><small>Source</small><span>${escapeHtml(getComplaintSourceLabel(item.sourceSection))}</span></div>
+                      <div><small>Proof</small><span class="${item.proofAttachment?.dataUrl ? 'complaint-record-proof' : ''}">${item.proofAttachment?.dataUrl ? 'Attached' : 'No proof uploaded'}</span></div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            ` : `
+              <div class="complaint-empty-state">
+                <small>No Complaints Yet</small>
+                <strong>Your complaint center is clear</strong>
+                <span>Reports you submit from listings, requirements, or broker account views will appear here with their review status.</span>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadBrokerComplaints(showStatus = false) {
+      state.complaintsLoading = true;
+      state.complaintsError = '';
+      renderComplaintCenter();
+      try {
+        const response = await fetch('/api/broker-complaints', {
+          method: 'GET',
+          headers: apiHeaders()
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Complaint center failed to load.');
+        }
+        state.complaints = Array.isArray(result?.complaints) ? result.complaints : [];
+        if (showStatus) {
+          setStatus('Complaint Center refreshed.', 'success');
+        }
+      } catch (error) {
+        state.complaintsError = error?.message || 'Complaint center failed to load.';
+      } finally {
+        state.complaintsLoading = false;
+        renderComplaintCenter();
+      }
+    }
+
+    function renderComplaintModal() {
+      const backdrop = document.getElementById('dashboardComplaintModalBackdrop');
+      const content = document.getElementById('dashboardComplaintModalContent');
+      if (!backdrop || !content) return;
+
+      if (!state.complaintModalOpen || !state.complaintDraft) {
+        backdrop.classList.add('hidden');
+        content.innerHTML = '';
+        return;
+      }
+
+      const draft = state.complaintDraft;
+      backdrop.classList.remove('hidden');
+      content.innerHTML = `
+        <form class="complaint-modal-shell" onsubmit="submitDashboardComplaint(event)">
+          <div class="complaint-modal-head">
+            <div>
+              <div class="settings-section-kicker">Complaint Center</div>
+              <h3 id="dashboardComplaintModalTitle">${escapeHtml(draft.title || 'Submit Complaint')}</h3>
+              <p class="complaint-modal-copy">${escapeHtml(draft.copy || 'Tell us what is wrong and our admin team will review it.')}</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeComplaintComposer()">Close</button>
+          </div>
+          <div class="complaint-context-grid">
+            <div class="complaint-context-card">
+              <small>Target Type</small>
+              <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
+              <span>${escapeHtml(getComplaintTargetSummary(draft))}</span>
+            </div>
+            <div class="complaint-context-card">
+              <small>Reported Broker</small>
+              <strong>${escapeHtml(draft.reportedBrokerName || 'Broker account')}</strong>
+              <span>${escapeHtml(draft.reportedBrokerIdNumber || 'No public broker ID')}</span>
+            </div>
+          </div>
+          <div class="complaint-form-grid">
+            <div class="complaint-form-section">
+              <label class="small" for="dashboardComplaintReason">Reason</label>
+              <select id="dashboardComplaintReason" onchange="updateComplaintDraftField('reason', this.value)">
+                <option value="">Select reason</option>
+                ${COMPLAINT_REASON_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${draft.reason === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="complaint-form-section">
+              <label class="small" for="dashboardComplaintProof">Optional Proof</label>
+              <div class="complaint-upload-row">
+                <input id="dashboardComplaintProof" type="file" accept="image/*,application/pdf" class="crm-hidden">
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('dashboardComplaintProof').click()">Upload Proof</button>
+                <span class="complaint-upload-note">${escapeHtml(draft.proofAttachment?.name || 'Images or PDF up to 2 MB')}</span>
+              </div>
+            </div>
+            <div class="complaint-form-section is-full">
+              <label class="small" for="dashboardComplaintDescription">Description</label>
+              <textarea id="dashboardComplaintDescription" rows="6" placeholder="Explain the issue clearly so admin can review it quickly." oninput="updateComplaintDraftField('description', this.value)">${escapeHtml(draft.description || '')}</textarea>
+            </div>
+          </div>
+          <div class="complaint-modal-actions">
+            <button class="btn btn-secondary" type="button" onclick="closeComplaintComposer()" ${state.complaintModalSubmitting ? 'disabled' : ''}>Cancel</button>
+            <button class="btn btn-primary" type="submit" ${state.complaintModalSubmitting ? 'disabled' : ''}>${state.complaintModalSubmitting ? 'Submitting...' : 'Submit Complaint'}</button>
+          </div>
+        </form>
+      `;
+
+      document.getElementById('dashboardComplaintProof')?.addEventListener('change', handleDashboardComplaintProofSelection);
+    }
+
+    async function handleDashboardComplaintProofSelection(event) {
+      const file = event?.target?.files?.[0];
+      if (!state.complaintDraft) return;
+      if (!file) {
+        state.complaintDraft.proofAttachment = null;
+        renderComplaintModal();
+        return;
+      }
+      if (file.size > (2 * 1024 * 1024)) {
+        setStatus('Proof upload must be 2 MB or smaller.', 'error');
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = loadEvent => {
+        state.complaintDraft.proofAttachment = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataUrl: String(loadEvent?.target?.result || '')
+        };
+        renderComplaintModal();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function submitDashboardComplaint(event) {
+      event?.preventDefault?.();
+      if (!state.complaintDraft || state.complaintModalSubmitting) return;
+      const draft = state.complaintDraft;
+      if (!draft.reason) {
+        setStatus('Select a complaint reason.', 'error');
+        return;
+      }
+      if (String(draft.description || '').trim().length < 10) {
+        setStatus('Add a brief complaint description.', 'error');
+        return;
+      }
+      state.complaintModalSubmitting = true;
+      renderComplaintModal();
+      try {
+        const response = await fetch('/api/broker-complaints', {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify({
+            action: 'create',
+            reason: draft.reason,
+            description: draft.description,
+            proofAttachment: draft.proofAttachment,
+            targetType: draft.targetType,
+            targetId: draft.targetId,
+            targetLabel: draft.targetLabel,
+            reportedUserId: draft.reportedUserId,
+            reportedBrokerIdNumber: draft.reportedBrokerIdNumber,
+            reportedBrokerName: draft.reportedBrokerName,
+            sourceSection: draft.sourceSection
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Complaint submission failed.');
+        }
+        setStatus(result?.message || 'Complaint submitted successfully.', 'success');
+        await loadBrokerComplaints();
+        closeComplaintComposer();
+      } catch (error) {
+        state.complaintModalSubmitting = false;
+        renderComplaintModal();
+        setStatus(error?.message || 'Complaint submission failed.', 'error');
+      }
+    }
+
+    function initDashboardComplaintModal() {
+      const backdrop = document.getElementById('dashboardComplaintModalBackdrop');
+      const card = document.getElementById('dashboardComplaintModalCard');
+      if (!backdrop || !card || backdrop.dataset.ready === 'true') return;
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) {
+          closeComplaintComposer();
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.complaintModalOpen) {
+          closeComplaintComposer();
+        }
+      });
+      backdrop.dataset.ready = 'true';
+    }
+
     function getBrokerActivityStatusInfo(lastActivity) {
       const timestamp = normalizeText(lastActivity);
       const parsed = timestamp ? new Date(timestamp).getTime() : NaN;
@@ -7463,8 +8119,10 @@
       renderFollowups();
       renderProgress();
       renderProfile();
+      renderComplaintCenter();
       renderSettings();
       populateFollowupEntities();
+      await loadBrokerComplaints();
     }
 
     async function dashboardAction(payload, successMessage) {
@@ -7965,6 +8623,7 @@
                   <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()" ${state.profileSavePending ? 'disabled' : ''}>Cancel</button>
                   <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()" ${state.profileSavePending ? 'disabled' : ''}>${state.profileSavePending ? 'Saving...' : 'Save Profile'}</button>
                 ` : `
+                  <button class="btn btn-secondary" type="button" onclick="openBrokerComplaintFromProfile()">Report Broker</button>
                   <button class="btn btn-primary" type="button" onclick="beginProfileEdit()">Edit Profile</button>
                 `}
               </div>
@@ -9702,8 +10361,10 @@
       renderFollowups();
       renderProgress();
       renderProfile();
+      renderComplaintCenter();
       renderSettings();
       populateFollowupEntities();
+      await loadBrokerComplaints();
     }
 
     function renderOverview() {
@@ -11806,6 +12467,13 @@
               <path d="M14 11v6"></path>
             </svg>
           `;
+        case 'report':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4v16"></path>
+              <path d="M5 5h9l1.5 3H19l-1.5 4H5"></path>
+            </svg>
+          `;
         default:
           return '';
       }
@@ -11869,6 +12537,12 @@
             tone: 'danger',
             onclick: `deleteLead(${lead.id})`
           })}
+          ${renderRecordActionButton({
+            label: 'Report',
+            icon: 'report',
+            tone: 'secondary',
+            onclick: `openLeadComplaint(${lead.id})`
+          })}
         </div>
       `;
     }
@@ -11920,6 +12594,12 @@
             icon: 'delete',
             tone: 'danger',
             onclick: `deleteProperty(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'Report',
+            icon: 'report',
+            tone: 'secondary',
+            onclick: `openPropertyComplaint(${property.id}, '${property.isDistress ? 'distress' : 'listing'}')`
           })}
         </div>
       `;
@@ -12444,6 +13124,7 @@
     (async function init() {
       try {
         initDashboardCallPopover();
+        initDashboardComplaintModal();
         wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
@@ -12451,6 +13132,7 @@
         syncDashboardTaxonomyOptions();
         syncFilterInputs('leads');
         syncFilterInputs('properties');
+        renderComplaintCenter();
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();

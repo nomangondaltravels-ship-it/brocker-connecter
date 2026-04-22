@@ -1836,6 +1836,23 @@
     }
 
     function findBrokerIdByComplaint(item) {
+      const metaBrokerId = String(item?.reportedBrokerIdNumber || '').trim();
+      if (metaBrokerId) return metaBrokerId;
+
+      const metaBrokerName = String(item?.reportedBrokerName || '').trim().toLowerCase();
+      if (metaBrokerName) {
+        const namedAccount = adminBrokerAccounts.find(account =>
+          String(account.name || '').trim().toLowerCase() === metaBrokerName
+        );
+        if (namedAccount?.brokerId) return namedAccount.brokerId;
+      }
+
+      const reportedUserId = String(item?.reportedUserId || '').trim();
+      if (reportedUserId) {
+        const matchedAccount = adminBrokerAccounts.find(account => String(account.id || '').trim() === reportedUserId);
+        if (matchedAccount?.brokerId) return matchedAccount.brokerId;
+      }
+
       const brokerRef = String(item?.broker || '').trim().toLowerCase();
       if (!brokerRef) return '';
       const accounts = adminBrokerAccounts;
@@ -1883,11 +1900,39 @@
         ...item,
         rawMessage,
         displayMessage,
+        reason: meta.reason || 'Other',
         reporterBrokerId: meta.reporterBrokerId || '',
+        reporterUserId: meta.reporterUserId || '',
         reporterEmail: meta.reporterEmail || '',
         reporterName: meta.reporterName || '',
+        reportedUserId: meta.reportedUserId || '',
+        reportedBrokerIdNumber: meta.reportedBrokerIdNumber || '',
+        reportedBrokerName: meta.reportedBrokerName || '',
+        targetType: meta.targetType || '',
+        targetId: meta.targetId || '',
+        targetLabel: meta.targetLabel || '',
+        sourceSection: meta.sourceSection || '',
+        proofAttachment: meta.proofAttachment && typeof meta.proofAttachment === 'object' ? meta.proofAttachment : null,
         normalizedStatus
       };
+    }
+
+    function getComplaintTargetLabel(item) {
+      const targetType = String(item?.targetType || '').trim().toLowerCase();
+      if (!targetType) return 'General complaint';
+      if (targetType === 'listing') return 'Listing';
+      if (targetType === 'requirement') return 'Requirement';
+      if (targetType === 'broker') return 'Broker';
+      return targetType;
+    }
+
+    function renderComplaintProofLink(item) {
+      const proof = item?.proofAttachment;
+      if (!proof?.dataUrl) {
+        return '<span class="muted">No proof uploaded</span>';
+      }
+      const fileName = proof.name || 'Proof attachment';
+      return `<a class="admin-inline-link" href="${escapeHtml(proof.dataUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(fileName)}</a>`;
     }
 
     function getComplaintStatusMeta(status) {
@@ -2761,6 +2806,7 @@
       const reporterEmail = entry.item.reporterEmail || 'No reporter email';
       const linkedBrokerLabel = entry.item.broker || 'No broker';
       const submittedAt = formatAdminDateTime(entry.item.created_at);
+      const targetLabel = entry.item.targetLabel || `${getComplaintTargetLabel(entry.item)} ${entry.item.targetId || ''}`.trim();
       const complaintText = entry.item.displayMessage || entry.item.message || 'No complaint message provided.';
       return `
         <div class="admin-complaint-modal">
@@ -2804,6 +2850,8 @@
                 <div class="admin-detail-grid">
                   <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(reporterName)}</strong></div>
                   <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(reporterEmail)}</strong></div>
+                  <div class="admin-detail-cell"><small>Reason</small><strong>${escapeHtml(entry.item.reason || 'Other')}</strong></div>
+                  <div class="admin-detail-cell"><small>Source</small><strong>${escapeHtml(entry.item.sourceSection || 'Dashboard')}</strong></div>
                 </div>
               </div>
               <div class="admin-detail-section admin-complaint-section admin-complaint-card">
@@ -2811,7 +2859,17 @@
                 <div class="admin-detail-grid">
                   <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(linkedBrokerLabel)}</strong></div>
                   <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
+                  <div class="admin-detail-cell"><small>Broker Name</small><strong>${escapeHtml(entry.item.reportedBrokerName || '--')}</strong></div>
                 </div>
+              </div>
+            </div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Target</h4>
+              <div class="admin-detail-grid">
+                <div class="admin-detail-cell"><small>Type</small><strong>${escapeHtml(getComplaintTargetLabel(entry.item))}</strong></div>
+                <div class="admin-detail-cell"><small>Target</small><strong>${escapeHtml(targetLabel || 'Not provided')}</strong></div>
+                <div class="admin-detail-cell"><small>Target ID</small><strong>${escapeHtml(entry.item.targetId || '--')}</strong></div>
+                <div class="admin-detail-cell"><small>Proof</small><strong>${renderComplaintProofLink(entry.item)}</strong></div>
               </div>
             </div>
             <div class="admin-detail-section admin-complaint-section admin-complaint-card">
@@ -3320,6 +3378,7 @@
         const reporterEmail = entry.item.reporterEmail || 'No reporter email';
         const linkedBrokerLabel = entry.item.broker || 'No broker';
         const submittedAt = formatAdminDateTime(entry.item.created_at);
+        const targetLabel = entry.item.targetLabel || `${getComplaintTargetLabel(entry.item)} ${entry.item.targetId || ''}`.trim();
         const complaintText = entry.item.displayMessage || entry.item.message || 'No complaint message provided.';
         target.innerHTML = `
           <div class="admin-complaint-detail">
@@ -3360,6 +3419,8 @@
                 <div class="admin-detail-grid">
                   <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(reporterName)}</strong></div>
                   <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(reporterEmail)}</strong></div>
+                  <div class="admin-detail-cell"><small>Reason</small><strong>${escapeHtml(entry.item.reason || 'Other')}</strong></div>
+                  <div class="admin-detail-cell"><small>Source</small><strong>${escapeHtml(entry.item.sourceSection || 'Dashboard')}</strong></div>
                 </div>
               </div>
               <div class="admin-detail-section admin-complaint-section admin-complaint-card">
@@ -3367,7 +3428,17 @@
                 <div class="admin-detail-grid">
                   <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(linkedBrokerLabel)}</strong></div>
                   <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
+                  <div class="admin-detail-cell"><small>Broker Name</small><strong>${escapeHtml(entry.item.reportedBrokerName || '--')}</strong></div>
                 </div>
+              </div>
+            </div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Target</h4>
+              <div class="admin-detail-grid">
+                <div class="admin-detail-cell"><small>Type</small><strong>${escapeHtml(getComplaintTargetLabel(entry.item))}</strong></div>
+                <div class="admin-detail-cell"><small>Target</small><strong>${escapeHtml(targetLabel || 'Not provided')}</strong></div>
+                <div class="admin-detail-cell"><small>Target ID</small><strong>${escapeHtml(entry.item.targetId || '--')}</strong></div>
+                <div class="admin-detail-cell"><small>Proof</small><strong>${renderComplaintProofLink(entry.item)}</strong></div>
               </div>
             </div>
             <div class="admin-detail-section admin-complaint-section admin-complaint-card">
