@@ -1143,6 +1143,37 @@
       white-space: pre-wrap;
     }
 
+    body.admin-modal-open {
+      overflow: hidden;
+    }
+
+    .admin-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 5000;
+    }
+
+    .admin-modal-backdrop.hidden {
+      display: none;
+    }
+
+    .admin-modal-dialog {
+      width: min(760px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 0 28px 70px rgba(15, 23, 42, 0.24);
+      padding: 20px;
+    }
+
     .admin-note-list {
       display: grid;
       gap: 10px;
@@ -1409,6 +1440,12 @@
     </div>
   </div>
 
+  <div class="admin-modal-backdrop hidden" id="brokerAccountModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="brokerAccountModalTitle">
+    <div class="admin-modal-dialog" id="brokerAccountModalDialog">
+      <div id="brokerAccountModalContent"></div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const ADMIN_SESSION_KEY = 'admin_portal_session';
@@ -1591,6 +1628,7 @@
     }
 
     function showLogin() {
+      renderBrokerAccountModal(null);
       document.getElementById('loginView').style.display = 'block';
       document.getElementById('dashboardView').classList.remove('active');
       document.getElementById('logoutBtn').style.display = 'none';
@@ -2452,6 +2490,79 @@
       renderAdminWorkspace();
     }
 
+    function renderBrokerDetailMarkup(account, closeHandler = 'clearAdminSelection()') {
+      const approved = Boolean(account.approved);
+      const blocked = Boolean(account.blocked);
+      return `
+        <div class="admin-detail-header">
+          <div class="admin-detail-head-row">
+            <div class="admin-detail-copy">Broker Account</div>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="${closeHandler}">Close</button>
+          </div>
+          <h3 id="brokerAccountModalTitle">${escapeHtml(account.name || 'Broker')}</h3>
+          <div class="admin-detail-meta">
+            <span class="badge ${approved ? 'green' : 'gold'}">${approved ? 'Verified' : 'Pending'}</span>
+            <span class="badge ${blocked ? 'red' : 'blue'}">${blocked ? 'Blocked' : 'Active'}</span>
+            <span class="badge blue">${escapeHtml(account.brokerId || 'No Broker ID')}</span>
+          </div>
+          <div class="admin-detail-toolbar">
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${escapeHtml(account.brokerId)}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
+            <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${escapeHtml(account.brokerId)}')">${blocked ? 'Unblock Broker' : 'Block Broker'}</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${escapeHtml(account.brokerId)}')">Change Password</button>
+            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${escapeHtml(account.brokerId)}')">Delete Broker</button>
+          </div>
+        </div>
+        <div class="admin-detail-section">
+          <h4>Account Overview</h4>
+          <div class="admin-detail-grid">
+            <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(account.email || 'No email')}</strong></div>
+            <div class="admin-detail-cell"><small>Phone</small><strong>${escapeHtml(account.phone || 'No phone')}</strong></div>
+            <div class="admin-detail-cell"><small>Company</small><strong>${escapeHtml(account.company || '—')}</strong></div>
+            <div class="admin-detail-cell"><small>Joined</small><strong>${escapeHtml(formatAdminDateTime(account.createdAt))}</strong></div>
+          </div>
+        </div>
+        <div class="admin-detail-section">
+          <h4>Marketplace Activity</h4>
+          <div class="admin-detail-grid">
+            <div class="admin-detail-cell"><small>Requirements</small><strong>${account.summary.requirementCount}</strong></div>
+            <div class="admin-detail-cell"><small>Listings</small><strong>${account.summary.listingCount}</strong></div>
+            <div class="admin-detail-cell"><small>Total Shared</small><strong>${account.summary.sharedCount}</strong></div>
+            <div class="admin-detail-cell"><small>Access State</small><strong>${blocked ? 'Blocked from sign in and posting' : approved ? 'Active and verified' : 'Awaiting verification'}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderBrokerAccountModal(account = null) {
+      const backdrop = document.getElementById('brokerAccountModalBackdrop');
+      const content = document.getElementById('brokerAccountModalContent');
+      if (!backdrop || !content) return;
+      if (!account) {
+        backdrop.classList.add('hidden');
+        document.body.classList.remove('admin-modal-open');
+        content.innerHTML = '';
+        return;
+      }
+      content.innerHTML = renderBrokerDetailMarkup(account, 'clearAdminSelection()');
+      backdrop.classList.remove('hidden');
+      document.body.classList.add('admin-modal-open');
+    }
+
+    function initBrokerAccountModal() {
+      const backdrop = document.getElementById('brokerAccountModalBackdrop');
+      const dialog = document.getElementById('brokerAccountModalDialog');
+      if (!backdrop || !dialog || backdrop.dataset.ready === 'true') return;
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) clearAdminSelection();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !backdrop.classList.contains('hidden')) {
+          clearAdminSelection();
+        }
+      });
+      backdrop.dataset.ready = 'true';
+    }
+
     function getSelectedAdminItem(collections) {
       if (adminUiState.selectedType === 'broker') {
         return collections.brokers.find(item => item.key === adminUiState.selectedKey) || null;
@@ -2474,14 +2585,16 @@
       ensureAdminSelection(collections);
       const grid = document.getElementById('adminMainGrid');
       const selected = getSelectedAdminItem(collections);
+      const inlineSelected = selected && selected.type !== 'broker' ? selected : null;
       if (grid) {
-        grid.classList.toggle('no-detail', !selected);
-        grid.classList.toggle('has-detail', Boolean(selected));
+        grid.classList.toggle('no-detail', !inlineSelected);
+        grid.classList.toggle('has-detail', Boolean(inlineSelected));
       }
       renderBrokerApprovals(collections.brokers);
       renderPostLists(collections);
       renderComplaints(collections.complaints);
       renderAdminDetailPanel(collections);
+      renderBrokerAccountModal(selected && selected.type === 'broker' ? selected : null);
       flushAdminDetailScroll();
     }
 
@@ -2766,6 +2879,12 @@
       target.className = '';
 
       if (selected.type === 'broker') {
+        target.className = 'admin-detail-empty';
+        target.innerHTML = 'Select a requirement, listing, or complaint to review actions and full context here.';
+        return;
+      }
+
+      if (selected.type === 'broker') {
         const account = selected;
         const approved = Boolean(account.approved);
         const blocked = Boolean(account.blocked);
@@ -2931,6 +3050,7 @@
       }
     }
 
+    initBrokerAccountModal();
     restoreAdminSession();
   </script>
 </body>
