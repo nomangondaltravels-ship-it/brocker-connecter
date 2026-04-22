@@ -1723,6 +1723,36 @@
       border-radius: 10px;
     }
 
+    .connector-action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .connector-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .connector-action-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
     .connector-detail-toolbar .btn-primary,
     .connector-detail-toolbar .btn-green {
       background: #b58a1d !important;
@@ -1741,6 +1771,20 @@
       border-color: transparent !important;
       color: #64748b !important;
       box-shadow: none !important;
+    }
+
+    .row-open-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .row-open-action .btn {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
     }
 
     .btn-ghost:hover {
@@ -2683,43 +2727,112 @@
       return `${Math.max(1, Math.floor(diffHours / 24))}d`;
     }
 
-    function buildPublicActionButtons(listing, sectionName) {
-      const shareLink = buildListingLink(listing, sectionName);
-      const matchText = encodeURIComponent(prefilledMatchText(listing));
-      return `
-        <div class="row-actions" onclick="event.stopPropagation()">
-          <button class="action-icon-btn match" type="button" title="I Have Match" aria-label="I Have Match" onclick="sendMatchInterest('${listing.brokerMobile}', '${matchText}')">
+    function getConnectorActionIcon(icon) {
+      switch (icon) {
+        case 'whatsapp':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11.5A8.5 8.5 0 0 1 7.1 18.8L4 20l1.3-3A8.5 8.5 0 1 1 20 11.5Z"></path>
+              <path d="M9.6 8.9c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.7 1.8c.1.2.1.4-.1.6l-.5.7c.5.9 1.2 1.6 2.1 2.1l.7-.5c.2-.1.4-.1.6-.1l1.8.7c.3.1.4.3.4.5v.5c0 .2 0 .4-.4.6-.4.2-.9.4-1.5.3-1.3-.2-2.7-1-4-2.2s-2-2.7-2.2-4c-.1-.6.1-1.1.3-1.5Z"></path>
+            </svg>
+          `;
+        case 'call':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6.9 4.5h2.6l1.3 4.2-1.7 1.7a14.5 14.5 0 0 0 4.5 4.5l1.7-1.7 4.2 1.3v2.6a1.6 1.6 0 0 1-1.8 1.6A15.8 15.8 0 0 1 5.3 6.3 1.6 1.6 0 0 1 6.9 4.5Z"></path>
+            </svg>
+          `;
+        case 'match':
+          return `
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 7h7a4 4 0 0 1 0 8H8"></path>
               <path d="M16 17H9a4 4 0 0 1 0-8h7"></path>
               <path d="M12 6v12"></path>
             </svg>
-          </button>
-          <button class="action-icon-btn success" type="button" title="WhatsApp Broker" aria-label="WhatsApp Broker" onclick="showWhatsappPopover(this, '${listing.brokerMobile}', '${matchText}')">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 11.5A8.5 8.5 0 0 1 7.1 18.8L4 20l1.3-3A8.5 8.5 0 1 1 20 11.5Z"></path>
-              <path d="M9.6 8.9c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.7 1.8c.1.2.1.4-.1.6l-.5.7c.5.9 1.2 1.6 2.1 2.1l.7-.5c.2-.1.4-.1.6-.1l1.8.7c.3.1.4.3.4.5v.5c0 .2 0 .4-.4.6-.4.2-.9.4-1.5.3-1.3-.2-2.7-1-4-2.2s-2-2.7-2.2-4c-.1-.6.1-1.1.3-1.5Z"></path>
-            </svg>
-          </button>
-          <button class="action-icon-btn call" type="button" title="Call Broker" aria-label="Call Broker" onclick="showContactPopover(this, '${listing.brokerMobile}')">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M6.9 4.5h2.6l1.3 4.2-1.7 1.7a14.5 14.5 0 0 0 4.5 4.5l1.7-1.7 4.2 1.3v2.6a1.6 1.6 0 0 1-1.8 1.6A15.8 15.8 0 0 1 5.3 6.3 1.6 1.6 0 0 1 6.9 4.5Z"></path>
-            </svg>
-          </button>
-          ${listing.brokerEmail ? `
-            <button class="action-icon-btn" type="button" title="Email Broker" aria-label="Email Broker" onclick="openBrokerEmail('${String(listing.brokerEmail).replace(/'/g, '%27')}')">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 7.5h16v9H4z"></path>
-                <path d="m5 8 7 5 7-5"></path>
-              </svg>
-            </button>
-          ` : ''}
-          <button class="action-icon-btn share" type="button" title="Share Listing" aria-label="Share Listing" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">
+          `;
+        case 'share':
+          return `
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 16V5"></path>
               <path d="m7 10 5-5 5 5"></path>
               <path d="M5 19.5h14"></path>
             </svg>
+          `;
+        case 'email':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7.5h16v9H4z"></path>
+              <path d="m5 8 7 5 7-5"></path>
+            </svg>
+          `;
+        case 'open':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          `;
+      }
+      return '';
+    }
+
+    function renderConnectorActionButton({ label, icon, tone = 'secondary', onclick, disabled = false }) {
+      return `
+        <button class="btn connector-action-btn ${tone === 'ghost' ? 'btn-ghost' : tone === 'primary' ? 'btn-primary' : 'btn-secondary'}" type="button" ${disabled ? 'disabled' : ''} onclick="${onclick}">
+          ${getConnectorActionIcon(icon)}
+          <span>${escapeHtml(label)}</span>
+        </button>
+      `;
+    }
+
+    function renderConnectorDetailActions(listing, shareLink, matchText) {
+      return `
+        <div class="connector-action-bar">
+          ${renderConnectorActionButton({
+            label: 'WhatsApp',
+            icon: 'whatsapp',
+            tone: 'primary',
+            onclick: `showWhatsappPopover(this, '${listing.brokerMobile}', '${matchText}')`,
+            disabled: !listing.brokerMobile
+          })}
+          ${renderConnectorActionButton({
+            label: 'Call',
+            icon: 'call',
+            tone: 'secondary',
+            onclick: `showContactPopover(this, '${listing.brokerMobile}')`,
+            disabled: !listing.brokerMobile
+          })}
+          ${renderConnectorActionButton({
+            label: 'I Have Match',
+            icon: 'match',
+            tone: 'secondary',
+            onclick: `sendMatchInterest('${listing.brokerMobile}', '${matchText}')`,
+            disabled: !listing.brokerMobile
+          })}
+          ${renderConnectorActionButton({
+            label: 'Share',
+            icon: 'share',
+            tone: 'ghost',
+            onclick: `showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')`
+          })}
+          ${listing.brokerEmail ? renderConnectorActionButton({
+            label: 'Email',
+            icon: 'email',
+            tone: 'ghost',
+            onclick: `openBrokerEmail('${String(listing.brokerEmail).replace(/'/g, '%27')}')`
+          }) : ''}
+        </div>
+      `;
+    }
+
+    function buildPublicActionButtons(listing, sectionName) {
+      const selectionKey = getPublicSelectionKey(sectionName, listing);
+      const isSelected = state.selectedPublicListingKeys[sectionName] === selectionKey;
+      return `
+        <div class="row-open-action" onclick="event.stopPropagation()">
+          <button class="btn btn-ghost btn-tiny" type="button" onclick="selectPublicListing('${sectionName}', '${listing.id}')">
+            ${getConnectorActionIcon('open')}
+            <span>${isSelected ? 'Selected' : 'Open'}</span>
           </button>
         </div>
       `;
@@ -2799,11 +2912,7 @@
             <span>Shared by ${escapeHtml(selected.brokerName || 'Broker')}</span>
           </div>
           <div class="connector-detail-toolbar">
-            <button class="btn btn-green" type="button" onclick="showWhatsappPopover(this, '${selected.brokerMobile}', '${matchText}')">WhatsApp</button>
-            <button class="btn btn-secondary" type="button" onclick="showContactPopover(this, '${selected.brokerMobile}')">Call</button>
-            <button class="btn btn-secondary" type="button" onclick="sendMatchInterest('${selected.brokerMobile}', '${matchText}')">I Have Match</button>
-            ${selected.brokerEmail ? `<button class="btn btn-secondary" type="button" onclick="openBrokerEmail('${String(selected.brokerEmail).replace(/'/g, '%27')}')">Email</button>` : ''}
-            <button class="btn btn-ghost" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share</button>
+            ${renderConnectorDetailActions(selected, shareLink, matchText)}
           </div>
         </div>
         <div class="connector-detail-section">
@@ -2842,7 +2951,7 @@
           <div>Budget</div>
           <div>Status</div>
           <div>Updated</div>
-          <div>Actions</div>
+          <div>Open</div>
         </div>
         ${items.map((listing, index) => `
           <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(136px,1fr) minmax(140px,1fr) minmax(124px,0.88fr) minmax(124px,0.88fr) minmax(120px,0.86fr) minmax(112px,0.78fr) auto;">
@@ -2900,7 +3009,7 @@
           <div>Size</div>
           <div>Status</div>
           <div>Updated</div>
-          <div>Actions</div>
+          <div>Open</div>
         </div>
         ${items.map((listing, index) => `
           <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(132px,0.9fr) minmax(144px,0.98fr) minmax(128px,0.88fr) minmax(128px,0.88fr) minmax(120px,0.82fr) minmax(112px,0.82fr) minmax(110px,0.74fr) auto;">
@@ -3438,7 +3547,7 @@
     });
 
     document.addEventListener('click', event => {
-      if (!event.target.closest('.floating-card') && !event.target.closest('.btn-tiny') && !event.target.closest('.action-icon-btn')) {
+      if (!event.target.closest('.floating-card') && !event.target.closest('.btn-tiny') && !event.target.closest('.action-icon-btn') && !event.target.closest('.connector-action-btn')) {
         closeAllPopovers();
       }
       if (!event.target.closest('#publicSearchBox') && !event.target.closest('#publicSearchSuggestions')) {

@@ -3945,6 +3945,81 @@
       font-size: 0.78rem;
     }
 
+    .record-action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .record-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .record-action-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .record-action-btn.is-primary {
+      background: #b58a1d;
+      border-color: #b58a1d;
+      color: #ffffff;
+    }
+
+    .record-action-btn.is-secondary {
+      background: #ffffff;
+      border-color: rgba(148, 163, 184, 0.24);
+      color: #334155;
+    }
+
+    .record-action-btn.is-ghost {
+      background: transparent;
+      border-color: transparent;
+      color: #64748b;
+      box-shadow: none;
+    }
+
+    .record-action-btn.is-danger {
+      background: #ffffff;
+      border-color: rgba(239, 68, 68, 0.22);
+      color: #dc2626;
+    }
+
+    .record-secondary-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid #eef2f7;
+    }
+
+    .workspace-actions {
+      justify-content: flex-end;
+    }
+
+    .workspace-actions .record-quick-btn {
+      min-height: 32px !important;
+      padding: 0 10px !important;
+      font-size: 0.75rem !important;
+      border-radius: 10px !important;
+    }
+
     .detail-note {
       padding: 12px;
       border: 1px solid #eef2f7;
@@ -10074,6 +10149,182 @@
       if (distressNode) distressNode.innerHTML = renderOverviewMiniList(recentDistress, 'distress');
     }
 
+    function getRecordActionIcon(icon) {
+      switch (icon) {
+        case 'whatsapp':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11.5A8.5 8.5 0 0 1 7.1 18.8L4 20l1.3-3A8.5 8.5 0 1 1 20 11.5Z"></path>
+              <path d="M9.6 8.9c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .5.4l.7 1.8c.1.2.1.4-.1.6l-.5.7c.5.9 1.2 1.6 2.1 2.1l.7-.5c.2-.1.4-.1.6-.1l1.8.7c.3.1.4.3.4.5v.5c0 .2 0 .4-.4.6-.4.2-.9.4-1.5.3-1.3-.2-2.7-1-4-2.2s-2-2.7-2.2-4c-.1-.6.1-1.1.3-1.5Z"></path>
+            </svg>
+          `;
+        case 'call':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6.9 4.5h2.6l1.3 4.2-1.7 1.7a14.5 14.5 0 0 0 4.5 4.5l1.7-1.7 4.2 1.3v2.6a1.6 1.6 0 0 1-1.8 1.6A15.8 15.8 0 0 1 5.3 6.3 1.6 1.6 0 0 1 6.9 4.5Z"></path>
+            </svg>
+          `;
+        case 'match':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 7h7a4 4 0 0 1 0 8H8"></path>
+              <path d="M16 17H9a4 4 0 0 1 0-8h7"></path>
+              <path d="M12 6v12"></path>
+            </svg>
+          `;
+        case 'share':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V5"></path>
+              <path d="m7 10 5-5 5 5"></path>
+              <path d="M5 19.5h14"></path>
+            </svg>
+          `;
+        case 'edit':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"></path>
+            </svg>
+          `;
+        case 'archive':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 7h18"></path>
+              <path d="M5 7l1 12h12l1-12"></path>
+              <path d="M9 11h6"></path>
+              <path d="M9 3h6l1 4H8l1-4Z"></path>
+            </svg>
+          `;
+        case 'delete':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18"></path>
+              <path d="M8 6V4h8v2"></path>
+              <path d="M19 6l-1 14H6L5 6"></path>
+              <path d="M10 11v6"></path>
+              <path d="M14 11v6"></path>
+            </svg>
+          `;
+        default:
+          return '';
+      }
+    }
+
+    function renderRecordActionButton({ label, icon, tone = 'secondary', onclick, disabled = false, extraClass = '' }) {
+      const className = ['btn', 'btn-tiny', 'record-action-btn', `is-${tone}`, extraClass].filter(Boolean).join(' ');
+      return `
+        <button class="${className}" type="button" ${disabled ? 'disabled' : ''} onclick="${onclick}">
+          ${getRecordActionIcon(icon)}
+          <span>${escapeHtml(label)}</span>
+        </button>
+      `;
+    }
+
+    function renderLeadActionBar(lead, phoneAvailable) {
+      return `
+        <div class="record-action-bar">
+          ${renderRecordActionButton({
+            label: 'WhatsApp',
+            icon: 'whatsapp',
+            tone: 'primary',
+            onclick: `contactLead(${lead.id}, 'whatsapp')`,
+            disabled: !phoneAvailable
+          })}
+          ${renderRecordActionButton({
+            label: 'Call',
+            icon: 'call',
+            tone: 'secondary',
+            onclick: `contactLead(${lead.id}, 'call', this)`,
+            disabled: !phoneAvailable
+          })}
+          ${renderRecordActionButton({
+            label: lead.isListedPublic ? 'Unlist' : 'Share',
+            icon: 'share',
+            tone: 'ghost',
+            onclick: `toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})`
+          })}
+        </div>
+      `;
+    }
+
+    function renderLeadSecondaryActions(lead) {
+      return `
+        <div class="record-secondary-actions">
+          ${renderRecordActionButton({
+            label: 'Edit',
+            icon: 'edit',
+            tone: 'secondary',
+            onclick: `editLead(${lead.id})`
+          })}
+          ${renderRecordActionButton({
+            label: lead.isArchived ? 'Restore' : 'Archive',
+            icon: 'archive',
+            tone: 'secondary',
+            onclick: lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'Delete',
+            icon: 'delete',
+            tone: 'danger',
+            onclick: `deleteLead(${lead.id})`
+          })}
+        </div>
+      `;
+    }
+
+    function renderPropertyActionBar(property, phoneAvailable) {
+      return `
+        <div class="record-action-bar">
+          ${renderRecordActionButton({
+            label: 'WhatsApp',
+            icon: 'whatsapp',
+            tone: 'primary',
+            onclick: `contactPropertyOwner(${property.id}, 'whatsapp')`,
+            disabled: !phoneAvailable
+          })}
+          ${renderRecordActionButton({
+            label: 'Call',
+            icon: 'call',
+            tone: 'secondary',
+            onclick: `contactPropertyOwner(${property.id}, 'call', this)`,
+            disabled: !phoneAvailable
+          })}
+          ${renderRecordActionButton({
+            label: property.isListedPublic ? 'Unlist' : 'Share',
+            icon: 'share',
+            tone: 'ghost',
+            onclick: `toggleListItem('property', ${property.id}, ${property.isListedPublic})`
+          })}
+        </div>
+      `;
+    }
+
+    function renderPropertySecondaryActions(property) {
+      return `
+        <div class="record-secondary-actions">
+          ${renderRecordActionButton({
+            label: 'Edit',
+            icon: 'edit',
+            tone: 'secondary',
+            onclick: `editProperty(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: property.isArchived ? 'Restore' : 'Archive',
+            icon: 'archive',
+            tone: 'secondary',
+            onclick: property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'Delete',
+            icon: 'delete',
+            tone: 'danger',
+            onclick: `deleteProperty(${property.id})`
+          })}
+        </div>
+      `;
+    }
+
     function renderLeadDetailPanel(lead) {
       if (!lead) {
         return `
@@ -10098,14 +10349,8 @@
             ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
           </div>
         </div>
-        <div class="detail-toolbar">
-          <button class="btn btn-primary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
-          <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
-          <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
-          <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-secondary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
-          <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
-          <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
-        </div>
+        ${renderLeadActionBar(lead, phoneAvailable)}
+        ${renderLeadSecondaryActions(lead)}
         <div class="detail-section">
           <h4>Overview</h4>
           <div class="detail-grid">
@@ -10197,14 +10442,8 @@
             ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
           </div>
         </div>
-        <div class="detail-toolbar">
-          <button class="btn btn-primary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
-          <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
-          <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
-          <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-secondary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
-          <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
-          <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-        </div>
+        ${renderPropertyActionBar(property, ownerPhone)}
+        ${renderPropertySecondaryActions(property)}
         <div class="detail-section">
           <h4>Overview</h4>
           <div class="detail-grid">
@@ -10349,18 +10588,13 @@
                           <span>${escapeHtml(`${lead.callCount || 0} calls / ${lead.whatsappCount || 0} WA`)}</span>
                         </div>
                         <div class="workspace-actions">
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editLead(${lead.id})">Edit</button>
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="event.stopPropagation();contactLead(${lead.id}, 'call', this)">Call</button>
-                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="event.stopPropagation();contactLead(${lead.id}, 'whatsapp')">WA</button>
-                          <details class="crm-row-more" onclick="event.stopPropagation()">
-                            <summary class="crm-row-more-toggle">More</summary>
-                            <div class="crm-row-more-menu">
-                              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecord(${lead.id})">Matches</button>
-                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
-                            </div>
-                          </details>
+                          ${renderRecordActionButton({
+                            label: 'Edit',
+                            icon: 'edit',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();editLead(${lead.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
                         </div>
                       </div>
                     `;
@@ -10453,18 +10687,13 @@
                           <span>${property.isDistress ? 'Distress deal' : 'Standard inventory'}</span>
                         </div>
                         <div class="workspace-actions">
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editProperty(${property.id})">Edit</button>
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'call', this)">Call</button>
-                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'whatsapp')">WA</button>
-                          <details class="crm-row-more" onclick="event.stopPropagation()">
-                            <summary class="crm-row-more-toggle">More</summary>
-                            <div class="crm-row-more-menu">
-                              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecord(${property.id}, 'properties')">Matches</button>
-                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-                            </div>
-                          </details>
+                          ${renderRecordActionButton({
+                            label: 'Edit',
+                            icon: 'edit',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();editProperty(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
                         </div>
                       </div>
                     `;
@@ -10557,18 +10786,13 @@
                           <span>${escapeHtml(`${property.ownerCallCount || 0} calls / ${property.ownerWhatsappCount || 0} WA`)}</span>
                         </div>
                         <div class="workspace-actions">
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editProperty(${property.id})">Edit</button>
-                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'call', this)">Call</button>
-                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'whatsapp')">WA</button>
-                          <details class="crm-row-more" onclick="event.stopPropagation()">
-                            <summary class="crm-row-more-toggle">More</summary>
-                            <div class="crm-row-more-menu">
-                              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
-                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecord(${property.id}, 'distress')">Matches</button>
-                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-                            </div>
-                          </details>
+                          ${renderRecordActionButton({
+                            label: 'Edit',
+                            icon: 'edit',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();editProperty(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
                         </div>
                       </div>
                     `;
