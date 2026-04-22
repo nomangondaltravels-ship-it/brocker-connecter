@@ -4491,8 +4491,15 @@
                       <div class="field-error" id="propertyBuildingNameError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Size (Sqft)</label>
-                      <input id="propertySizeSqft" type="text" inputmode="numeric" placeholder="Enter size in sqft" autocomplete="off">
+                      <label class="small">Size</label>
+                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;">
+                        <input id="propertySizeSqft" type="text" inputmode="decimal" placeholder="Enter size" autocomplete="off">
+                        <select id="propertySizeUnit">
+                          <option value="sqft">sqft</option>
+                          <option value="sqm">sqm</option>
+                        </select>
+                      </div>
+                      <div class="field-helper">Supports whole numbers and decimals, for example 484.67.</div>
                       <div class="field-error" id="propertySizeSqftError"></div>
                     </div>
                     <div class="field-block">
@@ -5521,6 +5528,39 @@
       return String(value || '').replace(/[^\d]/g, '');
     }
 
+    function normalizeDecimalInput(value) {
+      const rawValue = String(value || '').replace(/,/g, '.');
+      const sanitized = rawValue.replace(/[^\d.]/g, '');
+      if (!sanitized) return '';
+      const hasTrailingDot = sanitized.endsWith('.');
+      const parts = sanitized.split('.');
+      const whole = parts.shift() || '';
+      const decimal = parts.join('');
+      if (!decimal) {
+        return hasTrailingDot ? `${whole}.` : whole;
+      }
+      return `${whole}.${decimal}`;
+    }
+
+    function normalizeSizeUnit(value) {
+      return String(value || '').trim().toLowerCase() === 'sqm' ? 'sqm' : 'sqft';
+    }
+
+    function formatSizeValue(value) {
+      const normalized = normalizeDecimalInput(value);
+      if (!normalized) return '';
+      if (normalized.endsWith('.')) return normalized;
+      return normalized
+        .replace(/(\.\d*?[1-9])0+$/u, '$1')
+        .replace(/\.0+$/u, '');
+    }
+
+    function formatSizeDisplay(value, unit = 'sqft') {
+      const formattedValue = formatSizeValue(value);
+      if (!formattedValue) return '--';
+      return `${formattedValue} ${normalizeSizeUnit(unit)}`;
+    }
+
     function normalizeLeadPhoneInput(value) {
       const digits = String(value || '').replace(/[^\d]/g, '');
       if (!digits) return '';
@@ -6164,13 +6204,20 @@
       populatePropertySaleOptions();
       setPropertyPurpose('', { preserveValues: false });
 
-      ['propertySizeSqft', 'propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
+      ['propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', event => {
           event.target.value = normalizeBudgetDigits(event.target.value);
           event.target.classList.remove('is-invalid');
           refreshPropertyDistressUI();
           syncWorkspaceFormSummary('property');
         });
+      });
+
+      document.getElementById('propertySizeSqft')?.addEventListener('input', event => {
+        event.target.value = normalizeDecimalInput(event.target.value);
+        event.target.classList.remove('is-invalid');
+        refreshPropertyDistressUI();
+        syncWorkspaceFormSummary('property');
       });
 
       document.getElementById('propertyDistress')?.addEventListener('change', () => {
@@ -6182,6 +6229,7 @@
         'propertyType',
         'propertyLocation',
         'propertyBuildingName',
+        'propertySizeUnit',
         'propertyFloorLevel',
         'propertyFurnishing',
         'propertyCheques',
@@ -6232,7 +6280,8 @@
         propertyType: document.getElementById('propertyType').value.trim(),
         location: document.getElementById('propertyLocation').value.trim(),
         buildingName: document.getElementById('propertyBuildingName').value.trim(),
-        sizeSqft: normalizeBudgetDigits(document.getElementById('propertySizeSqft').value),
+        sizeSqft: formatSizeValue(document.getElementById('propertySizeSqft').value),
+        sizeUnit: normalizeSizeUnit(document.getElementById('propertySizeUnit').value),
         floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
         furnishing: document.getElementById('propertyFurnishing').value.trim(),
         rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
@@ -6677,7 +6726,7 @@
             </div>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Size</small><strong>${property.size || '--'}</strong></div>
+            <div class="detail-cell"><small>Size</small><strong>${formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit)}</strong></div>
             <div class="detail-cell"><small>Bedrooms</small><strong>${property.bedrooms ?? '--'}</strong></div>
             <div class="detail-cell"><small>Bathrooms</small><strong>${property.bathrooms ?? '--'}</strong></div>
             <div class="detail-cell"><small>Updated</small><strong>${new Date(property.updatedAt || property.createdAt || Date.now()).toLocaleDateString()}</strong></div>
@@ -7569,7 +7618,7 @@
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>${getPropertyPurpose(property.purpose) === 'rent' ? 'Rent Price' : 'Asking Price'}</small><strong>${getPropertyDisplayPrice(property)}</strong></div>
-            <div class="detail-cell"><small>Size</small><strong>${property.sizeSqft || property.size || '--'}</strong></div>
+            <div class="detail-cell"><small>Size</small><strong>${formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit)}</strong></div>
             <div class="detail-cell"><small>Floor Level</small><strong>${property.floorLevel || '--'}</strong></div>
             <div class="detail-cell"><small>Updated</small><strong>${new Date(property.updatedAt || property.createdAt || Date.now()).toLocaleDateString()}</strong></div>
           </div>
@@ -7596,6 +7645,7 @@
       document.getElementById('propertyLocation').value = '';
       document.getElementById('propertyBuildingName').value = '';
       document.getElementById('propertySizeSqft').value = '';
+      document.getElementById('propertySizeUnit').value = 'sqft';
       document.getElementById('propertyOwnerName').value = '';
       document.getElementById('propertyOwnerPhone').value = '';
       document.getElementById('propertyInternalNotes').value = '';
@@ -7618,7 +7668,8 @@
       populatePropertyFloorOptions(property.floorLevel || '');
       document.getElementById('propertyLocation').value = property.location || '';
       document.getElementById('propertyBuildingName').value = property.buildingName || '';
-      document.getElementById('propertySizeSqft').value = normalizeBudgetDigits(property.sizeSqft || property.size || '');
+      document.getElementById('propertySizeSqft').value = formatSizeValue(property.sizeSqft || property.size || '');
+      document.getElementById('propertySizeUnit').value = normalizeSizeUnit(property.sizeUnit || 'sqft');
       document.getElementById('propertyFurnishing').value = property.furnishing || '';
       document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
       document.getElementById('propertyCheques').value = property.cheques || '';
@@ -7661,6 +7712,7 @@
           location: formData.location,
           buildingName: formData.buildingName,
           sizeSqft: formData.sizeSqft,
+          sizeUnit: formData.sizeUnit,
           floorLevel: formData.floorLevel,
           furnishing: formData.furnishing,
           rentPrice: formData.rentPrice,
@@ -8475,7 +8527,8 @@
         propertyType: document.getElementById('propertyType').value.trim(),
         location: document.getElementById('propertyLocation').value.trim(),
         buildingName: document.getElementById('propertyBuildingName').value.trim(),
-        sizeSqft: normalizeBudgetDigits(document.getElementById('propertySizeSqft').value),
+        sizeSqft: formatSizeValue(document.getElementById('propertySizeSqft').value),
+        sizeUnit: normalizeSizeUnit(document.getElementById('propertySizeUnit').value),
         floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
         furnishing: document.getElementById('propertyFurnishing').value.trim(),
         rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
@@ -8529,6 +8582,7 @@
       document.getElementById('propertyLocation').value = '';
       document.getElementById('propertyBuildingName').value = '';
       document.getElementById('propertySizeSqft').value = '';
+      document.getElementById('propertySizeUnit').value = 'sqft';
       document.getElementById('propertyMarketPrice').value = '';
       document.getElementById('propertyOwnerName').value = '';
       document.getElementById('propertyOwnerPhone').value = '';
@@ -8559,7 +8613,8 @@
       populatePropertyFloorOptions(property.floorLevel || '');
       document.getElementById('propertyLocation').value = property.location || '';
       document.getElementById('propertyBuildingName').value = property.buildingName || '';
-      document.getElementById('propertySizeSqft').value = normalizeBudgetDigits(property.sizeSqft || property.size || '');
+      document.getElementById('propertySizeSqft').value = formatSizeValue(property.sizeSqft || property.size || '');
+      document.getElementById('propertySizeUnit').value = normalizeSizeUnit(property.sizeUnit || 'sqft');
       document.getElementById('propertyFurnishing').value = property.furnishing || '';
       document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
       document.getElementById('propertyCheques').value = property.cheques || '';
@@ -8669,6 +8724,7 @@
           location: formData.location,
           buildingName: formData.buildingName,
           sizeSqft: formData.sizeSqft,
+          sizeUnit: formData.sizeUnit,
           floorLevel: formData.floorLevel,
           furnishing: formData.furnishing,
           rentPrice: formData.rentPrice,
@@ -10157,7 +10213,7 @@
             <div class="detail-cell"><small>Area / Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
             <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(property.buildingName || '--')}</strong></div>
             <div class="detail-cell"><small>Price</small><strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong></div>
-            <div class="detail-cell"><small>Size</small><strong>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</strong></div>
+            <div class="detail-cell"><small>Size</small><strong>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</strong></div>
             <div class="detail-cell"><small>Furnishing</small><strong>${escapeHtml(property.furnishing || '--')}</strong></div>
             <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
             ${property.isDistress ? `<div class="detail-cell"><small>Market Difference</small><strong>${escapeHtml(distressLabel || '--')}</strong></div>` : ''}
@@ -10386,7 +10442,7 @@
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
-                          <span>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</span>
+                          <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(formatStatusLabel(property.status || 'available'))}</strong>
@@ -10486,7 +10542,7 @@
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
-                          <span>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</span>
+                          <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(getPropertyDistressLabel(property) || '--')}</strong>

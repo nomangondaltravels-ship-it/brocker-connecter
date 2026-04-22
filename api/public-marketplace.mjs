@@ -1,5 +1,6 @@
 import {
   buildPostgrestInFilter,
+  formatSizeLabel,
   getSupabaseConfig,
   json,
   normalizeText,
@@ -85,7 +86,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
           supabaseUrl,
           serviceRoleKey,
           table: 'broker_properties',
-          select: 'id,broker_uuid,is_listed_public,public_listing_status,description',
+          select: 'id,broker_uuid,is_listed_public,public_listing_status,size,description',
           filters: { id: buildPostgrestInFilter(propertyIds) }
         }).catch(() => [])
       : []
@@ -114,21 +115,37 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       .filter(row => isPropertyPublicSourceValid(row))
       .map(row => String(row.id))
   );
+  const leadRowMap = new Map((Array.isArray(leadRows) ? leadRows : []).map(row => [String(row.id), row]));
+  const propertyRowMap = new Map((Array.isArray(propertyRows) ? propertyRows : []).map(row => [String(row.id), row]));
 
-  return items.filter(item => {
+  return items.flatMap(item => {
     const brokerUuid = normalizeText(item.broker_uuid);
     const brokerIdNumber = normalizeText(item.broker_id_number);
     const brokerIsValid = (brokerUuid && validBrokerIds.has(brokerUuid))
       || (brokerIdNumber && validBrokerIdNumbers.has(brokerIdNumber));
-    if (!brokerIsValid) return false;
+    if (!brokerIsValid) return [];
 
     if (item.source_type === 'lead') {
-      return validLeadIds.has(String(item.source_id));
+      if (!validLeadIds.has(String(item.source_id))) return [];
+      const sourceRow = leadRowMap.get(String(item.source_id));
+      const meta = parseLeadMeta(sourceRow?.follow_up_notes);
+      return [{
+        ...item,
+        building_label: normalizeText(meta.preferredBuildingProject || item.size_label),
+        size_label: ''
+      }];
     }
     if (item.source_type === 'property') {
-      return validPropertyIds.has(String(item.source_id));
+      if (!validPropertyIds.has(String(item.source_id))) return [];
+      const sourceRow = propertyRowMap.get(String(item.source_id));
+      const meta = parsePropertyMeta(sourceRow?.description);
+      return [{
+        ...item,
+        building_label: normalizeText(meta.buildingName),
+        size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit)
+      }];
     }
-    return false;
+    return [];
   });
 }
 

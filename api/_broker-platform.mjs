@@ -33,6 +33,30 @@ export function normalizeText(value) {
   return String(value || '').trim();
 }
 
+export function normalizeDecimalValue(value) {
+  const rawValue = normalizeText(value).replace(/,/g, '.');
+  const sanitized = rawValue.replace(/[^\d.]/g, '');
+  if (!sanitized) return '';
+  const hasTrailingDot = sanitized.endsWith('.');
+  const parts = sanitized.split('.');
+  const whole = parts.shift() || '';
+  const decimal = parts.join('');
+  if (!decimal) return hasTrailingDot ? `${whole}.` : whole;
+  return `${whole}.${decimal}`
+    .replace(/(\.\d*?[1-9])0+$/u, '$1')
+    .replace(/\.0+$/u, '');
+}
+
+export function normalizeSizeUnit(value) {
+  return normalizeText(value).toLowerCase() === 'sqm' ? 'sqm' : 'sqft';
+}
+
+export function formatSizeLabel(value, unit = 'sqft') {
+  const normalizedValue = normalizeDecimalValue(value);
+  if (!normalizedValue) return '';
+  return `${normalizedValue} ${normalizeSizeUnit(unit)}`;
+}
+
 export function normalizeBool(value) {
   return Boolean(value);
 }
@@ -159,6 +183,7 @@ export function parsePropertyMeta(rawValue) {
     return {
       buildingName: '',
       floorLevel: '',
+      sizeUnit: 'sqft',
       furnishing: '',
       cheques: '',
       chiller: '',
@@ -176,6 +201,7 @@ export function parsePropertyMeta(rawValue) {
     return {
       buildingName: '',
       floorLevel: '',
+      sizeUnit: 'sqft',
       furnishing: '',
       cheques: '',
       chiller: '',
@@ -194,6 +220,7 @@ export function parsePropertyMeta(rawValue) {
     return {
       buildingName: normalizeText(parsed?.buildingName),
       floorLevel: normalizeText(parsed?.floorLevel),
+      sizeUnit: normalizeSizeUnit(parsed?.sizeUnit),
       furnishing: normalizeText(parsed?.furnishing),
       cheques: normalizeText(parsed?.cheques),
       chiller: normalizeText(parsed?.chiller),
@@ -209,6 +236,7 @@ export function parsePropertyMeta(rawValue) {
     return {
       buildingName: '',
       floorLevel: '',
+      sizeUnit: 'sqft',
       furnishing: '',
       cheques: '',
       chiller: '',
@@ -228,6 +256,7 @@ export function serializePropertyMeta(meta) {
   const payload = {
     buildingName: normalizeText(meta?.buildingName),
     floorLevel: normalizeText(meta?.floorLevel),
+    sizeUnit: normalizeSizeUnit(meta?.sizeUnit),
     furnishing: normalizeText(meta?.furnishing),
     cheques: normalizeText(meta?.cheques),
     chiller: normalizeText(meta?.chiller),
@@ -243,6 +272,7 @@ export function serializePropertyMeta(meta) {
   if (
     !payload.buildingName &&
     !payload.floorLevel &&
+    payload.sizeUnit === 'sqft' &&
     !payload.furnishing &&
     !payload.cheques &&
     !payload.chiller &&
@@ -896,9 +926,13 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const category = normalizeText(item.category);
   const location = normalizeText(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
+  const propertyMeta = !isLead ? parsePropertyMeta(item.description) : null;
   const projectOrBuilding = isLead
     ? normalizeText(item.preferredBuildingProject)
-    : normalizeText(item.buildingName || item.size);
+    : normalizeText(item.buildingName || propertyMeta?.buildingName);
+  const sizeLabel = !isLead
+    ? formatSizeLabel(item.sizeSqft || item.size, item.sizeUnit || propertyMeta?.sizeUnit)
+    : '';
   const generalNotes = isLead
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes);
@@ -921,7 +955,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     category,
     location,
     price_label: priceLabel,
-    size_label: projectOrBuilding,
+    size_label: isLead ? projectOrBuilding : sizeLabel,
     bedrooms: item.bedrooms ?? null,
     bathrooms: item.bathrooms ?? null,
     public_notes: generalNotes,
@@ -1003,8 +1037,9 @@ export function sanitizeProperty(row) {
     price: row.price,
     rentPrice: normalizeText(row.purpose).toLowerCase() === 'rent' ? row.price || '' : '',
     ownerAskingPrice: normalizeText(row.purpose).toLowerCase() === 'sale' ? row.price || '' : '',
-    size: row.size,
-    sizeSqft: row.size || '',
+    size: normalizeDecimalValue(row.size),
+    sizeSqft: normalizeDecimalValue(row.size),
+    sizeUnit: normalizeSizeUnit(meta.sizeUnit),
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     description: meta.legacyDescription || '',
@@ -1103,7 +1138,8 @@ export function sanitizePublicListing(row) {
     category: row.category,
     location: row.location,
     priceLabel: row.price_label,
-    sizeLabel: row.size_label,
+    buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
+    sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     publicNotes: row.public_notes,

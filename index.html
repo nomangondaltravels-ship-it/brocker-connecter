@@ -2781,7 +2781,7 @@
       const detailTitle = selected.sourceType === 'lead'
         ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${selected.propertyType || selected.category || 'Requirement'}`
         : `${String(selected.purpose || '--').toUpperCase()} - ${selected.propertyType || selected.category || 'Listing'}`;
-      const locationSummary = [selected.location || '--', selected.sizeLabel && selected.sizeLabel !== '--' ? selected.sizeLabel : '']
+      const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
         .filter(Boolean)
         .join(' - ');
       target.innerHTML = `
@@ -2812,7 +2812,8 @@
             <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Property Type</small><strong>${escapeHtml(selected.propertyType || selected.category || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
-            <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.buildingLabel || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Status</small><strong>${escapeHtml(selected.status || 'Active')}</strong></div>
           </div>
         </div>
@@ -2832,7 +2833,7 @@
 
     function renderRequirementsSheet(items, sectionName, startIndex) {
       return `
-        <div class="public-sheet-head">
+        <div class="public-sheet-head" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(136px,1fr) minmax(140px,1fr) minmax(124px,0.88fr) minmax(124px,0.88fr) minmax(120px,0.86fr) minmax(112px,0.78fr) auto;">
           <div>#</div>
           <div>Intent</div>
           <div>Location</div>
@@ -2844,7 +2845,7 @@
           <div>Actions</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')">
+          <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(136px,1fr) minmax(140px,1fr) minmax(124px,0.88fr) minmax(124px,0.88fr) minmax(120px,0.86fr) minmax(112px,0.78fr) auto;">
             <div class="sheet-col">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
@@ -2860,7 +2861,7 @@
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Building / Project</span>
-              <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
+              <span class="sheet-primary">${listing.buildingLabel || listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Type</span>
@@ -2889,19 +2890,20 @@
 
     function renderListingsSheet(items, sectionName, startIndex) {
       return `
-        <div class="public-sheet-head">
+        <div class="public-sheet-head" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(132px,0.9fr) minmax(144px,0.98fr) minmax(128px,0.88fr) minmax(128px,0.88fr) minmax(120px,0.82fr) minmax(112px,0.82fr) minmax(110px,0.74fr) auto;">
           <div>#</div>
           <div>Purpose</div>
           <div>Location</div>
           <div>Building / Project</div>
           <div>Type</div>
           <div>Price</div>
+          <div>Size</div>
           <div>Status</div>
           <div>Updated</div>
           <div>Actions</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')">
+          <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(132px,0.9fr) minmax(144px,0.98fr) minmax(128px,0.88fr) minmax(128px,0.88fr) minmax(120px,0.82fr) minmax(112px,0.82fr) minmax(110px,0.74fr) auto;">
             <div class="sheet-col">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
@@ -2917,7 +2919,7 @@
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Building / Project</span>
-              <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
+              <span class="sheet-primary">${listing.buildingLabel || '--'}</span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Type</span>
@@ -2926,6 +2928,10 @@
             <div class="sheet-col">
               <span class="sheet-label">Price</span>
               <span class="sheet-primary">${listing.priceLabel || '--'}</span>
+            </div>
+            <div class="sheet-col">
+              <span class="sheet-label">Size</span>
+              <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Status</span>

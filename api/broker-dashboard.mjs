@@ -4,8 +4,10 @@ import {
   getSupabasePublishableKey,
   json,
   normalizeBool,
+  normalizeDecimalValue,
   normalizeEmail,
   normalizePhoneNumber,
+  normalizeSizeUnit,
   normalizeText,
   parseLeadMeta,
   parsePropertyMeta,
@@ -162,6 +164,7 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   return {
     buildingName: body?.buildingName !== undefined ? normalizeText(body?.buildingName) : existingMeta.buildingName,
     floorLevel: body?.floorLevel !== undefined ? normalizeText(body?.floorLevel) : existingMeta.floorLevel,
+    sizeUnit: body?.sizeUnit !== undefined ? normalizeSizeUnit(body?.sizeUnit) : existingMeta.sizeUnit,
     furnishing: purpose === 'rent'
       ? (body?.furnishing !== undefined ? normalizeText(body?.furnishing) : existingMeta.furnishing)
       : '',
@@ -331,7 +334,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     category: propertyType,
     location: normalizeText(body?.location || existingProperty?.location),
     price: effectivePrice,
-    size: normalizeText(body?.size || body?.sizeSqft || existingProperty?.size),
+    size: normalizeDecimalValue(body?.size || body?.sizeSqft || existingProperty?.size),
     bedrooms: body?.bedrooms ?? existingProperty?.bedrooms ?? null,
     bathrooms: body?.bathrooms ?? existingProperty?.bathrooms ?? null,
     description: serializePropertyMeta(meta),
