@@ -33,6 +33,172 @@ export function normalizeText(value) {
   return String(value || '').trim();
 }
 
+const PROPERTY_TYPE_ALIASES = Object.freeze({
+  studio: 'Studio',
+  '1bhk': '1 BHK',
+  '1 bhk': '1 BHK',
+  '1 bedroom': '1 BHK',
+  '2bhk': '2 BHK',
+  '2 bhk': '2 BHK',
+  '2 bedroom': '2 BHK',
+  '3bhk': '3 BHK',
+  '3 bhk': '3 BHK',
+  '3 bedroom': '3 BHK',
+  '4bhk': '4 BHK',
+  '4 bhk': '4 BHK',
+  '4 bedroom': '4 BHK',
+  '5bhk': '5 BHK',
+  '5 bhk': '5 BHK',
+  '5 bedroom': '5 BHK',
+  '5+bhk': '5+ BHK',
+  '5+ bhk': '5+ BHK',
+  villa: 'Villa',
+  townhouse: 'Townhouse',
+  penthouse: 'Penthouse',
+  duplex: 'Duplex',
+  office: 'Office',
+  shop: 'Shop / Retail',
+  retail: 'Shop / Retail',
+  'shop / retail': 'Shop / Retail',
+  warehouse: 'Warehouse',
+  'labour camp': 'Labour Camp',
+  labourcamp: 'Labour Camp',
+  land: 'Land / Plot',
+  plot: 'Land / Plot',
+  'land / plot': 'Land / Plot',
+  building: 'Building',
+  'full floor': 'Full Floor',
+  'hotel apartment': 'Hotel Apartment',
+  'room / bedspace / partition': 'Room / Bedspace / Partition',
+  room: 'Room / Bedspace / Partition',
+  bedspace: 'Room / Bedspace / Partition',
+  partition: 'Room / Bedspace / Partition',
+  other: 'Other'
+});
+
+const LOCATION_ALIASES = Object.freeze({
+  'jumeirah village circle': 'JVC',
+  jvc: 'JVC',
+  'jumeirah village triangle': 'JVT',
+  jvt: 'JVT',
+  'jumeirah lakes towers': 'JLT',
+  jlt: 'JLT',
+  impz: 'Dubai Production City',
+  meaisem: "Me'aisem",
+  "me'aisem": "Me'aisem",
+  dso: 'Dubai Silicon Oasis',
+  'dubai silicon oasis': 'Dubai Silicon Oasis',
+  dlrc: 'Dubai Land Residence Complex',
+  nahda: 'Nahda',
+  'dubai marina': 'Dubai Marina',
+  'business bay': 'Business Bay',
+  'downtown dubai': 'Downtown Dubai'
+});
+
+const STATUS_ALIASES = Object.freeze({
+  connected: 'contacted',
+  contacted: 'contacted',
+  followup: 'follow-up',
+  'follow up': 'follow-up',
+  meeting: 'meeting scheduled',
+  'meeting scheduled': 'meeting scheduled',
+  negotiation: 'negotiation',
+  'closed won': 'closed won',
+  won: 'closed won',
+  'closed lost': 'closed lost',
+  lost: 'closed lost',
+  inactive: 'inactive',
+  available: 'available',
+  reserved: 'reserved',
+  rented: 'rented',
+  sold: 'sold',
+  offmarket: 'off market',
+  'off market': 'off market',
+  draft: 'draft',
+  active: 'active',
+  private: 'private',
+  shared: 'shared',
+  listed: 'listed',
+  pending: 'pending',
+  verified: 'verified',
+  rejected: 'rejected',
+  suspended: 'suspended'
+});
+
+const LEAD_STATUS_VALUES = new Set([
+  'new',
+  'contacted',
+  'follow-up',
+  'meeting scheduled',
+  'negotiation',
+  'closed won',
+  'closed lost',
+  'inactive'
+]);
+
+const LISTING_STATUS_VALUES = new Set([
+  'available',
+  'reserved',
+  'rented',
+  'sold',
+  'off market',
+  'draft'
+]);
+
+const CONNECTOR_STATUS_VALUES = new Set([
+  ...LEAD_STATUS_VALUES,
+  ...LISTING_STATUS_VALUES,
+  'active',
+  'private',
+  'shared',
+  'listed',
+  'pending'
+]);
+
+export function normalizeTaxonomyToken(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[\\/]+/g, ' / ')
+    .replace(/[\s_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function normalizePropertyTypeValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  return PROPERTY_TYPE_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+}
+
+export function normalizeLocationValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  return LOCATION_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+}
+
+export function normalizeLeadStatusValue(value, fallback = 'new') {
+  const normalized = STATUS_ALIASES[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
+  return LEAD_STATUS_VALUES.has(normalized) ? normalized : fallback;
+}
+
+export function normalizeListingStatusValue(value, fallback = 'available') {
+  const normalized = STATUS_ALIASES[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
+  return LISTING_STATUS_VALUES.has(normalized) ? normalized : fallback;
+}
+
+export function normalizeConnectorStatusValue(value, fallback = 'active') {
+  const normalized = STATUS_ALIASES[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
+  return CONNECTOR_STATUS_VALUES.has(normalized) ? normalized : fallback;
+}
+
+export function normalizeListingPurposeValue(value) {
+  const normalized = normalizeTaxonomyToken(value);
+  if (normalized === 'rent' || normalized === 'rental') return 'rent';
+  if (normalized === 'sale' || normalized === 'sell' || normalized === 'selling') return 'sale';
+  return '';
+}
+
 export function normalizeDecimalValue(value) {
   const rawValue = normalizeText(value).replace(/,/g, '.');
   const sanitized = rawValue.replace(/[^\d.]/g, '');
@@ -311,8 +477,8 @@ function normalizeLeadClientPurpose(value) {
 export function buildLeadPublicSummary(item) {
   const meta = parseLeadMeta(item?.follow_up_notes || item?.followUpNotes);
   const clientPurpose = normalizeLeadClientPurpose(item?.clientPurpose || item?.purpose);
-  const propertyType = normalizeText(item?.propertyType || item?.property_type || item?.category);
-  const location = normalizeText(item?.location);
+  const propertyType = normalizePropertyTypeValue(item?.propertyType || item?.property_type || item?.category);
+  const location = normalizeLocationValue(item?.location);
   const buildingProject = normalizeText(item?.preferredBuildingProject || meta.preferredBuildingProject);
   const budget = normalizeText(item?.budget || item?.price_label || item?.priceLabel);
   const paymentMethod = normalizeText(item?.paymentMethod || meta.paymentMethod);
@@ -922,9 +1088,11 @@ export async function requireBrokerSession(request) {
 
 export function buildPublicListingPayload(sourceType, broker, item) {
   const isLead = sourceType === 'lead';
-  const purpose = normalizeText(item.purpose);
-  const category = normalizeText(item.category);
-  const location = normalizeText(item.location);
+  const purpose = isLead
+    ? normalizeLeadClientPurpose(item.clientPurpose || item.purpose)
+    : normalizeListingPurposeValue(item.purpose);
+  const category = normalizePropertyTypeValue(item.category);
+  const location = normalizeLocationValue(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const propertyMeta = !isLead ? parsePropertyMeta(item.description) : null;
   const projectOrBuilding = isLead
@@ -937,9 +1105,11 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes);
   const propertyType = isLead
-    ? normalizeText(item.property_type || item.category || item.lead_type || '')
-    : normalizeText(item.property_type || '');
-  const status = normalizeText(item.status || 'active').toLowerCase();
+    ? normalizePropertyTypeValue(item.property_type || item.category || item.lead_type || '')
+    : normalizePropertyTypeValue(item.property_type || '');
+  const status = isLead
+    ? normalizeLeadStatusValue(item.status || 'new')
+    : normalizeListingStatusValue(item.status || 'available');
   const isDistress = normalizeBool(item.is_distress);
 
   return {
@@ -970,20 +1140,22 @@ export function sanitizeLead(row) {
   if (!row) return null;
   const meta = parseLeadMeta(row.follow_up_notes);
   const clientPurpose = normalizeLeadClientPurpose(row.purpose);
+  const propertyType = normalizePropertyTypeValue(row.category || row.property_type || row.lead_type || '');
+  const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
     purpose: row.purpose,
     clientPurpose,
-    category: row.category,
-    propertyType: row.category || '',
-    location: row.location,
-    preferredLocation: row.location || '',
+    category: propertyType,
+    propertyType,
+    location,
+    preferredLocation: location || '',
     budget: row.budget,
     notes: row.notes || '',
     privateNotes: row.notes || '',
     publicGeneralNotes: row.public_general_notes || '',
     leadType: row.lead_type,
-    status: row.status,
+    status: normalizeLeadStatusValue(row.status),
     priority: row.priority,
     source: row.source,
     meetingDate: row.meeting_date,
@@ -1028,12 +1200,14 @@ export function sanitizeLead(row) {
 export function sanitizeProperty(row) {
   if (!row) return null;
   const meta = parsePropertyMeta(row.description);
+  const propertyType = normalizePropertyTypeValue(row.property_type || row.category);
+  const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
-    purpose: row.purpose,
-    propertyType: row.property_type,
-    category: row.category,
-    location: row.location,
+    purpose: normalizeListingPurposeValue(row.purpose) || row.purpose,
+    propertyType,
+    category: propertyType,
+    location,
     price: row.price,
     rentPrice: normalizeText(row.purpose).toLowerCase() === 'rent' ? row.price || '' : '',
     ownerAskingPrice: normalizeText(row.purpose).toLowerCase() === 'sale' ? row.price || '' : '',
@@ -1069,7 +1243,7 @@ export function sanitizeProperty(row) {
     isArchived: Boolean(meta.isArchived),
     archivedAt: meta.archivedAt || '',
     activityLog: Array.isArray(meta.activityLog) ? meta.activityLog : [],
-    status: row.status,
+    status: normalizeListingStatusValue(row.status),
     isUrgent: Boolean(row.is_urgent),
     isDistress: Boolean(row.is_distress),
     isListedPublic: Boolean(row.is_listed_public),
@@ -1125,6 +1299,9 @@ export function sanitizeAiMatch(row) {
 
 export function sanitizePublicListing(row) {
   if (!row) return null;
+  const isLead = row.source_type === 'lead';
+  const propertyType = normalizePropertyTypeValue(row.property_type || row.category);
+  const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
     brokerName: row.broker_display_name,
@@ -1133,17 +1310,17 @@ export function sanitizePublicListing(row) {
     sourceType: row.source_type,
     sourceId: row.source_id,
     listingKind: row.listing_kind,
-    purpose: row.purpose,
-    propertyType: row.property_type,
-    category: row.category,
-    location: row.location,
+    purpose: isLead ? normalizeLeadClientPurpose(row.purpose) : (normalizeListingPurposeValue(row.purpose) || row.purpose),
+    propertyType,
+    category: propertyType,
+    location,
     priceLabel: row.price_label,
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
     sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     publicNotes: row.public_notes,
-    status: row.status,
+    status: normalizeConnectorStatusValue(row.status),
     isUrgent: Boolean(row.is_urgent),
     isDistress: Boolean(row.is_distress),
     createdAt: row.created_at,

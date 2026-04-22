@@ -6,7 +6,12 @@ import {
   normalizeBool,
   normalizeDecimalValue,
   normalizeEmail,
+  normalizeLeadStatusValue,
+  normalizeListingPurposeValue,
+  normalizeListingStatusValue,
+  normalizeLocationValue,
   normalizePhoneNumber,
+  normalizePropertyTypeValue,
   normalizeSizeUnit,
   normalizeText,
   parseLeadMeta,
@@ -29,8 +34,8 @@ import {
   supabaseSelect
 } from './_broker-platform.mjs';
 
-const LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost'];
-const LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market'];
+const LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost', 'inactive'];
+const LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market', 'draft'];
 const CLOSED_LEAD_STATUSES = new Set(['closed won', 'closed lost']);
 const INACTIVE_LISTING_STATUSES = new Set(['rented', 'sold', 'off market']);
 const ACTIVE_MATCH_LISTING_STATUSES = new Set(['available', 'reserved']);
@@ -51,13 +56,11 @@ function formatDateInDubai(date = new Date()) {
 }
 
 function normalizeLeadStatus(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  return LEAD_STATUS_OPTIONS.includes(normalized) ? normalized : 'new';
+  return normalizeLeadStatusValue(value, 'new');
 }
 
 function normalizeListingStatus(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  return LISTING_STATUS_OPTIONS.includes(normalized) ? normalized : 'available';
+  return normalizeListingStatusValue(value, 'available');
 }
 
 function formatStatusLabel(value) {
@@ -263,14 +266,14 @@ function buildPropertyActivityLog(existingProperty, body, extraEntries = []) {
 function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
   const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose || existingLead?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
   const purpose = clientPurpose === 'rent' ? 'rent' : 'sale';
-  const propertyType = normalizeText(body?.propertyType || body?.category || existingLead?.category);
+  const propertyType = normalizePropertyTypeValue(body?.propertyType || body?.category || existingLead?.category);
   const meta = getLeadMeta(body, existingLead, overrides);
   const publicGeneralNotes = body?.publicGeneralNotes !== undefined
     ? normalizeText(body?.publicGeneralNotes)
     : buildLeadPublicSummary({
         clientPurpose,
         category: propertyType,
-        location: normalizeText(body?.location || existingLead?.location),
+        location: normalizeLocationValue(body?.location || existingLead?.location),
         budget: normalizeText(body?.budget || existingLead?.budget),
         preferredBuildingProject: meta.preferredBuildingProject,
         paymentMethod: meta.paymentMethod
@@ -284,7 +287,7 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
     lead_type: clientPurpose === 'rent' ? 'tenant' : 'buyer',
     purpose,
     category: propertyType,
-    location: normalizeText(body?.location || existingLead?.location),
+    location: normalizeLocationValue(body?.location || existingLead?.location),
     budget: normalizeText(body?.budget || existingLead?.budget),
     notes: normalizeText(body?.privateNotes ?? body?.notes ?? existingLead?.notes),
     public_general_notes: publicGeneralNotes,
@@ -312,8 +315,8 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
 }
 
 function getPropertyPayload(body, brokerId, existingProperty = null, overrides = {}) {
-  const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
-  const propertyType = normalizeText(body?.propertyType || existingProperty?.property_type || existingProperty?.category);
+  const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
+  const propertyType = normalizePropertyTypeValue(body?.propertyType || existingProperty?.property_type || existingProperty?.category);
   const meta = getPropertyMeta(body, existingProperty, overrides);
   const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
   const effectivePrice = normalizeText(
@@ -332,7 +335,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     purpose,
     property_type: propertyType,
     category: propertyType,
-    location: normalizeText(body?.location || existingProperty?.location),
+    location: normalizeLocationValue(body?.location || existingProperty?.location),
     price: effectivePrice,
     size: normalizeDecimalValue(body?.size || body?.sizeSqft || existingProperty?.size),
     bedrooms: body?.bedrooms ?? existingProperty?.bedrooms ?? null,

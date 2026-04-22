@@ -2226,6 +2226,7 @@
     </div>
   </div>
 
+  <script src="assets/dashboard-lead-config.js"></script>
   <script>
     const state = {
       authMode: 'signin',
@@ -2283,6 +2284,138 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    const CORE_TAXONOMY = window.BROKER_CORE_TAXONOMY || {
+      locations: [],
+      propertyTypes: { listing: [] },
+      purposes: {
+        connector: [
+          { value: 'rent', label: 'Rent' },
+          { value: 'buy', label: 'Buy' },
+          { value: 'sale', label: 'Sale' }
+        ]
+      },
+      statuses: { connector: [] },
+      aliases: {
+        propertyTypes: {},
+        locations: {},
+        purposes: {},
+        statuses: {}
+      }
+    };
+
+    function normalizeTaxonomyToken(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\\/]+/g, ' / ')
+        .replace(/[\s_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function dedupeConnectorValues(values) {
+      const seen = new Set();
+      return (Array.isArray(values) ? values : []).filter(value => {
+        const key = normalizeTaxonomyToken(value);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function canonicalizeConnectorValue(value, aliases = {}, allowedValues = []) {
+      const rawValue = String(value || '').trim();
+      if (!rawValue) return '';
+      const token = normalizeTaxonomyToken(rawValue);
+      const allowedMatch = (Array.isArray(allowedValues) ? allowedValues : []).find(option => normalizeTaxonomyToken(option) === token);
+      if (allowedMatch) return allowedMatch;
+      const aliasMatch = aliases?.[token];
+      if (aliasMatch) return aliasMatch;
+      return rawValue.replace(/\s+/g, ' ');
+    }
+
+    function getConnectorTaxonomyOptions(field) {
+      if (field === 'purpose') return CORE_TAXONOMY.purposes?.connector || [];
+      if (field === 'status') {
+        const combinedStatusOptions = [
+          ...(CORE_TAXONOMY.statuses?.connector || []),
+          ...(CORE_TAXONOMY.statuses?.leads || []),
+          ...(CORE_TAXONOMY.statuses?.listings || [])
+        ];
+        const seen = new Set();
+        return combinedStatusOptions.filter(option => {
+          const key = normalizeTaxonomyToken(option?.value);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+      if (field === 'propertyType') {
+        return dedupeConnectorValues([
+          ...(CORE_TAXONOMY.propertyTypes?.listing || []),
+          ...(CORE_TAXONOMY.propertyTypes?.rent || []),
+          ...(CORE_TAXONOMY.propertyTypes?.buy || [])
+        ]).map(value => ({ value, label: value }));
+      }
+      if (field === 'location') {
+        return dedupeConnectorValues(CORE_TAXONOMY.locations || []).map(value => ({ value, label: value }));
+      }
+      return [];
+    }
+
+    function getConnectorOptionLabel(field, value) {
+      const option = getConnectorTaxonomyOptions(field).find(item => item.value === value);
+      if (option?.label) return option.label;
+      return String(value || '').trim();
+    }
+
+    function normalizeConnectorPurpose(value, sourceType = '') {
+      const normalized = (CORE_TAXONOMY.aliases?.purposes || {})[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
+      if (!normalized) return '';
+      if (sourceType === 'lead' && normalized === 'sale') return 'buy';
+      return ['rent', 'buy', 'sale'].includes(normalized) ? normalized : '';
+    }
+
+    function normalizeConnectorPropertyType(value) {
+      return canonicalizeConnectorValue(
+        value,
+        CORE_TAXONOMY.aliases?.propertyTypes || {},
+        getConnectorTaxonomyOptions('propertyType').map(option => option.value)
+      );
+    }
+
+    function normalizeConnectorLocation(value) {
+      return canonicalizeConnectorValue(
+        value,
+        CORE_TAXONOMY.aliases?.locations || {},
+        getConnectorTaxonomyOptions('location').map(option => option.value)
+      );
+    }
+
+    function normalizeConnectorStatus(value) {
+      const supportedStatuses = getConnectorTaxonomyOptions('status').map(option => option.value);
+      const normalized = canonicalizeConnectorValue(value, CORE_TAXONOMY.aliases?.statuses || {}, supportedStatuses);
+      return supportedStatuses.includes(normalized) ? normalized : '';
+    }
+
+    function getConnectorCanonicalFieldValue(field, listing) {
+      if (field === 'purpose') return normalizeConnectorPurpose(listing?.purpose, listing?.sourceType);
+      if (field === 'propertyType') return normalizeConnectorPropertyType(listing?.propertyType || listing?.category);
+      if (field === 'location') return normalizeConnectorLocation(listing?.location);
+      if (field === 'status') return normalizeConnectorStatus(listing?.status);
+      return String(listing?.[field] || '').trim();
+    }
+
+    function getConnectorFilterOptions(field) {
+      const baseOptions = getConnectorTaxonomyOptions(field);
+      const baseValues = baseOptions.map(option => option.value);
+      const dynamicValues = state.listings.map(listing => getConnectorCanonicalFieldValue(field, listing)).filter(Boolean);
+      return dedupeConnectorValues([...baseValues, ...dynamicValues]).map(value => ({
+        value,
+        label: getConnectorOptionLabel(field, value)
+      }));
     }
 
     const CONNECTOR_TABLE_COLUMNS = {
@@ -2524,14 +2657,6 @@
       ].join(' ').toLowerCase();
     }
 
-    function getUniquePublicFilterValues(field) {
-      return [...new Set(
-        state.listings
-          .map(item => String(item?.[field] || '').trim())
-          .filter(Boolean)
-      )].sort((a, b) => a.localeCompare(b));
-    }
-
     function populateConnectorFilterOptions() {
       const configs = [
         { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
@@ -2544,12 +2669,12 @@
         const select = document.getElementById(config.id);
         if (!select) return;
         const currentValue = state.publicFilters[config.field] || 'all';
-        const options = getUniquePublicFilterValues(config.field);
+        const options = getConnectorFilterOptions(config.field);
         select.innerHTML = [
           `<option value="all">${config.defaultLabel}</option>`,
-          ...options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`)
+          ...options.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
         ].join('');
-        select.value = options.includes(currentValue) ? currentValue : 'all';
+        select.value = options.some(option => option.value === currentValue) ? currentValue : 'all';
         state.publicFilters[config.field] = select.value;
       });
     }
@@ -2619,10 +2744,10 @@
       const query = state.publicSearchQuery.trim().toLowerCase();
       return state.listings.filter(listing => {
         if (query && !getPublicSearchText(listing).includes(query)) return false;
-        if (state.publicFilters.purpose !== 'all' && String(listing.purpose || '') !== state.publicFilters.purpose) return false;
-        if (state.publicFilters.propertyType !== 'all' && String(listing.propertyType || '') !== state.publicFilters.propertyType) return false;
-        if (state.publicFilters.location !== 'all' && String(listing.location || '') !== state.publicFilters.location) return false;
-        if (state.publicFilters.status !== 'all' && String(listing.status || '') !== state.publicFilters.status) return false;
+        if (state.publicFilters.purpose !== 'all' && getConnectorCanonicalFieldValue('purpose', listing) !== state.publicFilters.purpose) return false;
+        if (state.publicFilters.propertyType !== 'all' && getConnectorCanonicalFieldValue('propertyType', listing) !== state.publicFilters.propertyType) return false;
+        if (state.publicFilters.location !== 'all' && getConnectorCanonicalFieldValue('location', listing) !== state.publicFilters.location) return false;
+        if (state.publicFilters.status !== 'all' && getConnectorCanonicalFieldValue('status', listing) !== state.publicFilters.status) return false;
         return true;
       });
     }

@@ -5024,6 +5024,52 @@
       chillerOptions: [],
       mortgageStatuses: []
     };
+    const CORE_TAXONOMY = window.BROKER_CORE_TAXONOMY || {
+      locations: LEAD_CONFIG.uaeLocations || [],
+      buildingProjects: LEAD_CONFIG.buildingProjects || [],
+      propertyTypes: {
+        rent: LEAD_CONFIG.propertyTypes?.rent || [],
+        buy: LEAD_CONFIG.propertyTypes?.buy || [],
+        listing: LEAD_CONFIG.listingPropertyTypes || []
+      },
+      purposes: {
+        leads: [
+          { value: 'rent', label: 'Rent' },
+          { value: 'buy', label: 'Buy' }
+        ],
+        listings: [
+          { value: 'rent', label: 'Rent' },
+          { value: 'sale', label: 'Sale' }
+        ]
+      },
+      statuses: {
+        leads: [
+          { value: 'new', label: 'New' },
+          { value: 'contacted', label: 'Contacted' },
+          { value: 'follow-up', label: 'Follow-up' },
+          { value: 'meeting scheduled', label: 'Meeting Scheduled' },
+          { value: 'negotiation', label: 'Negotiation' },
+          { value: 'closed won', label: 'Closed Won' },
+          { value: 'closed lost', label: 'Closed Lost' },
+          { value: 'inactive', label: 'Inactive' }
+        ],
+        listings: [
+          { value: 'available', label: 'Available' },
+          { value: 'reserved', label: 'Reserved' },
+          { value: 'rented', label: 'Rented' },
+          { value: 'sold', label: 'Sold' },
+          { value: 'off market', label: 'Off Market' },
+          { value: 'draft', label: 'Draft' }
+        ]
+      },
+      aliases: {
+        propertyTypes: {},
+        locations: {},
+        statuses: {}
+      }
+    };
+    const DASHBOARD_LEAD_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.leads || []).map(option => option.value);
+    const DASHBOARD_LISTING_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.listings || []).map(option => option.value);
 
     const state = {
       token: localStorage.getItem('broker_session_token') || '',
@@ -5093,6 +5139,96 @@
 
     function normalizeText(value) {
       return String(value || '').trim();
+    }
+
+    function normalizeTaxonomyToken(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[\\/]+/g, ' / ')
+        .replace(/[\s_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function dedupeTaxonomyValues(values) {
+      const seen = new Set();
+      return (Array.isArray(values) ? values : []).filter(value => {
+        const key = normalizeTaxonomyToken(value);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function canonicalizeTaxonomyValue(value, aliases = {}, allowedValues = []) {
+      const rawValue = normalizeText(value);
+      if (!rawValue) return '';
+      const token = normalizeTaxonomyToken(rawValue);
+      const allowedMatch = (Array.isArray(allowedValues) ? allowedValues : []).find(option => normalizeTaxonomyToken(option) === token);
+      if (allowedMatch) return allowedMatch;
+      const aliasMatch = aliases?.[token];
+      if (aliasMatch) return aliasMatch;
+      return rawValue.replace(/\s+/g, ' ');
+    }
+
+    function normalizeDashboardPropertyTypeValue(value) {
+      const supportedValues = dedupeTaxonomyValues([
+        ...(CORE_TAXONOMY.propertyTypes?.listing || []),
+        ...(CORE_TAXONOMY.propertyTypes?.rent || []),
+        ...(CORE_TAXONOMY.propertyTypes?.buy || [])
+      ]);
+      return canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.propertyTypes || {}, supportedValues);
+    }
+
+    function normalizeDashboardLocationValue(value) {
+      return canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.locations || {}, CORE_TAXONOMY.locations || []);
+    }
+
+    function normalizeDashboardLeadStatusValue(value) {
+      const normalized = canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.statuses || {}, DASHBOARD_LEAD_STATUS_OPTIONS);
+      return DASHBOARD_LEAD_STATUS_OPTIONS.includes(normalized) ? normalized : 'new';
+    }
+
+    function normalizeDashboardListingStatusValue(value) {
+      const normalized = canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.statuses || {}, DASHBOARD_LISTING_STATUS_OPTIONS);
+      return DASHBOARD_LISTING_STATUS_OPTIONS.includes(normalized) ? normalized : 'available';
+    }
+
+    function buildDashboardOptionMarkup(options, defaultLabel = '') {
+      const optionMarkup = (Array.isArray(options) ? options : []).map(option => {
+        const value = normalizeText(option?.value);
+        const label = normalizeText(option?.label || option?.value);
+        return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
+      });
+      return [
+        defaultLabel ? `<option value="all">${escapeHtml(defaultLabel)}</option>` : '',
+        ...optionMarkup
+      ].join('');
+    }
+
+    function syncDashboardSelectOptions(selectId, options, currentValue = '') {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      const isFilter = String(selectId).endsWith('Filter');
+      const nextValue = normalizeText(currentValue || select.value || (isFilter ? 'all' : ''));
+      select.innerHTML = buildDashboardOptionMarkup(options, isFilter ? select.options?.[0]?.textContent || '' : '');
+      const allowedValues = (Array.isArray(options) ? options : []).map(option => option.value);
+      select.value = allowedValues.includes(nextValue) ? nextValue : (isFilter ? 'all' : (allowedValues[0] || ''));
+    }
+
+    function syncDashboardTaxonomyOptions() {
+      const leadPurposeOptions = CORE_TAXONOMY.purposes?.leads || [];
+      const listingPurposeOptions = CORE_TAXONOMY.purposes?.listings || [];
+      const leadStatusOptions = CORE_TAXONOMY.statuses?.leads || [];
+      const listingStatusOptions = CORE_TAXONOMY.statuses?.listings || [];
+
+      syncDashboardSelectOptions('leadStatusFilter', leadStatusOptions);
+      syncDashboardSelectOptions('leadPurposeFilter', leadPurposeOptions);
+      syncDashboardSelectOptions('propertyStatusFilter', listingStatusOptions);
+      syncDashboardSelectOptions('propertyPurposeFilter', listingPurposeOptions);
+      syncDashboardSelectOptions('leadStatus', leadStatusOptions);
+      syncDashboardSelectOptions('propertyStatus', listingStatusOptions);
     }
 
     function sanitizeStringArray(values) {
@@ -5695,9 +5831,13 @@
       const purpose = document.getElementById('leadClientPurpose')?.value || '';
       const select = document.getElementById('leadPropertyType');
       if (!select) return;
-      const options = LEAD_CONFIG.propertyTypes[purpose] || [];
+      const options = dedupeTaxonomyValues([
+        ...(CORE_TAXONOMY.propertyTypes?.[purpose] || []),
+        ...(LEAD_CONFIG.propertyTypes?.[purpose] || [])
+      ]);
+      const normalizedSelectedValue = normalizeDashboardPropertyTypeValue(selectedValue);
       select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
-      select.value = selectedValue && options.includes(selectedValue) ? selectedValue : '';
+      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
     }
 
     function populateLeadPaymentMethodOptions(selectedValue = '') {
@@ -5981,7 +6121,10 @@
           inputId: 'leadLocation',
           menuId: 'leadLocationMenu',
           boxId: 'leadLocationBox',
-          datasetProvider: () => LEAD_CONFIG.uaeLocations || []
+          datasetProvider: () => dedupeTaxonomyValues([
+            ...(CORE_TAXONOMY.locations || []),
+            ...(LEAD_CONFIG.uaeLocations || [])
+          ])
         });
       }
 
@@ -5990,7 +6133,10 @@
           inputId: 'leadBuildingProject',
           menuId: 'leadBuildingMenu',
           boxId: 'leadBuildingBox',
-          datasetProvider: () => LEAD_CONFIG.buildingProjects || []
+          datasetProvider: () => dedupeTaxonomyValues([
+            ...(CORE_TAXONOMY.buildingProjects || []),
+            ...(LEAD_CONFIG.buildingProjects || [])
+          ])
         });
       }
 
@@ -6016,6 +6162,11 @@
           event.target.classList.remove('is-invalid');
           syncWorkspaceFormSummary('lead');
         });
+      });
+
+      document.getElementById('leadLocation')?.addEventListener('blur', event => {
+        event.target.value = normalizeDashboardLocationValue(event.target.value);
+        syncWorkspaceFormSummary('lead');
       });
 
       ['leadPropertyType', 'leadPaymentMethod'].forEach(id => {
@@ -6057,9 +6208,13 @@
     function populatePropertyTypeOptions(selectedValue = '') {
       const select = document.getElementById('propertyType');
       if (!select) return;
-      const options = LEAD_CONFIG.listingPropertyTypes || [];
+      const options = dedupeTaxonomyValues([
+        ...(CORE_TAXONOMY.propertyTypes?.listing || []),
+        ...(LEAD_CONFIG.listingPropertyTypes || [])
+      ]);
+      const normalizedSelectedValue = normalizeDashboardPropertyTypeValue(selectedValue);
       select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
-      select.value = selectedValue && options.includes(selectedValue) ? selectedValue : '';
+      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
     }
 
     function populatePropertyFloorOptions(selectedValue = '') {
@@ -6275,7 +6430,10 @@
           inputId: 'propertyLocation',
           menuId: 'propertyLocationMenu',
           boxId: 'propertyLocationBox',
-          datasetProvider: () => LEAD_CONFIG.uaeLocations || []
+          datasetProvider: () => dedupeTaxonomyValues([
+            ...(CORE_TAXONOMY.locations || []),
+            ...(LEAD_CONFIG.uaeLocations || [])
+          ])
         });
       }
 
@@ -6284,7 +6442,10 @@
           inputId: 'propertyBuildingName',
           menuId: 'propertyBuildingMenu',
           boxId: 'propertyBuildingBox',
-          datasetProvider: () => LEAD_CONFIG.buildingProjects || []
+          datasetProvider: () => dedupeTaxonomyValues([
+            ...(CORE_TAXONOMY.buildingProjects || []),
+            ...(LEAD_CONFIG.buildingProjects || [])
+          ])
         });
       }
 
@@ -6355,6 +6516,11 @@
           event.target.value = normalizeLeadPhoneInput(event.target.value);
           syncWorkspaceFormSummary('property');
         });
+      });
+
+      document.getElementById('propertyLocation')?.addEventListener('blur', event => {
+        event.target.value = normalizeDashboardLocationValue(event.target.value);
+        syncWorkspaceFormSummary('property');
       });
     }
 
@@ -7297,9 +7463,9 @@
       return {
         id: Number(document.getElementById('leadId').value || 0),
         clientPurpose: document.getElementById('leadClientPurpose').value,
-        location: document.getElementById('leadLocation').value.trim(),
+        location: normalizeDashboardLocationValue(document.getElementById('leadLocation').value),
         preferredBuildingProject: document.getElementById('leadBuildingProject').value.trim(),
-        propertyType: document.getElementById('leadPropertyType').value.trim(),
+        propertyType: normalizeDashboardPropertyTypeValue(document.getElementById('leadPropertyType').value),
         budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
         paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
         clientName: document.getElementById('leadClientName').value.trim(),
@@ -7841,9 +8007,6 @@
       });
     }
 
-    const DASHBOARD_LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost'];
-    const DASHBOARD_LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market'];
-
     function formatStatusLabel(value) {
       return String(value || '')
         .trim()
@@ -8070,7 +8233,7 @@
           const followUpState = getFollowUpStateInfo(item);
           const isArchived = Boolean(item.isArchived);
           if (!matchesCommonSearch(item, type)) return false;
-          if (filters.status !== 'all' && String(item.status || '').toLowerCase() !== filters.status) return false;
+          if (filters.status !== 'all' && normalizeDashboardLeadStatusValue(item.status) !== filters.status) return false;
           if (filters.purpose !== 'all' && getLeadClientPurpose(item.clientPurpose) !== filters.purpose) return false;
           if (filters.visibility !== 'all' && getLeadVisibility(item) !== filters.visibility) return false;
           if (filters.followUp !== 'all' && followUpState.key !== filters.followUp) return false;
@@ -8090,7 +8253,7 @@
           const followUpState = getFollowUpStateInfo(item);
           const isArchived = Boolean(item.isArchived);
           if (!matchesCommonSearch(item, type)) return false;
-          if (filters.status !== 'all' && String(item.status || '').toLowerCase() !== filters.status) return false;
+          if (filters.status !== 'all' && normalizeDashboardListingStatusValue(item.status) !== filters.status) return false;
           if (filters.purpose !== 'all' && getPropertyPurpose(item.purpose) !== filters.purpose) return false;
           if (filters.visibility !== 'all' && getPropertyVisibility(item) !== filters.visibility) return false;
           if (filters.followUp !== 'all' && followUpState.key !== filters.followUp) return false;
@@ -8621,8 +8784,8 @@
       return {
         id: Number(document.getElementById('propertyId').value || 0),
         purpose,
-        propertyType: document.getElementById('propertyType').value.trim(),
-        location: document.getElementById('propertyLocation').value.trim(),
+        propertyType: normalizeDashboardPropertyTypeValue(document.getElementById('propertyType').value),
+        location: normalizeDashboardLocationValue(document.getElementById('propertyLocation').value),
         buildingName: document.getElementById('propertyBuildingName').value.trim(),
         sizeSqft: formatSizeValue(document.getElementById('propertySizeSqft').value),
         sizeUnit: normalizeSizeUnit(document.getElementById('propertySizeUnit').value),
@@ -10852,6 +11015,7 @@
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
         ensurePropertyFormEnhancements();
+        syncDashboardTaxonomyOptions();
         syncFilterInputs('leads');
         syncFilterInputs('properties');
         const ok = await verifySession();
