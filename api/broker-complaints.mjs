@@ -78,6 +78,15 @@ function validateProofAttachment(value) {
   return proofAttachment;
 }
 
+function normalizeComplaintTargetLinks(targetType, targetId) {
+  const rawTargetId = String(targetId ?? '').trim();
+  const numericTargetId = /^\d+$/.test(rawTargetId) ? Number(rawTargetId) : null;
+  return {
+    listingId: targetType === 'listing' && Number.isSafeInteger(numericTargetId) ? numericTargetId : null,
+    requirementId: targetType === 'requirement' && Number.isSafeInteger(numericTargetId) ? numericTargetId : null
+  };
+}
+
 async function createComplaint(context, body) {
   const reporterIdentity = getReporterIdentity(context.broker);
   const reason = normalizeComplaintReason(body?.reason);
@@ -90,6 +99,9 @@ async function createComplaint(context, body) {
   const targetLabel = normalizeText(body?.targetLabel);
   const sourceSection = normalizeText(body?.sourceSection);
   const proofAttachment = validateProofAttachment(body?.proofAttachment);
+  const proofUrl = normalizeText(proofAttachment?.dataUrl);
+  const { listingId, requirementId } = normalizeComplaintTargetLinks(targetType, targetId);
+  const reportedBrokerId = reportedUserId;
 
   if (!reason || !COMPLAINT_REASONS.includes(reason)) {
     const error = new Error('Select a valid complaint reason.');
@@ -118,6 +130,27 @@ async function createComplaint(context, body) {
   }
 
   const insertPayload = {
+    reporter_id: reporterIdentity.reporterBrokerId || null,
+    reporter_email: reporterIdentity.reporterEmail || null,
+    reporter_name: reporterIdentity.reporterName || null,
+    reported_user_id: reportedUserId || null,
+    reported_broker_id: reportedBrokerId || null,
+    reported_broker_id_number: reportedBrokerIdNumber || null,
+    reported_broker_name: reportedBrokerName || null,
+    listing_id: listingId,
+    requirement_id: requirementId,
+    target_type: targetType,
+    target_id: targetId,
+    target_label: targetLabel || null,
+    reason,
+    description,
+    proof_url: proofUrl || null,
+    source_section: sourceSection || null,
+    admin_note: null,
+    action_taken: 'none',
+    reviewed_by: null,
+    reviewed_at: null,
+    updated_at: new Date().toISOString(),
     name: reporterIdentity.reporterName || 'Broker',
     broker: reportedBrokerIdNumber || reportedBrokerName || reportedUserId || targetType,
     message: buildComplaintMessage(description, {

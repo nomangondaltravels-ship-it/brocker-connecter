@@ -13,6 +13,14 @@ These items cannot be completed from this local code session because they depend
 
 ## Still Required In Supabase Dashboard
 
+### 0. Run Complaint Center SQL
+
+Before complaint moderation can use the full backend fields, run:
+
+- `supabase-complaints-center.sql`
+
+This safely adds the complaint schema, admin action fields, and repeat-offense summary view on top of the existing project.
+
 ### 1. Enable Email Auth
 
 Open:
