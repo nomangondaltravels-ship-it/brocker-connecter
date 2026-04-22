@@ -3733,6 +3733,14 @@
       align-items: start;
     }
 
+    .workspace-split.no-detail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .workspace-split.no-detail .workspace-detail-card {
+      display: none;
+    }
+
     .workspace-table-card,
     .workspace-detail-card {
       overflow: hidden;
@@ -3790,6 +3798,13 @@
     .workspace-table-row.is-selected {
       background: var(--workspace-selected);
       box-shadow: inset 3px 0 0 var(--workspace-accent);
+    }
+
+    .detail-panel-head-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .workspace-cell {
@@ -10154,7 +10169,22 @@
     function ensureSelectedWorkspaceId(items, currentId) {
       const records = Array.isArray(items) ? items : [];
       if (!records.length) return null;
-      return records.some(item => String(item.id) === String(currentId)) ? currentId : records[0].id;
+      return records.some(item => String(item.id) === String(currentId)) ? currentId : null;
+    }
+
+    function closeLeadRecordPanel() {
+      state.selectedLeadId = null;
+      renderLeads();
+    }
+
+    function closePropertyRecordPanel() {
+      state.selectedPropertyId = null;
+      renderProperties();
+    }
+
+    function closeDistressRecordPanel() {
+      state.selectedDistressId = null;
+      renderDistressDeals();
     }
 
     function openLeadRecord(id) {
@@ -10531,7 +10561,10 @@
 
       return `
         <div class="detail-panel-header">
-          <div class="detail-panel-copy">Requirement / Lead</div>
+          <div class="detail-panel-head-row">
+            <div class="detail-panel-copy">Requirement / Lead</div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeLeadRecordPanel()">Close</button>
+          </div>
           <h3>${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} ${lead.propertyType ? `- ${lead.propertyType}` : 'Requirement'}`)}</h3>
           <div class="detail-panel-meta">
             <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
@@ -10623,7 +10656,10 @@
 
       return `
         <div class="detail-panel-header">
-          <div class="detail-panel-copy">${panelType === 'distress' ? 'Distress Deal' : 'Listing'}</div>
+          <div class="detail-panel-head-row">
+            <div class="detail-panel-copy">${panelType === 'distress' ? 'Distress Deal' : 'Listing'}</div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="${panelType === 'distress' ? 'closeDistressRecordPanel()' : 'closePropertyRecordPanel()'}">Close</button>
+          </div>
           <h3>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing'}`)}</h3>
           <div class="detail-panel-meta">
             <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
@@ -10720,7 +10756,7 @@
       const leadColumns = WORKSPACE_TABLE_COLUMNS.leads;
 
       target.innerHTML = `
-        <div class="workspace-split">
+        <div class="workspace-split ${selectedLead ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
@@ -10821,7 +10857,7 @@
       const listingColumns = WORKSPACE_TABLE_COLUMNS.listings;
 
       target.innerHTML = `
-        <div class="workspace-split">
+        <div class="workspace-split ${selectedProperty ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
@@ -10921,7 +10957,7 @@
       const distressColumns = WORKSPACE_TABLE_COLUMNS.distress;
 
       target.innerHTML = `
-        <div class="workspace-split">
+        <div class="workspace-split ${selectedDistress ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">

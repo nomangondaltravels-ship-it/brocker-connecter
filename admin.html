@@ -844,6 +844,14 @@
       align-items: start;
     }
 
+    .admin-main-grid.no-detail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .admin-main-grid.no-detail .admin-detail-stack {
+      display: none;
+    }
+
     .admin-primary-stack,
     .admin-detail-stack {
       display: grid;
@@ -1024,6 +1032,13 @@
     .admin-detail-header {
       display: grid;
       gap: 10px;
+    }
+
+    .admin-detail-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .admin-detail-header h3 {
@@ -1286,7 +1301,7 @@
           <div class="card stat-card"><small>Complaints</small><strong id="statComplaints">0</strong></div>
         </div>
 
-        <div class="admin-main-grid">
+        <div class="admin-main-grid no-detail" id="adminMainGrid">
           <div class="admin-primary-stack">
             <div class="admin-section-card">
               <div class="admin-section-head">
@@ -1361,7 +1376,7 @@
             </div>
           </div>
 
-          <div class="admin-detail-stack">
+          <div class="admin-detail-stack" id="adminDetailStack">
             <div class="admin-detail-card">
               <div id="adminDetailPanel" class="admin-detail-empty">
                 Select a broker, requirement, listing, or complaint to review actions and full context here.
@@ -2369,26 +2384,19 @@
 
       if (selectionExists) return;
 
-      const nextItem =
-        collections.brokers[0] ||
-        collections.requirements[0] ||
-        collections.deals[0] ||
-        collections.complaints[0] ||
-        null;
-
-      if (!nextItem) {
-        adminUiState.selectedType = 'broker';
-        adminUiState.selectedKey = '';
-        return;
-      }
-
-      adminUiState.selectedType = nextItem.type;
-      adminUiState.selectedKey = nextItem.key;
+      adminUiState.selectedType = 'broker';
+      adminUiState.selectedKey = '';
     }
 
     function setAdminSelection(type, key) {
       adminUiState.selectedType = type;
       adminUiState.selectedKey = String(key || '');
+      renderAdminWorkspace();
+    }
+
+    function clearAdminSelection() {
+      adminUiState.selectedType = 'broker';
+      adminUiState.selectedKey = '';
       renderAdminWorkspace();
     }
 
@@ -2412,6 +2420,12 @@
       const collections = getFilteredAdminCollections();
       renderStats(adminBrokerAccounts);
       ensureAdminSelection(collections);
+      const grid = document.getElementById('adminMainGrid');
+      const selected = getSelectedAdminItem(collections);
+      if (grid) {
+        grid.classList.toggle('no-detail', !selected);
+        grid.classList.toggle('has-detail', Boolean(selected));
+      }
       renderBrokerApprovals(collections.brokers);
       renderPostLists(collections);
       renderComplaints(collections.complaints);
@@ -2704,7 +2718,10 @@
         const blocked = Boolean(account.blocked);
         target.innerHTML = `
           <div class="admin-detail-header">
-            <div class="admin-detail-copy">Broker Account</div>
+            <div class="admin-detail-head-row">
+              <div class="admin-detail-copy">Broker Account</div>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+            </div>
             <h3>${escapeHtml(account.name || 'Broker')}</h3>
             <div class="admin-detail-meta">
               <span class="badge ${approved ? 'green' : 'gold'}">${approved ? 'Verified' : 'Pending'}</span>
@@ -2744,7 +2761,10 @@
         const entry = selected;
         target.innerHTML = `
           <div class="admin-detail-header">
-            <div class="admin-detail-copy">Requirement Review</div>
+            <div class="admin-detail-head-row">
+              <div class="admin-detail-copy">Requirement Review</div>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+            </div>
             <h3>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</h3>
             <div class="admin-detail-meta">
               <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
@@ -2781,7 +2801,10 @@
         const entry = selected;
         target.innerHTML = `
           <div class="admin-detail-header">
-            <div class="admin-detail-copy">Listing Review</div>
+            <div class="admin-detail-head-row">
+              <div class="admin-detail-copy">Listing Review</div>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+            </div>
             <h3>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</h3>
             <div class="admin-detail-meta">
               <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
@@ -2820,7 +2843,10 @@
         const linkedBrokerId = findBrokerIdByComplaint(entry.item);
         target.innerHTML = `
           <div class="admin-detail-header">
-            <div class="admin-detail-copy">Complaint Review</div>
+            <div class="admin-detail-head-row">
+              <div class="admin-detail-copy">Complaint Review</div>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+            </div>
             <h3>${escapeHtml(entry.item.name || 'Anonymous')}</h3>
             <div class="admin-detail-meta">
               <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>

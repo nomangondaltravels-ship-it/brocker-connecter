@@ -1668,6 +1668,14 @@
       align-items: start;
     }
 
+    .connector-results-shell.no-detail {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .connector-results-shell.no-detail .connector-detail-panel {
+      display: none;
+    }
+
     .connector-list-panel,
     .connector-detail-panel {
       border: 1px solid #e5e7eb;
@@ -1706,6 +1714,13 @@
     .connector-detail-header {
       display: grid;
       gap: 8px;
+    }
+
+    .connector-detail-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .connector-detail-header h3 {
@@ -2109,7 +2124,7 @@
           <h2>Broker Connector Listings</h2>
           <p>Latest broker listings available for quick scanning and direct connection.</p>
         </div>
-        <div class="connector-results-shell">
+            <div class="connector-results-shell no-detail">
           <div class="connector-list-panel">
             <div class="public-sheet" id="marketplaceGrid"></div>
             <div class="pager hidden" id="marketplacePager"></div>
@@ -2123,7 +2138,7 @@
           <h2>Broker Requirements</h2>
           <p>Latest shared requirements from brokers actively looking for matching properties.</p>
         </div>
-        <div class="connector-results-shell">
+            <div class="connector-results-shell no-detail">
           <div class="connector-list-panel">
             <div class="public-sheet" id="requirementsGrid"></div>
             <div class="pager hidden" id="requirementsPager"></div>
@@ -2137,7 +2152,7 @@
           <h2>Distress Deals</h2>
           <p>High-priority listings with stronger pricing urgency and faster action potential.</p>
         </div>
-        <div class="connector-results-shell">
+            <div class="connector-results-shell no-detail">
           <div class="connector-list-panel">
             <div class="public-sheet" id="distressDealsGrid"></div>
             <div class="pager hidden" id="distressDealsPager"></div>
@@ -2724,13 +2739,18 @@
       const selectedKey = state.selectedPublicListingKeys[sectionName];
       const selectedItem = items.find(item => getPublicSelectionKey(sectionName, item) === selectedKey);
       if (selectedItem) return selectedItem;
-      state.selectedPublicListingKeys[sectionName] = getPublicSelectionKey(sectionName, items[0]);
       state.revealedPublicContactKeys[sectionName] = '';
-      return items[0];
+      return null;
     }
 
     function selectPublicListing(sectionName, listingId) {
       state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
+      state.revealedPublicContactKeys[sectionName] = '';
+      renderPublicViews();
+    }
+
+    function closePublicDetailPanel(sectionName) {
+      state.selectedPublicListingKeys[sectionName] = '';
       state.revealedPublicContactKeys[sectionName] = '';
       renderPublicViews();
     }
@@ -3096,10 +3116,19 @@
     function renderConnectorDetailPanel(targetId, sectionName, items) {
       const target = document.getElementById(targetId);
       if (!target) return;
+      const shell = target.closest('.connector-results-shell');
       const selected = ensureSelectedPublicListing(sectionName, items);
       if (!selected) {
-        target.innerHTML = `<div class="connector-detail-empty">Select a shared requirement or listing to review safe visible details and broker contact actions here.</div>`;
+        if (shell) {
+          shell.classList.add('no-detail');
+          shell.classList.remove('has-detail');
+        }
+        target.innerHTML = '';
         return;
+      }
+      if (shell) {
+        shell.classList.add('has-detail');
+        shell.classList.remove('no-detail');
       }
       const matchText = encodeURIComponent(prefilledMatchText(selected));
       const shareLink = buildListingLink(selected, sectionName);
@@ -3117,10 +3146,13 @@
         : '<span class="contact-reveal-value">Not shared</span>';
       target.innerHTML = `
         <div class="connector-detail-header">
-          <div class="connector-detail-meta">
-            <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : 'Shared Listing'}</span>
-            ${selected.status ? `<span class="badge badge-gold">${escapeHtml(selected.status)}</span>` : ''}
-            ${selected.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
+          <div class="connector-detail-head-row">
+            <div class="connector-detail-meta">
+              <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : 'Shared Listing'}</span>
+              ${selected.status ? `<span class="badge badge-gold">${escapeHtml(selected.status)}</span>` : ''}
+              ${selected.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closePublicDetailPanel('${sectionName}')">Close</button>
           </div>
           <h3>${escapeHtml(detailTitle)}</h3>
           <div class="connector-detail-location">${escapeHtml(locationSummary || '--')}</div>
