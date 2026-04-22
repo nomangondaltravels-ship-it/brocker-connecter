@@ -68,13 +68,13 @@
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       min-width: 0;
     }
 
     .brand-logo {
-      width: 54px;
-      height: 54px;
+      width: 46px;
+      height: 46px;
       border-radius: 16px;
       border: 1px solid rgba(242,223,152,0.18);
       background: linear-gradient(180deg, rgba(9,18,32,0.98), rgba(9,18,32,0.9));
@@ -116,15 +116,15 @@
     .activity-brokers-trigger {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .activity-brokers-indicator {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 999px;
       background: #22c55e;
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
       flex: 0 0 auto;
     }
 
@@ -258,16 +258,16 @@
     }
 
     .account-menu-trigger {
-      min-height: 46px !important;
-      padding: 8px 12px !important;
+      min-height: 38px !important;
+      padding: 6px 10px !important;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .account-menu-avatar {
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.22);
@@ -276,9 +276,9 @@
       align-items: center;
       justify-content: center;
       color: #8f6a12;
-      font-size: 0.82rem;
+      font-size: 0.75rem;
       font-weight: 800;
-      flex: 0 0 34px;
+      flex: 0 0 28px;
     }
 
     .account-menu-avatar img {
@@ -289,33 +289,36 @@
     }
 
     .account-menu-copy {
-      display: grid;
-      gap: 2px;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
       text-align: left;
       min-width: 0;
     }
 
     .account-menu-copy strong {
-      font-size: 0.86rem;
+      font-size: 0.81rem;
       color: #0f172a;
       font-weight: 700;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 180px;
+      max-width: 132px;
     }
 
     .account-menu-copy span {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: #64748b;
       font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
+      letter-spacing: 0;
+      text-transform: none;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
 
     .account-menu-caret {
       color: #64748b;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       flex: 0 0 auto;
     }
 
@@ -2780,8 +2783,8 @@
     }
 
     .topbar-inner {
-      padding: 12px 0;
-      gap: 18px;
+      padding: 9px 0;
+      gap: 14px;
     }
 
     .brand-title {
@@ -2796,15 +2799,15 @@
     }
 
     .top-actions {
-      gap: 10px;
+      gap: 8px;
     }
 
     .top-actions .btn,
     .page-switch-btn {
-      min-height: 38px;
-      padding: 0 14px;
+      min-height: 34px;
+      padding: 0 12px;
       border-radius: 999px;
-      font-size: 0.82rem;
+      font-size: 0.78rem;
     }
 
     .btn {
@@ -7303,7 +7306,7 @@
       beginProfileEdit();
     }
 
-    function syncBrokerIdentityButton() {
+    function syncBrokerIdentityButtonLegacy() {
       const profile = getActiveBrokerProfile();
       const trigger = document.getElementById('brokerIdentityBtn');
       const avatar = document.getElementById('brokerIdentityAvatar');
@@ -7316,6 +7319,26 @@
       const metaText = `${profile.brokerIdNumber ? `Broker ID ${profile.brokerIdNumber}` : 'Broker Account'} • ${activityMeta}`;
       name.textContent = label;
       meta.textContent = metaText;
+      if (profile.avatarDataUrl) {
+        avatar.innerHTML = `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`;
+      } else {
+        avatar.textContent = getProfileInitials(fullName);
+      }
+    }
+
+    function syncBrokerIdentityButton() {
+      const profile = getActiveBrokerProfile();
+      const trigger = document.getElementById('brokerIdentityBtn');
+      const avatar = document.getElementById('brokerIdentityAvatar');
+      const name = document.getElementById('brokerIdentityName');
+      const meta = document.getElementById('brokerIdentityMeta');
+      if (!trigger || !avatar || !name || !meta) return;
+      const fullName = profile.fullName || profile.companyName || 'Broker Account';
+      const activityInfo = getBrokerActivityStatusInfo(profile.lastActivity || state.overview?.broker?.lastActivity || '');
+      const metaText = activityInfo.label || 'Offline';
+      name.textContent = fullName;
+      meta.textContent = metaText;
+      trigger.title = `${fullName} · ${metaText}`;
       if (profile.avatarDataUrl) {
         avatar.innerHTML = `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`;
       } else {
