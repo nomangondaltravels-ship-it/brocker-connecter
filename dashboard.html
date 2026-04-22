@@ -4480,6 +4480,28 @@
       word-break: break-word;
     }
 
+    .detail-grid .detail-cell .private-contact-placeholder,
+    .detail-grid .detail-cell .private-contact-value {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      color: #475569;
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .detail-grid .detail-cell .private-contact-placeholder {
+      color: #64748b;
+    }
+
+    .private-reveal-btn {
+      min-height: 30px !important;
+      padding: 0 10px !important;
+      border-radius: 10px !important;
+      font-size: 0.74rem !important;
+      font-weight: 700;
+    }
+
     .detail-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -5685,6 +5707,10 @@
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
+      privateContactReveal: {
+        lead: {},
+        property: {}
+      },
       splitScrollMemory: {
         leads: '',
         properties: '',
@@ -7746,7 +7772,7 @@
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>${getLeadClientPurpose(lead.clientPurpose) === 'buy' ? 'Payment Method' : 'Client Purpose'}</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
           </div>
-                  <div class="muted"><strong>Private client:</strong> ${escapeHtml(joinDisplayParts([lead.clientName || '--', lead.clientPhone || '--']))}</div>
+                  <div class="muted"><strong>Private client:</strong> ${escapeHtml(getLeadPrivateContactSummary(lead))}</div>
           <div class="muted"><strong>Private CRM note:</strong> ${escapeHtml(lead.privateNotes || 'No private note added')}</div>
           <div class="muted"><strong>Public-safe summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary generated yet')}</div>
           <div class="actions">
@@ -8935,9 +8961,50 @@
     }
 
     function getPropertyPrivateContactSummary(property) {
-      const owner = joinDisplayParts([property.ownerName, property.ownerPhone]);
-      if (owner) return `Owner: ${owner}`;
+      const displayPhone = isPrivatePhoneRevealed('property', property?.id) ? formatPhoneDisplay(property?.ownerPhone) : '';
+      if (displayPhone) return `Private contact - ${displayPhone}`;
+      if (property?.ownerName || property?.ownerPhone) return 'Private contact hidden';
       return 'No owner details added';
+    }
+
+    function getLeadPrivateContactSummary(lead) {
+      const displayPhone = isPrivatePhoneRevealed('lead', lead?.id) ? formatPhoneDisplay(lead?.clientPhone) : '';
+      if (displayPhone) return `Private contact - ${displayPhone}`;
+      if (lead?.clientName || lead?.clientPhone) return 'Private contact hidden';
+      return 'No client details added';
+    }
+
+    function isPrivatePhoneRevealed(kind, id) {
+      const bucket = state.privateContactReveal?.[kind];
+      if (!bucket) return false;
+      return Boolean(bucket[String(id ?? '')]);
+    }
+
+    function revealPrivatePhone(kind, id) {
+      const bucket = state.privateContactReveal?.[kind];
+      if (!bucket) return;
+      bucket[String(id ?? '')] = true;
+      if (kind === 'lead') {
+        renderLeads();
+        return;
+      }
+      renderProperties();
+      renderDistressDeals();
+    }
+
+    function renderPrivateNameValue(value, hiddenLabel = 'Hidden for privacy') {
+      return `<span class="private-contact-placeholder">${escapeHtml(value ? hiddenLabel : 'No contact added')}</span>`;
+    }
+
+    function renderPrivatePhoneValue(kind, id, rawPhone) {
+      const phoneDisplay = formatPhoneDisplay(rawPhone);
+      if (!phoneDisplay) {
+        return '<span class="private-contact-placeholder">No number added</span>';
+      }
+      if (isPrivatePhoneRevealed(kind, id)) {
+        return `<span class="private-contact-value">${escapeHtml(phoneDisplay)}</span>`;
+      }
+      return `<button class="btn btn-secondary btn-tiny private-reveal-btn" type="button" onclick='revealPrivatePhone(${JSON.stringify(kind)}, ${JSON.stringify(String(id ?? ""))})'>Show number</button>`;
     }
 
     function formatCompactAge(value) {
@@ -9668,8 +9735,8 @@
             </div>
 
             <div class="detail-grid">
-              <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
-              <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue(lead.clientName, 'Hidden for privacy')}</strong></div>
+              <div class="detail-cell"><small>Client Phone</small><strong>${renderPrivatePhoneValue('lead', lead.id, lead.clientPhone)}</strong></div>
               <div class="detail-cell"><small>Payment / Purpose</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
               <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([lead.nextFollowUpDate || '', lead.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
             </div>
@@ -9767,8 +9834,8 @@
             </div>
 
             <div class="detail-grid">
-              <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(property.ownerName || '--')}</strong></div>
-              <div class="detail-cell"><small>Owner Phone</small><strong>${escapeHtml(property.ownerPhone || '--')}</strong></div>
+              <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue(property.ownerName, 'Private contact')}</strong></div>
+              <div class="detail-cell"><small>Owner Phone</small><strong>${renderPrivatePhoneValue('property', property.id, property.ownerPhone)}</strong></div>
               <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
               <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([property.nextFollowUpDate || '', property.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
             </div>
@@ -11822,8 +11889,8 @@
         <div class="detail-section">
           <h4>Overview</h4>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
-            <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
+            <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue(lead.clientName, 'Hidden for privacy')}</strong></div>
+            <div class="detail-cell"><small>Client Phone</small><strong>${renderPrivatePhoneValue('lead', lead.id, lead.clientPhone)}</strong></div>
             <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>Preferred Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
@@ -11927,7 +11994,8 @@
             <div class="detail-cell"><small>Furnishing</small><strong>${escapeHtml(property.furnishing || '--')}</strong></div>
             <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
             ${property.isDistress ? `<div class="detail-cell"><small>Market Difference</small><strong>${escapeHtml(distressLabel || '--')}</strong></div>` : ''}
-            <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(getPropertyPrivateContactSummary(property))}</strong></div>
+            <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue(property.ownerName, 'Private contact')}</strong></div>
+            <div class="detail-cell"><small>Owner Phone</small><strong>${renderPrivatePhoneValue('property', property.id, property.ownerPhone)}</strong></div>
           </div>
         </div>
         <div class="detail-section">
