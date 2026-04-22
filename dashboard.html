@@ -5704,8 +5704,27 @@
     const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
 
-    function escapeHtml(value) {
+    const DISPLAY_SEPARATOR = ' · ';
+
+    function repairDisplayMojibake(value) {
       return String(value || '')
+        .replace(/Ã‚Â·/g, DISPLAY_SEPARATOR)
+        .replace(/Ã¢â€ â€/g, ' → ')
+        .replace(/â€™/g, "'")
+        .replace(/â€“/g, '–')
+        .replace(/â€”/g, '—');
+    }
+
+    function joinDisplayParts(parts, separator = DISPLAY_SEPARATOR) {
+      return (Array.isArray(parts) ? parts : [parts])
+        .map(item => repairDisplayMojibake(item))
+        .map(item => String(item || '').trim())
+        .filter(Boolean)
+        .join(separator);
+    }
+
+    function escapeHtml(value) {
+      return repairDisplayMojibake(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -7665,9 +7684,17 @@
 
     function leadChecklistSummary(lead) {
       if (String(lead.purpose).toLowerCase() === 'rent') {
-        return `Booking: ${lead.rentChecklist.booking ? 'Yes' : 'No'} Ã‚Â· Agreement: ${lead.rentChecklist.agreementSigned ? 'Yes' : 'No'} Ã‚Â· Handover: ${lead.rentChecklist.handoverDone ? 'Yes' : 'No'}`;
+      return joinDisplayParts([
+        `Booking: ${lead.rentChecklist.booking ? 'Yes' : 'No'}`,
+        `Agreement: ${lead.rentChecklist.agreementSigned ? 'Yes' : 'No'}`,
+        `Handover: ${lead.rentChecklist.handoverDone ? 'Yes' : 'No'}`
+      ]);
       }
-      return `Contract A: ${lead.saleChecklist.contractA ? 'Yes' : 'No'} Ã‚Â· Contract B: ${lead.saleChecklist.contractB ? 'Yes' : 'No'} Ã‚Â· Contract F: ${lead.saleChecklist.contractF ? 'Yes' : 'No'}`;
+      return joinDisplayParts([
+        `Contract A: ${lead.saleChecklist.contractA ? 'Yes' : 'No'}`,
+        `Contract B: ${lead.saleChecklist.contractB ? 'Yes' : 'No'}`,
+        `Contract F: ${lead.saleChecklist.contractF ? 'Yes' : 'No'}`
+      ]);
     }
 
     function renderLeads() {
@@ -7682,8 +7709,8 @@
         <div class="item-card">
           <div class="item-top">
             <div class="item-title">
-              <h4>${getLeadClientPurposeLabel(lead.clientPurpose)} Ã‚Â· ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
-              <div class="muted">${escapeHtml(lead.location || '--')} Ã‚Â· ${escapeHtml(formatBudgetLabel(lead.budget))} Ã‚Â· Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}</div>
+                <h4>${escapeHtml(joinDisplayParts([getLeadClientPurposeLabel(lead.clientPurpose), lead.propertyType || 'Requirement']))}</h4>
+                <div class="muted">${escapeHtml(joinDisplayParts([lead.location || '--', formatBudgetLabel(lead.budget), `Created ${new Date(lead.createdAt || Date.now()).toLocaleDateString()}`]))}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(lead.status)}">${escapeHtml(lead.status || 'new')}</span>
@@ -7696,7 +7723,7 @@
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>${getLeadClientPurpose(lead.clientPurpose) === 'buy' ? 'Payment Method' : 'Client Purpose'}</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
           </div>
-          <div class="muted"><strong>Private client:</strong> ${escapeHtml(lead.clientName || '--')} Ã‚Â· ${escapeHtml(lead.clientPhone || '--')}</div>
+                  <div class="muted"><strong>Private client:</strong> ${escapeHtml(joinDisplayParts([lead.clientName || '--', lead.clientPhone || '--']))}</div>
           <div class="muted"><strong>Private CRM note:</strong> ${escapeHtml(lead.privateNotes || 'No private note added')}</div>
           <div class="muted"><strong>Public-safe summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary generated yet')}</div>
           <div class="actions">
@@ -7720,8 +7747,8 @@
         <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${property.propertyType} Ã‚Â· ${property.category}</h4>
-              <div class="muted">${property.location} Ã‚Â· ${property.price} Ã‚Â· ${property.purpose}</div>
+                <h4>${escapeHtml(joinDisplayParts([property.propertyType, property.category]))}</h4>
+                <div class="muted">${escapeHtml(joinDisplayParts([property.location, property.price, property.purpose]))}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(property.status)}">${property.status}</span>
@@ -7761,8 +7788,8 @@
         <div class="item-card ${item.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${item.listingKind.replace('_', ' ')} Ã‚Â· ${item.purpose} Ã‚Â· ${item.category}</h4>
-              <div class="muted">${item.location} Ã‚Â· ${item.priceLabel}</div>
+                <h4>${escapeHtml(joinDisplayParts([item.listingKind.replace('_', ' '), item.purpose, item.category]))}</h4>
+                <div class="muted">${escapeHtml(joinDisplayParts([item.location, item.priceLabel]))}</div>
             </div>
             <div class="badges">
               <span class="badge badge-green">${item.status}</span>
@@ -7789,8 +7816,8 @@
       target.innerHTML = followUps.map(item => `
         <div class="mini-item">
           <strong>${item.followUpType}</strong>
-          <div class="muted">${item.entityType} #${item.entityId} Ã‚Â· ${item.meetingDate || '--'} ${item.meetingTime || ''}</div>
-          <div class="muted">${item.note || 'No note'}${item.nextAction ? ` Ã‚Â· Next: ${item.nextAction}` : ''}</div>
+                <div class="muted">${escapeHtml(joinDisplayParts([`${item.entityType} #${item.entityId}`, `${item.meetingDate || '--'} ${item.meetingTime || ''}`]))}</div>
+                <div class="muted">${escapeHtml(joinDisplayParts([item.note || 'No note', item.nextAction ? `Next: ${item.nextAction}` : '']))}</div>
         </div>
       `).join('');
     }
@@ -7807,7 +7834,7 @@
 
       getFilteredDashboardItems(state.leads, 'lead').forEach(lead => {
         const status = String(lead.status || '').toLowerCase();
-        const html = `<div class="mini-item"><strong>${lead.category}</strong><div class="muted">${lead.location} Ã‚Â· ${lead.budget}</div></div>`;
+        const html = `<div class="mini-item"><strong>${escapeHtml(lead.category)}</strong><div class="muted">${escapeHtml(joinDisplayParts([lead.location, lead.budget]))}</div></div>`;
         if (status === 'new') columns.new.push(html);
         else if (['contacted', 'demand confirmed', 'negotiation'].includes(status)) columns.active.push(html);
         else if (status === 'meeting scheduled') columns.meetings.push(html);
@@ -8541,8 +8568,8 @@
       const source = type === 'lead' ? state.leads : state.properties;
       select.innerHTML = source.map(item => {
         const label = type === 'lead'
-          ? `${item.id} Ã‚Â· ${item.category} Ã‚Â· ${item.location}`
-          : `${item.id} Ã‚Â· ${item.propertyType} Ã‚Â· ${item.location}`;
+          ? joinDisplayParts([item.id, item.category, item.location])
+          : joinDisplayParts([item.id, item.propertyType, item.location]);
         return `<option value="${item.id}">${label}</option>`;
       }).join('');
       if (!source.length) {
@@ -8871,21 +8898,21 @@
     function getPropertyTermsSummary(property) {
       const purpose = getPropertyPurpose(property.purpose);
       if (purpose === 'rent') {
-        return [
+        return joinDisplayParts([
           property.furnishing,
           property.cheques,
           property.chiller
-        ].filter(Boolean).join(' Ã‚Â· ') || 'Standard rent terms';
+        ]) || 'Standard rent terms';
       }
 
-      return [
+      return joinDisplayParts([
         property.leasehold ? 'Leasehold' : 'Freehold / Standard',
         property.mortgageStatus
-      ].filter(Boolean).join(' Ã‚Â· ') || 'Standard sale terms';
+      ]) || 'Standard sale terms';
     }
 
     function getPropertyPrivateContactSummary(property) {
-      const owner = [property.ownerName, property.ownerPhone].filter(Boolean).join(' Ã‚Â· ');
+      const owner = joinDisplayParts([property.ownerName, property.ownerPhone]);
       if (owner) return `Owner: ${owner}`;
       return 'No owner details added';
     }
@@ -9023,12 +9050,12 @@
         <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
           <div class="item-top">
             <div class="item-title">
-              <h4>${getPropertyPurposeLabel(property.purpose)} Ã‚Â· ${property.propertyType || 'Property'}</h4>
-              <div class="muted">${[
+              <h4>${escapeHtml(joinDisplayParts([getPropertyPurposeLabel(property.purpose), property.propertyType || 'Property']))}</h4>
+              <div class="muted">${escapeHtml(joinDisplayParts([
                 property.location,
                 getPropertyDisplayPrice(property),
                 property.buildingName
-              ].filter(Boolean).join(' Ã‚Â· ')}</div>
+              ]))}</div>
             </div>
             <div class="badges">
               <span class="badge ${badgeClass(property.status)}">${property.status}</span>
@@ -9463,12 +9490,12 @@
             return `
               <div class="workflow-alert-item">
                 <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
-                <div class="muted">Lead #${escapeHtml(match.requirementId)} Ã¢â€ â€ Listing #${escapeHtml(match.propertyId)}</div>
+                <div class="muted">${escapeHtml(`Lead #${match.requirementId} → Listing #${match.propertyId}`)}</div>
                 <div class="muted">${escapeHtml(match.matchReason || '')}</div>
-                <small>${escapeHtml([
+                <small>${escapeHtml(joinDisplayParts([
                   lead?.location || property?.location || '',
                   lead?.propertyType || property?.propertyType || ''
-                ].filter(Boolean).join(' Ã‚Â· '))}</small>
+                ]))}</small>
               </div>
             `;
           }).join('');
@@ -9553,8 +9580,8 @@
       if (!matches.length) return '<div class="empty">No matching listings yet.</div>';
       return `<div class="match-list">${matches.slice(0, 8).map(match => `
         <div class="match-item">
-          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} Ã‚Â· Listing #${escapeHtml(match.id)}</strong>
-          <div class="muted">${escapeHtml([match.propertyType, match.location, match.price].filter(Boolean).join(' Ã‚Â· '))}</div>
+          <strong>${escapeHtml(joinDisplayParts([match.confidence === 'strong' ? 'Strong Match' : 'Partial Match', `Listing #${match.id}`]))}</strong>
+          <div class="muted">${escapeHtml(joinDisplayParts([match.propertyType, match.location, match.price]))}</div>
           <small>${escapeHtml(match.matchReason || '')}</small>
         </div>
       `).join('')}</div>`;
@@ -9565,8 +9592,8 @@
       if (!matches.length) return '<div class="empty">No matching leads yet.</div>';
       return `<div class="match-list">${matches.slice(0, 8).map(match => `
         <div class="match-item">
-          <strong>${escapeHtml(match.confidence === 'strong' ? 'Strong Match' : 'Partial Match')} Ã‚Â· Lead #${escapeHtml(match.id)}</strong>
-          <div class="muted">${escapeHtml([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)].filter(Boolean).join(' Ã‚Â· '))}</div>
+          <strong>${escapeHtml(joinDisplayParts([match.confidence === 'strong' ? 'Strong Match' : 'Partial Match', `Lead #${match.id}`]))}</strong>
+          <div class="muted">${escapeHtml(joinDisplayParts([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)]))}</div>
           <small>${escapeHtml(match.matchReason || '')}</small>
         </div>
       `).join('')}</div>`;
@@ -9604,8 +9631,8 @@
           <div class="item-card">
             <div class="item-top">
               <div class="item-title">
-                <h4>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))} Ã‚Â· ${escapeHtml(lead.propertyType || 'Requirement')}</h4>
-                <div class="muted">${escapeHtml([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject].filter(Boolean).join(' Ã‚Â· '))}</div>
+                <h4>${escapeHtml(joinDisplayParts([getLeadClientPurposeLabel(lead.clientPurpose), lead.propertyType || 'Requirement']))}</h4>
+                <div class="muted">${escapeHtml(joinDisplayParts([lead.location, formatBudgetLabel(lead.budget), lead.preferredBuildingProject]))}</div>
               </div>
               <div class="badges">
                 <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
@@ -9702,8 +9729,8 @@
           <div class="item-card ${property.isDistress ? 'distress-card' : ''}">
             <div class="item-top">
               <div class="item-title">
-                <h4>${escapeHtml(getPropertyPurposeLabel(property.purpose))} Ã‚Â· ${escapeHtml(property.propertyType || 'Listing')}</h4>
-                <div class="muted">${escapeHtml([property.location, property.buildingName, getPropertyDisplayPrice(property)].filter(Boolean).join(' Ã‚Â· '))}</div>
+                <h4>${escapeHtml(joinDisplayParts([getPropertyPurposeLabel(property.purpose), property.propertyType || 'Listing']))}</h4>
+                <div class="muted">${escapeHtml(joinDisplayParts([property.location, property.buildingName, getPropertyDisplayPrice(property)]))}</div>
               </div>
               <div class="badges">
                 <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
@@ -10447,7 +10474,7 @@
               <div class="crm-col">
                 <span class="crm-col-label">Purpose / Type</span>
                 <div class="crm-primary">${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} | ${lead.propertyType || 'Requirement'}`)}</div>
-                <div class="crm-secondary">${escapeHtml([getLeadIntentText(lead), lead.paymentMethod].filter(Boolean).join(' Ã‚Â· '))}</div>
+                <div class="crm-secondary">${escapeHtml(joinDisplayParts([getLeadIntentText(lead), lead.paymentMethod]))}</div>
               </div>
               <div class="crm-col">
                 <span class="crm-col-label">Location</span>
@@ -10943,12 +10970,12 @@
                     </div>
                   </div>
                   <div class="crm-row-actions">
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">Ã¢Å“Å½ Edit</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">Ã¢ËœÅ½ Call</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">&#9998; Edit</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">&#9742; Call</button>
                     <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
                     <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
-                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? 'Ã¢â€ Âº Restore' : 'Ã°Å¸â€”â€ž Archive'}</button>
-                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">Ã¢Å“â€¢</button>
+                    <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '&#8634; Restore' : 'Archive'}</button>
+                    <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">&times;</button>
                   </div>
                 </div>
                 <details class="record-details-panel crm-row-panel">
