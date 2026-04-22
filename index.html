@@ -1278,6 +1278,12 @@
       letter-spacing: -0.02em;
     }
 
+    @media (max-width: 1380px) and (min-width: 1181px) {
+      .connector-results-shell {
+        grid-template-columns: minmax(0, 1fr) 360px;
+      }
+    }
+
     @media (max-width: 1180px) {
       .topbar-inner.public-topbar {
         grid-template-columns: 1fr;
@@ -1515,8 +1521,8 @@
 
     .public-sheet {
       gap: 0;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
       overflow: hidden;
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
@@ -1525,18 +1531,20 @@
     .public-sheet-head {
       background: #f8fafc !important;
       border: 0 !important;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
+      border-bottom: 1px solid #e5e7eb !important;
       color: #64748b !important;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      min-height: 44px;
+      font-size: 11px !important;
     }
 
     .public-row {
       background: #ffffff !important;
       border: 0 !important;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
+      border-bottom: 1px solid #f1f5f9 !important;
       border-radius: 0 !important;
-      min-height: 80px;
+      min-height: 72px;
       box-shadow: none !important;
       transform: none !important;
     }
@@ -1655,15 +1663,15 @@
 
     .connector-results-shell {
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.82fr);
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: 16px;
       align-items: start;
     }
 
     .connector-list-panel,
     .connector-detail-panel {
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
     }
@@ -1673,11 +1681,11 @@
     }
 
     .connector-detail-panel {
-      padding: 22px;
+      padding: 20px;
       position: sticky;
       top: 106px;
       display: grid;
-      gap: 18px;
+      gap: 20px;
       min-height: 240px;
     }
 
@@ -1697,7 +1705,7 @@
 
     .connector-detail-header {
       display: grid;
-      gap: 12px;
+      gap: 8px;
     }
 
     .connector-detail-header h3 {
@@ -1795,9 +1803,9 @@
 
     .connector-detail-section {
       display: grid;
-      gap: 12px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(148, 163, 184, 0.14);
+      gap: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
     }
 
     .connector-detail-section:first-of-type {
@@ -1849,6 +1857,63 @@
       line-height: 1.45;
       word-break: break-word;
       text-align: right;
+    }
+
+    .sheet-head-center,
+    .sheet-col-center {
+      text-align: center;
+      justify-items: center;
+    }
+
+    .sheet-head-right,
+    .sheet-col-right {
+      text-align: right;
+      justify-items: end;
+    }
+
+    .contact-reveal-trigger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+    }
+
+    .contact-reveal-trigger:hover {
+      border-color: rgba(181, 138, 29, 0.28);
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    .contact-reveal-trigger svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+
+    .contact-reveal-value {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #0f172a;
     }
 
     .connector-detail-note {
@@ -2181,6 +2246,11 @@
         marketplace: '',
         'distress-deals': ''
       },
+      revealedPublicContactKeys: {
+        requirements: '',
+        marketplace: '',
+        'distress-deals': ''
+      },
       pagination: {
         requirements: 1,
         marketplace: 1,
@@ -2214,6 +2284,11 @@
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
+
+    const CONNECTOR_TABLE_COLUMNS = {
+      requirements: '72px 180px 120px 180px 96px 120px 110px 96px 90px',
+      listings: '72px 180px 120px 180px 96px 120px 110px 110px 96px 90px'
+    };
 
     state.brokerProfile = safeJsonRead('broker_session_profile', null);
 
@@ -2511,20 +2586,32 @@
       return `${sectionName}:${listing?.id ?? ''}`;
     }
 
+    function isPublicContactRevealed(sectionName, listing) {
+      return state.revealedPublicContactKeys[sectionName] === getPublicSelectionKey(sectionName, listing);
+    }
+
     function ensureSelectedPublicListing(sectionName, items) {
       if (!Array.isArray(items) || !items.length) {
         state.selectedPublicListingKeys[sectionName] = '';
+        state.revealedPublicContactKeys[sectionName] = '';
         return null;
       }
       const selectedKey = state.selectedPublicListingKeys[sectionName];
       const selectedItem = items.find(item => getPublicSelectionKey(sectionName, item) === selectedKey);
       if (selectedItem) return selectedItem;
       state.selectedPublicListingKeys[sectionName] = getPublicSelectionKey(sectionName, items[0]);
+      state.revealedPublicContactKeys[sectionName] = '';
       return items[0];
     }
 
     function selectPublicListing(sectionName, listingId) {
       state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
+      state.revealedPublicContactKeys[sectionName] = '';
+      renderPublicViews();
+    }
+
+    function revealPublicContact(sectionName, listingId) {
+      state.revealedPublicContactKeys[sectionName] = `${sectionName}:${listingId}`;
       renderPublicViews();
     }
 
@@ -2897,6 +2984,12 @@
       const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
         .filter(Boolean)
         .join(' - ');
+      const phoneAvailable = String(selected.brokerMobile || '').trim();
+      const contactRevealControl = phoneAvailable
+        ? isPublicContactRevealed(sectionName, selected)
+          ? `<span class="contact-reveal-value">${escapeHtml(formatPhoneDisplay(selected.brokerMobile))}</span>`
+          : `<button class="contact-reveal-trigger" type="button" onclick="event.stopPropagation();revealPublicContact('${sectionName}', '${selected.id}')">${getConnectorActionIcon('call')}<span>Show number</span></button>`
+        : '<span class="contact-reveal-value">Not shared</span>';
       target.innerHTML = `
         <div class="connector-detail-header">
           <div class="connector-detail-meta">
@@ -2934,28 +3027,29 @@
           <h4>Broker Contact</h4>
           <div class="connector-detail-grid">
             <div class="connector-detail-cell"><small>Shared By</small><strong>${escapeHtml(selected.brokerName || 'Broker')}</strong></div>
-            <div class="connector-detail-cell"><small>Contact Number</small><strong>${escapeHtml(formatPhoneDisplay(selected.brokerMobile))}</strong></div>
+            <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
           </div>
         </div>
       `;
     }
 
     function renderRequirementsSheet(items, sectionName, startIndex) {
+      const columns = CONNECTOR_TABLE_COLUMNS.requirements;
       return `
-        <div class="public-sheet-head" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(136px,1fr) minmax(140px,1fr) minmax(124px,0.88fr) minmax(124px,0.88fr) minmax(120px,0.86fr) minmax(112px,0.78fr) auto;">
-          <div>#</div>
+        <div class="public-sheet-head" style="grid-template-columns:${columns};">
+          <div class="sheet-head-center">#</div>
           <div>Intent</div>
           <div>Location</div>
           <div>Building / Project</div>
           <div>Type</div>
-          <div>Budget</div>
+          <div class="sheet-head-right">Budget</div>
           <div>Status</div>
-          <div>Updated</div>
-          <div>Open</div>
+          <div class="sheet-head-right">Updated</div>
+          <div class="sheet-head-right">Open</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(136px,1fr) minmax(140px,1fr) minmax(124px,0.88fr) minmax(124px,0.88fr) minmax(120px,0.86fr) minmax(112px,0.78fr) auto;">
-            <div class="sheet-col">
+          <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:${columns};">
+            <div class="sheet-col sheet-col-center">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
@@ -2976,7 +3070,7 @@
               <span class="sheet-label">Type</span>
               <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
             </div>
-            <div class="sheet-col">
+            <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Budget</span>
               <span class="sheet-primary">${listing.priceLabel || '--'}</span>
             </div>
@@ -2987,7 +3081,7 @@
                 ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
               </div>
             </div>
-            <div class="sheet-col">
+            <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Updated</span>
               <span class="sheet-primary">${formatCompactRelativeTime(listing.updatedAt || listing.createdAt)}</span>
             </div>
@@ -2998,22 +3092,23 @@
     }
 
     function renderListingsSheet(items, sectionName, startIndex) {
+      const columns = CONNECTOR_TABLE_COLUMNS.listings;
       return `
-        <div class="public-sheet-head" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(132px,0.9fr) minmax(144px,0.98fr) minmax(128px,0.88fr) minmax(128px,0.88fr) minmax(120px,0.82fr) minmax(112px,0.82fr) minmax(110px,0.74fr) auto;">
-          <div>#</div>
+        <div class="public-sheet-head" style="grid-template-columns:${columns};">
+          <div class="sheet-head-center">#</div>
           <div>Purpose</div>
           <div>Location</div>
           <div>Building / Project</div>
           <div>Type</div>
-          <div>Price</div>
-          <div>Size</div>
+          <div class="sheet-head-right">Price</div>
+          <div class="sheet-head-right">Size</div>
           <div>Status</div>
-          <div>Updated</div>
-          <div>Open</div>
+          <div class="sheet-head-right">Updated</div>
+          <div class="sheet-head-right">Open</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:74px minmax(190px,1.45fr) minmax(132px,0.9fr) minmax(144px,0.98fr) minmax(128px,0.88fr) minmax(128px,0.88fr) minmax(120px,0.82fr) minmax(112px,0.82fr) minmax(110px,0.74fr) auto;">
-            <div class="sheet-col">
+          <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')" style="grid-template-columns:${columns};">
+            <div class="sheet-col sheet-col-center">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
@@ -3034,11 +3129,11 @@
               <span class="sheet-label">Type</span>
               <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
             </div>
-            <div class="sheet-col">
+            <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Price</span>
               <span class="sheet-primary">${listing.priceLabel || '--'}</span>
             </div>
-            <div class="sheet-col">
+            <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Size</span>
               <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
             </div>
@@ -3050,7 +3145,7 @@
                 ${listing.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
               </div>
             </div>
-            <div class="sheet-col">
+            <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Updated</span>
               <span class="sheet-primary">${formatCompactRelativeTime(listing.updatedAt || listing.createdAt)}</span>
             </div>

@@ -3728,7 +3728,7 @@
 
     .workspace-split {
       display: grid;
-      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: 16px;
       align-items: start;
     }
@@ -3736,6 +3736,9 @@
     .workspace-table-card,
     .workspace-detail-card {
       overflow: hidden;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
     }
 
     .workspace-table-scroll {
@@ -3750,16 +3753,16 @@
     .workspace-table-row {
       display: grid;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       padding: 0 16px;
     }
 
     .workspace-table-head {
-      min-height: 42px;
-      border-bottom: 1px solid #eef2f7;
+      min-height: 44px;
+      border-bottom: 1px solid #e5e7eb;
       background: #f8fafc;
       color: #64748b;
-      font-size: 0.72rem;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -3773,8 +3776,8 @@
     }
 
     .workspace-table-row {
-      min-height: 68px;
-      border-bottom: 1px solid #eef2f7;
+      min-height: 72px;
+      border-bottom: 1px solid #f1f5f9;
       cursor: pointer;
       background: #ffffff;
       transition: background 0.18s ease, border-color 0.18s ease;
@@ -3792,11 +3795,12 @@
     .workspace-cell {
       min-width: 0;
       display: grid;
-      gap: 3px;
+      gap: 4px;
     }
 
     .workspace-cell strong {
-      font-size: 0.83rem;
+      font-size: 14px;
+      font-weight: 500;
       color: #0f172a;
       line-height: 1.35;
       white-space: nowrap;
@@ -3806,12 +3810,24 @@
 
     .workspace-cell span,
     .workspace-cell small {
-      font-size: 0.76rem;
+      font-size: 12px;
       color: #64748b;
       line-height: 1.35;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .workspace-head-center,
+    .workspace-cell-center {
+      text-align: center;
+      justify-items: center;
+    }
+
+    .workspace-head-right,
+    .workspace-cell-right {
+      text-align: right;
+      justify-items: end;
     }
 
     .workspace-cell .workspace-number {
@@ -3838,9 +3854,9 @@
     }
 
     .workspace-detail-card {
-      padding: 18px 18px 16px;
+      padding: 20px;
       display: grid;
-      gap: 16px;
+      gap: 20px;
       position: sticky;
       top: 106px;
     }
@@ -3860,7 +3876,7 @@
 
     .detail-panel-header {
       display: grid;
-      gap: 10px;
+      gap: 8px;
     }
 
     .detail-panel-header h3 {
@@ -3883,9 +3899,9 @@
 
     .detail-section {
       display: grid;
-      gap: 10px;
-      padding-top: 12px;
-      border-top: 1px solid #eef2f7;
+      gap: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
     }
 
     .detail-section:first-of-type {
@@ -3904,7 +3920,7 @@
     .detail-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 12px;
     }
 
     .detail-grid .detail-cell {
@@ -4116,6 +4132,12 @@
     .crm-row.is-distress {
       background: #fffaf0 !important;
       border-left: 3px solid rgba(200, 169, 107, 0.45) !important;
+    }
+
+    @media (max-width: 1380px) and (min-width: 1181px) {
+      .workspace-split {
+        grid-template-columns: minmax(0, 1fr) 360px;
+      }
     }
 
     @media (max-width: 1180px) {
@@ -10325,6 +10347,12 @@
       `;
     }
 
+    const WORKSPACE_TABLE_COLUMNS = {
+      leads: '56px 180px 110px 120px 160px 120px 110px 96px 90px',
+      listings: '56px 180px 140px 160px 110px 120px 110px 110px 90px',
+      distress: '56px 180px 110px 160px 120px 120px 110px 96px 90px'
+    };
+
     function renderLeadDetailPanel(lead) {
       if (!lead) {
         return `
@@ -10526,22 +10554,23 @@
 
       state.selectedLeadId = ensureSelectedWorkspaceId(requirements, state.selectedLeadId);
       const selectedLead = requirements.find(item => String(item.id) === String(state.selectedLeadId)) || null;
+      const leadColumns = WORKSPACE_TABLE_COLUMNS.leads;
 
       target.innerHTML = `
         <div class="workspace-split">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
-                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(148px,1.1fr) minmax(112px,0.8fr) minmax(164px,1fr) minmax(120px,0.85fr) minmax(124px,0.85fr) minmax(148px,0.9fr) minmax(112px,0.76fr) minmax(200px,1fr);">
-                  <div>#</div>
+                <div class="workspace-table-head" style="grid-template-columns:${leadColumns};">
+                  <div class="workspace-head-center">#</div>
                   <div>Client / Purpose</div>
                   <div>Property Type</div>
                   <div>Preferred Location</div>
                   <div>Building</div>
-                  <div>Budget</div>
+                  <div class="workspace-head-right">Budget</div>
                   <div>Status</div>
-                  <div>Updated</div>
-                  <div>Quick Actions</div>
+                  <div class="workspace-head-right">Updated</div>
+                  <div class="workspace-head-right">Quick Actions</div>
                 </div>
                 <div class="workspace-table-body">
                   ${requirements.map((lead, index) => {
@@ -10556,9 +10585,9 @@
                         tabindex="0"
                         onclick="openLeadRecord(${lead.id})"
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLeadRecord(${lead.id})}"
-                        style="grid-template-columns: 60px minmax(148px,1.1fr) minmax(112px,0.8fr) minmax(164px,1fr) minmax(120px,0.85fr) minmax(124px,0.85fr) minmax(148px,0.9fr) minmax(112px,0.76fr) minmax(200px,1fr);"
+                        style="grid-template-columns:${leadColumns};"
                       >
-                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(lead.clientName || getLeadClientPurposeLabel(lead.clientPurpose))}</strong>
                           <span>${escapeHtml(getLeadIntentText(lead))}</span>
@@ -10575,7 +10604,7 @@
                           <strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong>
                           <span>${escapeHtml(lead.paymentMethod || '--')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong>
                           <span>${escapeHtml(lead.source || 'Broker desk')}</span>
                         </div>
@@ -10583,7 +10612,7 @@
                           <strong>${escapeHtml(formatStatusLabel(lead.status || 'new'))}</strong>
                           <span>${escapeHtml(followUpState.label)}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
                           <span>${escapeHtml(`${lead.callCount || 0} calls / ${lead.whatsappCount || 0} WA`)}</span>
                         </div>
@@ -10626,22 +10655,23 @@
 
       state.selectedPropertyId = ensureSelectedWorkspaceId(properties, state.selectedPropertyId);
       const selectedProperty = properties.find(item => String(item.id) === String(state.selectedPropertyId)) || null;
+      const listingColumns = WORKSPACE_TABLE_COLUMNS.listings;
 
       target.innerHTML = `
         <div class="workspace-split">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
-                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(170px,1.15fr) minmax(112px,0.8fr) minmax(174px,1fr) minmax(126px,0.86fr) minmax(116px,0.78fr) minmax(130px,0.82fr) minmax(124px,0.8fr) minmax(210px,1fr);">
-                  <div>#</div>
+                <div class="workspace-table-head" style="grid-template-columns:${listingColumns};">
+                  <div class="workspace-head-center">#</div>
                   <div>Reference / Listing</div>
                   <div>Purpose</div>
                   <div>Building / Area</div>
                   <div>Type</div>
-                  <div>Price</div>
+                  <div class="workspace-head-right">Price</div>
                   <div>Status</div>
                   <div>Visibility</div>
-                  <div>Quick Actions</div>
+                  <div class="workspace-head-right">Quick Actions</div>
                 </div>
                 <div class="workspace-table-body">
                   ${properties.map((property, index) => {
@@ -10655,9 +10685,9 @@
                         tabindex="0"
                         onclick="openPropertyRecord(${property.id}, 'properties')"
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'properties')}"
-                        style="grid-template-columns: 60px minmax(170px,1.15fr) minmax(112px,0.8fr) minmax(174px,1fr) minmax(126px,0.86fr) minmax(116px,0.78fr) minmax(130px,0.82fr) minmax(124px,0.8fr) minmax(210px,1fr);"
+                        style="grid-template-columns:${listingColumns};"
                       >
-                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.reference || property.buildingName || `${getPropertyPurposeLabel(property.purpose)} Listing`)}</strong>
                           <span>${escapeHtml(property.location || '--')}</span>
@@ -10674,7 +10704,7 @@
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
                           <span>${escapeHtml(property.furnishing || '--')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
                           <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
@@ -10725,22 +10755,23 @@
 
       state.selectedDistressId = ensureSelectedWorkspaceId(distressItems, state.selectedDistressId);
       const selectedDistress = distressItems.find(item => String(item.id) === String(state.selectedDistressId)) || null;
+      const distressColumns = WORKSPACE_TABLE_COLUMNS.distress;
 
       target.innerHTML = `
         <div class="workspace-split">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
-                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(188px,1.12fr) minmax(126px,0.82fr) minmax(174px,0.96fr) minmax(132px,0.84fr) minmax(144px,0.88fr) minmax(126px,0.8fr) minmax(110px,0.7fr) minmax(210px,1fr);">
-                  <div>#</div>
+                <div class="workspace-table-head" style="grid-template-columns:${distressColumns};">
+                  <div class="workspace-head-center">#</div>
                   <div>Title / Reference</div>
                   <div>Property Type</div>
                   <div>Area / Building</div>
-                  <div>Asking Price</div>
-                  <div>Market Difference</div>
+                  <div class="workspace-head-right">Asking Price</div>
+                  <div class="workspace-head-right">Market Difference</div>
                   <div>Visibility</div>
-                  <div>Updated</div>
-                  <div>Quick Actions</div>
+                  <div class="workspace-head-right">Updated</div>
+                  <div class="workspace-head-right">Quick Actions</div>
                 </div>
                 <div class="workspace-table-body">
                   ${distressItems.map((property, index) => {
@@ -10754,9 +10785,9 @@
                         tabindex="0"
                         onclick="openPropertyRecord(${property.id}, 'distress')"
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'distress')}"
-                        style="grid-template-columns: 60px minmax(188px,1.12fr) minmax(126px,0.82fr) minmax(174px,0.96fr) minmax(132px,0.84fr) minmax(144px,0.88fr) minmax(126px,0.8fr) minmax(110px,0.7fr) minmax(210px,1fr);"
+                        style="grid-template-columns:${distressColumns};"
                       >
-                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.reference || property.buildingName || 'Distress listing')}</strong>
                           <span>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</span>
@@ -10769,11 +10800,11 @@
                           <strong>${escapeHtml(property.location || '--')}</strong>
                           <span>${escapeHtml(property.buildingName || '--')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
                           <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(getPropertyDistressLabel(property) || '--')}</strong>
                           <span>${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
                         </div>
@@ -10781,7 +10812,7 @@
                           <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
                           <span>${property.isArchived ? 'Archived' : 'Active'}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
                           <span>${escapeHtml(`${property.ownerCallCount || 0} calls / ${property.ownerWhatsappCount || 0} WA`)}</span>
                         </div>
