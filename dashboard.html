@@ -532,6 +532,231 @@
       padding: 14px;
     }
 
+    .settings-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .settings-page-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 20px 22px;
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 20px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .settings-page-copy {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .settings-page-copy h3 {
+      font-size: 1.12rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .settings-page-copy p {
+      color: #64748b;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .settings-page-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .settings-page-body {
+      display: grid;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .settings-nav-card {
+      padding: 14px;
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+      display: grid;
+      gap: 10px;
+      position: sticky;
+      top: 106px;
+    }
+
+    .settings-nav-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-nav-btn {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .settings-nav-btn:hover {
+      background: #f8fafc;
+      border-color: rgba(200, 169, 107, 0.28);
+      transform: translateY(-1px);
+    }
+
+    .settings-nav-btn.is-active {
+      background: rgba(200, 169, 107, 0.12);
+      border-color: rgba(200, 169, 107, 0.4);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+
+    .settings-nav-meta {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .settings-nav-meta strong {
+      color: #0f172a;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .settings-nav-meta span {
+      color: #64748b;
+      font-size: 0.77rem;
+      line-height: 1.45;
+    }
+
+    .settings-nav-arrow {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      flex: 0 0 auto;
+    }
+
+    .settings-content-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-hero-statline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .settings-mini-stat {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-mini-stat small {
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .settings-mini-stat strong {
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .settings-card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .settings-kv-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .settings-kv-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-kv-item small {
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .settings-kv-item strong {
+      color: #0f172a;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .settings-copy-block {
+      display: grid;
+      gap: 10px;
+    }
+
+    .settings-copy-block p {
+      color: #64748b;
+      font-size: 0.85rem;
+      line-height: 1.55;
+    }
+
+    .settings-note-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .settings-note-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #f8fafc;
+      display: grid;
+      gap: 5px;
+    }
+
+    .settings-note-item strong {
+      color: #0f172a;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .settings-note-item span {
+      color: #64748b;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
     .verification-pill {
       display: inline-flex;
       align-items: center;
@@ -2791,6 +3016,22 @@
       }
       .settings-layout {
         grid-template-columns: 1fr;
+      }
+      .settings-page-head,
+      .settings-page-body,
+      .settings-card-grid,
+      .settings-kv-grid,
+      .settings-hero-statline {
+        grid-template-columns: 1fr;
+      }
+      .settings-page-head {
+        align-items: stretch;
+      }
+      .settings-page-actions {
+        justify-content: flex-start;
+      }
+      .settings-nav-card {
+        position: static;
       }
       .profile-summary-card,
       .profile-summary-main,
@@ -5409,6 +5650,7 @@
         brokers: []
       },
       activeSection: 'overview',
+      settingsView: 'account',
       dashboardSearchQuery: '',
       filters: {
         leads: {
@@ -7032,6 +7274,11 @@
       document.getElementById('settings-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function setSettingsView(view) {
+      state.settingsView = view;
+      renderSettings();
+    }
+
     function openProfileEditorFromSettings() {
       openProfilePage();
       beginProfileEdit();
@@ -7900,6 +8147,293 @@
       const completion = getProfileCompletion(profile);
       const verificationLabel = profile.isVerified ? 'Verified' : 'Pending';
       const socialCount = Object.values(profile.socialLinks || {}).filter(Boolean).length;
+      const verificationClass = profile.isVerified ? 'is-verified' : 'is-pending';
+      const socialSummary = socialCount === 1 ? '1 link connected' : `${socialCount} links connected`;
+      const settingsViews = [
+        { id: 'account', label: 'Account', copy: 'Identity, access, and linked broker account details.' },
+        { id: 'preferences', label: 'Preferences', copy: 'Workspace defaults and future personal controls.' },
+        { id: 'privacy', label: 'Privacy & Security', copy: 'Session, visibility, and account safety guidance.' },
+        { id: 'broker', label: 'Broker Controls', copy: 'Operational shortcuts tied to broker workflows.' },
+        { id: 'workspace', label: 'Workspace', copy: 'Expandable settings architecture for future modules.' }
+      ];
+      const activeSettingsView = settingsViews.some(view => view.id === state.settingsView) ? state.settingsView : 'account';
+      state.settingsView = activeSettingsView;
+
+      let panelMarkup = '';
+      if (activeSettingsView === 'account') {
+        panelMarkup = `
+          <div class="profile-section-card settings-section-card">
+            <div class="settings-section-head">
+              <div>
+                <div class="settings-section-kicker">Account</div>
+                <h3>Broker Account</h3>
+              </div>
+              <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
+            </div>
+            <div class="settings-kv-grid">
+              <div class="settings-kv-item"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
+              <div class="settings-kv-item"><small>Broker ID</small><strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></div>
+              <div class="settings-kv-item"><small>Email</small><strong>${escapeHtml(profile.email || '--')}</strong></div>
+              <div class="settings-kv-item"><small>Mobile Number</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
+            </div>
+          </div>
+          <div class="settings-card-grid">
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Profile</div>
+                  <h3>Identity Workspace</h3>
+                </div>
+                <div class="profile-section-actions">
+                  <button class="btn btn-secondary btn-tiny" type="button" onclick="openProfilePage()">View Profile</button>
+                  <button class="btn btn-primary btn-tiny" type="button" onclick="openProfileEditorFromSettings()">Edit Profile</button>
+                </div>
+              </div>
+              <div class="settings-copy-block">
+                <p>Profile stays separate from Settings and remains the home for broker identity, professional details, social links, and completion progress.</p>
+              </div>
+              <div class="settings-kv-grid">
+                <div class="settings-kv-item"><small>Company / Brokerage</small><strong>${escapeHtml(profile.companyName || '--')}</strong></div>
+                <div class="settings-kv-item"><small>Office Location</small><strong>${escapeHtml(profile.officeLocation || '--')}</strong></div>
+                <div class="settings-kv-item"><small>Profile Completion</small><strong>${completion.percent}% complete</strong></div>
+                <div class="settings-kv-item"><small>Social Links</small><strong>${escapeHtml(socialSummary)}</strong></div>
+              </div>
+            </div>
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Access</div>
+                  <h3>Session & Access</h3>
+                </div>
+              </div>
+              <div class="settings-note-list">
+                <div class="settings-note-item">
+                  <strong>Authenticated Broker Session</strong>
+                  <span>Your account access continues to use the existing Broker Desk auth flow without any routing changes.</span>
+                </div>
+                <div class="settings-note-item">
+                  <strong>Top Bar Account Menu</strong>
+                  <span>Open Profile, Settings, or Logout from the account area in the top bar for the standard SaaS navigation pattern.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (activeSettingsView === 'preferences') {
+        panelMarkup = `
+          <div class="profile-section-card settings-section-card">
+            <div class="settings-section-head">
+              <div>
+                <div class="settings-section-kicker">Preferences</div>
+                <h3>Workspace Defaults</h3>
+              </div>
+            </div>
+            <div class="settings-copy-block">
+              <p>Settings is now ready for future broker preferences while today’s working CRM logic stays in its existing sections. These blocks keep the architecture expandable without inventing unsupported controls.</p>
+            </div>
+            <div class="settings-hero-statline">
+              <div class="settings-mini-stat"><small>Profile Readiness</small><strong>${completion.percent}% complete</strong></div>
+              <div class="settings-mini-stat"><small>Social Presence</small><strong>${escapeHtml(socialSummary)}</strong></div>
+              <div class="settings-mini-stat"><small>Verification</small><strong>${escapeHtml(verificationLabel)}</strong></div>
+            </div>
+          </div>
+          <div class="settings-card-grid">
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Current Defaults</div>
+                  <h3>Operational Preferences</h3>
+                </div>
+              </div>
+              <div class="settings-note-list">
+                <div class="settings-note-item">
+                  <strong>Search & Filters</strong>
+                  <span>Lead, listing, and distress filters continue to work inside their own modules so today’s workflows stay unchanged.</span>
+                </div>
+                <div class="settings-note-item">
+                  <strong>Display Consistency</strong>
+                  <span>Workspace lists, split views, and detail panels follow the same Noman Core layout without creating a separate preference engine yet.</span>
+                </div>
+              </div>
+            </div>
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-section-head">
+                <div>
+                  <div class="settings-section-kicker">Future Ready</div>
+                  <h3>Expandable Controls</h3>
+                </div>
+              </div>
+              <div class="settings-note-list">
+                <div class="settings-note-item">
+                  <strong>Notifications</strong>
+                  <span>This section is ready for future notification preferences when those controls become supported.</span>
+                </div>
+                <div class="settings-note-item">
+                  <strong>Workspace Personalization</strong>
+                  <span>Future dashboard, AI, and broker connector preferences can be added here without merging them back into Profile.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (activeSettingsView === 'privacy') {
+        panelMarkup = `
+          <div class="profile-section-card settings-section-card">
+            <div class="settings-section-head">
+              <div>
+                <div class="settings-section-kicker">Privacy & Security</div>
+                <h3>Account Safety</h3>
+              </div>
+            </div>
+            <div class="settings-card-grid">
+              <div class="profile-side-card settings-section-card">
+                <div class="settings-copy-block">
+                  <p>Security continues to follow the current authenticated broker flow. This page keeps those controls visible without changing the working session and routing architecture.</p>
+                </div>
+                <div class="settings-note-list">
+                  <div class="settings-note-item">
+                    <strong>Session Access</strong>
+                    <span>Your dashboard session remains protected by the existing login flow and access checks.</span>
+                  </div>
+                  <div class="settings-note-item">
+                    <strong>Password Recovery</strong>
+                    <span>Password reset still follows the existing sign-in and recovery flow outside the dashboard, so no working auth behavior is changed here.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="profile-side-card settings-section-card">
+                <div class="settings-note-list">
+                  <div class="settings-note-item">
+                    <strong>Profile Visibility</strong>
+                    <span>Profile details remain private inside Broker Desk unless future public-safe publishing is explicitly supported.</span>
+                  </div>
+                  <div class="settings-note-item">
+                    <strong>Broker Connector Safety</strong>
+                    <span>Public and shared listing visibility continues to be controlled from operational workflows, not from this safety page.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (activeSettingsView === 'broker') {
+        panelMarkup = `
+          <div class="profile-section-card settings-section-card">
+            <div class="settings-section-head">
+              <div>
+                <div class="settings-section-kicker">Broker Controls</div>
+                <h3>Operational Controls</h3>
+              </div>
+            </div>
+            <div class="settings-copy-block">
+              <p>Operational sharing, visibility, and record-level actions stay exactly where brokers already use them today: inside Requirements, Listings, and Distress workflows.</p>
+            </div>
+            <div class="profile-section-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('leads')">Open Requirements</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('properties')">Open Listings</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('distress')">Open Distress Deals</button>
+            </div>
+          </div>
+          <div class="settings-card-grid">
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-note-list">
+                <div class="settings-note-item">
+                  <strong>Requirements Workflow</strong>
+                  <span>Create, edit, and manage demand-side records directly inside Requirements with no logic moved into Settings.</span>
+                </div>
+                <div class="settings-note-item">
+                  <strong>Listings Workflow</strong>
+                  <span>Inventory visibility, share state, and deal updates continue to live in Listings and Distress modules where brokers already act on them.</span>
+                </div>
+              </div>
+            </div>
+            <div class="profile-side-card settings-section-card">
+              <div class="settings-note-list">
+                <div class="settings-note-item">
+                  <strong>Profile Shortcut</strong>
+                  <span>Use Profile for identity and public-facing broker information, then return here for workspace controls and future settings modules.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        panelMarkup = `
+          <div class="profile-section-card settings-section-card">
+            <div class="settings-section-head">
+              <div>
+                <div class="settings-section-kicker">Workspace</div>
+                <h3>Expandable Settings Architecture</h3>
+              </div>
+            </div>
+            <div class="settings-copy-block">
+              <p>Settings is now a dedicated control center that can grow without turning Profile back into a mixed identity/settings page. This keeps navigation clean and future expansion simple.</p>
+            </div>
+            <div class="settings-card-grid">
+              <div class="profile-side-card settings-section-card">
+                <div class="settings-note-list">
+                  <div class="settings-note-item">
+                    <strong>Notifications</strong>
+                    <span>Ready for future alert preferences and delivery controls when those features are formally supported.</span>
+                  </div>
+                  <div class="settings-note-item">
+                    <strong>AI & Automation</strong>
+                    <span>Future AI, matching, and automation controls can be added here without changing current business logic.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="profile-side-card settings-section-card">
+                <div class="settings-note-list">
+                  <div class="settings-note-item">
+                    <strong>Workspace Controls</strong>
+                    <span>Additional broker connector, team, or dashboard preferences can be layered into this structure later while keeping today’s modules stable.</span>
+                  </div>
+                  <div class="settings-note-item">
+                    <strong>Consistent Navigation</strong>
+                    <span>Sidebar Settings stays dedicated to controls, while Profile remains accessible from the top bar account area.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      target.innerHTML = `
+        <div class="settings-shell">
+          <div class="settings-page-head">
+            <div class="settings-page-copy">
+              <div class="settings-section-kicker">Workspace Control Center</div>
+              <h3>Settings</h3>
+              <p>Use Settings for broker account controls, privacy guidance, workspace management, and future preferences. Profile remains a separate identity page in the top bar account area.</p>
+            </div>
+            <div class="settings-page-actions">
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openProfilePage()">Open Profile</button>
+              <button class="btn btn-primary btn-tiny" type="button" onclick="openProfileEditorFromSettings()">Edit Profile</button>
+            </div>
+          </div>
+          <div class="settings-page-body">
+            <div class="settings-nav-card">
+              <div class="settings-section-kicker">Navigate</div>
+              <div class="settings-nav-list">
+                ${settingsViews.map(view => `
+                  <button class="settings-nav-btn ${activeSettingsView === view.id ? 'is-active' : ''}" type="button" onclick="setSettingsView('${view.id}')">
+                    <span class="settings-nav-meta">
+                      <strong>${escapeHtml(view.label)}</strong>
+                      <span>${escapeHtml(view.copy)}</span>
+                    </span>
+                    <span class="settings-nav-arrow">&rsaquo;</span>
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+            <div class="settings-content-stack">
+              ${panelMarkup}
+            </div>
+          </div>
+        </div>
+      `;
+      return;
 
       target.innerHTML = `
         <div class="settings-layout">
