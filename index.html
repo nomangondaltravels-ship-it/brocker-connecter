@@ -1296,6 +1296,18 @@
         justify-content: flex-start;
       }
 
+      .connector-toolbar-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .connector-results-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .connector-detail-panel {
+        position: static;
+      }
+
       .public-sheet-head {
         display: none;
       }
@@ -1328,6 +1340,13 @@
       .hero-box.compact-public-hero { padding: 18px; }
       .public-row { grid-template-columns: 1fr; }
       .top-actions { justify-content: flex-start; }
+      .connector-toolbar {
+        margin-inline: 18px;
+      }
+      .connector-toolbar-grid,
+      .connector-detail-grid {
+        grid-template-columns: 1fr;
+      }
       .sidebar {
         top: 78px;
         right: 12px;
@@ -1533,6 +1552,11 @@
       transform: none !important;
     }
 
+    .public-row.is-selected {
+      background: #eff6ff !important;
+      box-shadow: inset 3px 0 0 #b58a1d !important;
+    }
+
     .public-row.is-distress {
       background: linear-gradient(180deg, #fffaf0, #ffffff) !important;
       border-left: 3px solid rgba(181, 138, 29, 0.42) !important;
@@ -1569,6 +1593,193 @@
     .pager {
       margin-top: 14px;
       padding-top: 6px;
+    }
+
+    .connector-toolbar {
+      margin: 14px 16px 0;
+      padding: 16px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+      display: grid;
+      gap: 14px;
+    }
+
+    .connector-toolbar-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .connector-toolbar-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .connector-toolbar-copy h3 {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .connector-toolbar-copy p,
+    .connector-toolbar-meta {
+      color: #64748b;
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .connector-toolbar-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .connector-filter-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .connector-filter-field label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .connector-results-shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.82fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .connector-list-panel,
+    .connector-detail-panel {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .connector-list-panel {
+      overflow: hidden;
+    }
+
+    .connector-detail-panel {
+      padding: 18px;
+      position: sticky;
+      top: 106px;
+      display: grid;
+      gap: 14px;
+      min-height: 240px;
+    }
+
+    .connector-detail-empty {
+      min-height: 220px;
+      border: 1px dashed rgba(148, 163, 184, 0.22);
+      border-radius: 16px;
+      background: #f8fafc;
+      color: #64748b;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      text-align: center;
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .connector-detail-header {
+      display: grid;
+      gap: 10px;
+    }
+
+    .connector-detail-header h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.35;
+    }
+
+    .connector-detail-meta,
+    .connector-detail-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .connector-detail-toolbar .btn {
+      min-height: 34px;
+      padding: 0 12px;
+      font-size: 0.78rem;
+      border-radius: 10px;
+    }
+
+    .connector-detail-section {
+      display: grid;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .connector-detail-section:first-of-type {
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .connector-detail-section h4 {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .connector-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .connector-detail-cell {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #f8fafc;
+      display: grid;
+      gap: 4px;
+    }
+
+    .connector-detail-cell small {
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.66rem;
+      font-weight: 800;
+    }
+
+    .connector-detail-cell strong {
+      color: #0f172a;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .connector-detail-note {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.82rem;
+      line-height: 1.55;
     }
 
     /* Compact typography scale */
@@ -1690,13 +1901,54 @@
       </section>
 
       <div class="system-banner" id="systemBanner"></div>
+      <div class="connector-toolbar">
+        <div class="connector-toolbar-head">
+          <div class="connector-toolbar-copy">
+            <h3>Discovery Filters</h3>
+            <p>Filter shared requirements, broker connector listings, and distress opportunities without changing visibility or broker sharing rules.</p>
+          </div>
+          <div class="connector-toolbar-meta" id="connectorToolbarMeta">Showing all shared records.</div>
+        </div>
+        <div class="connector-toolbar-grid">
+          <div class="connector-filter-field">
+            <label for="connectorPurposeFilter">Purpose</label>
+            <select id="connectorPurposeFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Purposes</option>
+            </select>
+          </div>
+          <div class="connector-filter-field">
+            <label for="connectorTypeFilter">Property Type</label>
+            <select id="connectorTypeFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Types</option>
+            </select>
+          </div>
+          <div class="connector-filter-field">
+            <label for="connectorLocationFilter">Location</label>
+            <select id="connectorLocationFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Areas</option>
+            </select>
+          </div>
+          <div class="connector-filter-field">
+            <label for="connectorStatusFilter">Status</label>
+            <select id="connectorStatusFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Statuses</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" type="button" onclick="clearConnectorFilters()">Clear Filters</button>
+        </div>
+      </div>
       <section class="section" id="marketplace-section">
         <div class="page-head compact-head">
           <h2>Broker Connector Listings</h2>
           <p>Latest broker listings available for quick scanning and direct connection.</p>
         </div>
-        <div class="public-sheet" id="marketplaceGrid"></div>
-        <div class="pager hidden" id="marketplacePager"></div>
+        <div class="connector-results-shell">
+          <div class="connector-list-panel">
+            <div class="public-sheet" id="marketplaceGrid"></div>
+            <div class="pager hidden" id="marketplacePager"></div>
+          </div>
+          <div class="connector-detail-panel" id="marketplaceDetailPanel"></div>
+        </div>
       </section>
 
       <section class="section active" id="requirements-section">
@@ -1704,8 +1956,13 @@
           <h2>Broker Requirements</h2>
           <p>Latest shared requirements from brokers actively looking for matching properties.</p>
         </div>
-        <div class="public-sheet" id="requirementsGrid"></div>
-        <div class="pager hidden" id="requirementsPager"></div>
+        <div class="connector-results-shell">
+          <div class="connector-list-panel">
+            <div class="public-sheet" id="requirementsGrid"></div>
+            <div class="pager hidden" id="requirementsPager"></div>
+          </div>
+          <div class="connector-detail-panel" id="requirementsDetailPanel"></div>
+        </div>
       </section>
 
       <section class="section" id="distress-deals-section">
@@ -1713,8 +1970,13 @@
           <h2>Distress Deals</h2>
           <p>High-priority listings with stronger pricing urgency and faster action potential.</p>
         </div>
-        <div class="public-sheet" id="distressDealsGrid"></div>
-        <div class="pager hidden" id="distressDealsPager"></div>
+        <div class="connector-results-shell">
+          <div class="connector-list-panel">
+            <div class="public-sheet" id="distressDealsGrid"></div>
+            <div class="pager hidden" id="distressDealsPager"></div>
+          </div>
+          <div class="connector-detail-panel" id="distressDealsDetailPanel"></div>
+        </div>
       </section>
     </main>
   </div>
@@ -1806,6 +2068,17 @@
       listings: [],
       activeSection: 'requirements',
       publicSearchQuery: '',
+      publicFilters: {
+        purpose: 'all',
+        propertyType: 'all',
+        location: 'all',
+        status: 'all'
+      },
+      selectedPublicListingKeys: {
+        requirements: '',
+        marketplace: '',
+        'distress-deals': ''
+      },
       pagination: {
         requirements: 1,
         marketplace: 1,
@@ -2064,10 +2337,95 @@
       ].join(' ').toLowerCase();
     }
 
+    function getUniquePublicFilterValues(field) {
+      return [...new Set(
+        state.listings
+          .map(item => String(item?.[field] || '').trim())
+          .filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b));
+    }
+
+    function populateConnectorFilterOptions() {
+      const configs = [
+        { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
+        { id: 'connectorTypeFilter', field: 'propertyType', defaultLabel: 'All Types' },
+        { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' },
+        { id: 'connectorStatusFilter', field: 'status', defaultLabel: 'All Statuses' }
+      ];
+
+      configs.forEach(config => {
+        const select = document.getElementById(config.id);
+        if (!select) return;
+        const currentValue = state.publicFilters[config.field] || 'all';
+        const options = getUniquePublicFilterValues(config.field);
+        select.innerHTML = [
+          `<option value="all">${config.defaultLabel}</option>`,
+          ...options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`)
+        ].join('');
+        select.value = options.includes(currentValue) ? currentValue : 'all';
+        state.publicFilters[config.field] = select.value;
+      });
+    }
+
+    function applyConnectorFilters() {
+      state.publicFilters.purpose = document.getElementById('connectorPurposeFilter')?.value || 'all';
+      state.publicFilters.propertyType = document.getElementById('connectorTypeFilter')?.value || 'all';
+      state.publicFilters.location = document.getElementById('connectorLocationFilter')?.value || 'all';
+      state.publicFilters.status = document.getElementById('connectorStatusFilter')?.value || 'all';
+      state.pagination.requirements = 1;
+      state.pagination.marketplace = 1;
+      state.pagination['distress-deals'] = 1;
+      renderPublicViews();
+    }
+
+    function clearConnectorFilters() {
+      state.publicFilters = {
+        purpose: 'all',
+        propertyType: 'all',
+        location: 'all',
+        status: 'all'
+      };
+      ['connectorPurposeFilter', 'connectorTypeFilter', 'connectorLocationFilter', 'connectorStatusFilter'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.value = 'all';
+      });
+      state.pagination.requirements = 1;
+      state.pagination.marketplace = 1;
+      state.pagination['distress-deals'] = 1;
+      renderPublicViews();
+    }
+
+    function getPublicSelectionKey(sectionName, listing) {
+      return `${sectionName}:${listing?.id ?? ''}`;
+    }
+
+    function ensureSelectedPublicListing(sectionName, items) {
+      if (!Array.isArray(items) || !items.length) {
+        state.selectedPublicListingKeys[sectionName] = '';
+        return null;
+      }
+      const selectedKey = state.selectedPublicListingKeys[sectionName];
+      const selectedItem = items.find(item => getPublicSelectionKey(sectionName, item) === selectedKey);
+      if (selectedItem) return selectedItem;
+      state.selectedPublicListingKeys[sectionName] = getPublicSelectionKey(sectionName, items[0]);
+      return items[0];
+    }
+
+    function selectPublicListing(sectionName, listingId) {
+      state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
+      renderPublicViews();
+    }
+
     function getFilteredPublicListings() {
       const query = state.publicSearchQuery.trim().toLowerCase();
-      if (!query) return [...state.listings];
-      return state.listings.filter(listing => getPublicSearchText(listing).includes(query));
+      return state.listings.filter(listing => {
+        if (query && !getPublicSearchText(listing).includes(query)) return false;
+        if (state.publicFilters.purpose !== 'all' && String(listing.purpose || '') !== state.publicFilters.purpose) return false;
+        if (state.publicFilters.propertyType !== 'all' && String(listing.propertyType || '') !== state.publicFilters.propertyType) return false;
+        if (state.publicFilters.location !== 'all' && String(listing.location || '') !== state.publicFilters.location) return false;
+        if (state.publicFilters.status !== 'all' && String(listing.status || '') !== state.publicFilters.status) return false;
+        return true;
+      });
     }
 
     function buildPublicSuggestions(query) {
@@ -2261,7 +2619,7 @@
       const shareLink = buildListingLink(listing, sectionName);
       const matchText = encodeURIComponent(prefilledMatchText(listing));
       return `
-        <div class="row-actions">
+        <div class="row-actions" onclick="event.stopPropagation()">
           <button class="action-icon-btn match" type="button" title="I Have Match" aria-label="I Have Match" onclick="sendMatchInterest('${listing.brokerMobile}', '${matchText}')">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 7h7a4 4 0 0 1 0 8H8"></path>
@@ -2342,6 +2700,57 @@
       document.getElementById(`${sectionName}-section`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function renderConnectorDetailPanel(targetId, sectionName, items) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const selected = ensureSelectedPublicListing(sectionName, items);
+      if (!selected) {
+        target.innerHTML = `<div class="connector-detail-empty">Select a shared requirement or listing to review safe visible details and broker contact actions here.</div>`;
+        return;
+      }
+      const matchText = encodeURIComponent(prefilledMatchText(selected));
+      const shareLink = buildListingLink(selected, sectionName);
+      target.innerHTML = `
+        <div class="connector-detail-header">
+          <div class="connector-detail-meta">
+            <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : 'Shared Listing'}</span>
+            ${selected.status ? `<span class="badge badge-gold">${escapeHtml(selected.status)}</span>` : ''}
+            ${selected.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
+          </div>
+          <h3>${escapeHtml(selected.sourceType === 'lead' ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} · ${selected.propertyType || selected.category || 'Requirement'}` : `${String(selected.purpose || '--').toUpperCase()} · ${selected.propertyType || selected.category || 'Listing'}`)}</h3>
+          <div class="connector-detail-toolbar">
+            <button class="btn btn-secondary" type="button" onclick="sendMatchInterest('${selected.brokerMobile}', '${matchText}')">I Have Match</button>
+            <button class="btn btn-green" type="button" onclick="showWhatsappPopover(this, '${selected.brokerMobile}', '${matchText}')">WhatsApp</button>
+            <button class="btn btn-secondary" type="button" onclick="showContactPopover(this, '${selected.brokerMobile}')">Call</button>
+            ${selected.brokerEmail ? `<button class="btn btn-secondary" type="button" onclick="openBrokerEmail('${String(selected.brokerEmail).replace(/'/g, '%27')}')">Email</button>` : ''}
+            <button class="btn btn-secondary" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share</button>
+          </div>
+        </div>
+        <div class="connector-detail-section">
+          <h4>Overview</h4>
+          <div class="connector-detail-grid">
+            <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Property Type</small><strong>${escapeHtml(selected.propertyType || selected.category || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Budget / Price</small><strong>${escapeHtml(selected.priceLabel || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Last Updated</small><strong>${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</strong></div>
+          </div>
+        </div>
+        <div class="connector-detail-section">
+          <h4>Safe Shared Details</h4>
+          <div class="connector-detail-note">${escapeHtml(selected.publicNotes || 'No extra public note was shared for this record.')}</div>
+        </div>
+        <div class="connector-detail-section">
+          <h4>Broker Contact</h4>
+          <div class="connector-detail-grid">
+            <div class="connector-detail-cell"><small>Shared By</small><strong>${escapeHtml(selected.brokerName || 'Broker')}</strong></div>
+            <div class="connector-detail-cell"><small>Contact Number</small><strong>${escapeHtml(formatPhoneDisplay(selected.brokerMobile))}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderRequirementsSheet(items, sectionName, startIndex) {
       return `
         <div class="public-sheet-head">
@@ -2356,7 +2765,7 @@
           <div>Actions</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row" data-listing-id="${listing.id}">
+          <div class="public-row ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')">
             <div class="sheet-col">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
@@ -2413,7 +2822,7 @@
           <div>Actions</div>
         </div>
         ${items.map((listing, index) => `
-          <div class="public-row ${listing.isDistress ? 'is-distress' : ''}" data-listing-id="${listing.id}">
+          <div class="public-row ${listing.isDistress ? 'is-distress' : ''} ${state.selectedPublicListingKeys[sectionName] === getPublicSelectionKey(sectionName, listing) ? 'is-selected' : ''}" data-listing-id="${listing.id}" onclick="selectPublicListing('${sectionName}', '${listing.id}')">
             <div class="sheet-col">
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
@@ -2463,6 +2872,8 @@
       if (!items.length) {
         target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
         renderPager(sectionName, 0);
+        const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
+        renderConnectorDetailPanel(detailTargetId, sectionName, []);
         return;
       }
       const sortedItems = sortPublicListings(items);
@@ -2471,6 +2882,8 @@
         ? renderRequirementsSheet(page.pageItems, sectionName, page.startIndex)
         : renderListingsSheet(page.pageItems, sectionName, page.startIndex);
       renderPager(sectionName, sortedItems.length);
+      const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
+      renderConnectorDetailPanel(detailTargetId, sectionName, sortedItems);
     }
 
     function updateStats() {
@@ -2481,9 +2894,13 @@
       const requirementCount = document.getElementById('tabCountRequirements');
       const listingCount = document.getElementById('tabCountListings');
       const distressCount = document.getElementById('tabCountDistress');
+      const toolbarMeta = document.getElementById('connectorToolbarMeta');
       if (requirementCount) requirementCount.textContent = requirements.length;
       if (listingCount) listingCount.textContent = listings.length;
       if (distressCount) distressCount.textContent = distress.length;
+      if (toolbarMeta) {
+        toolbarMeta.textContent = `Showing ${filtered.length} shared records across ${requirements.length} requirements, ${listings.length} listings, and ${distress.length} distress deals.`;
+      }
     }
 
     function renderPublicViews() {
@@ -2504,6 +2921,7 @@
         throw new Error(result?.message || 'Broker Connector Page could not load.');
       }
       state.listings = Array.isArray(result.listings) ? result.listings : [];
+      populateConnectorFilterOptions();
       renderPublicViews();
       revealSharedListingFromUrl();
     }
@@ -2596,6 +3014,10 @@
       if (normalizedSection && normalizedSection !== state.activeSection) {
         document.getElementById(`${normalizedSection}-section`)?.classList.add('active');
         openSection(normalizedSection);
+      }
+      if (normalizedSection) {
+        state.selectedPublicListingKeys[normalizedSection] = `${normalizedSection}:${listingId}`;
+        renderPublicViews();
       }
       const target = document.querySelector(`[data-listing-id="${listingId}"]`);
       if (target) {
