@@ -1536,7 +1536,7 @@
       border: 0 !important;
       border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
       border-radius: 0 !important;
-      min-height: 72px;
+      min-height: 80px;
       box-shadow: none !important;
       transform: none !important;
     }
@@ -1546,15 +1546,15 @@
     }
 
     .public-row:hover {
-      background: #f8fafc !important;
+      background: #f1f5f9 !important;
       border-color: rgba(148, 163, 184, 0.14) !important;
-      box-shadow: none !important;
+      box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06) !important;
       transform: none !important;
     }
 
     .public-row.is-selected {
-      background: #eff6ff !important;
-      box-shadow: inset 3px 0 0 #b58a1d !important;
+      background: #f8fafc !important;
+      box-shadow: inset 3px 0 0 #b58a1d, inset 0 0 0 1px rgba(181, 138, 29, 0.08) !important;
     }
 
     .public-row.is-distress {
@@ -1673,11 +1673,11 @@
     }
 
     .connector-detail-panel {
-      padding: 18px;
+      padding: 22px;
       position: sticky;
       top: 106px;
       display: grid;
-      gap: 14px;
+      gap: 18px;
       min-height: 240px;
     }
 
@@ -1697,14 +1697,15 @@
 
     .connector-detail-header {
       display: grid;
-      gap: 10px;
+      gap: 12px;
     }
 
     .connector-detail-header h3 {
-      font-size: 1rem;
+      font-size: 1.12rem;
       font-weight: 800;
       color: #0f172a;
-      line-height: 1.35;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
     }
 
     .connector-detail-meta,
@@ -1722,10 +1723,36 @@
       border-radius: 10px;
     }
 
+    .connector-detail-toolbar .btn-primary,
+    .connector-detail-toolbar .btn-green {
+      background: #b58a1d !important;
+      border-color: #b58a1d !important;
+      color: #ffffff !important;
+    }
+
+    .connector-detail-toolbar .btn-secondary {
+      background: #ffffff !important;
+      border-color: rgba(148, 163, 184, 0.24) !important;
+      color: #334155 !important;
+    }
+
+    .btn-ghost {
+      background: transparent !important;
+      border-color: transparent !important;
+      color: #64748b !important;
+      box-shadow: none !important;
+    }
+
+    .btn-ghost:hover {
+      background: #f8fafc !important;
+      border-color: rgba(148, 163, 184, 0.14) !important;
+      color: #0f172a !important;
+    }
+
     .connector-detail-section {
       display: grid;
-      gap: 10px;
-      padding-top: 12px;
+      gap: 12px;
+      padding-top: 14px;
       border-top: 1px solid rgba(148, 163, 184, 0.14);
     }
 
@@ -1744,17 +1771,24 @@
 
     .connector-detail-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: 1fr;
+      gap: 0;
     }
 
     .connector-detail-cell {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      background: #f8fafc;
-      display: grid;
-      gap: 4px;
+      padding: 10px 0;
+      border-radius: 0;
+      border: 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      background: transparent;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .connector-detail-cell:last-child {
+      border-bottom: 0;
     }
 
     .connector-detail-cell small {
@@ -1767,19 +1801,43 @@
 
     .connector-detail-cell strong {
       color: #0f172a;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       line-height: 1.45;
       word-break: break-word;
+      text-align: right;
     }
 
     .connector-detail-note {
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      background: #f8fafc;
+      padding: 0;
+      border-radius: 0;
+      border: 0;
+      background: transparent;
       color: #475569;
-      font-size: 0.82rem;
+      font-size: 0.88rem;
       line-height: 1.55;
+    }
+
+    .connector-detail-location {
+      color: #475569;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .connector-detail-price {
+      color: #0f172a;
+      font-size: 1.3rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .connector-detail-inline-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: #64748b;
+      font-size: 0.78rem;
+      line-height: 1.5;
     }
 
     /* Compact typography scale */
@@ -1804,15 +1862,15 @@
     }
 
     .sheet-primary {
-      font-size: 0.86rem !important;
-      line-height: 1.3 !important;
+      font-size: 0.9rem !important;
+      line-height: 1.38 !important;
     }
 
     .sheet-secondary,
     .muted,
     .pager {
-      font-size: 0.78rem !important;
-      line-height: 1.4 !important;
+      font-size: 0.79rem !important;
+      line-height: 1.46 !important;
     }
 
     .badge {
@@ -2720,6 +2778,12 @@
       }
       const matchText = encodeURIComponent(prefilledMatchText(selected));
       const shareLink = buildListingLink(selected, sectionName);
+      const detailTitle = selected.sourceType === 'lead'
+        ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${selected.propertyType || selected.category || 'Requirement'}`
+        : `${String(selected.purpose || '--').toUpperCase()} - ${selected.propertyType || selected.category || 'Listing'}`;
+      const locationSummary = [selected.location || '--', selected.sizeLabel && selected.sizeLabel !== '--' ? selected.sizeLabel : '']
+        .filter(Boolean)
+        .join(' - ');
       target.innerHTML = `
         <div class="connector-detail-header">
           <div class="connector-detail-meta">
@@ -2727,13 +2791,19 @@
             ${selected.status ? `<span class="badge badge-gold">${escapeHtml(selected.status)}</span>` : ''}
             ${selected.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
           </div>
-          <h3>${escapeHtml(selected.sourceType === 'lead' ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} · ${selected.propertyType || selected.category || 'Requirement'}` : `${String(selected.purpose || '--').toUpperCase()} · ${selected.propertyType || selected.category || 'Listing'}`)}</h3>
+          <h3>${escapeHtml(detailTitle)}</h3>
+          <div class="connector-detail-location">${escapeHtml(locationSummary || '--')}</div>
+          <div class="connector-detail-price">${escapeHtml(selected.priceLabel || '--')}</div>
+          <div class="connector-detail-inline-meta">
+            <span>Updated ${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</span>
+            <span>Shared by ${escapeHtml(selected.brokerName || 'Broker')}</span>
+          </div>
           <div class="connector-detail-toolbar">
-            <button class="btn btn-secondary" type="button" onclick="sendMatchInterest('${selected.brokerMobile}', '${matchText}')">I Have Match</button>
             <button class="btn btn-green" type="button" onclick="showWhatsappPopover(this, '${selected.brokerMobile}', '${matchText}')">WhatsApp</button>
             <button class="btn btn-secondary" type="button" onclick="showContactPopover(this, '${selected.brokerMobile}')">Call</button>
+            <button class="btn btn-secondary" type="button" onclick="sendMatchInterest('${selected.brokerMobile}', '${matchText}')">I Have Match</button>
             ${selected.brokerEmail ? `<button class="btn btn-secondary" type="button" onclick="openBrokerEmail('${String(selected.brokerEmail).replace(/'/g, '%27')}')">Email</button>` : ''}
-            <button class="btn btn-secondary" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share</button>
+            <button class="btn btn-ghost" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share</button>
           </div>
         </div>
         <div class="connector-detail-section">
@@ -2742,9 +2812,8 @@
             <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Property Type</small><strong>${escapeHtml(selected.propertyType || selected.category || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
-            <div class="connector-detail-cell"><small>Budget / Price</small><strong>${escapeHtml(selected.priceLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
-            <div class="connector-detail-cell"><small>Last Updated</small><strong>${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</strong></div>
+            <div class="connector-detail-cell"><small>Status</small><strong>${escapeHtml(selected.status || 'Active')}</strong></div>
           </div>
         </div>
         <div class="connector-detail-section">
