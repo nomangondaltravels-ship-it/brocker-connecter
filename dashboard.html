@@ -8960,30 +8960,22 @@
       ]) || 'Standard sale terms';
     }
 
-    function getPropertyPrivateContactSummary(property) {
-      const displayPhone = isPrivatePhoneRevealed('property', property?.id) ? formatPhoneDisplay(property?.ownerPhone) : '';
-      if (displayPhone) return `Private contact - ${displayPhone}`;
-      if (property?.ownerName || property?.ownerPhone) return 'Private contact hidden';
-      return 'No owner details added';
-    }
-
-    function getLeadPrivateContactSummary(lead) {
-      const displayPhone = isPrivatePhoneRevealed('lead', lead?.id) ? formatPhoneDisplay(lead?.clientPhone) : '';
-      if (displayPhone) return `Private contact - ${displayPhone}`;
-      if (lead?.clientName || lead?.clientPhone) return 'Private contact hidden';
-      return 'No client details added';
-    }
-
-    function isPrivatePhoneRevealed(kind, id) {
+    function getPrivateRevealEntry(kind, id) {
       const bucket = state.privateContactReveal?.[kind];
-      if (!bucket) return false;
-      return Boolean(bucket[String(id ?? '')]);
+      if (!bucket) return null;
+      const key = String(id ?? '');
+      if (!bucket[key]) {
+        bucket[key] = {
+          nameVisible: false,
+          phoneVisible: false,
+          nameTimer: null,
+          phoneTimer: null
+        };
+      }
+      return bucket[key];
     }
 
-    function revealPrivatePhone(kind, id) {
-      const bucket = state.privateContactReveal?.[kind];
-      if (!bucket) return;
-      bucket[String(id ?? '')] = true;
+    function rerenderPrivateRevealKind(kind) {
       if (kind === 'lead') {
         renderLeads();
         return;
@@ -8992,8 +8984,90 @@
       renderDistressDeals();
     }
 
-    function renderPrivateNameValue(value, hiddenLabel = 'Hidden for privacy') {
-      return `<span class="private-contact-placeholder">${escapeHtml(value ? hiddenLabel : 'No contact added')}</span>`;
+    function clearPrivateRevealTimer(entry, field) {
+      const timerKey = field === 'name' ? 'nameTimer' : 'phoneTimer';
+      if (entry?.[timerKey]) {
+        clearTimeout(entry[timerKey]);
+        entry[timerKey] = null;
+      }
+    }
+
+    function isPrivateFieldRevealed(kind, id, field) {
+      const entry = getPrivateRevealEntry(kind, id);
+      if (!entry) return false;
+      return Boolean(field === 'name' ? entry.nameVisible : entry.phoneVisible);
+    }
+
+    function hidePrivateField(kind, id, field) {
+      const entry = getPrivateRevealEntry(kind, id);
+      if (!entry) return;
+      if (field === 'name') {
+        entry.nameVisible = false;
+      } else {
+        entry.phoneVisible = false;
+      }
+      clearPrivateRevealTimer(entry, field);
+      rerenderPrivateRevealKind(kind);
+    }
+
+    function revealPrivateField(kind, id, field) {
+      const entry = getPrivateRevealEntry(kind, id);
+      if (!entry) return;
+      if (field === 'name') {
+        entry.nameVisible = true;
+      } else {
+        entry.phoneVisible = true;
+      }
+      clearPrivateRevealTimer(entry, field);
+      const timerKey = field === 'name' ? 'nameTimer' : 'phoneTimer';
+      entry[timerKey] = window.setTimeout(() => {
+        hidePrivateField(kind, id, field);
+      }, 30000);
+      rerenderPrivateRevealKind(kind);
+    }
+
+    function clearAllPrivateRevealTimers() {
+      ['lead', 'property'].forEach(kind => {
+        const bucket = state.privateContactReveal?.[kind];
+        if (!bucket) return;
+        Object.values(bucket).forEach(entry => {
+          clearPrivateRevealTimer(entry, 'name');
+          clearPrivateRevealTimer(entry, 'phone');
+        });
+      });
+    }
+
+    function getPropertyPrivateContactSummary(property) {
+      const nameVisible = isPrivateFieldRevealed('property', property?.id, 'name');
+      const phoneVisible = isPrivateFieldRevealed('property', property?.id, 'phone');
+      const details = [];
+      if (nameVisible && property?.ownerName) details.push(property.ownerName);
+      if (phoneVisible && property?.ownerPhone) details.push(formatPhoneDisplay(property.ownerPhone));
+      if (details.length) return `Private contact - ${joinDisplayParts(details)}`;
+      if (property?.ownerName || property?.ownerPhone) return 'Private contact hidden';
+      return 'No owner details added';
+    }
+
+    function getLeadPrivateContactSummary(lead) {
+      const nameVisible = isPrivateFieldRevealed('lead', lead?.id, 'name');
+      const phoneVisible = isPrivateFieldRevealed('lead', lead?.id, 'phone');
+      const details = [];
+      if (nameVisible && lead?.clientName) details.push(lead.clientName);
+      if (phoneVisible && lead?.clientPhone) details.push(formatPhoneDisplay(lead.clientPhone));
+      if (details.length) return `Private contact - ${joinDisplayParts(details)}`;
+      if (lead?.clientName || lead?.clientPhone) return 'Private contact hidden';
+      return 'No client details added';
+    }
+
+    function renderPrivateNameValue(kind, id, value, hiddenLabel = 'Hidden for privacy') {
+      const displayValue = normalizeText(value);
+      if (!displayValue) {
+        return `<span class="private-contact-placeholder">No contact added</span>`;
+      }
+      if (isPrivateFieldRevealed(kind, id, 'name')) {
+        return `<span class="private-contact-value">${escapeHtml(displayValue)}</span>`;
+      }
+      return `<button class="btn btn-secondary btn-tiny private-reveal-btn" type="button" onclick='revealPrivateField(${JSON.stringify(kind)}, ${JSON.stringify(String(id ?? ""))}, "name")'>Show name</button>`;
     }
 
     function renderPrivatePhoneValue(kind, id, rawPhone) {
@@ -9001,10 +9075,10 @@
       if (!phoneDisplay) {
         return '<span class="private-contact-placeholder">No number added</span>';
       }
-      if (isPrivatePhoneRevealed(kind, id)) {
+      if (isPrivateFieldRevealed(kind, id, 'phone')) {
         return `<span class="private-contact-value">${escapeHtml(phoneDisplay)}</span>`;
       }
-      return `<button class="btn btn-secondary btn-tiny private-reveal-btn" type="button" onclick='revealPrivatePhone(${JSON.stringify(kind)}, ${JSON.stringify(String(id ?? ""))})'>Show number</button>`;
+      return `<button class="btn btn-secondary btn-tiny private-reveal-btn" type="button" onclick='revealPrivateField(${JSON.stringify(kind)}, ${JSON.stringify(String(id ?? ""))}, "phone")'>Show number</button>`;
     }
 
     function formatCompactAge(value) {
@@ -9735,7 +9809,7 @@
             </div>
 
             <div class="detail-grid">
-              <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue(lead.clientName, 'Hidden for privacy')}</strong></div>
+              <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue('lead', lead.id, lead.clientName, 'Hidden for privacy')}</strong></div>
               <div class="detail-cell"><small>Client Phone</small><strong>${renderPrivatePhoneValue('lead', lead.id, lead.clientPhone)}</strong></div>
               <div class="detail-cell"><small>Payment / Purpose</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
               <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([lead.nextFollowUpDate || '', lead.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
@@ -9834,7 +9908,7 @@
             </div>
 
             <div class="detail-grid">
-              <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue(property.ownerName, 'Private contact')}</strong></div>
+              <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue('property', property.id, property.ownerName, 'Private contact')}</strong></div>
               <div class="detail-cell"><small>Owner Phone</small><strong>${renderPrivatePhoneValue('property', property.id, property.ownerPhone)}</strong></div>
               <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
               <div class="detail-cell"><small>Next Follow-up</small><strong>${escapeHtml([property.nextFollowUpDate || '', property.nextFollowUpTime || ''].filter(Boolean).join(' ') || 'Not set')}</strong></div>
@@ -11889,7 +11963,7 @@
         <div class="detail-section">
           <h4>Overview</h4>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue(lead.clientName, 'Hidden for privacy')}</strong></div>
+            <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue('lead', lead.id, lead.clientName, 'Hidden for privacy')}</strong></div>
             <div class="detail-cell"><small>Client Phone</small><strong>${renderPrivatePhoneValue('lead', lead.id, lead.clientPhone)}</strong></div>
             <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
@@ -11994,7 +12068,7 @@
             <div class="detail-cell"><small>Furnishing</small><strong>${escapeHtml(property.furnishing || '--')}</strong></div>
             <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
             ${property.isDistress ? `<div class="detail-cell"><small>Market Difference</small><strong>${escapeHtml(distressLabel || '--')}</strong></div>` : ''}
-            <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue(property.ownerName, 'Private contact')}</strong></div>
+            <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue('property', property.id, property.ownerName, 'Private contact')}</strong></div>
             <div class="detail-cell"><small>Owner Phone</small><strong>${renderPrivatePhoneValue('property', property.id, property.ownerPhone)}</strong></div>
           </div>
         </div>
@@ -12357,6 +12431,7 @@
     }
 
     async function logoutBroker() {
+      clearAllPrivateRevealTimers();
       if (brokerActivityHeartbeatTimer) {
         clearInterval(brokerActivityHeartbeatTimer);
         brokerActivityHeartbeatTimer = null;
