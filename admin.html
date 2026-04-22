@@ -1884,7 +1884,11 @@
     function renderStats(accounts) {
       document.getElementById('statAccounts').textContent = accounts.length;
       document.getElementById('statApproved').textContent = accounts.filter(item => item.approved).length;
-      document.getElementById('statPosts').textContent = requirements.length + deals.length;
+      const totalPosts = accounts.reduce((sum, account) => {
+        const summary = getBrokerSummary(account);
+        return sum + summary.requirementCount + summary.listingCount;
+      }, 0);
+      document.getElementById('statPosts').textContent = totalPosts;
       document.getElementById('statComplaints').textContent = complaints.length;
     }
 
@@ -2269,6 +2273,14 @@
     }
 
     function getBrokerSummary(account) {
+      if (account?.summary && Number.isFinite(Number(account.summary.requirementCount)) && Number.isFinite(Number(account.summary.listingCount))) {
+        return {
+          requirementCount: Number(account.summary.requirementCount || 0),
+          listingCount: Number(account.summary.listingCount || 0),
+          sharedCount: Number(account.summary.sharedCount || 0)
+        };
+      }
+
       const brokerName = normalizeAdminText(account?.name);
       const brokerPhone = normalizeAdminText(account?.phone);
       const requirementCount = requirements.filter(item => {

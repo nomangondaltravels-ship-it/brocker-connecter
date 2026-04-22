@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import {
+  buildPostgrestInFilter,
   createPasswordHash,
   getSupabaseConfig,
   json,
@@ -11,6 +12,12 @@ import {
   supabasePatch,
   supabaseSelect
 } from './_broker-platform.mjs';
+
+const EMPTY_SUMMARY = Object.freeze({
+  requirementCount: 0,
+  listingCount: 0,
+  sharedCount: 0
+});
 
 function getBearerToken(request) {
   const authHeader = request.headers.get('authorization') || '';
@@ -32,7 +39,7 @@ function verifyAdminToken(token, secret) {
   }
 }
 
-function sanitizeBroker(row) {
+function sanitizeBroker(row, summary = EMPTY_SUMMARY) {
   const fallbackId = row.broker_id_number || `BROKER-${String(row.id || '').slice(0, 8).toUpperCase()}`;
   const fallbackName = row.full_name || row.email || fallbackId;
   return {
@@ -44,8 +51,65 @@ function sanitizeBroker(row) {
     company: row.company_name || '',
     approved: Boolean(row.is_verified),
     blocked: Boolean(row.is_blocked),
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    summary: {
+      requirementCount: Number(summary?.requirementCount || 0),
+      listingCount: Number(summary?.listingCount || 0),
+      sharedCount: Number(summary?.sharedCount || 0)
+    }
   };
+}
+
+async function aggregateBrokerSummaries({ supabaseUrl, serviceRoleKey, brokers }) {
+  const brokerIds = Array.from(new Set((Array.isArray(brokers) ? brokers : [])
+    .map(row => String(row?.id || '').trim())
+    .filter(Boolean)));
+
+  if (!brokerIds.length) {
+    return new Map();
+  }
+
+  const brokerFilter = { broker_uuid: buildPostgrestInFilter(brokerIds) };
+  const [leadRows, propertyRows] = await Promise.all([
+    supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'broker_leads',
+      select: 'broker_uuid,is_listed_public',
+      filters: brokerFilter
+    }).catch(() => []),
+    supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'broker_properties',
+      select: 'broker_uuid,is_listed_public',
+      filters: brokerFilter
+    }).catch(() => [])
+  ]);
+
+  const summaryMap = new Map(brokerIds.map(id => [id, { ...EMPTY_SUMMARY }]));
+
+  for (const row of Array.isArray(leadRows) ? leadRows : []) {
+    const brokerUuid = String(row?.broker_uuid || '').trim();
+    if (!brokerUuid || !summaryMap.has(brokerUuid)) continue;
+    const current = summaryMap.get(brokerUuid);
+    current.requirementCount += 1;
+    if (row?.is_listed_public) {
+      current.sharedCount += 1;
+    }
+  }
+
+  for (const row of Array.isArray(propertyRows) ? propertyRows : []) {
+    const brokerUuid = String(row?.broker_uuid || '').trim();
+    if (!brokerUuid || !summaryMap.has(brokerUuid)) continue;
+    const current = summaryMap.get(brokerUuid);
+    current.listingCount += 1;
+    if (row?.is_listed_public) {
+      current.sharedCount += 1;
+    }
+  }
+
+  return summaryMap;
 }
 
 async function deleteOptionalTableRows({ supabaseUrl, serviceRoleKey, table, filters }) {
@@ -182,8 +246,15 @@ export async function GET(request) {
       order: { column: 'created_at', ascending: false }
     });
 
+    const brokerRows = Array.isArray(rows) ? rows : [];
+    const summaryMap = await aggregateBrokerSummaries({
+      supabaseUrl,
+      serviceRoleKey,
+      brokers: brokerRows
+    });
+
     return json({
-      brokers: (Array.isArray(rows) ? rows : []).map(sanitizeBroker)
+      brokers: brokerRows.map(row => sanitizeBroker(row, summaryMap.get(String(row?.id || '').trim()) || EMPTY_SUMMARY))
     });
   } catch (error) {
     return json({ message: error?.message || 'Failed to load brokers.' }, error?.status || 500);
