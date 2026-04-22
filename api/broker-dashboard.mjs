@@ -1,6 +1,7 @@
 import {
   buildLeadPublicSummary,
   buildPublicListingPayload,
+  deriveBrokerActivity,
   getSupabasePublishableKey,
   json,
   normalizeBool,
@@ -665,7 +666,54 @@ function sanitizeOverviewBroker(broker) {
     mobileNumber: broker.mobile_number,
     email: broker.email,
     companyName: broker.company_name || '',
-    isVerified: Boolean(broker.is_verified)
+    isVerified: Boolean(broker.is_verified),
+    lastActivity: normalizeText(broker.last_activity)
+  };
+}
+
+function formatBrokerActivityLabel(activity) {
+  switch (activity?.key) {
+    case 'online':
+      return 'Online';
+    case 'active':
+      return 'Active';
+    case 'recent':
+      return 'Recently Active';
+    default:
+      return 'Offline';
+  }
+}
+
+function buildBrokerActivityRow(broker) {
+  const lastActivity = normalizeText(broker?.last_activity);
+  const activity = deriveBrokerActivity(lastActivity);
+  return {
+    id: broker?.id,
+    fullName: normalizeText(broker?.full_name) || 'Broker',
+    companyName: normalizeText(broker?.company_name),
+    lastActivity,
+    activityStatus: activity.key,
+    activityLabel: formatBrokerActivityLabel(activity),
+    isOnline: activity.isOnline,
+    isActive: activity.isActive,
+    isRecent: activity.isRecent
+  };
+}
+
+function buildBrokerActivitySnapshot(rows = []) {
+  const brokers = (Array.isArray(rows) ? rows : [])
+    .filter(item => !item?.is_blocked)
+    .map(buildBrokerActivityRow)
+    .sort((left, right) => {
+      const leftRank = left.isOnline ? 3 : left.isActive ? 2 : left.isRecent ? 1 : 0;
+      const rightRank = right.isOnline ? 3 : right.isActive ? 2 : right.isRecent ? 1 : 0;
+      if (rightRank !== leftRank) return rightRank - leftRank;
+      return new Date(right.lastActivity || 0).getTime() - new Date(left.lastActivity || 0).getTime();
+    });
+
+  return {
+    activeCount: brokers.filter(item => item.isOnline || item.isActive).length,
+    brokers: brokers.filter(item => item.isOnline || item.isActive || item.isRecent).slice(0, 12)
   };
 }
 
@@ -728,7 +776,7 @@ async function fetchBrokerDataset(context) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const brokerFilter = { broker_uuid: broker.id };
 
-  const [leadRows, propertyRows, followUpRows, listingRows, notificationRows, aiMatchRows] = await Promise.all([
+  const [leadRows, propertyRows, followUpRows, listingRows, notificationRows, aiMatchRows, brokerRows] = await Promise.all([
     supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
@@ -758,7 +806,14 @@ async function fetchBrokerDataset(context) {
       order: { column: 'created_at', ascending: false }
     }),
     selectOptionalBrokerRows(context, 'broker_notifications'),
-    selectOptionalBrokerRows(context, 'broker_ai_matches')
+    selectOptionalBrokerRows(context, 'broker_ai_matches'),
+    supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'brokers',
+      filters: { is_blocked: false },
+      order: { column: 'updated_at', ascending: false }
+    }).catch(() => [])
   ]);
 
   const leadRecords = (Array.isArray(leadRows) ? leadRows : []).map(sanitizeLead);
@@ -774,6 +829,7 @@ async function fetchBrokerDataset(context) {
 
   return {
     overview: buildOverview(computedMatches.leads, computedMatches.properties, sharedListings, broker, aiMatches),
+    brokerActivity: buildBrokerActivitySnapshot(brokerRows),
     leads: computedMatches.leads,
     properties: computedMatches.properties,
     followUps,
@@ -844,6 +900,21 @@ export async function POST(request) {
 
     if (!action) {
       return json({ message: 'Dashboard action is required.' }, 400);
+    }
+
+    if (action === 'heartbeat') {
+      const brokerRows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { is_blocked: false },
+        order: { column: 'updated_at', ascending: false }
+      }).catch(() => []);
+
+      return json({
+        broker: sanitizeOverviewBroker(broker),
+        brokerActivity: buildBrokerActivitySnapshot(brokerRows)
+      });
     }
 
     if (action === 'update-profile') {

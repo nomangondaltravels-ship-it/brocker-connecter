@@ -107,6 +107,150 @@
       font-size: 0.82rem;
     }
 
+    .activity-brokers-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .activity-brokers-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .activity-brokers-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .activity-brokers-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      min-width: 260px;
+      max-width: 320px;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+      z-index: 30;
+      display: grid;
+      gap: 10px;
+    }
+
+    .activity-brokers-panel.hidden {
+      display: none;
+    }
+
+    .activity-brokers-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 2px 4px 0;
+    }
+
+    .activity-brokers-head strong {
+      font-size: 0.9rem;
+      color: #0f172a;
+    }
+
+    .activity-brokers-head span {
+      font-size: 0.74rem;
+      color: #64748b;
+    }
+
+    .activity-brokers-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .activity-broker-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #eef2f7;
+    }
+
+    .activity-broker-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .activity-broker-copy strong {
+      font-size: 0.82rem;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-broker-copy span {
+      font-size: 0.73rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .activity-brokers-empty {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px dashed #e5e7eb;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.78rem;
+      text-align: center;
+    }
+
+    .broker-activity-chip,
+    .broker-activity-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      color: #475569;
+      font-size: 0.78rem;
+      line-height: 1.4;
+    }
+
+    .broker-activity-inline {
+      font-size: 0.74rem;
+      color: #64748b;
+    }
+
+    .broker-activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      background: #cbd5e1;
+    }
+
+    .broker-activity-dot.is-online {
+      background: #22c55e;
+    }
+
+    .broker-activity-dot.is-active {
+      background: #f59e0b;
+    }
+
+    .broker-activity-dot.is-recent,
+    .broker-activity-dot.is-offline {
+      background: #cbd5e1;
+    }
+
     .account-menu-wrap {
       position: relative;
       display: flex;
@@ -4401,6 +4545,19 @@
       </div>
       <div class="top-actions">
         <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
+        <div class="activity-brokers-wrap">
+          <button class="btn btn-secondary activity-brokers-trigger" type="button" id="activeBrokersBtn" onclick="toggleBrokerActivityMenu()" aria-haspopup="menu" aria-expanded="false">
+            <span class="activity-brokers-indicator" aria-hidden="true"></span>
+            <span id="activeBrokersLabel">0 Active Brokers</span>
+          </button>
+          <div class="activity-brokers-panel hidden" id="activeBrokersPanel" role="menu" aria-label="Active brokers">
+            <div class="activity-brokers-head">
+              <strong>Active Brokers</strong>
+              <span id="activeBrokersMeta">Live activity</span>
+            </div>
+            <div class="activity-brokers-list" id="activeBrokersList"></div>
+          </div>
+        </div>
         <button class="btn btn-secondary page-switch-btn" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
         <div class="account-menu-wrap">
           <button class="btn btn-secondary page-switch-btn account-menu-trigger" id="brokerIdentityBtn" type="button" onclick="toggleAccountMenu()" aria-haspopup="menu" aria-expanded="false">
@@ -5247,6 +5404,10 @@
       sharedListings: [],
       notifications: [],
       aiMatches: [],
+      brokerActivity: {
+        activeCount: 0,
+        brokers: []
+      },
       activeSection: 'overview',
       dashboardSearchQuery: '',
       filters: {
@@ -5297,6 +5458,7 @@
 
     const leadAutocompleteControllers = {};
     const propertyAutocompleteControllers = {};
+    let brokerActivityHeartbeatTimer = null;
     const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
 
@@ -6770,6 +6932,77 @@
       };
     }
 
+    function getBrokerActivityStatusInfo(lastActivity) {
+      const timestamp = normalizeText(lastActivity);
+      const parsed = timestamp ? new Date(timestamp).getTime() : NaN;
+      if (!Number.isFinite(parsed)) {
+        return { key: 'offline', label: 'Offline', dotClass: 'is-offline', ageMs: Infinity, isActive: false };
+      }
+      const ageMs = Math.max(0, Date.now() - parsed);
+      if (ageMs < 2 * 60 * 1000) return { key: 'online', label: 'Online', dotClass: 'is-online', ageMs, isActive: true };
+      if (ageMs < 10 * 60 * 1000) return { key: 'active', label: 'Active', dotClass: 'is-active', ageMs, isActive: true };
+      if (ageMs < 60 * 60 * 1000) return { key: 'recent', label: 'Recently Active', dotClass: 'is-recent', ageMs, isActive: false };
+      return { key: 'offline', label: 'Offline', dotClass: 'is-offline', ageMs, isActive: false };
+    }
+
+    function formatBrokerActivityMeta(lastActivity) {
+      const info = getBrokerActivityStatusInfo(lastActivity);
+      if (info.key === 'online') return 'Online';
+      if (info.key === 'active') return `Active ${formatCompactRelativeTime(lastActivity)}`;
+      if (info.key === 'recent') return `Recently active ${formatCompactRelativeTime(lastActivity)}`;
+      return 'Offline';
+    }
+
+    function renderBrokerActivityInline(lastActivity, fallbackLabel = '') {
+      const info = getBrokerActivityStatusInfo(lastActivity);
+      const label = fallbackLabel || formatBrokerActivityMeta(lastActivity);
+      return `<span class="broker-activity-inline"><span class="broker-activity-dot ${info.dotClass}" aria-hidden="true"></span><span>${escapeHtml(label)}</span></span>`;
+    }
+
+    function closeBrokerActivityMenu() {
+      const panel = document.getElementById('activeBrokersPanel');
+      const button = document.getElementById('activeBrokersBtn');
+      if (panel) panel.classList.add('hidden');
+      if (button) button.setAttribute('aria-expanded', 'false');
+    }
+
+    function syncBrokerActivityIndicator() {
+      const labelEl = document.getElementById('activeBrokersLabel');
+      const metaEl = document.getElementById('activeBrokersMeta');
+      const listEl = document.getElementById('activeBrokersList');
+      const items = Array.isArray(state.brokerActivity?.brokers) ? state.brokerActivity.brokers : [];
+      const activeCount = Number(state.brokerActivity?.activeCount || 0);
+      if (labelEl) {
+        labelEl.textContent = `${activeCount} Active Broker${activeCount === 1 ? '' : 's'}`;
+      }
+      if (metaEl) {
+        metaEl.textContent = items.length ? `${items.length} brokers visible` : 'Live activity';
+      }
+      if (listEl) {
+        listEl.innerHTML = items.length
+          ? items.map(item => `
+            <div class="activity-broker-row">
+              <div class="activity-broker-copy">
+                <strong>${escapeHtml(item.fullName || 'Broker')}</strong>
+                <span>${escapeHtml(item.companyName || 'Broker account')}</span>
+              </div>
+              ${renderBrokerActivityInline(item.lastActivity)}
+            </div>
+          `).join('')
+          : '<div class="activity-brokers-empty">No brokers are online or recently active right now.</div>';
+      }
+    }
+
+    function toggleBrokerActivityMenu() {
+      const panel = document.getElementById('activeBrokersPanel');
+      const button = document.getElementById('activeBrokersBtn');
+      if (!panel || !button) return;
+      closeAccountMenu();
+      const willOpen = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !willOpen);
+      button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    }
+
     function closeAccountMenu() {
       const panel = document.getElementById('accountMenuPanel');
       const button = document.getElementById('brokerIdentityBtn');
@@ -6781,6 +7014,7 @@
       const panel = document.getElementById('accountMenuPanel');
       const button = document.getElementById('brokerIdentityBtn');
       if (!panel || !button) return;
+      closeBrokerActivityMenu();
       const willOpen = panel.classList.contains('hidden');
       panel.classList.toggle('hidden', !willOpen);
       button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
@@ -6812,7 +7046,8 @@
       if (!trigger || !avatar || !name || !meta) return;
       const fullName = profile.fullName || profile.companyName || 'Broker Account';
       const label = profile.brokerIdNumber ? `${fullName}` : fullName;
-      const metaText = profile.brokerIdNumber ? `Broker ID ${profile.brokerIdNumber}` : 'Broker Account';
+      const activityMeta = formatBrokerActivityMeta(profile.lastActivity || state.overview?.broker?.lastActivity || '');
+      const metaText = `${profile.brokerIdNumber ? `Broker ID ${profile.brokerIdNumber}` : 'Broker Account'} • ${activityMeta}`;
       name.textContent = label;
       meta.textContent = metaText;
       if (profile.avatarDataUrl) {
@@ -6820,6 +7055,37 @@
       } else {
         avatar.textContent = getProfileInitials(fullName);
       }
+    }
+
+    async function refreshBrokerActivityHeartbeat() {
+      if (!state.token || document.hidden) return;
+      try {
+        const response = await fetch('/api/broker-dashboard', {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify({ action: 'heartbeat' })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) return;
+        if (result?.broker) {
+          state.broker = { ...(state.broker || {}), ...result.broker };
+          localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
+        }
+        state.brokerActivity = result?.brokerActivity || { activeCount: 0, brokers: [] };
+        syncBrokerIdentityButton();
+        syncBrokerActivityIndicator();
+      } catch (error) {
+        console.debug('Broker activity heartbeat skipped', error?.message || error);
+      }
+    }
+
+    function startBrokerActivityHeartbeat() {
+      if (brokerActivityHeartbeatTimer) {
+        clearInterval(brokerActivityHeartbeatTimer);
+      }
+      brokerActivityHeartbeatTimer = window.setInterval(() => {
+        refreshBrokerActivityHeartbeat();
+      }, 90000);
     }
 
     async function verifySession() {
@@ -6866,12 +7132,14 @@
       state.properties = Array.isArray(result.properties) ? result.properties : [];
       state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
       state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+      state.brokerActivity = result.brokerActivity || { activeCount: 0, brokers: [] };
       if (result.overview?.broker) {
         state.broker = { ...(state.broker || {}), ...result.overview.broker };
         localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
       }
       syncProfileStorage();
       syncBrokerIdentityButton();
+      syncBrokerActivityIndicator();
 
       renderOverview();
       renderLeads();
@@ -8048,10 +8316,14 @@
       if (!event.target.closest('.account-menu-wrap')) {
         closeAccountMenu();
       }
+      if (!event.target.closest('.activity-brokers-wrap')) {
+        closeBrokerActivityMenu();
+      }
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
         closeAccountMenu();
+        closeBrokerActivityMenu();
       }
     });
 
@@ -8094,6 +8366,16 @@
       } catch (error) {
         return '--';
       }
+    }
+
+    function formatCompactRelativeTime(value) {
+      if (!value) return '--';
+      const diffMs = Math.max(0, Date.now() - new Date(value).getTime());
+      const minutes = Math.max(1, Math.floor(diffMs / 60000));
+      if (minutes < 60) return `${minutes} min ago`;
+      const hours = Math.max(1, Math.floor(minutes / 60));
+      if (hours < 24) return `${hours} hr ago`;
+      return `${Math.max(1, Math.floor(hours / 24))} d ago`;
     }
 
     function getLeadIntentText(lead) {
@@ -11411,6 +11693,10 @@
     }
 
     async function logoutBroker() {
+      if (brokerActivityHeartbeatTimer) {
+        clearInterval(brokerActivityHeartbeatTimer);
+        brokerActivityHeartbeatTimer = null;
+      }
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
       window.location.href = 'index.html';
@@ -11429,6 +11715,7 @@
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();
+        startBrokerActivityHeartbeat();
       } catch (error) {
         setStatus(error.message || 'Could not open the dashboard.', 'error');
       }

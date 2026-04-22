@@ -59,7 +59,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
           supabaseUrl,
           serviceRoleKey,
           table: 'brokers',
-          select: 'id,broker_id_number,is_blocked',
+          select: '*',
           filters: { id: buildPostgrestInFilter(brokerIds) }
         }).catch(() => [])
       : [],
@@ -68,7 +68,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
           supabaseUrl,
           serviceRoleKey,
           table: 'brokers',
-          select: 'id,broker_id_number,is_blocked',
+          select: '*',
           filters: { broker_id_number: buildPostgrestInFilter(brokerIdNumbers) }
         }).catch(() => [])
       : [],
@@ -99,10 +99,20 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
 
   const validBrokerIds = new Set();
   const validBrokerIdNumbers = new Set();
+  const brokerActivityById = new Map();
+  const brokerActivityByBrokerId = new Map();
   for (const broker of Array.isArray(brokerRows) ? brokerRows : []) {
     if (broker?.is_blocked) continue;
-    if (normalizeText(broker.id)) validBrokerIds.add(normalizeText(broker.id));
-    if (normalizeText(broker.broker_id_number)) validBrokerIdNumbers.add(normalizeText(broker.broker_id_number));
+    const brokerId = normalizeText(broker.id);
+    const brokerIdNumber = normalizeText(broker.broker_id_number);
+    if (brokerId) {
+      validBrokerIds.add(brokerId);
+      brokerActivityById.set(brokerId, normalizeText(broker.last_activity));
+    }
+    if (brokerIdNumber) {
+      validBrokerIdNumbers.add(brokerIdNumber);
+      brokerActivityByBrokerId.set(brokerIdNumber, normalizeText(broker.last_activity));
+    }
   }
 
   const validLeadIds = new Set(
@@ -124,6 +134,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
     const brokerIsValid = (brokerUuid && validBrokerIds.has(brokerUuid))
       || (brokerIdNumber && validBrokerIdNumbers.has(brokerIdNumber));
     if (!brokerIsValid) return [];
+    const brokerLastActivity = brokerActivityById.get(brokerUuid) || brokerActivityByBrokerId.get(brokerIdNumber) || '';
 
     if (item.source_type === 'lead') {
       if (!validLeadIds.has(String(item.source_id))) return [];
@@ -131,6 +142,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       const meta = parseLeadMeta(sourceRow?.follow_up_notes);
       return [{
         ...item,
+        broker_last_activity: brokerLastActivity,
         building_label: normalizeText(meta.preferredBuildingProject || item.size_label),
         size_label: ''
       }];
@@ -141,6 +153,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       const meta = parsePropertyMeta(sourceRow?.description);
       return [{
         ...item,
+        broker_last_activity: brokerLastActivity,
         building_label: normalizeText(meta.buildingName),
         size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit)
       }];

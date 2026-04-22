@@ -1938,6 +1938,48 @@
       color: #0f172a;
     }
 
+    .broker-activity-inline,
+    .broker-activity-stack {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+      color: #64748b;
+      font-size: 0.76rem;
+      line-height: 1.4;
+    }
+
+    .broker-activity-stack {
+      font-size: 0.8rem;
+      color: #475569;
+    }
+
+    .broker-activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      background: #cbd5e1;
+    }
+
+    .broker-activity-dot.is-online {
+      background: #22c55e;
+    }
+
+    .broker-activity-dot.is-active {
+      background: #f59e0b;
+    }
+
+    .broker-activity-dot.is-recent,
+    .broker-activity-dot.is-offline {
+      background: #cbd5e1;
+    }
+
+    .sheet-secondary.is-rich {
+      display: grid;
+      gap: 4px;
+    }
+
     .connector-detail-note {
       padding: 0;
       border-radius: 0;
@@ -3007,6 +3049,26 @@
       return `${Math.max(1, Math.floor(diffHours / 24))}d`;
     }
 
+    function getBrokerActivityStatusInfo(lastActivity) {
+      const timestamp = String(lastActivity || '').trim();
+      const parsed = timestamp ? new Date(timestamp).getTime() : NaN;
+      if (!Number.isFinite(parsed)) {
+        return { key: 'offline', label: 'Offline', dotClass: 'is-offline' };
+      }
+      const ageMs = Math.max(0, Date.now() - parsed);
+      const minutes = Math.max(1, Math.floor(ageMs / 60000));
+      if (ageMs < 2 * 60 * 1000) return { key: 'online', label: 'Online', dotClass: 'is-online' };
+      if (ageMs < 10 * 60 * 1000) return { key: 'active', label: `Active ${minutes} min ago`, dotClass: 'is-active' };
+      if (ageMs < 60 * 60 * 1000) return { key: 'recent', label: `Recently active ${minutes} min ago`, dotClass: 'is-recent' };
+      return { key: 'offline', label: 'Offline', dotClass: 'is-offline' };
+    }
+
+    function renderBrokerActivityLine(listing, brokerLabel = '') {
+      const info = getBrokerActivityStatusInfo(listing?.brokerLastActivity);
+      const label = brokerLabel || String(listing?.brokerName || 'Broker');
+      return `<span class="broker-activity-inline"><span class="broker-activity-dot ${info.dotClass}" aria-hidden="true"></span><span>${escapeHtml(label)} • ${escapeHtml(info.label)}</span></span>`;
+    }
+
     function getConnectorActionIcon(icon) {
       switch (icon) {
         case 'whatsapp':
@@ -3186,6 +3248,7 @@
       const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
         .filter(Boolean)
         .join(' - ');
+      const brokerActivity = getBrokerActivityStatusInfo(selected.brokerLastActivity);
       const phoneAvailable = String(selected.brokerMobile || '').trim();
       const contactRevealControl = phoneAvailable
         ? isPublicContactRevealed(sectionName, selected)
@@ -3209,6 +3272,7 @@
             <span>Updated ${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</span>
             <span>Shared by ${escapeHtml(selected.brokerName || 'Broker')}</span>
           </div>
+          <div class="broker-activity-stack"><span class="broker-activity-dot ${brokerActivity.dotClass}" aria-hidden="true"></span><span>${escapeHtml(brokerActivity.label)}</span></div>
           <div class="connector-detail-toolbar">
             ${renderConnectorDetailActions(selected, shareLink, matchText)}
           </div>
@@ -3232,6 +3296,7 @@
           <h4>Broker Contact</h4>
           <div class="connector-detail-grid">
             <div class="connector-detail-cell"><small>Shared By</small><strong>${escapeHtml(selected.brokerName || 'Broker')}</strong></div>
+            <div class="connector-detail-cell"><small>Broker Activity</small><strong>${escapeHtml(brokerActivity.label)}</strong></div>
             <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
           </div>
         </div>
@@ -3261,7 +3326,7 @@
             <div class="sheet-col">
               <span class="sheet-label">Intent</span>
               <span class="sheet-primary">${listing.purpose === 'rent' ? 'My client is looking to rent' : 'My client is looking to buy'}</span>
-              <span class="sheet-secondary">${listing.publicNotes || 'Shared broker requirement'}</span>
+              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker requirement')}</span></span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Location</span>
@@ -3320,7 +3385,7 @@
             <div class="sheet-col">
               <span class="sheet-label">Purpose</span>
               <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${listing.propertyType || listing.category || 'Listing'}</span>
-              <span class="sheet-secondary">${listing.publicNotes || 'Shared broker connector listing'}</span>
+              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker connector listing')}</span></span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Location</span>

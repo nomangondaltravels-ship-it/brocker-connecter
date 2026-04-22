@@ -227,6 +227,63 @@ export function normalizeBool(value) {
   return Boolean(value);
 }
 
+const BROKER_ACTIVITY_THRESHOLDS_MS = Object.freeze({
+  online: 2 * 60 * 1000,
+  active: 10 * 60 * 1000,
+  recent: 60 * 60 * 1000
+});
+
+export function deriveBrokerActivity(lastActivity, now = Date.now()) {
+  const timestamp = normalizeText(lastActivity);
+  const parsedTime = timestamp ? Date.parse(timestamp) : NaN;
+  if (!Number.isFinite(parsedTime)) {
+    return {
+      key: 'offline',
+      isOnline: false,
+      isActive: false,
+      isRecent: false,
+      ageMs: Infinity
+    };
+  }
+
+  const ageMs = Math.max(0, now - parsedTime);
+  if (ageMs < BROKER_ACTIVITY_THRESHOLDS_MS.online) {
+    return {
+      key: 'online',
+      isOnline: true,
+      isActive: true,
+      isRecent: true,
+      ageMs
+    };
+  }
+  if (ageMs < BROKER_ACTIVITY_THRESHOLDS_MS.active) {
+    return {
+      key: 'active',
+      isOnline: false,
+      isActive: true,
+      isRecent: true,
+      ageMs
+    };
+  }
+  if (ageMs < BROKER_ACTIVITY_THRESHOLDS_MS.recent) {
+    return {
+      key: 'recent',
+      isOnline: false,
+      isActive: false,
+      isRecent: true,
+      ageMs
+    };
+  }
+
+  return {
+    key: 'offline',
+    isOnline: false,
+    isActive: false,
+    isRecent: false,
+    ageMs
+  };
+}
+
 const LEAD_META_PREFIX = '__BC_LEAD_META__:';
 const PROPERTY_META_PREFIX = '__BC_PROPERTY_META__:';
 
@@ -1077,6 +1134,27 @@ export async function requireBrokerSession(request) {
     throw error;
   }
 
+  const lastActivity = normalizeText(broker.last_activity);
+  const parsedLastActivity = lastActivity ? Date.parse(lastActivity) : NaN;
+  const shouldTouchActivity = !Number.isFinite(parsedLastActivity) || (Date.now() - parsedLastActivity) >= 60 * 1000;
+  if (shouldTouchActivity) {
+    const nextLastActivity = new Date().toISOString();
+    try {
+      await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { id: broker.id },
+        payload: {
+          last_activity: nextLastActivity
+        }
+      });
+      broker.last_activity = nextLastActivity;
+    } catch (error) {
+      broker.last_activity = lastActivity;
+    }
+  }
+
   return {
     supabaseUrl,
     serviceRoleKey,
@@ -1307,6 +1385,7 @@ export function sanitizePublicListing(row) {
     brokerName: row.broker_display_name,
     brokerIdNumber: row.broker_id_number,
     brokerMobile: row.broker_mobile,
+    brokerLastActivity: normalizeText(row.broker_last_activity),
     sourceType: row.source_type,
     sourceId: row.source_id,
     listingKind: row.listing_kind,
