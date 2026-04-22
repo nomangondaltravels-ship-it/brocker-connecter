@@ -101,17 +101,27 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
   const validBrokerIdNumbers = new Set();
   const brokerActivityById = new Map();
   const brokerActivityByBrokerId = new Map();
+  const brokerAvatarById = new Map();
+  const brokerAvatarByBrokerId = new Map();
   for (const broker of Array.isArray(brokerRows) ? brokerRows : []) {
     if (broker?.is_blocked) continue;
     const brokerId = normalizeText(broker.id);
     const brokerIdNumber = normalizeText(broker.broker_id_number);
+    const brokerAvatar = normalizeText(
+      broker.avatar_data_url
+      || broker.avatar_url
+      || broker.profile_image_url
+      || broker.profile_photo_url
+    );
     if (brokerId) {
       validBrokerIds.add(brokerId);
       brokerActivityById.set(brokerId, normalizeText(broker.last_activity));
+      brokerAvatarById.set(brokerId, brokerAvatar);
     }
     if (brokerIdNumber) {
       validBrokerIdNumbers.add(brokerIdNumber);
       brokerActivityByBrokerId.set(brokerIdNumber, normalizeText(broker.last_activity));
+      brokerAvatarByBrokerId.set(brokerIdNumber, brokerAvatar);
     }
   }
 
@@ -135,6 +145,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       || (brokerIdNumber && validBrokerIdNumbers.has(brokerIdNumber));
     if (!brokerIsValid) return [];
     const brokerLastActivity = brokerActivityById.get(brokerUuid) || brokerActivityByBrokerId.get(brokerIdNumber) || '';
+    const brokerAvatarUrl = brokerAvatarById.get(brokerUuid) || brokerAvatarByBrokerId.get(brokerIdNumber) || '';
 
     if (item.source_type === 'lead') {
       if (!validLeadIds.has(String(item.source_id))) return [];
@@ -143,6 +154,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       return [{
         ...item,
         broker_last_activity: brokerLastActivity,
+        broker_avatar_url: brokerAvatarUrl,
         building_label: normalizeText(meta.preferredBuildingProject || item.size_label),
         size_label: ''
       }];
@@ -154,6 +166,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
       return [{
         ...item,
         broker_last_activity: brokerLastActivity,
+        broker_avatar_url: brokerAvatarUrl,
         building_label: normalizeText(meta.buildingName),
         size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit)
       }];

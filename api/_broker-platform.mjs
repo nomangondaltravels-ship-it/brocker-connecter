@@ -1383,9 +1383,9 @@ export function sanitizePublicListing(row) {
   return {
     id: row.id,
     brokerName: row.broker_display_name,
-    brokerIdNumber: row.broker_id_number,
     brokerMobile: row.broker_mobile,
     brokerLastActivity: normalizeText(row.broker_last_activity),
+    brokerAvatarUrl: normalizeText(row.broker_avatar_url || row.broker_avatar_data_url || row.broker_profile_image_url),
     sourceType: row.source_type,
     sourceId: row.source_id,
     listingKind: row.listing_kind,

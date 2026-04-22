@@ -1954,6 +1954,50 @@
       color: #475569;
     }
 
+    .bcp-broker-identity {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .bcp-broker-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      background: #f8fafc;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #8f6a12;
+      font-size: 0.8rem;
+      font-weight: 800;
+      flex: 0 0 42px;
+    }
+
+    .bcp-broker-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .bcp-broker-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .bcp-broker-copy strong {
+      font-size: 0.9rem;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .broker-activity-dot {
       width: 8px;
       height: 8px;
@@ -3081,6 +3125,29 @@
       return `<span class="broker-activity-inline"><span class="broker-activity-dot ${info.dotClass}" aria-hidden="true"></span><span>${escapeHtml(label)} • ${escapeHtml(info.label)}</span></span>`;
     }
 
+    function getBrokerInitials(name) {
+      const parts = String(name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+      if (!parts.length) return 'BC';
+      return parts.map(part => part.charAt(0).toUpperCase()).join('');
+    }
+
+    function renderBcpBrokerIdentity(listing) {
+      const brokerName = String(listing?.brokerName || 'Broker').trim() || 'Broker';
+      const activity = getBrokerActivityStatusInfo(listing?.brokerLastActivity);
+      const avatarMarkup = listing?.brokerAvatarUrl
+        ? `<span class="bcp-broker-avatar"><img src="${escapeHtml(listing.brokerAvatarUrl)}" alt="${escapeHtml(brokerName)}"></span>`
+        : `<span class="bcp-broker-avatar">${escapeHtml(getBrokerInitials(brokerName))}</span>`;
+      return `
+        <div class="bcp-broker-identity">
+          ${avatarMarkup}
+          <div class="bcp-broker-copy">
+            <strong>${escapeHtml(brokerName)}</strong>
+            <span class="broker-activity-stack"><span class="broker-activity-dot ${activity.dotClass}" aria-hidden="true"></span><span>${escapeHtml(activity.label)}</span></span>
+          </div>
+        </div>
+      `;
+    }
+
     function getConnectorActionIcon(icon) {
       switch (icon) {
         case 'whatsapp':
@@ -3260,7 +3327,6 @@
       const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
         .filter(Boolean)
         .join(' - ');
-      const brokerActivity = getBrokerActivityStatusInfo(selected.brokerLastActivity);
       const phoneAvailable = String(selected.brokerMobile || '').trim();
       const contactRevealControl = phoneAvailable
         ? isPublicContactRevealed(sectionName, selected)
@@ -3282,9 +3348,7 @@
           <div class="connector-detail-price">${escapeHtml(selected.priceLabel || '--')}</div>
           <div class="connector-detail-inline-meta">
             <span>Updated ${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</span>
-            <span>Shared by ${escapeHtml(selected.brokerName || 'Broker')}</span>
           </div>
-          <div class="broker-activity-stack"><span class="broker-activity-dot ${brokerActivity.dotClass}" aria-hidden="true"></span><span>${escapeHtml(brokerActivity.label)}</span></div>
           <div class="connector-detail-toolbar">
             ${renderConnectorDetailActions(selected, shareLink, matchText)}
           </div>
@@ -3306,9 +3370,8 @@
         </div>
         <div class="connector-detail-section">
           <h4>Broker Contact</h4>
+          ${renderBcpBrokerIdentity(selected)}
           <div class="connector-detail-grid">
-            <div class="connector-detail-cell"><small>Shared By</small><strong>${escapeHtml(selected.brokerName || 'Broker')}</strong></div>
-            <div class="connector-detail-cell"><small>Broker Activity</small><strong>${escapeHtml(brokerActivity.label)}</strong></div>
             <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
           </div>
         </div>
