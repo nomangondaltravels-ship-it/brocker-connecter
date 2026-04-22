@@ -2957,6 +2957,717 @@
         right: auto;
       }
     }
+    :root {
+      --workspace-accent: #c8a96b;
+      --workspace-accent-strong: #a67c10;
+      --workspace-hover: #f1f5f9;
+      --workspace-selected: #eff6ff;
+    }
+
+    body {
+      background: #f8fafc !important;
+      color: #0f172a !important;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: rgba(255, 255, 255, 0.96) !important;
+      border-bottom: 1px solid #e5e7eb !important;
+      backdrop-filter: blur(12px);
+    }
+
+    .brand-title,
+    .brand-title span {
+      color: #0f172a !important;
+    }
+
+    .brand-title span {
+      color: var(--workspace-accent-strong) !important;
+    }
+
+    .brand small {
+      color: #64748b !important;
+    }
+
+    .top-actions .btn,
+    .btn-secondary,
+    .page-switch-btn,
+    .menu button,
+    .segment-btn {
+      background: #ffffff !important;
+      color: #334155 !important;
+      border-color: #e5e7eb !important;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .btn-primary {
+      background: var(--workspace-accent) !important;
+      color: #ffffff !important;
+      border-color: var(--workspace-accent) !important;
+      box-shadow: 0 8px 18px rgba(200, 169, 107, 0.18) !important;
+    }
+
+    .btn-primary:hover {
+      background: var(--workspace-accent-strong) !important;
+      border-color: var(--workspace-accent-strong) !important;
+    }
+
+    .btn-success {
+      background: #f8fafc !important;
+      color: #0f766e !important;
+      border-color: rgba(15, 118, 110, 0.18) !important;
+    }
+
+    .btn-warning {
+      background: #fff7ed !important;
+      color: #b45309 !important;
+      border-color: rgba(245, 158, 11, 0.2) !important;
+    }
+
+    .btn-danger {
+      background: #fef2f2 !important;
+      color: #b91c1c !important;
+      border-color: rgba(239, 68, 68, 0.22) !important;
+    }
+
+    .page-switch-btn.is-active,
+    .menu button.active,
+    .segment-btn.active,
+    .segment-btn[aria-pressed="true"] {
+      background: #f8f5ef !important;
+      color: var(--workspace-accent-strong) !important;
+      border-color: rgba(200, 169, 107, 0.36) !important;
+      box-shadow: inset 3px 0 0 var(--workspace-accent), 0 4px 12px rgba(200, 169, 107, 0.08) !important;
+    }
+
+    .app-shell {
+      width: min(1500px, 96%) !important;
+      margin: 20px auto 28px !important;
+      grid-template-columns: 244px minmax(0, 1fr) !important;
+      gap: 20px !important;
+      align-items: start !important;
+    }
+
+    .sidebar-dock {
+      width: auto !important;
+      min-height: auto !important;
+      top: 92px !important;
+    }
+
+    .sidebar {
+      transform: none !important;
+      width: auto !important;
+      min-height: calc(100vh - 124px) !important;
+      padding: 18px !important;
+      border-radius: 22px !important;
+      background: #ffffff !important;
+      border: 1px solid #e5e7eb !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .sidebar-peek {
+      display: none !important;
+    }
+
+    .sidebar h2 {
+      font-size: 1rem !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+      margin-bottom: 14px !important;
+    }
+
+    .menu {
+      gap: 10px !important;
+    }
+
+    .menu button {
+      min-height: 62px !important;
+      padding: 12px 14px !important;
+      align-items: flex-start !important;
+      justify-content: center !important;
+      gap: 4px !important;
+      border-radius: 14px !important;
+    }
+
+    .menu-sub {
+      color: #64748b !important;
+    }
+
+    .panel {
+      background: #ffffff !important;
+      border: 1px solid #e5e7eb !important;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06) !important;
+      border-radius: 24px !important;
+      overflow: hidden !important;
+    }
+
+    .hero {
+      background: #ffffff !important;
+      border-bottom: 1px solid #e5e7eb !important;
+      padding: 18px 24px !important;
+    }
+
+    .hero h1 {
+      font-family: 'Manrope', Arial, sans-serif !important;
+      font-size: 1.9rem !important;
+      color: #0f172a !important;
+      margin: 0 !important;
+    }
+
+    .status-bar {
+      margin: 18px 24px 0 !important;
+      border-radius: 14px !important;
+      border-color: #e5e7eb !important;
+      background: #ffffff !important;
+      color: #0f172a !important;
+    }
+
+    .status-bar.success {
+      background: #ecfdf3 !important;
+      color: #166534 !important;
+      border-color: rgba(34, 197, 94, 0.16) !important;
+    }
+
+    .status-bar.error {
+      background: #fef2f2 !important;
+      color: #b91c1c !important;
+      border-color: rgba(239, 68, 68, 0.18) !important;
+    }
+
+    .section {
+      padding: 20px 24px 24px !important;
+      background: #ffffff !important;
+    }
+
+    .section + .section {
+      border-top: 1px solid #eef2f7;
+    }
+
+    .section-head {
+      margin-bottom: 14px !important;
+    }
+
+    .section-head h2 {
+      font-size: 1.08rem !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+    }
+
+    .section-head p {
+      color: #64748b !important;
+      font-size: 0.86rem !important;
+    }
+
+    .stats {
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+      margin-bottom: 16px !important;
+    }
+
+    .stat-card {
+      min-height: 88px !important;
+      padding: 14px 16px !important;
+      border-radius: 16px !important;
+      border: 1px solid #e5e7eb !important;
+      background: #ffffff !important;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+      display: grid !important;
+      gap: 6px !important;
+      align-content: start !important;
+    }
+
+    .stat-card small {
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.08em !important;
+      font-size: 0.7rem !important;
+      font-weight: 800 !important;
+    }
+
+    .stat-card strong {
+      font-size: 1.55rem !important;
+      color: #0f172a !important;
+    }
+
+    .overview-command-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .overview-list-card,
+    .workflow-insights .insight-card,
+    .record-toolbar,
+    .workspace-table-card,
+    .workspace-detail-card {
+      background: #ffffff !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 18px !important;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .overview-list-card {
+      padding: 14px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .overview-list-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .overview-list-head h3 {
+      font-size: 0.94rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .overview-list-head p,
+    .workspace-toolbar-copy span {
+      color: #64748b;
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .overview-mini-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .overview-mini-row {
+      display: grid;
+      gap: 4px;
+      padding: 10px 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .overview-mini-row.is-clickable {
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .overview-mini-row.is-clickable:hover {
+      background: #ffffff;
+      border-color: rgba(200, 169, 107, 0.32);
+      transform: translateY(-1px);
+    }
+
+    .overview-mini-row strong {
+      font-size: 0.83rem;
+      color: #0f172a;
+    }
+
+    .overview-mini-row span,
+    .overview-mini-row small {
+      color: #64748b;
+      font-size: 0.77rem;
+    }
+
+    .record-toolbar {
+      padding: 14px 16px !important;
+      margin-bottom: 14px !important;
+    }
+
+    .record-filter-grid {
+      display: grid !important;
+      grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+      gap: 12px !important;
+    }
+
+    .record-filter-grid .field-block {
+      min-width: 0;
+    }
+
+    .workspace-toolbar-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .workspace-toolbar-copy strong {
+      font-size: 0.85rem;
+      color: #0f172a;
+    }
+
+    .workspace-split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .workspace-table-card,
+    .workspace-detail-card {
+      overflow: hidden;
+    }
+
+    .workspace-table-scroll {
+      overflow: auto;
+    }
+
+    .workspace-table-inner {
+      min-width: 980px;
+    }
+
+    .workspace-table-head,
+    .workspace-table-row {
+      display: grid;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+    }
+
+    .workspace-table-head {
+      min-height: 42px;
+      border-bottom: 1px solid #eef2f7;
+      background: #f8fafc;
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .workspace-table-body {
+      display: grid;
+    }
+
+    .workspace-table-row {
+      min-height: 68px;
+      border-bottom: 1px solid #eef2f7;
+      cursor: pointer;
+      background: #ffffff;
+      transition: background 0.18s ease, border-color 0.18s ease;
+    }
+
+    .workspace-table-row:hover {
+      background: var(--workspace-hover);
+    }
+
+    .workspace-table-row.is-selected {
+      background: var(--workspace-selected);
+      box-shadow: inset 3px 0 0 var(--workspace-accent);
+    }
+
+    .workspace-cell {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .workspace-cell strong {
+      font-size: 0.83rem;
+      color: #0f172a;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .workspace-cell span,
+    .workspace-cell small {
+      font-size: 0.76rem;
+      color: #64748b;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .workspace-cell .workspace-number {
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .workspace-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .workspace-actions .crm-row-more {
+      margin-left: 0;
+    }
+
+    .workspace-actions .crm-row-action-btn {
+      min-height: 32px !important;
+      padding: 0 10px !important;
+      font-size: 0.75rem !important;
+      border-radius: 10px !important;
+    }
+
+    .workspace-detail-card {
+      padding: 18px 18px 16px;
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 106px;
+    }
+
+    .workspace-detail-empty {
+      min-height: 240px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #64748b;
+      font-size: 0.86rem;
+      border: 1px dashed #e5e7eb;
+      border-radius: 16px;
+      background: #f8fafc;
+      padding: 20px;
+    }
+
+    .detail-panel-header {
+      display: grid;
+      gap: 10px;
+    }
+
+    .detail-panel-header h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .detail-panel-copy {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .detail-panel-meta {
+      color: #64748b;
+      font-size: 0.8rem;
+    }
+
+    .detail-section {
+      display: grid;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #eef2f7;
+    }
+
+    .detail-section:first-of-type {
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .detail-section h4 {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .detail-grid .detail-cell {
+      padding: 10px 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .detail-grid .detail-cell small {
+      display: block;
+      margin-bottom: 4px;
+      color: #64748b;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .detail-grid .detail-cell strong {
+      display: block;
+      color: #0f172a;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .detail-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .detail-toolbar .btn {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+    }
+
+    .detail-note {
+      padding: 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .workflow-strip,
+    .record-inline-grid,
+    .timeline-list,
+    .match-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .workflow-strip {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .record-inline-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .timeline-item,
+    .match-item {
+      padding: 10px 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .timeline-item strong,
+    .match-item strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+      color: #0f172a;
+    }
+
+    .crm-empty-state,
+    .empty {
+      border-radius: 16px !important;
+      border: 1px dashed #dbe3ee !important;
+      background: #f8fafc !important;
+      color: #64748b !important;
+      padding: 28px 18px !important;
+    }
+
+    .badge {
+      border-radius: 999px !important;
+      padding: 0 9px !important;
+      min-height: 24px !important;
+      font-size: 0.7rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.03em !important;
+      box-shadow: none !important;
+    }
+
+    .badge-yellow {
+      background: #f8fafc !important;
+      color: #475569 !important;
+      border-color: #dbe3ee !important;
+    }
+
+    .badge-blue,
+    .badge-match {
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
+      border-color: rgba(37, 99, 235, 0.18) !important;
+    }
+
+    .badge-orange {
+      background: #fff7ed !important;
+      color: #b45309 !important;
+      border-color: rgba(245, 158, 11, 0.18) !important;
+    }
+
+    .badge-green {
+      background: #ecfdf3 !important;
+      color: #15803d !important;
+      border-color: rgba(34, 197, 94, 0.18) !important;
+    }
+
+    .badge-red,
+    .badge-archived {
+      background: #fef2f2 !important;
+      color: #b91c1c !important;
+      border-color: rgba(239, 68, 68, 0.18) !important;
+    }
+
+    .crm-row.is-distress {
+      background: #fffaf0 !important;
+      border-left: 3px solid rgba(200, 169, 107, 0.45) !important;
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 1fr !important;
+      }
+
+      .sidebar-dock {
+        position: static !important;
+      }
+
+      .sidebar {
+        min-height: auto !important;
+      }
+
+      .stats,
+      .overview-command-grid,
+      .profile-progress-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      .record-filter-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      }
+
+      .workspace-split {
+        grid-template-columns: 1fr !important;
+      }
+
+      .workspace-detail-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner {
+        grid-template-columns: 1fr !important;
+      }
+
+      .stats,
+      .overview-command-grid,
+      .record-filter-grid,
+      .detail-grid,
+      .record-inline-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .section {
+        padding: 18px 16px 20px !important;
+      }
+
+      .hero,
+      .status-bar {
+        margin-left: 16px !important;
+        margin-right: 16px !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -3009,11 +3720,12 @@
           <div class="sidebar-peek-line"></div>
           <div class="sidebar-peek-label">CRM</div>
         </div>
-        <h2>Broker CRM</h2>
+        <h2>Workspace</h2>
         <div class="menu">
-          <button class="btn active" data-section="overview" onclick="openSection('overview')"><span class="menu-label">Overview</span></button>
-          <button class="btn" data-section="leads" onclick="openSection('leads')"><span class="menu-label">My Broker Requirements</span><span class="menu-sub">Leads / Client Demand</span></button>
-          <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">My Properties</span><span class="menu-sub">Inventory / Availability</span></button>
+          <button class="btn active" data-section="overview" onclick="openSection('overview')"><span class="menu-label">Broker Desk</span><span class="menu-sub">Dashboard / command center</span></button>
+          <button class="btn" data-section="leads" onclick="openSection('leads')"><span class="menu-label">Requirements</span><span class="menu-sub">Demand / lead workflow</span></button>
+          <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">Listings</span><span class="menu-sub">Inventory / availability</span></button>
+          <button class="btn" data-section="distress" onclick="openSection('distress')"><span class="menu-label">Distress Deals</span><span class="menu-sub">Urgent discounted stock</span></button>
           <button class="btn" data-section="profile" onclick="openSection('profile')"><span class="menu-label">Profile / Settings</span></button>
         </div>
       </aside>
@@ -3029,7 +3741,7 @@
         <div class="section-head">
           <div>
             <h2>Overview</h2>
-            <p>Broker CRM summary</p>
+            <p>Compact operating view for requirements, listings, alerts, and urgent work.</p>
           </div>
         </div>
         <div class="stats" id="overviewStats"></div>
@@ -3070,6 +3782,38 @@
               <span>Add a new property to your private inventory.</span>
             </span>
           </button>
+        </div>
+        <div class="overview-command-grid">
+          <div class="overview-list-card">
+            <div class="overview-list-head">
+              <div>
+                <h3>Recent Requirements</h3>
+                <p>Latest client demand and follow-up activity.</p>
+              </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('leads')">Open</button>
+            </div>
+            <div id="overviewRecentRequirements"></div>
+          </div>
+          <div class="overview-list-card">
+            <div class="overview-list-head">
+              <div>
+                <h3>Recent Listings</h3>
+                <p>Inventory updates and listing visibility changes.</p>
+              </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('properties')">Open</button>
+            </div>
+            <div id="overviewRecentListings"></div>
+          </div>
+          <div class="overview-list-card">
+            <div class="overview-list-head">
+              <div>
+                <h3>Distress Watch</h3>
+                <p>Urgent discounted inventory that needs quick action.</p>
+              </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('distress')">Open</button>
+            </div>
+            <div id="overviewRecentDistress"></div>
+          </div>
         </div>
         <div class="workspace-shell" id="overviewWorkspace">
           <div class="workspace-head">
@@ -3464,8 +4208,8 @@
       <section class="section" id="leads-section">
         <div class="section-head">
           <div>
-            <h2>My Broker Requirements</h2>
-            <p>Private requirement workflow and follow-up pipeline.</p>
+            <h2>Requirements</h2>
+            <p>Client demand pipeline in a compact broker CRM table.</p>
           </div>
         </div>
         <div class="record-toolbar">
@@ -3541,8 +4285,8 @@
       <section class="section" id="properties-section">
         <div class="section-head">
           <div>
-            <h2>My Properties</h2>
-            <p>Private inventory pipeline and broker-ready listing workflow.</p>
+            <h2>Listings</h2>
+            <p>Inventory pipeline with compact operational visibility and workflow control.</p>
           </div>
         </div>
         <div class="record-toolbar">
@@ -3613,6 +4357,26 @@
         <div class="item-list" id="propertiesList"></div>
       </section>
 
+      <section class="section" id="distress-section">
+        <div class="section-head">
+          <div>
+            <h2>Distress Deals</h2>
+            <p>Urgent listings and market-gap opportunities in one focused workspace view.</p>
+          </div>
+        </div>
+        <div class="record-toolbar distress-toolbar">
+          <div class="workspace-toolbar-copy">
+            <strong>Only distress-flagged listings appear here.</strong>
+            <span>Underlying listing logic stays unchanged. This view isolates urgent discounted inventory for daily action.</span>
+          </div>
+          <div class="profile-section-actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="openSection('properties')">View All Listings</button>
+            <button class="btn btn-primary btn-tiny" type="button" onclick="openPropertyComposer()">Add Listing</button>
+          </div>
+        </div>
+        <div class="item-list" id="distressList"></div>
+      </section>
+
       <section class="section" id="profile-section">
         <div class="section-head">
           <div>
@@ -3678,6 +4442,9 @@
       profileStorageKey: '',
       isEditingProfile: false,
       profileSavePending: false,
+      selectedLeadId: null,
+      selectedPropertyId: null,
+      selectedDistressId: null,
       callPopover: {
         anchor: null,
         phoneRaw: '',
@@ -5156,6 +5923,7 @@
       renderDashboardSuggestions('');
       renderLeads();
       renderProperties();
+      renderDistressDeals();
       renderSharedListings();
       renderFollowups();
       renderProgress();
@@ -6326,7 +7094,10 @@
       if (!state.filters?.[section]) return;
       state.filters[section][key] = value;
       if (section === 'leads') renderLeads();
-      if (section === 'properties') renderProperties();
+      if (section === 'properties') {
+        renderProperties();
+        renderDistressDeals();
+      }
     }
 
     function syncFilterInputs(section) {
@@ -6583,6 +7354,7 @@
       renderWorkflowAlerts();
       renderLeads();
       renderProperties();
+      renderDistressDeals();
       renderSharedListings();
       renderFollowups();
       renderProgress();
@@ -8372,6 +9144,699 @@
               </div>
             `;
           }).join('')}
+        </div>
+      `;
+    }
+
+    function ensureSelectedWorkspaceId(items, currentId) {
+      const records = Array.isArray(items) ? items : [];
+      if (!records.length) return null;
+      return records.some(item => String(item.id) === String(currentId)) ? currentId : records[0].id;
+    }
+
+    function openLeadRecord(id) {
+      state.selectedLeadId = id;
+      openSection('leads');
+      renderLeads();
+    }
+
+    function openPropertyRecord(id, section = 'properties') {
+      if (section === 'distress') {
+        state.selectedDistressId = id;
+        openSection('distress');
+        renderDistressDeals();
+        return;
+      }
+      state.selectedPropertyId = id;
+      openSection('properties');
+      renderProperties();
+    }
+
+    function openRecordPanel(panelId) {
+      if (String(panelId || '').startsWith('lead-panel-')) {
+        openLeadRecord(Number(String(panelId).replace('lead-panel-', '')));
+        return;
+      }
+      if (String(panelId || '').startsWith('property-panel-')) {
+        openPropertyRecord(Number(String(panelId).replace('property-panel-', '')), 'properties');
+        return;
+      }
+      if (String(panelId || '').startsWith('distress-panel-')) {
+        openPropertyRecord(Number(String(panelId).replace('distress-panel-', '')), 'distress');
+        return;
+      }
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      panel.open = true;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function changeLeadStatusFromPanel(id, prefix = 'requirement') {
+      const nextStatus = document.getElementById(`${prefix}-status-action-${id}`)?.value;
+      if (!nextStatus) return;
+      try {
+        await dashboardAction({ action: 'update-lead-status', id, status: nextStatus }, 'Requirement status updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function saveLeadFollowUpFromPanel(id, prefix = 'requirement') {
+      try {
+        await dashboardAction({
+          action: 'set-lead-followup',
+          id,
+          nextFollowUpDate: document.getElementById(`${prefix}-followup-date-${id}`)?.value || '',
+          nextFollowUpTime: document.getElementById(`${prefix}-followup-time-${id}`)?.value || '',
+          followUpNote: document.getElementById(`${prefix}-followup-note-${id}`)?.value || '',
+          isUrgentFollowUp: Boolean(document.getElementById(`${prefix}-followup-urgent-${id}`)?.checked)
+        }, 'Requirement follow-up updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function changePropertyStatusFromPanel(id, prefix = 'listing') {
+      const nextStatus = document.getElementById(`${prefix}-status-action-${id}`)?.value;
+      if (!nextStatus) return;
+      try {
+        await dashboardAction({ action: 'update-property-status', id, status: nextStatus }, 'Listing status updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function savePropertyFollowUpFromPanel(id, prefix = 'listing') {
+      try {
+        await dashboardAction({
+          action: 'set-property-followup',
+          id,
+          nextFollowUpDate: document.getElementById(`${prefix}-followup-date-${id}`)?.value || '',
+          nextFollowUpTime: document.getElementById(`${prefix}-followup-time-${id}`)?.value || '',
+          followUpNote: document.getElementById(`${prefix}-followup-note-${id}`)?.value || '',
+          isUrgentFollowUp: Boolean(document.getElementById(`${prefix}-followup-urgent-${id}`)?.checked)
+        }, prefix === 'distress' ? 'Distress follow-up updated.' : 'Listing follow-up updated.');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    function renderOverviewMiniList(items, type) {
+      const records = Array.isArray(items) ? items : [];
+      if (!records.length) {
+        return '<div class="empty">No records to show right now.</div>';
+      }
+      return records.map(item => {
+        const isLead = type === 'lead';
+        const isDistress = type === 'distress';
+        const title = isLead
+          ? `${getLeadClientPurposeLabel(item.clientPurpose)} ${item.propertyType ? `- ${item.propertyType}` : 'requirement'}`
+          : `${getPropertyPurposeLabel(item.purpose)} ${item.propertyType ? `- ${item.propertyType}` : 'listing'}`;
+        const meta = isLead
+          ? [item.location || '', item.preferredBuildingProject || ''].filter(Boolean).join(' - ')
+          : [item.location || '', item.buildingName || ''].filter(Boolean).join(' - ');
+        const tertiary = isLead ? formatBudgetLabel(item.budget) : getPropertyDisplayPrice(item);
+        const action = isLead
+          ? `openLeadRecord(${item.id})`
+          : `openPropertyRecord(${item.id}, '${isDistress ? 'distress' : 'properties'}')`;
+        return `
+          <div
+            class="overview-mini-row is-clickable"
+            role="button"
+            tabindex="0"
+            onclick="${action}"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${action}}"
+          >
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(meta || '--')}</span>
+            <small>${escapeHtml(tertiary || '--')}</small>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderOverview() {
+      const overview = state.overview || { totals: {}, broker: {} };
+      const activeRequirements = (Array.isArray(state.leads) ? state.leads : []).filter(item => !item.isArchived);
+      const activeListings = (Array.isArray(state.properties) ? state.properties : []).filter(item => !item.isArchived);
+      const distressItems = activeListings.filter(item => item.isDistress);
+      const recentRequirements = [...activeRequirements].sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)).slice(0, 5);
+      const recentListings = [...activeListings].sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)).slice(0, 5);
+      const recentDistress = [...distressItems].sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)).slice(0, 5);
+      const stats = [
+        {
+          label: 'Requirements',
+          value: activeRequirements.length || overview.totals?.activeLeads || 0,
+          action: "openOverviewMetric('activeLeads')"
+        },
+        {
+          label: 'Listings',
+          value: activeListings.length || overview.totals?.activeProperties || 0,
+          action: "openOverviewMetric('activeListings')"
+        },
+        {
+          label: 'Distress Deals',
+          value: distressItems.length,
+          action: "openSection('distress');renderDistressDeals()"
+        },
+        {
+          label: 'Alerts',
+          value: Array.isArray(state.notifications) ? state.notifications.length : 0,
+          action: 'focusWorkflowAlerts()'
+        }
+      ];
+
+      const overviewStats = document.getElementById('overviewStats');
+      if (overviewStats) {
+        overviewStats.innerHTML = stats.map(item => `
+          <div
+            class="stat-card is-clickable"
+            role="button"
+            tabindex="0"
+            aria-label="Open ${item.label}"
+            onclick="${item.action}"
+            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${item.action}}"
+          >
+            <small>${escapeHtml(item.label)}</small>
+            <strong>${escapeHtml(item.value || 0)}</strong>
+          </div>
+        `).join('');
+      }
+
+      const requirementsNode = document.getElementById('overviewRecentRequirements');
+      const listingsNode = document.getElementById('overviewRecentListings');
+      const distressNode = document.getElementById('overviewRecentDistress');
+      if (requirementsNode) requirementsNode.innerHTML = renderOverviewMiniList(recentRequirements, 'lead');
+      if (listingsNode) listingsNode.innerHTML = renderOverviewMiniList(recentListings, 'property');
+      if (distressNode) distressNode.innerHTML = renderOverviewMiniList(recentDistress, 'distress');
+    }
+
+    function renderLeadDetailPanel(lead) {
+      if (!lead) {
+        return `
+          <div class="workspace-detail-empty">
+            Select a requirement to review client details, workflow, and follow-up actions.
+          </div>
+        `;
+      }
+
+      const followUpState = getFollowUpStateInfo(lead);
+      const phoneAvailable = String(lead.clientPhone || '').trim();
+      const lastTouched = formatCompactAge(lead.updatedAt || lead.createdAt);
+
+      return `
+        <div class="detail-panel-header">
+          <div class="detail-panel-copy">Requirement / Lead</div>
+          <h3>${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} ${lead.propertyType ? `- ${lead.propertyType}` : 'Requirement'}`)}</h3>
+          <div class="detail-panel-meta">
+            <span class="badge ${badgeClass(lead.status)}">${escapeHtml(formatStatusLabel(lead.status || 'new'))}</span>
+            <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+            <span class="badge ${lead.isListedPublic ? 'badge-green' : 'badge-blue'}">${lead.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+            ${lead.isUrgentFollowUp ? '<span class="badge badge-red">Urgent</span>' : ''}
+          </div>
+        </div>
+        <div class="detail-toolbar">
+          <button class="btn btn-primary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
+          <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
+          <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
+          <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-secondary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+          <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+        </div>
+        <div class="detail-section">
+          <h4>Overview</h4>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Client Name</small><strong>${escapeHtml(lead.clientName || '--')}</strong></div>
+            <div class="detail-cell"><small>Client Phone</small><strong>${escapeHtml(lead.clientPhone || '--')}</strong></div>
+            <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
+            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>Preferred Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
+            <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
+            <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong></div>
+            <div class="detail-cell"><small>Payment</small><strong>${escapeHtml(lead.paymentMethod || '--')}</strong></div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Workflow</h4>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Status</small><strong>${escapeHtml(formatStatusLabel(lead.status || 'new'))}</strong></div>
+            <div class="detail-cell"><small>Last Updated</small><strong>${escapeHtml(`${lastTouched} ago`)}</strong></div>
+            <div class="detail-cell"><small>Calls</small><strong>${escapeHtml(lead.callCount || 0)}</strong></div>
+            <div class="detail-cell"><small>WhatsApp</small><strong>${escapeHtml(lead.whatsappCount || 0)}</strong></div>
+          </div>
+          <div class="workflow-strip">
+            <select id="requirement-status-action-${lead.id}">
+              ${DASHBOARD_LEAD_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(lead.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+            </select>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="changeLeadStatusFromPanel(${lead.id}, 'requirement')">Update Status</button>
+          </div>
+          <div class="record-inline-grid">
+            <div class="field-block">
+              <label class="small">Next Follow-up Date</label>
+              <input id="requirement-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
+            </div>
+            <div class="field-block">
+              <label class="small">Next Follow-up Time</label>
+              <input id="requirement-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
+            </div>
+            <div class="field-block full">
+              <label class="small">Follow-up Note</label>
+              <textarea id="requirement-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
+            </div>
+            <label class="toggle-card compact-toggle">
+              <input id="requirement-followup-urgent-${lead.id}" type="checkbox" ${lead.isUrgentFollowUp ? 'checked' : ''}>
+              <span><strong>Urgent Reminder</strong><small>Flag this requirement as urgent.</small></span>
+            </label>
+          </div>
+          <div class="detail-toolbar">
+            <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUpFromPanel(${lead.id}, 'requirement')">Save Follow-up</button>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Notes</h4>
+          <div class="detail-note">${escapeHtml(lead.privateNotes || 'No private notes yet.')}</div>
+        </div>
+        <div class="detail-section">
+          <h4>Matches</h4>
+          ${renderLeadMatches(lead)}
+        </div>
+        <div class="detail-section">
+          <h4>Activity</h4>
+          ${renderActivityTimeline(lead.activityLog)}
+        </div>
+      `;
+    }
+
+    function renderPropertyDetailPanel(property, panelType = 'listing') {
+      if (!property) {
+        return `
+          <div class="workspace-detail-empty">
+            Select a ${panelType === 'distress' ? 'distress deal' : 'listing'} to review owner details, workflow, and visibility controls.
+          </div>
+        `;
+      }
+
+      const followUpState = getFollowUpStateInfo(property);
+      const ownerPhone = String(property.ownerPhone || '').trim();
+      const lastTouched = formatCompactAge(property.updatedAt || property.createdAt);
+      const distressLabel = getPropertyDistressLabel(property);
+      const prefix = panelType === 'distress' ? 'distress' : 'listing';
+
+      return `
+        <div class="detail-panel-header">
+          <div class="detail-panel-copy">${panelType === 'distress' ? 'Distress Deal' : 'Listing'}</div>
+          <h3>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing'}`)}</h3>
+          <div class="detail-panel-meta">
+            <span class="badge ${badgeClass(property.status)}">${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+            <span class="badge ${followUpState.className}">${escapeHtml(followUpState.label)}</span>
+            <span class="badge ${property.isListedPublic ? 'badge-green' : 'badge-blue'}">${property.isListedPublic ? 'Listed Public' : 'Private Only'}</span>
+            ${property.isDistress ? '<span class="badge badge-red">Distress</span>' : ''}
+            ${property.isArchived ? '<span class="badge badge-archived">Archived</span>' : ''}
+          </div>
+        </div>
+        <div class="detail-toolbar">
+          <button class="btn btn-primary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+          <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
+          <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
+          <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-secondary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+          <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+        </div>
+        <div class="detail-section">
+          <h4>Overview</h4>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong></div>
+            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>Area / Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
+            <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(property.buildingName || '--')}</strong></div>
+            <div class="detail-cell"><small>Price</small><strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong></div>
+            <div class="detail-cell"><small>Size</small><strong>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</strong></div>
+            <div class="detail-cell"><small>Furnishing</small><strong>${escapeHtml(property.furnishing || '--')}</strong></div>
+            <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
+            ${property.isDistress ? `<div class="detail-cell"><small>Market Difference</small><strong>${escapeHtml(distressLabel || '--')}</strong></div>` : ''}
+            <div class="detail-cell"><small>Owner</small><strong>${escapeHtml(getPropertyPrivateContactSummary(property))}</strong></div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Workflow</h4>
+          <div class="detail-grid">
+            <div class="detail-cell"><small>Status</small><strong>${escapeHtml(formatStatusLabel(property.status || 'available'))}</strong></div>
+            <div class="detail-cell"><small>Last Updated</small><strong>${escapeHtml(`${lastTouched} ago`)}</strong></div>
+            <div class="detail-cell"><small>Owner Calls</small><strong>${escapeHtml(property.ownerCallCount || 0)}</strong></div>
+            <div class="detail-cell"><small>Owner WhatsApp</small><strong>${escapeHtml(property.ownerWhatsappCount || 0)}</strong></div>
+          </div>
+          <div class="workflow-strip">
+            <select id="${prefix}-status-action-${property.id}">
+              ${DASHBOARD_LISTING_STATUS_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${option === String(property.status || '').toLowerCase() ? 'selected' : ''}>${escapeHtml(formatStatusLabel(option))}</option>`).join('')}
+            </select>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="changePropertyStatusFromPanel(${property.id}, '${prefix}')">Update Status</button>
+          </div>
+          <div class="record-inline-grid">
+            <div class="field-block">
+              <label class="small">Next Follow-up Date</label>
+              <input id="${prefix}-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
+            </div>
+            <div class="field-block">
+              <label class="small">Next Follow-up Time</label>
+              <input id="${prefix}-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
+            </div>
+            <div class="field-block full">
+              <label class="small">Follow-up Note</label>
+              <textarea id="${prefix}-followup-note-${property.id}" placeholder="Add owner or viewing follow-up">${escapeHtml(property.followUpNote || '')}</textarea>
+            </div>
+            <label class="toggle-card compact-toggle">
+              <input id="${prefix}-followup-urgent-${property.id}" type="checkbox" ${property.isUrgentFollowUp ? 'checked' : ''}>
+              <span><strong>Urgent Reminder</strong><small>Flag this ${panelType === 'distress' ? 'distress deal' : 'listing'} for urgent follow-up.</small></span>
+            </label>
+          </div>
+          <div class="detail-toolbar">
+            <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUpFromPanel(${property.id}, '${prefix}')">Save Follow-up</button>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Notes</h4>
+          <div class="detail-note">${escapeHtml(property.publicNotes || property.internalNotes || 'No notes added yet.')}</div>
+        </div>
+        <div class="detail-section">
+          <h4>Matches</h4>
+          ${renderPropertyMatches(property)}
+        </div>
+        <div class="detail-section">
+          <h4>Activity</h4>
+          ${renderActivityTimeline(property.activityLog)}
+        </div>
+      `;
+    }
+
+    function renderLeads() {
+      const target = document.getElementById('leadsList');
+      if (!target) return;
+      const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      if (!requirements.length) {
+        target.innerHTML = renderEmptyState(
+          'No broker requirements yet',
+          'Adjust your filters or add your first lead from Broker Desk to start tracking client demand.',
+          'Add New Lead',
+          'openLeadComposer()'
+        );
+        return;
+      }
+
+      state.selectedLeadId = ensureSelectedWorkspaceId(requirements, state.selectedLeadId);
+      const selectedLead = requirements.find(item => String(item.id) === String(state.selectedLeadId)) || null;
+
+      target.innerHTML = `
+        <div class="workspace-split">
+          <div class="workspace-table-card">
+            <div class="workspace-table-scroll">
+              <div class="workspace-table-inner">
+                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(148px,1.1fr) minmax(112px,0.8fr) minmax(164px,1fr) minmax(120px,0.85fr) minmax(124px,0.85fr) minmax(148px,0.9fr) minmax(112px,0.76fr) minmax(200px,1fr);">
+                  <div>#</div>
+                  <div>Client / Purpose</div>
+                  <div>Property Type</div>
+                  <div>Preferred Location</div>
+                  <div>Building</div>
+                  <div>Budget</div>
+                  <div>Status</div>
+                  <div>Updated</div>
+                  <div>Quick Actions</div>
+                </div>
+                <div class="workspace-table-body">
+                  ${requirements.map((lead, index) => {
+                    const followUpState = getFollowUpStateInfo(lead);
+                    const phoneAvailable = String(lead.clientPhone || '').trim();
+                    const isSelected = String(lead.id) === String(state.selectedLeadId);
+                    const lastTouched = formatCompactAge(lead.updatedAt || lead.createdAt);
+                    return `
+                      <div
+                        class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        role="button"
+                        tabindex="0"
+                        onclick="openLeadRecord(${lead.id})"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLeadRecord(${lead.id})}"
+                        style="grid-template-columns: 60px minmax(148px,1.1fr) minmax(112px,0.8fr) minmax(164px,1fr) minmax(120px,0.85fr) minmax(124px,0.85fr) minmax(148px,0.9fr) minmax(112px,0.76fr) minmax(200px,1fr);"
+                      >
+                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(lead.clientName || getLeadClientPurposeLabel(lead.clientPurpose))}</strong>
+                          <span>${escapeHtml(getLeadIntentText(lead))}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(lead.propertyType || '--')}</strong>
+                          <span>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(lead.location || '--')}</strong>
+                          <span>${escapeHtml(lead.preferredBuildingProject || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong>
+                          <span>${escapeHtml(lead.paymentMethod || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong>
+                          <span>${escapeHtml(lead.source || 'Broker desk')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(formatStatusLabel(lead.status || 'new'))}</strong>
+                          <span>${escapeHtml(followUpState.label)}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
+                          <span>${escapeHtml(`${lead.callCount || 0} calls / ${lead.whatsappCount || 0} WA`)}</span>
+                        </div>
+                        <div class="workspace-actions">
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editLead(${lead.id})">Edit</button>
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="event.stopPropagation();contactLead(${lead.id}, 'call', this)">Call</button>
+                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="event.stopPropagation();contactLead(${lead.id}, 'whatsapp')">WA</button>
+                          <details class="crm-row-more" onclick="event.stopPropagation()">
+                            <summary class="crm-row-more-toggle">More</summary>
+                            <div class="crm-row-more-menu">
+                              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecord(${lead.id})">Matches</button>
+                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+                            </div>
+                          </details>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="workspace-detail-card">
+            ${renderLeadDetailPanel(selectedLead)}
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderProperties() {
+      const target = document.getElementById('propertiesList');
+      if (!target) return;
+      const properties = getFilteredDashboardItems(state.properties, 'property');
+      if (!properties.length) {
+        target.innerHTML = renderEmptyState(
+          'No listings yet',
+          'Adjust your filters or add your first listing from Broker Desk to start managing inventory.',
+          'Add New Listing',
+          'openPropertyComposer()'
+        );
+        return;
+      }
+
+      state.selectedPropertyId = ensureSelectedWorkspaceId(properties, state.selectedPropertyId);
+      const selectedProperty = properties.find(item => String(item.id) === String(state.selectedPropertyId)) || null;
+
+      target.innerHTML = `
+        <div class="workspace-split">
+          <div class="workspace-table-card">
+            <div class="workspace-table-scroll">
+              <div class="workspace-table-inner">
+                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(170px,1.15fr) minmax(112px,0.8fr) minmax(174px,1fr) minmax(126px,0.86fr) minmax(116px,0.78fr) minmax(130px,0.82fr) minmax(124px,0.8fr) minmax(210px,1fr);">
+                  <div>#</div>
+                  <div>Reference / Listing</div>
+                  <div>Purpose</div>
+                  <div>Building / Area</div>
+                  <div>Type</div>
+                  <div>Price</div>
+                  <div>Status</div>
+                  <div>Visibility</div>
+                  <div>Quick Actions</div>
+                </div>
+                <div class="workspace-table-body">
+                  ${properties.map((property, index) => {
+                    const ownerPhone = String(property.ownerPhone || '').trim();
+                    const isSelected = String(property.id) === String(state.selectedPropertyId);
+                    const lastTouched = formatCompactAge(property.updatedAt || property.createdAt);
+                    return `
+                      <div
+                        class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        role="button"
+                        tabindex="0"
+                        onclick="openPropertyRecord(${property.id}, 'properties')"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'properties')}"
+                        style="grid-template-columns: 60px minmax(170px,1.15fr) minmax(112px,0.8fr) minmax(174px,1fr) minmax(126px,0.86fr) minmax(116px,0.78fr) minmax(130px,0.82fr) minmax(124px,0.8fr) minmax(210px,1fr);"
+                      >
+                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.reference || property.buildingName || `${getPropertyPurposeLabel(property.purpose)} Listing`)}</strong>
+                          <span>${escapeHtml(property.location || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong>
+                          <span>${escapeHtml(getPropertyTermsSummary(property))}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.buildingName || '--')}</strong>
+                          <span>${escapeHtml(property.location || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.propertyType || '--')}</strong>
+                          <span>${escapeHtml(property.furnishing || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
+                          <span>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(formatStatusLabel(property.status || 'available'))}</strong>
+                          <span>${escapeHtml(`${lastTouched} ago`)}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
+                          <span>${property.isDistress ? 'Distress deal' : 'Standard inventory'}</span>
+                        </div>
+                        <div class="workspace-actions">
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editProperty(${property.id})">Edit</button>
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'call', this)">Call</button>
+                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'whatsapp')">WA</button>
+                          <details class="crm-row-more" onclick="event.stopPropagation()">
+                            <summary class="crm-row-more-toggle">More</summary>
+                            <div class="crm-row-more-menu">
+                              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecord(${property.id}, 'properties')">Matches</button>
+                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+                            </div>
+                          </details>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="workspace-detail-card">
+            ${renderPropertyDetailPanel(selectedProperty, 'listing')}
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderDistressDeals() {
+      const target = document.getElementById('distressList');
+      if (!target) return;
+      const distressItems = getFilteredDashboardItems(state.properties, 'property').filter(item => item.isDistress);
+      if (!distressItems.length) {
+        target.innerHTML = renderEmptyState(
+          'No distress deals yet',
+          'Mark a listing as distress to surface urgent discounted stock in this operational view.',
+          'Add Listing',
+          'openPropertyComposer()'
+        );
+        return;
+      }
+
+      state.selectedDistressId = ensureSelectedWorkspaceId(distressItems, state.selectedDistressId);
+      const selectedDistress = distressItems.find(item => String(item.id) === String(state.selectedDistressId)) || null;
+
+      target.innerHTML = `
+        <div class="workspace-split">
+          <div class="workspace-table-card">
+            <div class="workspace-table-scroll">
+              <div class="workspace-table-inner">
+                <div class="workspace-table-head" style="grid-template-columns: 60px minmax(188px,1.12fr) minmax(126px,0.82fr) minmax(174px,0.96fr) minmax(132px,0.84fr) minmax(144px,0.88fr) minmax(126px,0.8fr) minmax(110px,0.7fr) minmax(210px,1fr);">
+                  <div>#</div>
+                  <div>Title / Reference</div>
+                  <div>Property Type</div>
+                  <div>Area / Building</div>
+                  <div>Asking Price</div>
+                  <div>Market Difference</div>
+                  <div>Visibility</div>
+                  <div>Updated</div>
+                  <div>Quick Actions</div>
+                </div>
+                <div class="workspace-table-body">
+                  ${distressItems.map((property, index) => {
+                    const ownerPhone = String(property.ownerPhone || '').trim();
+                    const isSelected = String(property.id) === String(state.selectedDistressId);
+                    const lastTouched = formatCompactAge(property.updatedAt || property.createdAt);
+                    return `
+                      <div
+                        class="workspace-table-row ${isSelected ? 'is-selected' : ''}"
+                        role="button"
+                        tabindex="0"
+                        onclick="openPropertyRecord(${property.id}, 'distress')"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'distress')}"
+                        style="grid-template-columns: 60px minmax(188px,1.12fr) minmax(126px,0.82fr) minmax(174px,0.96fr) minmax(132px,0.84fr) minmax(144px,0.88fr) minmax(126px,0.8fr) minmax(110px,0.7fr) minmax(210px,1fr);"
+                      >
+                        <div class="workspace-cell"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.reference || property.buildingName || 'Distress listing')}</strong>
+                          <span>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.propertyType || '--')}</strong>
+                          <span>${escapeHtml(property.furnishing || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(property.location || '--')}</strong>
+                          <span>${escapeHtml(property.buildingName || '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
+                          <span>${escapeHtml(property.sizeSqft ? `${property.sizeSqft} sqft` : '--')}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(getPropertyDistressLabel(property) || '--')}</strong>
+                          <span>${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
+                          <span>${property.isArchived ? 'Archived' : 'Active'}</span>
+                        </div>
+                        <div class="workspace-cell">
+                          <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
+                          <span>${escapeHtml(`${property.ownerCallCount || 0} calls / ${property.ownerWhatsappCount || 0} WA`)}</span>
+                        </div>
+                        <div class="workspace-actions">
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="event.stopPropagation();editProperty(${property.id})">Edit</button>
+                          <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'call', this)">Call</button>
+                          <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="event.stopPropagation();contactPropertyOwner(${property.id}, 'whatsapp')">WA</button>
+                          <details class="crm-row-more" onclick="event.stopPropagation()">
+                            <summary class="crm-row-more-toggle">More</summary>
+                            <div class="crm-row-more-menu">
+                              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
+                              <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecord(${property.id}, 'distress')">Matches</button>
+                              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+                            </div>
+                          </details>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="workspace-detail-card">
+            ${renderPropertyDetailPanel(selectedDistress, 'distress')}
+          </aside>
         </div>
       `;
     }
