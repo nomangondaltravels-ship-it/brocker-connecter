@@ -1160,17 +1160,47 @@
       text-align: left;
       padding: 0 14px;
       border-radius: 12px;
-      background: #ffffff;
-      border: 1px solid rgba(148, 163, 184, 0.24);
-      color: #334155;
+      background: rgba(200, 169, 107, 0.08);
+      border: 1px solid rgba(200, 169, 107, 0.24);
+      color: #8f6a12;
       gap: 8px;
       box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
     }
 
     .quick-action-card:hover {
+      background: rgba(200, 169, 107, 0.12);
+      border-color: rgba(200, 169, 107, 0.32);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .quick-action-card.is-idle {
+      background: #ffffff;
+      border-color: rgba(148, 163, 184, 0.24);
+      color: #334155;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03);
+    }
+
+    .quick-action-card.is-idle:hover {
       background: #f8fafc;
       border-color: rgba(100, 116, 139, 0.3);
-      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    .quick-action-card.is-active {
+      background: var(--workspace-accent) !important;
+      border-color: var(--workspace-accent) !important;
+      color: #ffffff !important;
+      box-shadow: 0 8px 18px rgba(200, 169, 107, 0.18) !important;
+    }
+
+    .quick-action-card.is-active:hover {
+      background: var(--workspace-accent-strong) !important;
+      border-color: var(--workspace-accent-strong) !important;
+    }
+
+    .quick-action-card.is-prompt {
+      animation: quickActionPulse 1.8s ease-out 2;
     }
 
     .quick-action-icon {
@@ -1201,6 +1231,12 @@
 
     .quick-action-copy span {
       display: none;
+    }
+
+    @keyframes quickActionPulse {
+      0% { box-shadow: 0 0 0 0 rgba(200, 169, 107, 0.18); }
+      70% { box-shadow: 0 0 0 10px rgba(200, 169, 107, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(200, 169, 107, 0); }
     }
 
     .workspace-shell {
@@ -4198,14 +4234,14 @@
           </div>
         </div>
         <div class="overview-actions">
-          <button class="btn quick-action-card" type="button" onclick="openLeadComposer()">
+          <button class="btn quick-action-card is-prompt" id="newLeadActionBtn" type="button" onclick="openLeadComposer()">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>New Lead</strong>
               <span>Create a new broker requirement or client demand.</span>
             </span>
           </button>
-          <button class="btn quick-action-card" type="button" onclick="openPropertyComposer()">
+          <button class="btn quick-action-card" id="newListingActionBtn" type="button" onclick="openPropertyComposer()">
             <span class="quick-action-icon">+</span>
             <span class="quick-action-copy">
               <strong>New Listing</strong>
@@ -6356,10 +6392,32 @@
         setPropertyWorkspaceHeader(state.propertyEditorOriginal ? 'edit' : 'create');
       }
       shell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateOverviewActionState(type);
     }
 
     function hideOverviewWorkspace() {
       document.getElementById('overviewWorkspace')?.classList.remove('active');
+      updateOverviewActionState('');
+    }
+
+    function updateOverviewActionState(activeType = '') {
+      const leadButton = document.getElementById('newLeadActionBtn');
+      const listingButton = document.getElementById('newListingActionBtn');
+      if (!leadButton || !listingButton) return;
+
+      const setButtonState = (button, isActive) => {
+        button.classList.toggle('is-active', isActive);
+        button.classList.toggle('is-idle', Boolean(activeType) && !isActive);
+      };
+
+      if (!activeType) {
+        leadButton.classList.remove('is-active', 'is-idle');
+        listingButton.classList.remove('is-active', 'is-idle');
+        return;
+      }
+
+      setButtonState(leadButton, activeType === 'lead');
+      setButtonState(listingButton, activeType === 'property');
     }
 
     function badgeClass(status) {
