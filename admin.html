@@ -752,6 +752,440 @@
       padding: 4px 8px !important;
       letter-spacing: 0.03em !important;
     }
+
+    .shell {
+      width: min(1480px, 96%);
+      gap: 18px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 24px;
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .hero-copy p {
+      max-width: 760px;
+    }
+
+    .admin-toolbar-card,
+    .admin-section-card,
+    .admin-detail-card,
+    .admin-note-card {
+      background: #ffffff !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 18px !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05) !important;
+    }
+
+    .admin-toolbar-card {
+      padding: 14px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .admin-toolbar-layout {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .admin-toolbar-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .admin-toolbar-copy h3 {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .admin-toolbar-copy p {
+      color: #64748b !important;
+      font-size: 0.83rem !important;
+      line-height: 1.45;
+      max-width: 720px;
+    }
+
+    .admin-toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .admin-search-wrap {
+      min-width: 280px;
+      flex: 1 1 280px;
+    }
+
+    .admin-search-wrap input,
+    .admin-toolbar-controls select {
+      min-height: 38px;
+      border-radius: 12px;
+      font-size: 0.84rem;
+      background: #ffffff !important;
+    }
+
+    .admin-main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.78fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .admin-primary-stack,
+    .admin-detail-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .admin-section-card,
+    .admin-detail-card,
+    .admin-note-card {
+      padding: 16px;
+    }
+
+    .admin-section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .admin-section-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .admin-section-copy h3 {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .admin-section-copy p,
+    .admin-note-card p {
+      color: #64748b !important;
+      font-size: 0.82rem !important;
+      line-height: 1.45;
+    }
+
+    .admin-table-wrap {
+      overflow: auto;
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      background: #ffffff;
+    }
+
+    .admin-table-inner {
+      min-width: 980px;
+    }
+
+    .admin-table-head,
+    .admin-table-row {
+      display: grid;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
+    .admin-table-head {
+      min-height: 42px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8fafc;
+      border-bottom: 1px solid #e5e7eb;
+      color: #64748b;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-table-row {
+      min-height: 68px;
+      border-bottom: 1px solid #eef2f7;
+      background: #ffffff;
+      cursor: pointer;
+      transition: background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .admin-table-row:last-child {
+      border-bottom: none;
+    }
+
+    .admin-table-row:hover {
+      background: #f1f5f9;
+    }
+
+    .admin-table-row.is-selected {
+      background: #eff6ff;
+      box-shadow: inset 3px 0 0 #c8a96b;
+    }
+
+    .admin-cell {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .admin-cell strong {
+      color: #0f172a;
+      font-size: 0.82rem;
+      font-weight: 700;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .admin-cell span,
+    .admin-cell small {
+      color: #64748b;
+      font-size: 0.76rem;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .admin-table-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .admin-table-actions .btn {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+
+    .admin-table-actions .status-pill,
+    .admin-cell .status-pill {
+      justify-self: start;
+    }
+
+    .admin-review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .admin-detail-card {
+      position: sticky;
+      top: 88px;
+    }
+
+    .admin-detail-empty {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #64748b;
+      border: 1px dashed #dbe3ee;
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 22px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .admin-detail-header {
+      display: grid;
+      gap: 10px;
+    }
+
+    .admin-detail-header h3 {
+      font-size: 1.04rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .admin-detail-meta,
+    .admin-detail-copy {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .admin-detail-copy {
+      color: #64748b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-detail-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .admin-detail-toolbar .btn {
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+    }
+
+    .admin-detail-section {
+      display: grid;
+      gap: 10px;
+      padding-top: 12px;
+      margin-top: 12px;
+      border-top: 1px solid #eef2f7;
+    }
+
+    .admin-detail-section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .admin-detail-section h4,
+    .admin-note-card h4 {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+
+    .admin-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .admin-detail-cell {
+      padding: 10px 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .admin-detail-cell small {
+      display: block;
+      margin-bottom: 4px;
+      color: #64748b;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-detail-cell strong {
+      display: block;
+      color: #0f172a;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .admin-detail-note {
+      padding: 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .admin-note-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .admin-note-item {
+      padding: 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+    }
+
+    .admin-note-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .admin-note-item strong {
+      font-size: 0.84rem;
+      color: #0f172a;
+    }
+
+    .admin-note-item p {
+      color: #64748b !important;
+      font-size: 0.8rem !important;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1180px) {
+      .admin-main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-detail-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .admin-review-grid,
+      .grid-4 {
+        grid-template-columns: 1fr !important;
+      }
+
+      .admin-toolbar-layout,
+      .admin-section-head {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .content {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 18px 16px;
+      }
+
+      .admin-detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-search-wrap {
+        min-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
@@ -782,11 +1216,50 @@
   <div class="shell dashboard" id="dashboardView">
     <div class="panel">
       <div class="hero">
-        <h1>Admin Review Portal</h1>
-        <p>Review broker accounts, approve verified brokers, update post statuses, and monitor complaints from a separate admin page.</p>
+        <div class="hero-copy">
+          <h1>Admin Control</h1>
+          <p>Review broker accounts, moderate marketplace activity, and handle verification or complaint actions from one compact management workspace.</p>
+        </div>
       </div>
       <div class="content">
         <div class="status" id="adminStatus"></div>
+        <div class="admin-toolbar-card">
+          <div class="admin-toolbar-layout">
+            <div class="admin-toolbar-copy">
+              <h3>Management Workspace</h3>
+              <p>Search brokers and moderation queues, then review one selected item with actions and context on the right.</p>
+            </div>
+            <div class="admin-toolbar-controls">
+              <div class="admin-search-wrap">
+                <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints" oninput="applyAdminFilters()">
+              </div>
+              <select id="adminVerificationFilter" onchange="applyAdminFilters()" aria-label="Filter verification status">
+                <option value="all">All Verification</option>
+                <option value="verified">Verified</option>
+                <option value="unverified">Unverified</option>
+              </select>
+              <select id="adminAccountFilter" onchange="applyAdminFilters()" aria-label="Filter account status">
+                <option value="all">All Accounts</option>
+                <option value="active">Active</option>
+                <option value="blocked">Blocked</option>
+                <option value="pending">Pending</option>
+              </select>
+              <select id="adminQueueFilter" onchange="applyAdminFilters()" aria-label="Filter review queue">
+                <option value="all">All Queue States</option>
+                <option value="open">Open</option>
+                <option value="matched">Matched</option>
+                <option value="closed">Closed</option>
+                <option value="expired">Expired</option>
+                <option value="new">Complaint: New</option>
+                <option value="under-review">Complaint: Under Review</option>
+                <option value="resolved">Complaint: Resolved</option>
+                <option value="rejected">Complaint: Rejected</option>
+              </select>
+              <button class="btn btn-secondary" type="button" onclick="clearAdminFilters()">Clear Filters</button>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-4">
           <div class="card stat-card"><small>Broker Accounts</small><strong id="statAccounts">0</strong></div>
           <div class="card stat-card"><small>Approved Brokers</small><strong id="statApproved">0</strong></div>
@@ -794,87 +1267,107 @@
           <div class="card stat-card"><small>Complaints</small><strong id="statComplaints">0</strong></div>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <h3>Broker Approvals</h3>
-            <p>Verify genuine brokers, block spam brokers, and control who can keep posting.</p>
-            <div class="list" id="brokerApprovalList">
-              <div class="item"><p>No broker accounts available yet.</p></div>
-            </div>
-          </div>
-          <div class="card">
-            <h3>Review Notes</h3>
-            <div class="list">
-              <div class="item">
-                <div class="item-head">
-                  <h4>Portal Security</h4>
-                  <span class="badge gold">Testing</span>
+        <div class="admin-main-grid">
+          <div class="admin-primary-stack">
+            <div class="admin-section-card">
+              <div class="admin-section-head">
+                <div class="admin-section-copy">
+                  <h3>User Management</h3>
+                  <p>Verify genuine brokers, block spam accounts, and manage password or delete actions without leaving the queue.</p>
                 </div>
-                <p>Admin access and delete actions should run through secure server-side checks. Keep this page as the dashboard UI only.</p>
               </div>
-              <div class="item">
-                <div class="item-head">
-                  <h4>Shared Data</h4>
-                  <span class="badge blue">Attached</span>
+              <div class="admin-table-wrap" id="brokerApprovalList">
+                <div class="item"><p>No broker accounts available yet.</p></div>
+              </div>
+            </div>
+
+            <div class="admin-review-grid">
+              <div class="admin-section-card">
+                <div class="admin-section-head">
+                  <div class="admin-section-copy">
+                    <h3>Requirements Review</h3>
+                    <p>Moderate shared requirement posts and clean outdated demand records.</p>
+                  </div>
+                  <div class="review-toolbar">
+                    <select id="requirementAgeDays" aria-label="Delete requirement leads older than">
+                      <option value="10">Older than 10 days</option>
+                      <option value="30" selected>Older than 30 days</option>
+                      <option value="60">Older than 60 days</option>
+                      <option value="90">Older than 90 days</option>
+                    </select>
+                    <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldRequirements()">Delete Old Requirements</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllRequirements()">Delete All Requirements</button>
+                  </div>
                 </div>
-                <p>This page reads the same Supabase project and the same local browser admin settings used by the main website.</p>
+                <p class="inline-note">Use age cleanup for old dated leads. Legacy rows without a saved post date stay untouched.</p>
+                <div class="admin-table-wrap" id="requirementReviewList">
+                  <div class="item"><p>No requirements found.</p></div>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="item-head" style="margin-bottom:10px;">
-              <div>
-                <h3>Broker Requirements Review</h3>
-                <p>Change broker requirement statuses and keep the broker board clean.</p>
-              </div>
-              <div class="review-toolbar">
-                <select id="requirementAgeDays" aria-label="Delete requirement leads older than">
-                  <option value="10">Older than 10 days</option>
-                  <option value="30" selected>Older than 30 days</option>
-                  <option value="60">Older than 60 days</option>
-                  <option value="90">Older than 90 days</option>
-                </select>
-                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldRequirements()">Delete Old Requirements</button>
-                <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllRequirements()">Delete All Requirements</button>
-              </div>
-            </div>
-            <p class="inline-note">Use age cleanup for old dated leads. Legacy rows without a saved post date stay untouched.</p>
-            <div class="list" id="requirementReviewList">
-              <div class="item"><p>No requirements found.</p></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="item-head" style="margin-bottom:10px;">
-              <div>
-                <h3>Broker Connector Listings Review</h3>
-                <p>Monitor broker connector listings and premium distress opportunities.</p>
-              </div>
-              <div class="review-toolbar">
-                <select id="dealAgeDays" aria-label="Delete broker connector listings older than">
-                  <option value="10">Older than 10 days</option>
-                  <option value="30" selected>Older than 30 days</option>
-                  <option value="60">Older than 60 days</option>
-                  <option value="90">Older than 90 days</option>
-                </select>
-                <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldDeals()">Delete Old Listings</button>
-                <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Broker Connector Listings</button>
+              <div class="admin-section-card">
+                <div class="admin-section-head">
+                  <div class="admin-section-copy">
+                    <h3>Broker Connector Listings Review</h3>
+                    <p>Monitor public listings, distress inventory, and shared deal visibility.</p>
+                  </div>
+                  <div class="review-toolbar">
+                    <select id="dealAgeDays" aria-label="Delete broker connector listings older than">
+                      <option value="10">Older than 10 days</option>
+                      <option value="30" selected>Older than 30 days</option>
+                      <option value="60">Older than 60 days</option>
+                      <option value="90">Older than 90 days</option>
+                    </select>
+                    <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldDeals()">Delete Old Listings</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Broker Connector Listings</button>
+                  </div>
+                </div>
+                <p class="inline-note">Age-based cleanup works on deals that already have a valid saved post date.</p>
+                <div class="admin-table-wrap" id="dealReviewList">
+                  <div class="item"><p>No broker connector listings found.</p></div>
+                </div>
               </div>
             </div>
-            <p class="inline-note">Age-based cleanup works on deals that already have a valid saved post date.</p>
-            <div class="list" id="dealReviewList">
-              <div class="item"><p>No broker connector listings found.</p></div>
-            </div>
-          </div>
-        </div>
 
-        <div class="card">
-          <h3>Complaint Review</h3>
-          <p>Recent complaints submitted from the main website.</p>
-          <div class="list" id="complaintList">
-            <div class="item"><p>No complaints found.</p></div>
+            <div class="admin-section-card">
+              <div class="admin-section-head">
+                <div class="admin-section-copy">
+                  <h3>Complaint Review</h3>
+                  <p>Review recent complaints, block linked brokers where needed, and keep the marketplace safe.</p>
+                </div>
+              </div>
+              <div class="admin-table-wrap" id="complaintList">
+                <div class="item"><p>No complaints found.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-detail-stack">
+            <div class="admin-detail-card">
+              <div id="adminDetailPanel" class="admin-detail-empty">
+                Select a broker, requirement, listing, or complaint to review actions and full context here.
+              </div>
+            </div>
+
+            <div class="admin-note-card">
+              <h4>Review Notes</h4>
+              <div class="admin-note-list">
+                <div class="admin-note-item">
+                  <div class="admin-note-item-header">
+                    <strong>Portal Security</strong>
+                    <span class="badge gold">Server-side</span>
+                  </div>
+                  <p>Admin access and delete actions continue to run through secure server functions. This page stays as the review UI only.</p>
+                </div>
+                <div class="admin-note-item">
+                  <div class="admin-note-item-header">
+                    <strong>Shared Data</strong>
+                    <span class="badge blue">Connected</span>
+                  </div>
+                  <p>This workspace reads the same Supabase project and the same admin state already used by the main website.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -897,6 +1390,14 @@
     let brokerApprovals = {};
     let blockedBrokerIds = {};
     let postStatusOverrides = {};
+    let adminUiState = {
+      search: '',
+      verification: 'all',
+      account: 'all',
+      queue: 'all',
+      selectedType: 'broker',
+      selectedKey: ''
+    };
 
     function safeJsonRead(key, fallback) {
       try {
@@ -1120,7 +1621,7 @@
       const key = getEntryKey(item, urgent);
       postStatusOverrides[key] = status;
       safeJsonWrite('post_status_overrides', postStatusOverrides);
-      renderPostLists();
+      renderAdminWorkspace();
     }
 
     function loadLocalAdminState() {
@@ -1297,10 +1798,7 @@
 
       complaints = (resolvedComplaints || []).map(parseComplaintRecord);
 
-      renderStats(accounts);
-      renderBrokerApprovals(accounts);
-      renderPostLists();
-      renderComplaints();
+      renderAdminWorkspace();
     }
 
     function renderStats(accounts) {
@@ -1665,109 +2163,667 @@
       loadAdminData();
     }
 
+    function normalizeAdminText(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatAdminDateTime(value) {
+      const timestamp = Date.parse(String(value || ''));
+      if (!Number.isFinite(timestamp)) return '—';
+      return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(timestamp));
+    }
+
+    function getBrokerSummary(account) {
+      const brokerName = normalizeAdminText(account?.name);
+      const brokerPhone = normalizeAdminText(account?.phone);
+      const requirementCount = requirements.filter(item => {
+        const itemBroker = normalizeAdminText(item?.broker);
+        const itemPhone = normalizeAdminText(item?.phone);
+        return (brokerPhone && itemPhone && brokerPhone === itemPhone) || (brokerName && itemBroker === brokerName);
+      }).length;
+      const listingCount = deals.filter(item => {
+        const itemBroker = normalizeAdminText(item?.broker);
+        const itemPhone = normalizeAdminText(item?.phone);
+        return (brokerPhone && itemPhone && brokerPhone === itemPhone) || (brokerName && itemBroker === brokerName);
+      }).length;
+      return {
+        requirementCount,
+        listingCount,
+        sharedCount: requirementCount + listingCount
+      };
+    }
+
+    function getBrokerAccountStatus(account) {
+      if (account?.blocked) return { label: 'Blocked', tone: 'red' };
+      if (account?.approved) return { label: 'Active', tone: 'green' };
+      return { label: 'Pending', tone: 'gold' };
+    }
+
+    function readAdminFilters() {
+      adminUiState.search = document.getElementById('adminSearchInput')?.value || '';
+      adminUiState.verification = document.getElementById('adminVerificationFilter')?.value || 'all';
+      adminUiState.account = document.getElementById('adminAccountFilter')?.value || 'all';
+      adminUiState.queue = document.getElementById('adminQueueFilter')?.value || 'all';
+    }
+
+    function getRequirementEntries() {
+      return requirements.map((item, index) => ({
+        type: 'requirement',
+        key: getEntryKey(item, false),
+        index,
+        status: getPostStatus(item, false),
+        item
+      }));
+    }
+
+    function getDealEntries() {
+      return deals.map((item, index) => ({
+        type: 'deal',
+        key: getEntryKey(item, true),
+        index,
+        status: getPostStatus(item, true),
+        item
+      }));
+    }
+
+    function getComplaintEntries() {
+      return complaints.map((item, index) => ({
+        type: 'complaint',
+        key: String(item?.id || `${item?.broker || 'complaint'}-${index}`),
+        index,
+        status: item?.normalizedStatus || 'new',
+        item
+      }));
+    }
+
+    function getFilteredAdminCollections() {
+      readAdminFilters();
+      const search = normalizeAdminText(adminUiState.search);
+      const verification = adminUiState.verification;
+      const accountState = adminUiState.account;
+      const queue = adminUiState.queue;
+
+      const brokers = adminBrokerAccounts
+        .map(account => ({
+          ...account,
+          type: 'broker',
+          key: String(account?.brokerId || account?.id || ''),
+          summary: getBrokerSummary(account),
+          accountMeta: getBrokerAccountStatus(account)
+        }))
+        .filter(account => {
+          if (verification === 'verified' && !account.approved) return false;
+          if (verification === 'unverified' && account.approved) return false;
+          if (accountState === 'active' && account.blocked) return false;
+          if (accountState === 'blocked' && !account.blocked) return false;
+          if (accountState === 'pending' && (account.blocked || account.approved)) return false;
+          if (!search) return true;
+          const haystack = [
+            account.name,
+            account.brokerId,
+            account.email,
+            account.phone,
+            account.company
+          ].map(normalizeAdminText).join(' ');
+          return haystack.includes(search);
+        });
+
+      const requirementsList = getRequirementEntries().filter(entry => {
+        if (queue !== 'all' && ['open', 'matched', 'closed', 'expired'].includes(queue) && entry.status !== queue) {
+          return false;
+        }
+        if (!search) return true;
+        const haystack = [
+          entry.item.broker,
+          entry.item.phone,
+          entry.item.purpose,
+          entry.item.category,
+          entry.item.location,
+          entry.item.budget,
+          entry.item.notes
+        ].map(normalizeAdminText).join(' ');
+        return haystack.includes(search);
+      });
+
+      const dealsList = getDealEntries().filter(entry => {
+        if (queue !== 'all' && ['open', 'matched', 'closed', 'expired'].includes(queue) && entry.status !== queue) {
+          return false;
+        }
+        if (!search) return true;
+        const haystack = [
+          entry.item.broker,
+          entry.item.phone,
+          entry.item.purpose,
+          entry.item.category,
+          entry.item.location,
+          entry.item.budget,
+          entry.item.notes,
+          entry.item.distress ? 'distress' : ''
+        ].map(normalizeAdminText).join(' ');
+        return haystack.includes(search);
+      });
+
+      const complaintList = getComplaintEntries().filter(entry => {
+        if (queue !== 'all' && ['new', 'under-review', 'resolved', 'rejected'].includes(queue) && entry.status !== queue) {
+          return false;
+        }
+        if (!search) return true;
+        const haystack = [
+          entry.item.name,
+          entry.item.broker,
+          entry.item.displayMessage,
+          entry.item.reporterEmail,
+          entry.item.reporterName
+        ].map(normalizeAdminText).join(' ');
+        return haystack.includes(search);
+      });
+
+      return {
+        brokers,
+        requirements: requirementsList,
+        deals: dealsList,
+        complaints: complaintList
+      };
+    }
+
+    function ensureAdminSelection(collections) {
+      const selectionExists =
+        (adminUiState.selectedType === 'broker' && collections.brokers.some(item => item.key === adminUiState.selectedKey)) ||
+        (adminUiState.selectedType === 'requirement' && collections.requirements.some(item => item.key === adminUiState.selectedKey)) ||
+        (adminUiState.selectedType === 'deal' && collections.deals.some(item => item.key === adminUiState.selectedKey)) ||
+        (adminUiState.selectedType === 'complaint' && collections.complaints.some(item => item.key === adminUiState.selectedKey));
+
+      if (selectionExists) return;
+
+      const nextItem =
+        collections.brokers[0] ||
+        collections.requirements[0] ||
+        collections.deals[0] ||
+        collections.complaints[0] ||
+        null;
+
+      if (!nextItem) {
+        adminUiState.selectedType = 'broker';
+        adminUiState.selectedKey = '';
+        return;
+      }
+
+      adminUiState.selectedType = nextItem.type;
+      adminUiState.selectedKey = nextItem.key;
+    }
+
+    function setAdminSelection(type, key) {
+      adminUiState.selectedType = type;
+      adminUiState.selectedKey = String(key || '');
+      renderAdminWorkspace();
+    }
+
+    function getSelectedAdminItem(collections) {
+      if (adminUiState.selectedType === 'broker') {
+        return collections.brokers.find(item => item.key === adminUiState.selectedKey) || null;
+      }
+      if (adminUiState.selectedType === 'requirement') {
+        return collections.requirements.find(item => item.key === adminUiState.selectedKey) || null;
+      }
+      if (adminUiState.selectedType === 'deal') {
+        return collections.deals.find(item => item.key === adminUiState.selectedKey) || null;
+      }
+      if (adminUiState.selectedType === 'complaint') {
+        return collections.complaints.find(item => item.key === adminUiState.selectedKey) || null;
+      }
+      return null;
+    }
+
+    function renderAdminWorkspace() {
+      const collections = getFilteredAdminCollections();
+      renderStats(adminBrokerAccounts);
+      ensureAdminSelection(collections);
+      renderBrokerApprovals(collections.brokers);
+      renderPostLists(collections);
+      renderComplaints(collections.complaints);
+      renderAdminDetailPanel(collections);
+    }
+
+    function applyAdminFilters() {
+      renderAdminWorkspace();
+    }
+
+    function clearAdminFilters() {
+      const searchInput = document.getElementById('adminSearchInput');
+      const verification = document.getElementById('adminVerificationFilter');
+      const accountState = document.getElementById('adminAccountFilter');
+      const queue = document.getElementById('adminQueueFilter');
+      if (searchInput) searchInput.value = '';
+      if (verification) verification.value = 'all';
+      if (accountState) accountState.value = 'all';
+      if (queue) queue.value = 'all';
+      adminUiState.search = '';
+      adminUiState.verification = 'all';
+      adminUiState.account = 'all';
+      adminUiState.queue = 'all';
+      renderAdminWorkspace();
+    }
+
     function renderBrokerApprovals(accounts) {
       const target = document.getElementById('brokerApprovalList');
       if (!accounts.length) {
-        target.innerHTML = `<div class="item"><p>No broker accounts available yet.</p></div>`;
+        target.innerHTML = `<div class="admin-detail-empty">No broker accounts match the current filter set.</div>`;
         return;
       }
 
-      target.innerHTML = accounts.map(account => {
-        const approved = Boolean(brokerApprovals[account.brokerId]);
-        const blocked = Boolean(blockedBrokerIds[account.brokerId]);
-        return `
-          <div class="item">
-            <div class="item-head">
-              <h4>${account.name} (${account.brokerId})</h4>
-              <span class="badge ${blocked ? 'red' : approved ? 'blue' : 'gold'}">${blocked ? 'Blocked' : approved ? 'Verified' : 'Pending'}</span>
+      const columns = 'minmax(200px,1.45fr) minmax(140px,0.9fr) minmax(200px,1.2fr) minmax(120px,0.8fr) minmax(72px,0.45fr) minmax(72px,0.45fr) minmax(110px,0.7fr) minmax(120px,0.8fr) minmax(230px,1.25fr)';
+      target.innerHTML = `
+        <div class="admin-table-inner">
+          <div class="admin-table-head" style="grid-template-columns:${columns};">
+            <div>User</div>
+            <div>Company</div>
+            <div>Contact</div>
+            <div>Verification</div>
+            <div>Req</div>
+            <div>List</div>
+            <div>Status</div>
+            <div>Joined</div>
+            <div style="text-align:right;">Quick Actions</div>
+          </div>
+          ${accounts.map(account => {
+            const approved = Boolean(account.approved);
+            const blocked = Boolean(account.blocked);
+            const selected = adminUiState.selectedType === 'broker' && adminUiState.selectedKey === account.key ? ' is-selected' : '';
+            return `
+              <div class="admin-table-row${selected}" style="grid-template-columns:${columns};" onclick="setAdminSelection('broker', '${escapeHtml(account.key)}')">
+                <div class="admin-cell">
+                  <strong>${escapeHtml(account.name || 'Broker')}</strong>
+                  <span>${escapeHtml(account.brokerId || 'No Broker ID')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(account.company || '—')}</strong>
+                  <span>${account.summary.sharedCount} shared records</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(account.email || 'No email')}</strong>
+                  <span>${escapeHtml(account.phone || 'No phone')}</span>
+                </div>
+                <div class="admin-cell">
+                  <span class="badge ${approved ? 'green' : 'gold'}">${approved ? 'Verified' : 'Pending'}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${account.summary.requirementCount}</strong>
+                  <span>requirements</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${account.summary.listingCount}</strong>
+                  <span>listings</span>
+                </div>
+                <div class="admin-cell">
+                  <span class="badge ${account.accountMeta.tone}">${account.accountMeta.label}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(formatAdminDateTime(account.createdAt))}</strong>
+                  <span>${blocked ? 'Access disabled' : approved ? 'Live account' : 'Needs review'}</span>
+                </div>
+                <div class="admin-table-actions" onclick="event.stopPropagation()">
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${escapeHtml(account.brokerId)}')">${approved ? 'Unverify' : 'Verify'}</button>
+                  <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${escapeHtml(account.brokerId)}')">${blocked ? 'Unblock' : 'Block'}</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${escapeHtml(account.brokerId)}')">Password</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${escapeHtml(account.brokerId)}')">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderPostLists(collections) {
+      const reqTarget = document.getElementById('requirementReviewList');
+      const dealTarget = document.getElementById('dealReviewList');
+      const requirementColumns = 'minmax(160px,1.1fr) minmax(150px,0.95fr) minmax(150px,0.95fr) minmax(120px,0.85fr) minmax(120px,0.75fr) minmax(110px,0.72fr) minmax(180px,1.2fr)';
+      const dealColumns = 'minmax(160px,1.1fr) minmax(150px,0.95fr) minmax(150px,0.95fr) minmax(120px,0.85fr) minmax(120px,0.75fr) minmax(110px,0.72fr) minmax(200px,1.25fr)';
+
+      reqTarget.innerHTML = collections.requirements.length ? `
+        <div class="admin-table-inner">
+          <div class="admin-table-head" style="grid-template-columns:${requirementColumns};">
+            <div>Requirement</div>
+            <div>Broker</div>
+            <div>Area</div>
+            <div>Budget</div>
+            <div>Status</div>
+            <div>Updated</div>
+            <div style="text-align:right;">Quick Actions</div>
+          </div>
+          ${collections.requirements.map(entry => {
+            const selected = adminUiState.selectedType === 'requirement' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
+            return `
+              <div class="admin-table-row${selected}" style="grid-template-columns:${requirementColumns};" onclick="setAdminSelection('requirement', '${escapeHtml(entry.key)}')">
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</strong>
+                  <span>${escapeHtml(entry.item.notes || 'No notes provided')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.broker || 'Unknown broker')}</strong>
+                  <span>${escapeHtml(entry.item.phone || 'No phone')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.location || 'Area missing')}</strong>
+                  <span>${entry.item.verified ? 'Verified details' : 'Pending verification'}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.budget || '—')}</strong>
+                  <span>Requirement budget</span>
+                </div>
+                <div class="admin-cell">
+                  <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(formatPostedTime(entry.item.postedAt))}</strong>
+                  <span>${escapeHtml(formatAdminDateTime(entry.item.postedAt))}</span>
+                </div>
+                <div class="admin-table-actions" onclick="event.stopPropagation()">
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'open')">Open</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'matched')">Matched</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'closed')">Closed</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'expired')">Expired</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `<div class="admin-detail-empty">No requirements match the current queue or search filter.</div>`;
+
+      dealTarget.innerHTML = collections.deals.length ? `
+        <div class="admin-table-inner">
+          <div class="admin-table-head" style="grid-template-columns:${dealColumns};">
+            <div>Listing</div>
+            <div>Broker</div>
+            <div>Area</div>
+            <div>Price</div>
+            <div>Status</div>
+            <div>Updated</div>
+            <div style="text-align:right;">Quick Actions</div>
+          </div>
+          ${collections.deals.map(entry => {
+            const selected = adminUiState.selectedType === 'deal' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
+            return `
+              <div class="admin-table-row${selected}" style="grid-template-columns:${dealColumns};" onclick="setAdminSelection('deal', '${escapeHtml(entry.key)}')">
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</strong>
+                  <span>${entry.item.distress ? 'Distress listing' : 'Standard connector listing'}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.broker || 'Unknown broker')}</strong>
+                  <span>${escapeHtml(entry.item.phone || 'No phone')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.location || 'Area missing')}</strong>
+                  <span>${entry.item.urgent ? 'Urgent exposure' : 'Normal visibility'}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.budget || '—')}</strong>
+                  <span>${entry.item.distress ? 'Distress pricing' : 'Listing price'}</span>
+                </div>
+                <div class="admin-cell">
+                  <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(formatPostedTime(entry.item.postedAt))}</strong>
+                  <span>${escapeHtml(formatAdminDateTime(entry.item.postedAt))}</span>
+                </div>
+                <div class="admin-table-actions" onclick="event.stopPropagation()">
+                  ${entry.item.distress ? '<span class="badge gold">Distress</span>' : ''}
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'open')">Open</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'matched')">Matched</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'closed')">Closed</button>
+                  <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'expired')">Expired</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `<div class="admin-detail-empty">No broker connector listings match the current queue or search filter.</div>`;
+    }
+
+    function renderComplaints(complaintEntries) {
+      const target = document.getElementById('complaintList');
+      if (!complaintsReadable) {
+        target.innerHTML = `<div class="admin-detail-empty">Complaint review is currently unavailable because complaint read access is blocked by Supabase permissions.</div>`;
+        return;
+      }
+      if (!complaintEntries.length) {
+        target.innerHTML = `<div class="admin-detail-empty">No complaints match the current queue or search filter.</div>`;
+        return;
+      }
+
+      const columns = 'minmax(160px,1.05fr) minmax(140px,0.9fr) minmax(210px,1.45fr) minmax(120px,0.75fr) minmax(120px,0.8fr) minmax(220px,1.3fr)';
+      target.innerHTML = `
+        <div class="admin-table-inner">
+          <div class="admin-table-head" style="grid-template-columns:${columns};">
+            <div>Reporter</div>
+            <div>Broker</div>
+            <div>Complaint</div>
+            <div>Status</div>
+            <div>Submitted</div>
+            <div style="text-align:right;">Quick Actions</div>
+          </div>
+          ${complaintEntries.map(entry => {
+            const statusMeta = getComplaintStatusMeta(entry.item.normalizedStatus);
+            const selected = adminUiState.selectedType === 'complaint' && adminUiState.selectedKey === entry.key ? ' is-selected' : '';
+            return `
+              <div class="admin-table-row${selected}" style="grid-template-columns:${columns};" onclick="setAdminSelection('complaint', '${escapeHtml(entry.key)}')">
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.name || 'Anonymous')}</strong>
+                  <span>${escapeHtml(entry.item.reporterEmail || 'No reporter email')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(entry.item.broker || 'N/A')}</strong>
+                  <span>${escapeHtml(findBrokerIdByComplaint(entry.item) || 'Broker not linked')}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml((entry.item.displayMessage || entry.item.message || '').slice(0, 70) || 'No complaint text')}</strong>
+                  <span>${escapeHtml(entry.item.reporterName || 'No reporter name')}</span>
+                </div>
+                <div class="admin-cell">
+                  <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>
+                </div>
+                <div class="admin-cell">
+                  <strong>${escapeHtml(formatAdminDateTime(entry.item.created_at))}</strong>
+                  <span>${escapeHtml(formatPostedTime(entry.item.created_at))}</span>
+                </div>
+                <div class="admin-table-actions" onclick="event.stopPropagation()">
+                  <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'new')">New</button>
+                  <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'under-review')">Review</button>
+                  <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'resolved')">Resolve</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'rejected')">Reject</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${entry.index})">Block</button>
+                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${entry.index})">Delete</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderAdminDetailPanel(collections) {
+      const target = document.getElementById('adminDetailPanel');
+      if (!target) return;
+      const selected = getSelectedAdminItem(collections);
+      if (!selected) {
+        target.className = 'admin-detail-empty';
+        target.innerHTML = 'Select a broker, requirement, listing, or complaint to review actions and full context here.';
+        return;
+      }
+
+      target.className = '';
+
+      if (selected.type === 'broker') {
+        const account = selected;
+        const approved = Boolean(account.approved);
+        const blocked = Boolean(account.blocked);
+        target.innerHTML = `
+          <div class="admin-detail-header">
+            <div class="admin-detail-copy">Broker Account</div>
+            <h3>${escapeHtml(account.name || 'Broker')}</h3>
+            <div class="admin-detail-meta">
+              <span class="badge ${approved ? 'green' : 'gold'}">${approved ? 'Verified' : 'Pending'}</span>
+              <span class="badge ${blocked ? 'red' : 'blue'}">${blocked ? 'Blocked' : 'Active'}</span>
+              <span class="badge blue">${escapeHtml(account.brokerId || 'No Broker ID')}</span>
             </div>
-            <p>${account.phone} &middot; ${account.email}</p>
-            <div class="action-row">
-              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${account.brokerId}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
-              <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${account.brokerId}')">${blocked ? 'Unblock Broker' : 'Block Broker'}</button>
-              <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${account.brokerId}')">Change Password</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${account.brokerId}')">Delete Broker</button>
+            <div class="admin-detail-toolbar">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${escapeHtml(account.brokerId)}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
+              <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${escapeHtml(account.brokerId)}')">${blocked ? 'Unblock Broker' : 'Block Broker'}</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${escapeHtml(account.brokerId)}')">Change Password</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${escapeHtml(account.brokerId)}')">Delete Broker</button>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Account Overview</h4>
+            <div class="admin-detail-grid">
+              <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(account.email || 'No email')}</strong></div>
+              <div class="admin-detail-cell"><small>Phone</small><strong>${escapeHtml(account.phone || 'No phone')}</strong></div>
+              <div class="admin-detail-cell"><small>Company</small><strong>${escapeHtml(account.company || '—')}</strong></div>
+              <div class="admin-detail-cell"><small>Joined</small><strong>${escapeHtml(formatAdminDateTime(account.createdAt))}</strong></div>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Marketplace Activity</h4>
+            <div class="admin-detail-grid">
+              <div class="admin-detail-cell"><small>Requirements</small><strong>${account.summary.requirementCount}</strong></div>
+              <div class="admin-detail-cell"><small>Listings</small><strong>${account.summary.listingCount}</strong></div>
+              <div class="admin-detail-cell"><small>Total Shared</small><strong>${account.summary.sharedCount}</strong></div>
+              <div class="admin-detail-cell"><small>Access State</small><strong>${blocked ? 'Blocked from sign in and posting' : approved ? 'Active and verified' : 'Awaiting verification'}</strong></div>
             </div>
           </div>
         `;
-      }).join('');
-    }
-
-    function renderPostLists() {
-      const reqTarget = document.getElementById('requirementReviewList');
-      const dealTarget = document.getElementById('dealReviewList');
-      const sortedRequirements = [...requirements].sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt));
-      const sortedDeals = [...deals].sort((a, b) => getPostedTimestamp(b.postedAt) - getPostedTimestamp(a.postedAt));
-
-      reqTarget.innerHTML = sortedRequirements.length ? sortedRequirements.slice(0, 10).map(item => `
-        <div class="item">
-          <div class="item-head">
-            <h4>${item.purpose} &middot; ${item.category}</h4>
-            <span class="status-pill ${getPostStatus(item, false)}">${getPostStatus(item, false)}</span>
-          </div>
-          <p>${item.broker} &middot; ${item.location} &middot; ${item.budget}</p>
-          <p class="muted">Posted ${formatPostedTime(item.postedAt)}</p>
-          <p class="muted">${item.notes}</p>
-          <div class="action-row">
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'open')">Open</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'matched')">Matched</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'closed')">Closed</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${requirements.indexOf(item)}], false, 'expired')">Expired</button>
-            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${requirements.indexOf(item)})">Delete</button>
-          </div>
-        </div>
-      `).join('') : `<div class="item"><p>No requirements found.</p></div>`;
-
-      dealTarget.innerHTML = sortedDeals.length ? sortedDeals.slice(0, 10).map(item => `
-        <div class="item">
-          <div class="item-head">
-            <h4>${item.purpose} &middot; ${item.category}</h4>
-            <span class="status-pill ${getPostStatus(item, true)}">${getPostStatus(item, true)}</span>
-          </div>
-          <p>${item.broker} &middot; ${item.location} &middot; ${item.budget}</p>
-          <p class="muted">Posted ${formatPostedTime(item.postedAt)}</p>
-          <p class="muted">${item.notes}</p>
-          <div class="action-row">
-            ${item.distress ? '<span class="badge gold">Hot Distress</span>' : ''}
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'open')">Open</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'matched')">Matched</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'closed')">Closed</button>
-            <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${deals.indexOf(item)}], true, 'expired')">Expired</button>
-            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${deals.indexOf(item)})">Delete</button>
-          </div>
-        </div>
-      `).join('') : `<div class="item"><p>No broker connector listings found.</p></div>`;
-    }
-
-    function renderComplaints() {
-      const target = document.getElementById('complaintList');
-      if (!complaintsReadable) {
-        target.innerHTML = `<div class="item"><p>Complaint review is currently unavailable because complaint read access is blocked by Supabase permissions.</p></div>`;
-        return;
-      }
-      if (!complaints.length) {
-        target.innerHTML = `<div class="item"><p>No complaints found.</p></div>`;
         return;
       }
 
-      target.innerHTML = complaints.slice(0, 12).map(item => `
-        <div class="item">
-          <div class="item-head">
-            <h4>${item.name || 'Anonymous'}</h4>
-            <span class="badge ${getComplaintStatusMeta(item.normalizedStatus).tone}">${getComplaintStatusMeta(item.normalizedStatus).label}</span>
+      if (selected.type === 'requirement') {
+        const entry = selected;
+        target.innerHTML = `
+          <div class="admin-detail-header">
+            <div class="admin-detail-copy">Requirement Review</div>
+            <h3>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</h3>
+            <div class="admin-detail-meta">
+              <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
+              <span class="badge ${entry.item.verified ? 'green' : 'gold'}">${entry.item.verified ? 'Verified' : 'Pending'}</span>
+            </div>
+            <div class="admin-detail-toolbar">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'open')">Open</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'matched')">Matched</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'closed')">Closed</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'expired')">Expired</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete Requirement</button>
+            </div>
           </div>
-          <p>${item.broker || 'N/A'}</p>
-          <p class="muted">${item.displayMessage || item.message || ''}</p>
-          <div class="action-row">
-            <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'new')">New</button>
-            <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'under-review')">Under Review</button>
-            <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'resolved')">Resolve</button>
-            <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${complaints.indexOf(item)}, 'rejected')">Reject</button>
-            <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${complaints.indexOf(item)})">Block Broker</button>
-            <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${complaints.indexOf(item)})">Delete Complaint</button>
+          <div class="admin-detail-section">
+            <h4>Requirement Details</h4>
+            <div class="admin-detail-grid">
+              <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(entry.item.broker || 'Unknown broker')}</strong></div>
+              <div class="admin-detail-cell"><small>Contact</small><strong>${escapeHtml(entry.item.phone || 'No phone')}</strong></div>
+              <div class="admin-detail-cell"><small>Preferred Area</small><strong>${escapeHtml(entry.item.location || '—')}</strong></div>
+              <div class="admin-detail-cell"><small>Budget</small><strong>${escapeHtml(entry.item.budget || '—')}</strong></div>
+              <div class="admin-detail-cell"><small>Posted</small><strong>${escapeHtml(formatAdminDateTime(entry.item.postedAt))}</strong></div>
+              <div class="admin-detail-cell"><small>Queue State</small><strong>${escapeHtml(entry.status)}</strong></div>
+            </div>
           </div>
-        </div>
-      `).join('');
+          <div class="admin-detail-section">
+            <h4>Notes</h4>
+            <div class="admin-detail-note">${escapeHtml(entry.item.notes || 'No notes provided for this requirement.')}</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (selected.type === 'deal') {
+        const entry = selected;
+        target.innerHTML = `
+          <div class="admin-detail-header">
+            <div class="admin-detail-copy">Listing Review</div>
+            <h3>${escapeHtml(entry.item.purpose)} · ${escapeHtml(entry.item.category)}</h3>
+            <div class="admin-detail-meta">
+              <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
+              ${entry.item.distress ? '<span class="badge gold">Distress</span>' : '<span class="badge blue">Connector Listing</span>'}
+            </div>
+            <div class="admin-detail-toolbar">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'open')">Open</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'matched')">Matched</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'closed')">Closed</button>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'expired')">Expired</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete Listing</button>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Listing Details</h4>
+            <div class="admin-detail-grid">
+              <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(entry.item.broker || 'Unknown broker')}</strong></div>
+              <div class="admin-detail-cell"><small>Contact</small><strong>${escapeHtml(entry.item.phone || 'No phone')}</strong></div>
+              <div class="admin-detail-cell"><small>Area</small><strong>${escapeHtml(entry.item.location || '—')}</strong></div>
+              <div class="admin-detail-cell"><small>Price</small><strong>${escapeHtml(entry.item.budget || '—')}</strong></div>
+              <div class="admin-detail-cell"><small>Urgency</small><strong>${entry.item.urgent ? 'Urgent' : 'Standard'}</strong></div>
+              <div class="admin-detail-cell"><small>Posted</small><strong>${escapeHtml(formatAdminDateTime(entry.item.postedAt))}</strong></div>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Notes</h4>
+            <div class="admin-detail-note">${escapeHtml(entry.item.notes || 'No notes provided for this listing.')}</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (selected.type === 'complaint') {
+        const entry = selected;
+        const statusMeta = getComplaintStatusMeta(entry.item.normalizedStatus);
+        const linkedBrokerId = findBrokerIdByComplaint(entry.item);
+        target.innerHTML = `
+          <div class="admin-detail-header">
+            <div class="admin-detail-copy">Complaint Review</div>
+            <h3>${escapeHtml(entry.item.name || 'Anonymous')}</h3>
+            <div class="admin-detail-meta">
+              <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>
+              <span class="badge blue">${escapeHtml(entry.item.broker || 'No broker')}</span>
+            </div>
+            <div class="admin-detail-toolbar">
+              <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'new')">New</button>
+              <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'under-review')">Under Review</button>
+              <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'resolved')">Resolve</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'rejected')">Reject</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${entry.index})">Block Broker</button>
+              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${entry.index})">Delete Complaint</button>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Reporter</h4>
+            <div class="admin-detail-grid">
+              <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(entry.item.reporterName || entry.item.name || 'Anonymous')}</strong></div>
+              <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(entry.item.reporterEmail || 'No reporter email')}</strong></div>
+              <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
+              <div class="admin-detail-cell"><small>Submitted</small><strong>${escapeHtml(formatAdminDateTime(entry.item.created_at))}</strong></div>
+            </div>
+          </div>
+          <div class="admin-detail-section">
+            <h4>Complaint</h4>
+            <div class="admin-detail-note">${escapeHtml(entry.item.displayMessage || entry.item.message || 'No complaint message provided.')}</div>
+          </div>
+        `;
+      }
     }
 
     restoreAdminSession();
