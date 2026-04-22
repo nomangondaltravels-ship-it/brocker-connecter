@@ -301,18 +301,133 @@
 
     .profile-shell {
       display: grid;
+      gap: 18px;
+    }
+
+    .profile-summary-card,
+    .profile-progress-card,
+    .profile-section-card,
+    .profile-side-card,
+    .profile-save-rail {
+      background: #ffffff;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 20px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .profile-summary-card {
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(260px, 0.9fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .profile-summary-main {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 16px;
+      align-items: center;
+    }
+
+    .profile-summary-copy {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .profile-summary-headline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .profile-summary-headline h3 {
+      font-size: 1.14rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+    }
+
+    .profile-summary-role {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: #475569;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .profile-summary-company {
+      color: #475569;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .profile-summary-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      color: #64748b;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .profile-summary-meta strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .profile-summary-note {
+      color: #64748b;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      max-width: 720px;
+    }
+
+    .profile-summary-side {
+      display: grid;
+      gap: 12px;
+      align-content: space-between;
+      min-width: 0;
+    }
+
+    .profile-summary-statline {
+      display: grid;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .profile-summary-statline .settings-section-kicker {
+      margin-bottom: 0;
+    }
+
+    .profile-settings-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.42fr) minmax(280px, 0.78fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .profile-settings-main,
+    .profile-settings-side {
+      display: grid;
       gap: 16px;
     }
 
     .profile-progress-card,
-    .profile-section-card {
-      background: #ffffff;
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
-    }
-
-    .profile-progress-card {
+    .profile-side-card,
+    .profile-save-rail {
       padding: 18px 20px;
       display: grid;
       gap: 14px;
@@ -322,7 +437,7 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 14px;
+      gap: 12px;
       flex-wrap: wrap;
     }
 
@@ -332,19 +447,19 @@
     }
 
     .profile-progress-copy h3 {
-      font-size: 1.08rem;
+      font-size: 1rem;
       font-weight: 800;
-      color: #18212f;
+      color: #0f172a;
     }
 
     .profile-progress-copy p {
-      color: #6b7280;
-      font-size: 0.88rem;
-      line-height: 1.5;
+      color: #64748b;
+      font-size: 0.84rem;
+      line-height: 1.48;
     }
 
     .profile-progress-bar {
-      height: 10px;
+      height: 9px;
       border-radius: 999px;
       background: #e5e7eb;
       overflow: hidden;
@@ -360,9 +475,7 @@
 
     .profile-progress-meta {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
       gap: 14px;
-      align-items: start;
     }
 
     .profile-hint-list,
@@ -396,13 +509,6 @@
       text-align: center;
       font-weight: 800;
       flex: 0 0 18px;
-    }
-
-    .profile-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      align-items: start;
     }
 
     .profile-section-card {
@@ -645,6 +751,37 @@
       margin-top: 18px;
       padding-top: 16px;
       border-top: 1px solid rgba(15, 23, 42, 0.08);
+    }
+
+    .profile-save-rail {
+      position: sticky;
+      top: 106px;
+    }
+
+    .profile-side-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .profile-side-item {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: #f8fafc;
+      display: grid;
+      gap: 4px;
+    }
+
+    .profile-side-item strong {
+      color: #0f172a;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .profile-side-item span {
+      color: #64748b;
+      font-size: 0.78rem;
+      line-height: 1.45;
     }
 
     .app-shell {
@@ -2356,7 +2493,9 @@
       .settings-layout {
         grid-template-columns: 1fr;
       }
-      .profile-grid,
+      .profile-summary-card,
+      .profile-summary-main,
+      .profile-settings-layout,
       .profile-progress-meta,
       .profile-field-grid {
         grid-template-columns: 1fr;
@@ -3628,7 +3767,8 @@
 
       .stats,
       .overview-command-grid,
-      .profile-progress-meta {
+      .profile-progress-meta,
+      .profile-summary-card {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
       }
 
@@ -3641,6 +3781,14 @@
       }
 
       .workspace-detail-card {
+        position: static;
+      }
+
+      .profile-settings-layout {
+        grid-template-columns: 1fr !important;
+      }
+
+      .profile-save-rail {
         position: static;
       }
     }
@@ -6158,6 +6306,9 @@
       const verificationLabel = profile.isVerified ? 'Verified' : 'Pending';
       const verificationClass = profile.isVerified ? 'is-verified' : 'is-pending';
       const isEditing = state.isEditingProfile;
+      const completionDescription = completion.percent >= 100
+        ? 'Profile complete and ready for internal CRM trust.'
+        : 'Finish the remaining fields to strengthen your internal broker profile.';
       const socialEntries = [
         ['Instagram', profile.socialLinks?.instagram],
         ['Facebook', profile.socialLinks?.facebook],
@@ -6170,11 +6321,45 @@
 
       target.innerHTML = `
         <div class="profile-shell">
-          <div class="profile-progress-card">
-            <div class="profile-progress-top">
-              <div class="profile-progress-copy">
-                <h3>Broker Profile</h3>
-                <p>Complete your broker profile to keep your CRM identity polished and ready for future public trust features.</p>
+          <div class="profile-summary-card">
+            <div class="profile-summary-main">
+              <div class="profile-avatar-wrap">
+                <div class="profile-avatar">
+                  ${profile.avatarDataUrl
+                    ? `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`
+                    : `<span class="profile-avatar-fallback">${escapeHtml(getProfileInitials(profile.fullName))}</span>`}
+                </div>
+                ${isEditing ? `
+                  <div class="profile-avatar-actions">
+                    <input id="profileAvatarInput" type="file" accept="image/*" class="crm-hidden">
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('profileAvatarInput').click()">${profile.avatarDataUrl ? 'Replace' : 'Upload'} Photo</button>
+                    ${profile.avatarDataUrl ? '<button class="btn btn-secondary btn-tiny" type="button" onclick="removeProfileAvatar()">Remove</button>' : ''}
+                  </div>
+                ` : ''}
+              </div>
+              <div class="profile-summary-copy">
+                <div class="settings-section-kicker">Account Settings</div>
+                <div class="profile-summary-headline">
+                  <h3>${escapeHtml(profile.fullName || 'Broker Profile')}</h3>
+                  <span class="profile-summary-role">Broker Account</span>
+                  <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
+                </div>
+                <div class="profile-summary-company">${escapeHtml(profile.companyName || 'Add your brokerage or company name')}</div>
+                <div class="profile-summary-meta">
+                  <span>Broker ID <strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></span>
+                  <span>Email <strong>${escapeHtml(profile.email || '--')}</strong></span>
+                  <span>Mobile <strong>${escapeHtml(profile.mobileNumber || '--')}</strong></span>
+                </div>
+                <div class="profile-summary-note">Your account details stay inside Broker Desk unless future features explicitly publish a public-safe version.</div>
+              </div>
+            </div>
+            <div class="profile-summary-side">
+              <div class="profile-summary-statline">
+                <div class="settings-section-kicker">Profile ${completion.percent}% complete</div>
+                <div class="profile-progress-bar">
+                  <div class="profile-progress-fill" style="width:${completion.percent}%"></div>
+                </div>
+                <div class="profile-summary-company">${escapeHtml(completionDescription)}</div>
               </div>
               <div class="profile-section-actions">
                 ${isEditing ? `
@@ -6185,208 +6370,236 @@
                 `}
               </div>
             </div>
-            <div class="profile-progress-bar">
-              <div class="profile-progress-fill" id="profileCompletionFill" style="width:${completion.percent}%"></div>
-            </div>
-            <div class="profile-progress-meta">
-              <div>
-                <div class="settings-section-kicker" id="profileCompletionText">Profile ${completion.percent}% complete</div>
-                <div class="profile-hint-list" id="profileHintList"></div>
-              </div>
-              <div class="profile-checklist" id="profileChecklist"></div>
-            </div>
           </div>
 
-          <div class="profile-grid">
-            <div class="profile-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section A</div>
-                  <h3>Basic Info</h3>
+          <div class="profile-settings-layout">
+            <div class="profile-settings-main">
+              <div class="profile-section-card">
+                <div class="settings-section-head">
+                  <div>
+                    <div class="settings-section-kicker">Personal Information</div>
+                    <h3>Basic Info</h3>
+                  </div>
+                  <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
                 </div>
-                <span class="verification-pill ${verificationClass}">${verificationLabel}</span>
-              </div>
-              <div class="profile-header-grid">
-                <div class="profile-avatar-wrap">
-                  <div class="profile-avatar">
-                    ${profile.avatarDataUrl
-                      ? `<img src="${escapeHtml(profile.avatarDataUrl)}" alt="Broker profile picture">`
-                      : `<span class="profile-avatar-fallback">${escapeHtml(getProfileInitials(profile.fullName))}</span>`}
-                  </div>
-                  ${isEditing ? `
-                    <div class="profile-avatar-actions">
-                      <input id="profileAvatarInput" type="file" accept="image/*" class="crm-hidden">
-                      <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('profileAvatarInput').click()">${profile.avatarDataUrl ? 'Replace' : 'Upload'} Photo</button>
-                      ${profile.avatarDataUrl ? '<button class="btn btn-secondary btn-tiny" type="button" onclick="removeProfileAvatar()">Remove</button>' : ''}
-                    </div>
-                  ` : ''}
-                </div>
-                <div class="profile-info-summary">
-                  <h3>${escapeHtml(profile.fullName || '--')}</h3>
-                  <div class="profile-meta-line">
-                    <span>Broker ID: <strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></span>
-                    <span>&bull;</span>
-                    <span>${escapeHtml(verificationLabel)}</span>
-                  </div>
-                  <div class="profile-note">Private broker profile data stays inside Broker Desk unless you intentionally decide to publish public-safe broker details in future features.</div>
-                </div>
-              </div>
-              <div class="profile-field-grid">
-                ${isEditing ? `
-                  <div class="field-block">
-                    <label class="small">Full Name</label>
-                    <input type="text" data-profile-input="fullName" value="${escapeHtml(profile.fullName)}" placeholder="Enter broker name">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Broker ID</label>
-                    <input type="text" value="${escapeHtml(profile.brokerIdNumber)}" readonly>
-                  </div>
-                ` : `
-                  <div class="profile-display-cell"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Broker ID</small><strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></div>
-                `}
-              </div>
-            </div>
-
-            <div class="profile-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section B</div>
-                  <h3>Contact Info</h3>
-                </div>
-              </div>
-              <div class="profile-field-grid">
-                ${isEditing ? `
-                  <div class="field-block">
-                    <label class="small">Mobile Number</label>
-                    <input type="tel" data-profile-input="mobileNumber" value="${escapeHtml(profile.mobileNumber)}" placeholder="Enter mobile number">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Email</label>
-                    <input type="email" data-profile-input="email" value="${escapeHtml(profile.email)}" placeholder="Enter email">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">WhatsApp Number</label>
-                    <input type="tel" data-profile-input="whatsappNumber" value="${escapeHtml(profile.whatsappNumber)}" placeholder="Enter WhatsApp number">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Office Location</label>
-                    <input type="text" data-profile-input="officeLocation" value="${escapeHtml(profile.officeLocation)}" placeholder="Enter office location">
-                  </div>
-                ` : `
-                  <div class="profile-display-cell"><small>Mobile</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Email</small><strong>${escapeHtml(profile.email || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>WhatsApp</small><strong>${escapeHtml(profile.whatsappNumber || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Office Location</small><strong>${escapeHtml(profile.officeLocation || '--')}</strong></div>
-                `}
-              </div>
-            </div>
-
-            <div class="profile-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section C</div>
-                  <h3>Professional Info</h3>
-                </div>
-              </div>
-              <div class="profile-field-grid">
-                ${isEditing ? `
-                  <div class="field-block">
-                    <label class="small">Company Name</label>
-                    <input type="text" data-profile-input="companyName" value="${escapeHtml(profile.companyName)}" placeholder="Enter company name">
-                  </div>
-                  <div class="field-block full">
-                    <label class="small">Short Bio</label>
-                    <textarea data-profile-input="bio" placeholder="Add a short broker bio">${escapeHtml(profile.bio)}</textarea>
-                  </div>
-                  <div class="field-block full">
-                    <label class="small">Specialization</label>
-                    <div class="choice-chip-grid">
-                      ${PROFILE_SPECIALIZATION_OPTIONS.map(option => `
-                        <label class="choice-chip ${profile.specializations.includes(option) ? 'is-selected' : ''}">
-                          <input type="checkbox" ${profile.specializations.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('specializations', '${escapeHtml(option)}')">
-                          <span>${escapeHtml(option)}</span>
-                        </label>
-                      `).join('')}
-                    </div>
-                  </div>
-                  <div class="field-block full">
-                    <label class="small">Areas / Communities Served</label>
-                    <div class="areas-input-row">
-                      <input id="profileAreasInput" type="text" placeholder="Type an area and press Enter">
-                      <button class="btn btn-secondary btn-tiny" type="button" onclick="addProfileAreaTag()">Add</button>
-                    </div>
-                    <div class="profile-tags">
-                      ${(profile.areasServed || []).length
-                        ? profile.areasServed.map(area => `<span class="profile-tag">${escapeHtml(area)} <button type="button" onclick="removeProfileAreaTag('${encodeURIComponent(area)}')">&times;</button></span>`).join('')
-                        : '<span class="profile-empty">No communities added yet.</span>'}
-                    </div>
-                  </div>
-                  <div class="field-block full">
-                    <label class="small">Languages Spoken</label>
-                    <div class="choice-chip-grid">
-                      ${PROFILE_LANGUAGE_OPTIONS.map(option => `
-                        <label class="choice-chip ${profile.languages.includes(option) ? 'is-selected' : ''}">
-                          <input type="checkbox" ${profile.languages.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('languages', '${escapeHtml(option)}')">
-                          <span>${escapeHtml(option)}</span>
-                        </label>
-                      `).join('')}
-                    </div>
-                  </div>
-                ` : `
-                  <div class="profile-display-cell"><small>Company Name</small><strong>${escapeHtml(profile.companyName || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Specialization</small><strong>${escapeHtml((profile.specializations || []).join(', ') || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Areas Served</small><strong>${escapeHtml((profile.areasServed || []).join(', ') || '--')}</strong></div>
-                  <div class="profile-display-cell"><small>Languages</small><strong>${escapeHtml((profile.languages || []).join(', ') || '--')}</strong></div>
-                  <div class="profile-display-cell" style="grid-column:1 / -1;"><small>Short Bio</small><strong>${escapeHtml(profile.bio || '--')}</strong></div>
-                `}
-              </div>
-            </div>
-
-            <div class="profile-section-card">
-              <div class="settings-section-head">
-                <div>
-                  <div class="settings-section-kicker">Section D</div>
-                  <h3>Social Links</h3>
-                </div>
-              </div>
-              ${isEditing ? `
                 <div class="profile-field-grid">
-                  <div class="field-block">
-                    <label class="small">Instagram</label>
-                    <input type="url" data-profile-input="socialLinks.instagram" value="${escapeHtml(profile.socialLinks?.instagram || '')}" placeholder="https://instagram.com/...">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Facebook</label>
-                    <input type="url" data-profile-input="socialLinks.facebook" value="${escapeHtml(profile.socialLinks?.facebook || '')}" placeholder="https://facebook.com/...">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">LinkedIn</label>
-                    <input type="url" data-profile-input="socialLinks.linkedin" value="${escapeHtml(profile.socialLinks?.linkedin || '')}" placeholder="https://linkedin.com/in/...">
-                  </div>
-                  <div class="field-block">
-                    <label class="small">Website</label>
-                    <input type="url" data-profile-input="socialLinks.website" value="${escapeHtml(profile.socialLinks?.website || '')}" placeholder="https://yourwebsite.com">
-                  </div>
-                  <div class="field-block full">
-                    <label class="small">WhatsApp Link</label>
-                    <input type="url" data-profile-input="socialLinks.whatsappLink" value="${escapeHtml(profile.socialLinks?.whatsappLink || '')}" placeholder="https://wa.me/...">
+                  ${isEditing ? `
+                    <div class="field-block">
+                      <label class="small">Full Name</label>
+                      <input type="text" data-profile-input="fullName" value="${escapeHtml(profile.fullName)}" placeholder="Enter broker name">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Broker ID</label>
+                      <input type="text" value="${escapeHtml(profile.brokerIdNumber)}" readonly>
+                    </div>
+                  ` : `
+                    <div class="profile-display-cell"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Broker ID</small><strong>${escapeHtml(profile.brokerIdNumber || '--')}</strong></div>
+                  `}
+                </div>
+              </div>
+
+              <div class="profile-section-card">
+                <div class="settings-section-head">
+                  <div>
+                    <div class="settings-section-kicker">Contact Details</div>
+                    <h3>Contact Info</h3>
                   </div>
                 </div>
-              ` : `
-                <div class="profile-link-list">
-                  ${socialEntries.some(([, value]) => value)
-                    ? socialEntries.filter(([, value]) => value).map(([label, value]) => `
-                        <div class="profile-link-row">
-                          <div>
-                            <small>${escapeHtml(label)}</small>
-                            <strong>${escapeHtml(value)}</strong>
-                          </div>
-                        </div>
-                      `).join('')
-                    : '<div class="profile-empty">No social links added yet.</div>'}
+                <div class="profile-field-grid">
+                  ${isEditing ? `
+                    <div class="field-block">
+                      <label class="small">Mobile Number</label>
+                      <input type="tel" data-profile-input="mobileNumber" value="${escapeHtml(profile.mobileNumber)}" placeholder="Enter mobile number">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Email</label>
+                      <input type="email" data-profile-input="email" value="${escapeHtml(profile.email)}" placeholder="Enter email">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">WhatsApp Number</label>
+                      <input type="tel" data-profile-input="whatsappNumber" value="${escapeHtml(profile.whatsappNumber)}" placeholder="Enter WhatsApp number">
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Office Location</label>
+                      <input type="text" data-profile-input="officeLocation" value="${escapeHtml(profile.officeLocation)}" placeholder="Enter office location">
+                    </div>
+                  ` : `
+                    <div class="profile-display-cell"><small>Mobile</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Email</small><strong>${escapeHtml(profile.email || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>WhatsApp</small><strong>${escapeHtml(profile.whatsappNumber || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Office Location</small><strong>${escapeHtml(profile.officeLocation || '--')}</strong></div>
+                  `}
                 </div>
-              `}
+              </div>
+
+              <div class="profile-section-card">
+                <div class="settings-section-head">
+                  <div>
+                    <div class="settings-section-kicker">Professional Information</div>
+                    <h3>Broker / Company Details</h3>
+                  </div>
+                </div>
+                <div class="profile-field-grid">
+                  ${isEditing ? `
+                    <div class="field-block">
+                      <label class="small">Company Name</label>
+                      <input type="text" data-profile-input="companyName" value="${escapeHtml(profile.companyName)}" placeholder="Enter company name">
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Short Bio</label>
+                      <textarea data-profile-input="bio" placeholder="Add a short broker bio">${escapeHtml(profile.bio)}</textarea>
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Specialization</label>
+                      <div class="choice-chip-grid">
+                        ${PROFILE_SPECIALIZATION_OPTIONS.map(option => `
+                          <label class="choice-chip ${profile.specializations.includes(option) ? 'is-selected' : ''}">
+                            <input type="checkbox" ${profile.specializations.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('specializations', '${escapeHtml(option)}')">
+                            <span>${escapeHtml(option)}</span>
+                          </label>
+                        `).join('')}
+                      </div>
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Areas / Communities Served</label>
+                      <div class="areas-input-row">
+                        <input id="profileAreasInput" type="text" placeholder="Type an area and press Enter">
+                        <button class="btn btn-secondary btn-tiny" type="button" onclick="addProfileAreaTag()">Add</button>
+                      </div>
+                      <div class="profile-tags">
+                        ${(profile.areasServed || []).length
+                          ? profile.areasServed.map(area => `<span class="profile-tag">${escapeHtml(area)} <button type="button" onclick="removeProfileAreaTag('${encodeURIComponent(area)}')">&times;</button></span>`).join('')
+                          : '<span class="profile-empty">No communities added yet.</span>'}
+                      </div>
+                    </div>
+                    <div class="field-block full">
+                      <label class="small">Languages Spoken</label>
+                      <div class="choice-chip-grid">
+                        ${PROFILE_LANGUAGE_OPTIONS.map(option => `
+                          <label class="choice-chip ${profile.languages.includes(option) ? 'is-selected' : ''}">
+                            <input type="checkbox" ${profile.languages.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('languages', '${escapeHtml(option)}')">
+                            <span>${escapeHtml(option)}</span>
+                          </label>
+                        `).join('')}
+                      </div>
+                    </div>
+                  ` : `
+                    <div class="profile-display-cell"><small>Company Name</small><strong>${escapeHtml(profile.companyName || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Specialization</small><strong>${escapeHtml((profile.specializations || []).join(', ') || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Areas Served</small><strong>${escapeHtml((profile.areasServed || []).join(', ') || '--')}</strong></div>
+                    <div class="profile-display-cell"><small>Languages</small><strong>${escapeHtml((profile.languages || []).join(', ') || '--')}</strong></div>
+                    <div class="profile-display-cell" style="grid-column:1 / -1;"><small>Short Bio</small><strong>${escapeHtml(profile.bio || '--')}</strong></div>
+                  `}
+                </div>
+              </div>
+
+              <div class="profile-section-card">
+                <div class="settings-section-head">
+                  <div>
+                    <div class="settings-section-kicker">Social Presence</div>
+                    <h3>Social Links</h3>
+                  </div>
+                ${
+                  isEditing ? `
+                    <div class="profile-field-grid">
+                      <div class="field-block">
+                        <label class="small">Instagram</label>
+                        <input type="url" data-profile-input="socialLinks.instagram" value="${escapeHtml(profile.socialLinks?.instagram || '')}" placeholder="https://instagram.com/...">
+                      </div>
+                      <div class="field-block">
+                        <label class="small">Facebook</label>
+                        <input type="url" data-profile-input="socialLinks.facebook" value="${escapeHtml(profile.socialLinks?.facebook || '')}" placeholder="https://facebook.com/...">
+                      </div>
+                      <div class="field-block">
+                        <label class="small">LinkedIn</label>
+                        <input type="url" data-profile-input="socialLinks.linkedin" value="${escapeHtml(profile.socialLinks?.linkedin || '')}" placeholder="https://linkedin.com/in/...">
+                      </div>
+                      <div class="field-block">
+                        <label class="small">Website</label>
+                        <input type="url" data-profile-input="socialLinks.website" value="${escapeHtml(profile.socialLinks?.website || '')}" placeholder="https://yourwebsite.com">
+                      </div>
+                      <div class="field-block full">
+                        <label class="small">WhatsApp Link</label>
+                        <input type="url" data-profile-input="socialLinks.whatsappLink" value="${escapeHtml(profile.socialLinks?.whatsappLink || '')}" placeholder="https://wa.me/...">
+                      </div>
+                    </div>
+                  ` : `
+                    <div class="profile-link-list">
+                      ${socialEntries.some(([, value]) => value)
+                        ? socialEntries.filter(([, value]) => value).map(([label, value]) => `
+                            <div class="profile-link-row">
+                              <div>
+                                <small>${escapeHtml(label)}</small>
+                                <strong>${escapeHtml(value)}</strong>
+                              </div>
+                            </div>
+                          `).join('')
+                        : '<div class="profile-empty">No social links added yet.</div>'}
+                    </div>
+                  `
+                }
+              </div>
+            </div>
+
+            <div class="profile-settings-side">
+              <div class="profile-progress-card">
+                <div class="profile-progress-top">
+                  <div class="profile-progress-copy">
+                    <h3>Profile Completion</h3>
+                    <p>Complete the remaining details to make your internal profile stronger and easier to trust at a glance.</p>
+                  </div>
+                </div>
+                <div class="profile-progress-bar">
+                  <div class="profile-progress-fill" id="profileCompletionFill" style="width:${completion.percent}%"></div>
+                </div>
+                <div class="profile-progress-meta">
+                  <div>
+                    <div class="settings-section-kicker" id="profileCompletionText">Profile ${completion.percent}% complete</div>
+                    <div class="profile-hint-list" id="profileHintList"></div>
+                  </div>
+                  <div class="profile-checklist" id="profileChecklist"></div>
+                </div>
+              </div>
+
+              <div class="profile-side-card">
+                <div class="settings-section-head">
+                  <div>
+                    <div class="settings-section-kicker">Account Snapshot</div>
+                    <h3>Verification & Presence</h3>
+                  </div>
+                </div>
+                <div class="profile-side-list">
+                  <div class="profile-side-item">
+                    <strong>Verification Status</strong>
+                    <span>${escapeHtml(verificationLabel)} broker account</span>
+                  </div>
+                  <div class="profile-side-item">
+                    <strong>Company / Brokerage</strong>
+                    <span>${escapeHtml(profile.companyName || 'Add your brokerage name to complete this section')}</span>
+                  </div>
+                  <div class="profile-side-item">
+                    <strong>Profile Visibility</strong>
+                    <span>Profile details stay private inside Broker Desk unless future connector features explicitly publish safe public fields.</span>
+                  </div>
+                </div>
+              </div>
+
+              ${isEditing ? `
+                <div class="profile-save-rail">
+                  <div class="settings-section-head">
+                    <div>
+                      <div class="settings-section-kicker">Save Actions</div>
+                      <h3>Update Profile</h3>
+                    </div>
+                  </div>
+                  <div class="profile-note">Save after finishing your edits, or cancel to return to the current live profile values.</div>
+                  <div class="profile-section-actions">
+                    <button class="btn btn-secondary" type="button" onclick="cancelProfileEdit()" ${state.profileSavePending ? 'disabled' : ''}>Cancel</button>
+                    <button class="btn btn-primary" type="button" onclick="saveBrokerProfile()" ${state.profileSavePending ? 'disabled' : ''}>${state.profileSavePending ? 'Saving...' : 'Save Profile'}</button>
+                  </div>
+                </div>
+              ` : ''}
             </div>
           </div>
 
