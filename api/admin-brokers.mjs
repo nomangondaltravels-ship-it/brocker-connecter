@@ -19,6 +19,14 @@ const EMPTY_SUMMARY = Object.freeze({
   sharedCount: 0
 });
 
+function normalizeBrokerIdInput(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function isValidBrokerId(value) {
+  return /^[A-Z0-9-]{3,40}$/.test(String(value || '').trim().toUpperCase());
+}
+
 function getBearerToken(request) {
   const authHeader = request.headers.get('authorization') || '';
   return authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
@@ -230,6 +238,47 @@ async function fetchBrokerByBrokerId({ supabaseUrl, serviceRoleKey, brokerId }) 
   return Array.isArray(rows) ? rows[0] : null;
 }
 
+async function fetchBrokerById({ supabaseUrl, serviceRoleKey, id }) {
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'brokers',
+    filters: { id },
+    order: { column: 'created_at', ascending: false }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
+}
+
+async function syncBrokerIdNumberReferences({ supabaseUrl, serviceRoleKey, broker, nextBrokerId }) {
+  const previousBrokerId = String(broker?.broker_id_number || '').trim();
+  const nextId = String(nextBrokerId || '').trim();
+  if (!nextId) return;
+
+  await supabasePatch({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    filters: { broker_uuid: broker.id },
+    payload: {
+      broker_id_number: nextId,
+      updated_at: new Date().toISOString()
+    }
+  }).catch(() => []);
+
+  if (previousBrokerId && previousBrokerId !== nextId) {
+    await supabasePatch({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'public_listings',
+      filters: { broker_id_number: previousBrokerId },
+      payload: {
+        broker_id_number: nextId,
+        updated_at: new Date().toISOString()
+      }
+    }).catch(() => []);
+  }
+}
+
 export async function GET(request) {
   try {
     await requireAdmin(request);
@@ -272,12 +321,15 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const action = normalizeText(body?.action).toLowerCase();
     const brokerId = normalizeText(body?.brokerId);
+    const brokerRecordId = normalizeText(body?.brokerRecordId);
 
-    if (!action || !brokerId) {
-      return json({ message: 'Broker action and broker ID are required.' }, 400);
+    if (!action || (!brokerId && !brokerRecordId)) {
+      return json({ message: 'Broker action and broker reference are required.' }, 400);
     }
 
-    const broker = await fetchBrokerByBrokerId({ supabaseUrl, serviceRoleKey, brokerId });
+    const broker = brokerRecordId
+      ? await fetchBrokerById({ supabaseUrl, serviceRoleKey, id: brokerRecordId })
+      : await fetchBrokerByBrokerId({ supabaseUrl, serviceRoleKey, brokerId });
     if (!broker) {
       return json({ message: 'Broker account not found.' }, 404);
     }
@@ -364,6 +416,52 @@ export async function POST(request) {
         }
       });
       return json({ success: true });
+    }
+
+    if (action === 'set-broker-id') {
+      const nextBrokerId = normalizeBrokerIdInput(body?.newBrokerId);
+      if (!nextBrokerId) {
+        return json({ message: 'Broker ID is required.' }, 400);
+      }
+      if (!isValidBrokerId(nextBrokerId)) {
+        return json({ message: 'Broker ID must use 3-40 letters, numbers, or hyphens only.' }, 400);
+      }
+      if (nextBrokerId !== String(broker.broker_id_number || '').trim()) {
+        const existing = await fetchBrokerByBrokerId({
+          supabaseUrl,
+          serviceRoleKey,
+          brokerId: nextBrokerId
+        });
+        if (existing && String(existing.id || '') !== String(broker.id || '')) {
+          return json({ message: 'That Broker ID is already assigned to another broker.' }, 409);
+        }
+      }
+
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        filters: { id: broker.id },
+        payload: {
+          broker_id_number: nextBrokerId,
+          updated_at: new Date().toISOString()
+        }
+      });
+      const updatedBroker = (Array.isArray(rows) ? rows[0] : null) || { ...broker, broker_id_number: nextBrokerId };
+      await syncBrokerIdNumberReferences({
+        supabaseUrl,
+        serviceRoleKey,
+        broker: updatedBroker,
+        nextBrokerId
+      });
+      const summaryMap = await aggregateBrokerSummaries({
+        supabaseUrl,
+        serviceRoleKey,
+        brokers: [updatedBroker]
+      });
+      return json({
+        broker: sanitizeBroker(updatedBroker, summaryMap.get(String(updatedBroker?.id || '').trim()) || EMPTY_SUMMARY)
+      });
     }
 
     if (action === 'delete') {

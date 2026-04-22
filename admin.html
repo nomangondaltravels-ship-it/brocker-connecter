@@ -2347,6 +2347,48 @@
       loadAdminData();
     }
 
+    async function updateBrokerId(brokerId) {
+      const account = adminBrokerAccounts.find(item => item.brokerId === brokerId);
+      if (!account) {
+        setAdminStatus('Broker account not found.', 'error');
+        return;
+      }
+
+      const nextBrokerIdInput = window.prompt('Enter the updated Broker ID for this broker:', String(account.brokerId || ''));
+      if (nextBrokerIdInput === null) return;
+
+      const nextBrokerId = String(nextBrokerIdInput || '').trim().toUpperCase();
+      if (!nextBrokerId) {
+        setAdminStatus('Broker ID is required.', 'error');
+        return;
+      }
+
+      if (!/^[A-Z0-9-]{3,40}$/.test(nextBrokerId)) {
+        setAdminStatus('Broker ID must use 3-40 letters, numbers, or hyphens only.', 'error');
+        return;
+      }
+
+      if (nextBrokerId === String(account.brokerId || '').trim().toUpperCase()) {
+        setAdminStatus('Broker ID is already set to that value.', 'success');
+        return;
+      }
+
+      try {
+        await requestBrokerAdminAction({
+          action: 'set-broker-id',
+          brokerId,
+          brokerRecordId: account.id,
+          newBrokerId: nextBrokerId
+        });
+      } catch (error) {
+        setAdminStatus(error?.message || 'Broker ID update failed.', 'error');
+        return;
+      }
+
+      setAdminStatus('Broker ID updated successfully.', 'success');
+      loadAdminData();
+    }
+
     async function deleteBrokerAccount(brokerId) {
       const accounts = adminBrokerAccounts;
       const account = accounts.find(item => item.brokerId === brokerId);
@@ -2656,6 +2698,7 @@
           <div class="admin-detail-toolbar">
             <button class="btn btn-secondary tiny-btn" type="button" onclick="toggleBrokerApproval('${escapeHtml(account.brokerId)}')">${approved ? 'Remove Verification' : 'Verify Broker'}</button>
             <button class="btn ${blocked ? 'btn-secondary' : 'btn-danger'} tiny-btn" type="button" onclick="toggleBrokerBlock('${escapeHtml(account.brokerId)}')">${blocked ? 'Unblock Broker' : 'Block Broker'}</button>
+            <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerId('${escapeHtml(account.brokerId)}')">Edit Broker ID</button>
             <button class="btn btn-secondary tiny-btn" type="button" onclick="updateBrokerPassword('${escapeHtml(account.brokerId)}')">Change Password</button>
             <button class="btn btn-danger tiny-btn" type="button" onclick="deleteBrokerAccount('${escapeHtml(account.brokerId)}')">Delete Broker</button>
           </div>
