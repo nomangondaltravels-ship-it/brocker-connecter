@@ -3846,8 +3846,19 @@
     }
 
     .workspace-cell .workspace-number {
-      font-weight: 800;
-      color: #0f172a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.78rem;
+      line-height: 1;
     }
 
     .workspace-actions {
@@ -10542,7 +10553,7 @@
 
     const WORKSPACE_TABLE_COLUMNS = {
       leads: '56px 180px 110px 120px 160px 120px 110px 96px 90px',
-      listings: '56px 180px 140px 160px 110px 120px 110px 110px 90px',
+      listings: '56px 180px 120px 160px 110px 120px 110px 110px 90px',
       distress: '56px 180px 110px 160px 120px 120px 110px 96px 90px'
     };
 
@@ -10863,9 +10874,9 @@
               <div class="workspace-table-inner">
                 <div class="workspace-table-head" style="grid-template-columns:${listingColumns};">
                   <div class="workspace-head-center">#</div>
-                  <div>Reference / Listing</div>
                   <div>Purpose</div>
-                  <div>Building / Area</div>
+                  <div>Location</div>
+                  <div>Building / Project</div>
                   <div>Type</div>
                   <div class="workspace-head-right">Price</div>
                   <div>Status</div>
@@ -10888,16 +10899,16 @@
                       >
                         <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
                         <div class="workspace-cell">
-                          <strong>${escapeHtml(property.reference || property.buildingName || `${getPropertyPurposeLabel(property.purpose)} Listing`)}</strong>
-                          <span>${escapeHtml(property.location || '--')}</span>
-                        </div>
-                        <div class="workspace-cell">
-                          <strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong>
+                          <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(getPropertyTermsSummary(property))}</span>
                         </div>
                         <div class="workspace-cell">
+                          <strong>${escapeHtml(property.location || '--')}</strong>
+                          <span>${escapeHtml(property.location ? 'Area / location' : 'No area set')}</span>
+                        </div>
+                        <div class="workspace-cell">
                           <strong>${escapeHtml(property.buildingName || '--')}</strong>
-                          <span>${escapeHtml(property.location || '--')}</span>
+                          <span>${escapeHtml(property.buildingName ? 'Building / project' : 'No building set')}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
@@ -10963,8 +10974,8 @@
               <div class="workspace-table-inner">
                 <div class="workspace-table-head" style="grid-template-columns:${distressColumns};">
                   <div class="workspace-head-center">#</div>
-                  <div>Title / Reference</div>
-                  <div>Property Type</div>
+                  <div>Purpose</div>
+                  <div>Type</div>
                   <div>Area / Building</div>
                   <div class="workspace-head-right">Asking Price</div>
                   <div class="workspace-head-right">Market Difference</div>
@@ -10988,8 +10999,8 @@
                       >
                         <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
                         <div class="workspace-cell">
-                          <strong>${escapeHtml(property.reference || property.buildingName || 'Distress listing')}</strong>
-                          <span>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</span>
+                          <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
+                          <span>${escapeHtml(property.isDistress ? 'Distress deal' : 'Active listing')}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
