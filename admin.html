@@ -1143,6 +1143,86 @@
       white-space: pre-wrap;
     }
 
+    .admin-complaint-detail {
+      display: grid;
+      gap: 18px;
+    }
+
+    .admin-complaint-header {
+      gap: 12px;
+      padding-bottom: 4px;
+    }
+
+    .admin-complaint-header h3 {
+      font-size: 1.08rem;
+    }
+
+    .admin-complaint-section {
+      gap: 14px;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .admin-complaint-actions {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .admin-complaint-action-groups {
+      display: grid;
+      gap: 14px;
+    }
+
+    .admin-complaint-action-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .admin-complaint-action-group h4 {
+      margin: 0;
+    }
+
+    .admin-complaint-toolbar {
+      align-items: center;
+    }
+
+    .admin-complaint-toolbar .btn {
+      min-width: max-content;
+    }
+
+    .admin-complaint-meta-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-complaint-card {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      background: #ffffff;
+    }
+
+    .admin-complaint-card .admin-detail-grid {
+      gap: 10px;
+    }
+
+    .admin-complaint-single {
+      grid-template-columns: 1fr;
+    }
+
+    .admin-complaint-note {
+      padding: 14px 15px;
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
     body.admin-modal-open {
       overflow: hidden;
     }
@@ -1245,6 +1325,10 @@
       }
 
       .admin-detail-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-complaint-meta-grid {
         grid-template-columns: 1fr;
       }
 
@@ -3025,38 +3109,70 @@
         const entry = selected;
         const statusMeta = getComplaintStatusMeta(entry.item.normalizedStatus);
         const linkedBrokerId = findBrokerIdByComplaint(entry.item);
+        const reporterName = entry.item.reporterName || entry.item.name || 'Anonymous';
+        const reporterEmail = entry.item.reporterEmail || 'No reporter email';
+        const linkedBrokerLabel = entry.item.broker || 'No broker';
+        const submittedAt = formatAdminDateTime(entry.item.created_at);
+        const complaintText = entry.item.displayMessage || entry.item.message || 'No complaint message provided.';
         target.innerHTML = `
-          <div class="admin-detail-header">
-            <div class="admin-detail-head-row">
-              <div class="admin-detail-copy">Complaint Review</div>
-              <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+          <div class="admin-complaint-detail">
+            <div class="admin-detail-header admin-complaint-header">
+              <div class="admin-detail-head-row">
+                <div class="admin-detail-copy">Complaint Review</div>
+                <button class="btn btn-secondary tiny-btn" type="button" onclick="clearAdminSelection()">Close</button>
+              </div>
+              <h3>${escapeHtml(reporterName)}</h3>
+              <div class="admin-detail-meta">
+                <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>
+                <span class="badge blue">${escapeHtml(linkedBrokerLabel)}</span>
+              </div>
             </div>
-            <h3>${escapeHtml(entry.item.name || 'Anonymous')}</h3>
-            <div class="admin-detail-meta">
-              <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>
-              <span class="badge blue">${escapeHtml(entry.item.broker || 'No broker')}</span>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-actions">
+              <div class="admin-complaint-action-groups">
+                <div class="admin-complaint-action-group">
+                  <h4>Status</h4>
+                  <div class="admin-detail-toolbar admin-complaint-toolbar">
+                    <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'new')">New</button>
+                    <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'under-review')">Under Review</button>
+                    <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'resolved')">Resolve</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'rejected')">Reject</button>
+                  </div>
+                </div>
+                <div class="admin-complaint-action-group">
+                  <h4>Admin Actions</h4>
+                  <div class="admin-detail-toolbar admin-complaint-toolbar">
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${entry.index})">Block Broker</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${entry.index})">Delete Complaint</button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="admin-detail-toolbar">
-              <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'new')">New</button>
-              <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'under-review')">Under Review</button>
-              <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'resolved')">Resolve</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'rejected')">Reject</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${entry.index})">Block Broker</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${entry.index})">Delete Complaint</button>
+            <div class="admin-complaint-meta-grid">
+              <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+                <h4>Reporter</h4>
+                <div class="admin-detail-grid">
+                  <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(reporterName)}</strong></div>
+                  <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(reporterEmail)}</strong></div>
+                </div>
+              </div>
+              <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+                <h4>Broker</h4>
+                <div class="admin-detail-grid">
+                  <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(linkedBrokerLabel)}</strong></div>
+                  <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div class="admin-detail-section">
-            <h4>Reporter</h4>
-            <div class="admin-detail-grid">
-              <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(entry.item.reporterName || entry.item.name || 'Anonymous')}</strong></div>
-              <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(entry.item.reporterEmail || 'No reporter email')}</strong></div>
-              <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
-              <div class="admin-detail-cell"><small>Submitted</small><strong>${escapeHtml(formatAdminDateTime(entry.item.created_at))}</strong></div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Submitted</h4>
+              <div class="admin-detail-grid admin-complaint-single">
+                <div class="admin-detail-cell"><small>Submitted</small><strong>${escapeHtml(submittedAt)}</strong></div>
+              </div>
             </div>
-          </div>
-          <div class="admin-detail-section">
-            <h4>Complaint</h4>
-            <div class="admin-detail-note">${escapeHtml(entry.item.displayMessage || entry.item.message || 'No complaint message provided.')}</div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Complaint</h4>
+              <div class="admin-detail-note admin-complaint-note">${escapeHtml(complaintText)}</div>
+            </div>
           </div>
         `;
       }
