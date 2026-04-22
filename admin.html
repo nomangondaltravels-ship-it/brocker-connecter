@@ -2414,15 +2414,27 @@
       }
     }
 
+    function scrollAdminDetailTopIntoView(panel, fallbackTarget = null) {
+      const target = panel || fallbackTarget;
+      if (!target) return;
+      const topOffset = 92;
+      const absoluteTop = window.scrollY + target.getBoundingClientRect().top - topOffset;
+      window.scrollTo({
+        top: Math.max(0, absoluteTop),
+        behavior: 'smooth'
+      });
+    }
+
     function flushAdminDetailScroll() {
       const intent = adminUiState.pendingDetailScroll;
       if (!intent) return;
       adminUiState.pendingDetailScroll = null;
       requestAnimationFrame(() => {
         const grid = document.getElementById('adminMainGrid');
+        const panel = document.getElementById('adminDetailStack') || document.getElementById('adminDetailPanel');
         const row = intent.key ? document.querySelector(`[data-admin-row-key="${intent.key}"]`) : null;
         if (intent.mode === 'open') {
-          grid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          scrollAdminDetailTopIntoView(panel, grid);
           return;
         }
         if (intent.mode === 'restore' && row) {

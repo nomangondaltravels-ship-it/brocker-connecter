@@ -2816,6 +2816,17 @@
       }
     }
 
+    function scrollConnectorPanelTopIntoView(panel, fallbackTarget = null) {
+      const target = panel || fallbackTarget;
+      if (!target) return;
+      const topOffset = 92;
+      const absoluteTop = window.scrollY + target.getBoundingClientRect().top - topOffset;
+      window.scrollTo({
+        top: Math.max(0, absoluteTop),
+        behavior: 'smooth'
+      });
+    }
+
     function flushPublicSplitScroll(sectionName) {
       const intent = state.pendingPublicSplitScroll;
       if (!intent || intent.sectionName !== sectionName) return;
@@ -2823,9 +2834,10 @@
       requestAnimationFrame(() => {
         const section = document.getElementById(`${sectionName}-section`);
         const shell = section?.querySelector('.connector-results-shell');
+        const detailPanel = shell?.querySelector('.connector-detail-panel');
         const row = intent.listingId ? section?.querySelector(`[data-listing-id="${intent.listingId}"]`) : null;
         if (intent.mode === 'open') {
-          (shell || section)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          scrollConnectorPanelTopIntoView(detailPanel, shell || section);
           return;
         }
         if (intent.mode === 'restore' && row) {

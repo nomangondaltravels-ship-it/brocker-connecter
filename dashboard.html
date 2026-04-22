@@ -10781,6 +10781,17 @@
       return records.some(item => String(item.id) === String(currentId)) ? currentId : null;
     }
 
+    function scrollPanelTopIntoView(panel, fallbackTarget = null) {
+      const target = panel || fallbackTarget;
+      if (!target) return;
+      const topOffset = 92;
+      const absoluteTop = window.scrollY + target.getBoundingClientRect().top - topOffset;
+      window.scrollTo({
+        top: Math.max(0, absoluteTop),
+        behavior: 'smooth'
+      });
+    }
+
     function queueWorkspaceSplitScroll(sectionName, mode, rowId) {
       state.pendingSplitScroll = {
         sectionName,
@@ -10801,9 +10812,10 @@
         const listTargetId = sectionName === 'leads' ? 'leadsList' : sectionName === 'properties' ? 'propertiesList' : 'distressList';
         const target = document.getElementById(listTargetId);
         const shell = target?.querySelector('.workspace-split');
+        const detailPanel = shell?.querySelector('.workspace-detail-card');
         const row = intent.rowId ? target?.querySelector(`[data-workspace-row-id="${intent.rowId}"]`) : null;
         if (intent.mode === 'open') {
-          (shell || section || target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          scrollPanelTopIntoView(detailPanel, shell || section || target);
           return;
         }
         if (intent.mode === 'restore' && row) {
