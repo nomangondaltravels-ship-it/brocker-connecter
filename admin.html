@@ -1223,6 +1223,29 @@
       background: #f8fafc;
     }
 
+    .admin-complaint-modal {
+      display: grid;
+      gap: 0;
+    }
+
+    .admin-complaint-modal-top {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: grid;
+      gap: 18px;
+      padding: 20px 20px 16px;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .admin-complaint-modal-body {
+      display: grid;
+      gap: 18px;
+      padding: 18px 20px 20px;
+    }
+
     body.admin-modal-open {
       overflow: hidden;
     }
@@ -1252,6 +1275,12 @@
       background: #ffffff;
       box-shadow: 0 28px 70px rgba(15, 23, 42, 0.24);
       padding: 20px;
+    }
+
+    .admin-modal-dialog--review {
+      width: min(920px, calc(100vw - 32px));
+      padding: 0;
+      overflow: auto;
     }
 
     .admin-note-list {
@@ -1330,6 +1359,12 @@
 
       .admin-complaint-meta-grid {
         grid-template-columns: 1fr;
+      }
+
+      .admin-complaint-modal-top,
+      .admin-complaint-modal-body {
+        padding-left: 16px;
+        padding-right: 16px;
       }
 
       .admin-search-wrap {
@@ -1529,6 +1564,11 @@
       <div id="brokerAccountModalContent"></div>
     </div>
   </div>
+  <div class="admin-modal-backdrop hidden" id="complaintReviewModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="complaintReviewModalTitle">
+    <div class="admin-modal-dialog admin-modal-dialog--review" id="complaintReviewModalDialog">
+      <div id="complaintReviewModalContent"></div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -1713,6 +1753,7 @@
 
     function showLogin() {
       renderBrokerAccountModal(null);
+      renderComplaintReviewModal(null);
       document.getElementById('loginView').style.display = 'block';
       document.getElementById('dashboardView').classList.remove('active');
       document.getElementById('logoutBtn').style.display = 'none';
@@ -2568,6 +2609,9 @@
         const panel = document.getElementById('adminDetailStack') || document.getElementById('adminDetailPanel');
         const row = intent.key ? document.querySelector(`[data-admin-row-key="${intent.key}"]`) : null;
         if (intent.mode === 'open') {
+          if (intent.type === 'broker' || intent.type === 'complaint') {
+            return;
+          }
           scrollAdminDetailTopIntoView(panel, grid);
           return;
         }
@@ -2584,6 +2628,14 @@
       adminUiState.selectedType = 'broker';
       adminUiState.selectedKey = '';
       renderAdminWorkspace();
+    }
+
+    function syncAdminModalBodyLock() {
+      const brokerBackdrop = document.getElementById('brokerAccountModalBackdrop');
+      const complaintBackdrop = document.getElementById('complaintReviewModalBackdrop');
+      const hasVisibleModal = (brokerBackdrop && !brokerBackdrop.classList.contains('hidden'))
+        || (complaintBackdrop && !complaintBackdrop.classList.contains('hidden'));
+      document.body.classList.toggle('admin-modal-open', Boolean(hasVisibleModal));
     }
 
     function renderBrokerDetailMarkup(account, closeHandler = 'clearAdminSelection()') {
@@ -2635,18 +2687,123 @@
       if (!backdrop || !content) return;
       if (!account) {
         backdrop.classList.add('hidden');
-        document.body.classList.remove('admin-modal-open');
         content.innerHTML = '';
+        syncAdminModalBodyLock();
         return;
       }
       content.innerHTML = renderBrokerDetailMarkup(account, 'clearAdminSelection()');
       backdrop.classList.remove('hidden');
-      document.body.classList.add('admin-modal-open');
+      syncAdminModalBodyLock();
     }
 
     function initBrokerAccountModal() {
       const backdrop = document.getElementById('brokerAccountModalBackdrop');
       const dialog = document.getElementById('brokerAccountModalDialog');
+      if (!backdrop || !dialog || backdrop.dataset.ready === 'true') return;
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) clearAdminSelection();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !backdrop.classList.contains('hidden')) {
+          clearAdminSelection();
+        }
+      });
+      backdrop.dataset.ready = 'true';
+    }
+
+    function renderComplaintDetailMarkup(entry, closeHandler = 'clearAdminSelection()') {
+      const statusMeta = getComplaintStatusMeta(entry.item.normalizedStatus);
+      const linkedBrokerId = findBrokerIdByComplaint(entry.item);
+      const reporterName = entry.item.reporterName || entry.item.name || 'Anonymous';
+      const reporterEmail = entry.item.reporterEmail || 'No reporter email';
+      const linkedBrokerLabel = entry.item.broker || 'No broker';
+      const submittedAt = formatAdminDateTime(entry.item.created_at);
+      const complaintText = entry.item.displayMessage || entry.item.message || 'No complaint message provided.';
+      return `
+        <div class="admin-complaint-modal">
+          <div class="admin-complaint-modal-top">
+            <div class="admin-detail-header admin-complaint-header">
+              <div class="admin-detail-head-row">
+                <div class="admin-detail-copy">Complaint Review</div>
+                <button class="btn btn-secondary tiny-btn" type="button" onclick="${closeHandler}">Close</button>
+              </div>
+              <h3 id="complaintReviewModalTitle">${escapeHtml(reporterName)}</h3>
+              <div class="admin-detail-meta">
+                <span class="badge ${statusMeta.tone}">${statusMeta.label}</span>
+                <span class="badge blue">${escapeHtml(linkedBrokerLabel)}</span>
+              </div>
+            </div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-actions">
+              <div class="admin-complaint-action-groups">
+                <div class="admin-complaint-action-group">
+                  <h4>Status</h4>
+                  <div class="admin-detail-toolbar admin-complaint-toolbar">
+                    <button class="btn btn-warning tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'new')">New</button>
+                    <button class="btn btn-orange tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'under-review')">Under Review</button>
+                    <button class="btn btn-success tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'resolved')">Resolve</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="updateComplaintStatus(${entry.index}, 'rejected')">Reject</button>
+                  </div>
+                </div>
+                <div class="admin-complaint-action-group">
+                  <h4>Admin Actions</h4>
+                  <div class="admin-detail-toolbar admin-complaint-toolbar">
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="blockComplaintBroker(${entry.index})">Block Broker</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteComplaintAt(${entry.index})">Delete Complaint</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="admin-complaint-modal-body">
+            <div class="admin-complaint-meta-grid">
+              <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+                <h4>Reporter</h4>
+                <div class="admin-detail-grid">
+                  <div class="admin-detail-cell"><small>Name</small><strong>${escapeHtml(reporterName)}</strong></div>
+                  <div class="admin-detail-cell"><small>Email</small><strong>${escapeHtml(reporterEmail)}</strong></div>
+                </div>
+              </div>
+              <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+                <h4>Broker</h4>
+                <div class="admin-detail-grid">
+                  <div class="admin-detail-cell"><small>Broker</small><strong>${escapeHtml(linkedBrokerLabel)}</strong></div>
+                  <div class="admin-detail-cell"><small>Linked Broker</small><strong>${escapeHtml(linkedBrokerId || 'Broker not matched')}</strong></div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Submitted</h4>
+              <div class="admin-detail-grid admin-complaint-single">
+                <div class="admin-detail-cell"><small>Submitted</small><strong>${escapeHtml(submittedAt)}</strong></div>
+              </div>
+            </div>
+            <div class="admin-detail-section admin-complaint-section admin-complaint-card">
+              <h4>Complaint</h4>
+              <div class="admin-detail-note admin-complaint-note">${escapeHtml(complaintText)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderComplaintReviewModal(entry = null) {
+      const backdrop = document.getElementById('complaintReviewModalBackdrop');
+      const content = document.getElementById('complaintReviewModalContent');
+      if (!backdrop || !content) return;
+      if (!entry) {
+        backdrop.classList.add('hidden');
+        content.innerHTML = '';
+        syncAdminModalBodyLock();
+        return;
+      }
+      content.innerHTML = renderComplaintDetailMarkup(entry, 'clearAdminSelection()');
+      backdrop.classList.remove('hidden');
+      syncAdminModalBodyLock();
+    }
+
+    function initComplaintReviewModal() {
+      const backdrop = document.getElementById('complaintReviewModalBackdrop');
+      const dialog = document.getElementById('complaintReviewModalDialog');
       if (!backdrop || !dialog || backdrop.dataset.ready === 'true') return;
       backdrop.addEventListener('click', event => {
         if (event.target === backdrop) clearAdminSelection();
@@ -2681,7 +2838,7 @@
       ensureAdminSelection(collections);
       const grid = document.getElementById('adminMainGrid');
       const selected = getSelectedAdminItem(collections);
-      const inlineSelected = selected && selected.type !== 'broker' ? selected : null;
+      const inlineSelected = selected && selected.type !== 'broker' && selected.type !== 'complaint' ? selected : null;
       if (grid) {
         grid.classList.toggle('no-detail', !inlineSelected);
         grid.classList.toggle('has-detail', Boolean(inlineSelected));
@@ -2691,6 +2848,7 @@
       renderComplaints(collections.complaints);
       renderAdminDetailPanel(collections);
       renderBrokerAccountModal(selected && selected.type === 'broker' ? selected : null);
+      renderComplaintReviewModal(selected && selected.type === 'complaint' ? selected : null);
       flushAdminDetailScroll();
     }
 
@@ -2980,6 +3138,12 @@
         return;
       }
 
+      if (selected.type === 'complaint') {
+        target.className = 'admin-detail-empty';
+        target.innerHTML = 'Select a requirement or listing to review actions and full context here.';
+        return;
+      }
+
       if (selected.type === 'broker') {
         const account = selected;
         const approved = Boolean(account.approved);
@@ -3179,6 +3343,7 @@
     }
 
     initBrokerAccountModal();
+    initComplaintReviewModal();
     restoreAdminSession();
   </script>
 </body>
