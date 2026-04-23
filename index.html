@@ -577,6 +577,38 @@
       color: var(--gold-deep);
     }
 
+    .protected-broker-contact {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(212, 175, 55, 0.18);
+      background: rgba(15, 23, 42, 0.04);
+    }
+
+    .protected-broker-contact.is-compact {
+      width: 100%;
+      min-width: 220px;
+      padding: 12px;
+      gap: 8px;
+    }
+
+    .protected-broker-contact-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .protected-broker-contact-copy strong {
+      font-size: 0.98rem;
+      color: var(--text);
+    }
+
+    .protected-broker-contact-copy span,
+    .protected-broker-contact small {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
     .auth-inline-link {
       border: none;
       background: transparent;
@@ -2622,11 +2654,12 @@
   <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
   <script>
-    const state = {
-      authMode: 'signin',
-      authRequestId: 0,
-      sessionToken: localStorage.getItem('broker_session_token') || '',
-      brokerProfile: null,
+      const state = {
+        authMode: 'signin',
+        authRequestId: 0,
+        authIntent: null,
+        sessionToken: localStorage.getItem('broker_session_token') || '',
+        brokerProfile: null,
       approvedCompanies: [],
       approvedCompaniesLoaded: false,
       approvedCompaniesRequest: null,
@@ -2675,9 +2708,10 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
-    const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
-    const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
-    const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
+      const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
+      const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
+      const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
+      const BCP_AUTH_RETURN_KEY = 'bcp_auth_return_intent';
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
     const SUPPORT_SUBJECT_OPTIONS = ['General Help', 'Report Issue', 'Complaint', 'Account Problem'];
       const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
@@ -3068,6 +3102,101 @@
       state.sessionToken = authPayload.token;
       state.brokerProfile = authPayload.broker;
       return true;
+    }
+
+    function isMarketplaceBrokerAuthenticated() {
+      return Boolean(state.sessionToken && state.brokerProfile?.id);
+    }
+
+    function buildMarketplaceReturnUrl(sectionName = state.activeSection, listingId = '') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'public');
+      if (sectionName) {
+        url.searchParams.set('section', sectionName);
+      }
+      if (listingId) {
+        url.searchParams.set('listing', listingId);
+        url.searchParams.set('revealContact', '1');
+      } else {
+        url.searchParams.delete('listing');
+        url.searchParams.delete('revealContact');
+      }
+      return `${url.pathname}${url.search}${url.hash || ''}`;
+    }
+
+    function saveMarketplaceAuthIntent(intent = null) {
+      state.authIntent = intent ? { ...intent } : null;
+      try {
+        if (!intent) {
+          sessionStorage.removeItem(BCP_AUTH_RETURN_KEY);
+          return;
+        }
+        sessionStorage.setItem(BCP_AUTH_RETURN_KEY, JSON.stringify(state.authIntent));
+      } catch (error) {
+        console.error('Could not persist marketplace auth intent.', error);
+      }
+    }
+
+    function loadMarketplaceAuthIntent() {
+      if (state.authIntent) return state.authIntent;
+      try {
+        const raw = sessionStorage.getItem(BCP_AUTH_RETURN_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        state.authIntent = parsed;
+        return state.authIntent;
+      } catch (error) {
+        console.error('Could not read marketplace auth intent.', error);
+        return null;
+      }
+    }
+
+    function clearMarketplaceAuthIntent() {
+      state.authIntent = null;
+      try {
+        sessionStorage.removeItem(BCP_AUTH_RETURN_KEY);
+      } catch (error) {
+        console.error('Could not clear marketplace auth intent.', error);
+      }
+    }
+
+    function getActiveAuthIntent() {
+      return state.authIntent || loadMarketplaceAuthIntent();
+    }
+
+    function isContactRevealAuthIntent() {
+      return getActiveAuthIntent()?.type === 'contact-reveal';
+    }
+
+    function getMarketplaceContactRecordType(listing) {
+      if (listing?.sourceType === 'lead') return 'requirement';
+      if (listing?.isDistress) return 'distress';
+      return 'listing';
+    }
+
+    function findMarketplaceListing(sectionName, listingId) {
+      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : sectionName;
+      return (Array.isArray(state.listings) ? state.listings : []).find(item =>
+        String(item?.id || '') === String(listingId || '')
+        && (!normalizedSection || normalizedSection === 'all'
+          || (normalizedSection === 'requirements' && item?.sourceType === 'lead')
+          || (normalizedSection === 'marketplace' && item?.sourceType === 'property' && !item?.isDistress)
+          || (normalizedSection === 'distress-deals' && item?.sourceType === 'property' && item?.isDistress))
+      ) || null;
+    }
+
+    function openAuthRequiredModal(sectionName, listingId, listing = null, preferredMode = 'signin') {
+      const selectedListing = listing || findMarketplaceListing(sectionName, listingId);
+      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : sectionName;
+      saveMarketplaceAuthIntent({
+        type: 'contact-reveal',
+        sectionName: normalizedSection || state.activeSection || 'marketplace',
+        listingId: String(listingId || selectedListing?.id || '').trim(),
+        recordType: getMarketplaceContactRecordType(selectedListing),
+        returnTo: buildMarketplaceReturnUrl(normalizedSection || state.activeSection || 'marketplace', String(listingId || selectedListing?.id || '').trim())
+      });
+      openAuthModal(preferredMode);
     }
 
     function syncPublicComplaintBodyLock() {
@@ -3886,7 +4015,34 @@
       return payload;
     }
 
+    function canAccessBrokerContact(listing) {
+      return Boolean(isMarketplaceBrokerAuthenticated() && listing && !listing.contactLocked && normalizePhoneNumber(listing.brokerMobile));
+    }
+
+    function renderProtectedBrokerContact(listing, sectionName, options = {}) {
+      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : sectionName;
+      const unlockLabel = options.unlockLabel || 'Unlock Broker Details';
+      const compact = Boolean(options.compact);
+      if (canAccessBrokerContact(listing)) {
+        return options.unlockedHtml || '';
+      }
+      return `
+        <div class="protected-broker-contact${compact ? ' is-compact' : ''}">
+          <div class="protected-broker-contact-copy">
+            <strong>Broker Hidden</strong>
+            <span>Phone Hidden</span>
+          </div>
+          <button class="btn btn-primary btn-tiny" type="button" onclick="event.stopPropagation();openAuthRequiredModal('${normalizedSection}', '${listing?.id || ''}', null, 'signin')">${unlockLabel}</button>
+          <small>Sign in or register to view contact information</small>
+        </div>
+      `;
+    }
+
     function openConnectorWhatsappContact(listing, sectionName = 'connector') {
+      if (!canAccessBrokerContact(listing)) {
+        openAuthRequiredModal(sectionName, listing?.id, listing, 'signin');
+        return false;
+      }
       if (!listing?.brokerMobile) {
         setSystemBanner('WhatsApp number is not available for this broker.', 'error');
         return false;
@@ -3907,12 +4063,40 @@
     }
 
     function openConnectorWhatsappContactById(sectionName, listingId) {
-      const listing = state.listings.find(item => String(item.id) === String(listingId));
+      const listing = findMarketplaceListing(sectionName, listingId) || state.listings.find(item => String(item.id) === String(listingId));
       if (!listing) {
         setSystemBanner('Broker post could not be loaded for WhatsApp.', 'error');
         return false;
       }
       return openConnectorWhatsappContact(listing, sectionName);
+    }
+
+    function openProtectedCallPopoverById(button, sectionName, listingId) {
+      const listing = findMarketplaceListing(sectionName, listingId);
+      if (!listing) {
+        setSystemBanner('Broker contact could not be loaded.', 'error');
+        return false;
+      }
+      if (!canAccessBrokerContact(listing)) {
+        openAuthRequiredModal(sectionName, listingId, listing, 'signin');
+        return false;
+      }
+      showContactPopover(button, listing.brokerMobile);
+      return true;
+    }
+
+    function sendProtectedMatchInterest(sectionName, listingId) {
+      const listing = findMarketplaceListing(sectionName, listingId);
+      if (!listing) {
+        setSystemBanner('Broker post could not be loaded for matching.', 'error');
+        return false;
+      }
+      if (!canAccessBrokerContact(listing)) {
+        openAuthRequiredModal(sectionName, listingId, listing, 'signin');
+        return false;
+      }
+      sendMatchInterest(listing.brokerMobile, encodeURIComponent(prefilledMatchText(listing)));
+      return true;
     }
 
     function prefilledMatchText(listing) {
@@ -4122,6 +4306,11 @@
     }
 
     function revealPublicContact(sectionName, listingId) {
+      const listing = findMarketplaceListing(sectionName, listingId);
+      if (!canAccessBrokerContact(listing)) {
+        openAuthRequiredModal(sectionName, listingId, listing, 'signin');
+        return;
+      }
       state.revealedPublicContactKeys[sectionName] = `${sectionName}:${listingId}`;
       safeRenderPublicViews();
     }
@@ -4204,8 +4393,15 @@
 
     function renderListingCard(listing, sectionName) {
       const shareLink = buildListingLink(listing, sectionName);
+      const contactActions = canAccessBrokerContact(listing)
+        ? `
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="sendProtectedMatchInterest('${sectionName}', '${listing.id}')">I Have Match</button>
+              <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openProtectedCallPopoverById(this, '${sectionName}', '${listing.id}')">Call Broker</button>
+            `
+        : renderProtectedBrokerContact(listing, sectionName, { compact: true, unlockLabel: 'Unlock Broker Details' });
       return `
-        <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
+          <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
               <h3>${listing.purpose} · ${listing.category}</h3>
@@ -4221,22 +4417,27 @@
             <div class="detail-cell"><small>Category</small><strong>${listing.category || '--'}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
+            </div>
+            <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
+            <div class="actions" style="margin-top:12px;">
+              ${contactActions}
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
+            </div>
           </div>
-          <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
-          <div class="actions" style="margin-top:12px;">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">I Have Match</button>
-            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="showContactPopover(this, '${listing.brokerMobile}')">Call Broker</button>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
-          </div>
-        </div>
-      `;
-    }
+        `;
+      }
 
     function renderPublicCard(listing, sectionName) {
       const shareLink = buildListingLink(listing, sectionName);
+      const contactActions = canAccessBrokerContact(listing)
+        ? `
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="sendProtectedMatchInterest('${sectionName}', '${listing.id}')">I Have Match</button>
+              <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="openProtectedCallPopoverById(this, '${sectionName}', '${listing.id}')">Call Broker</button>
+            `
+        : renderProtectedBrokerContact(listing, sectionName, { compact: true, unlockLabel: 'Unlock Broker Details' });
       return `
-        <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
+          <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
               <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${listing.category}</h3>
@@ -4252,16 +4453,14 @@
             <div class="detail-cell"><small>Category</small><strong>${listing.category || '--'}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
+            </div>
+            <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
+            <div class="actions" style="margin-top:12px;">
+              ${contactActions}
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
+            </div>
           </div>
-          <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
-          <div class="actions" style="margin-top:12px;">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">I Have Match</button>
-            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="showContactPopover(this, '${listing.brokerMobile}')">Call Broker</button>
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
-          </div>
-        </div>
-      `;
+        `;
     }
 
     function renderSectionGrid(targetId, sectionName, items) {
@@ -4460,34 +4659,45 @@
         targetId: listing.sourceId || listing.id,
         selfDisabledText: 'You cannot report your own shared record.'
       });
-      return `
-        <div class="connector-action-bar">
-          ${renderConnectorActionButton({
-            label: 'WhatsApp',
-            icon: 'whatsapp',
-            tone: 'primary',
-            onclick: `openConnectorWhatsappContactById('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`,
-            disabled: !listing.brokerMobile
-          })}
-          ${renderConnectorActionButton({
-            label: 'Call',
+      const sectionName = listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace';
+      const protectedActions = canAccessBrokerContact(listing)
+        ? `
+            ${renderConnectorActionButton({
+              label: 'WhatsApp',
+              icon: 'whatsapp',
+              tone: 'primary',
+              onclick: `openConnectorWhatsappContactById('${sectionName}', '${listing.id}')`,
+              disabled: !listing.brokerMobile
+            })}
+            ${renderConnectorActionButton({
+              label: 'Call',
+              icon: 'call',
+              tone: 'secondary',
+              onclick: `openProtectedCallPopoverById(this, '${sectionName}', '${listing.id}')`,
+              disabled: !listing.brokerMobile
+            })}
+            ${renderConnectorActionButton({
+              label: 'I Have Match',
+              icon: 'match',
+              tone: 'secondary',
+              onclick: `sendProtectedMatchInterest('${sectionName}', '${listing.id}')`,
+              disabled: !listing.brokerMobile
+            })}
+          `
+        : renderConnectorActionButton({
+            label: 'Unlock Broker Details',
             icon: 'call',
-            tone: 'secondary',
-            onclick: `showContactPopover(this, '${listing.brokerMobile}')`,
-            disabled: !listing.brokerMobile
-          })}
-          ${renderConnectorActionButton({
-            label: 'I Have Match',
-            icon: 'match',
-            tone: 'secondary',
-            onclick: `sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')`,
-            disabled: !listing.brokerMobile
-          })}
-          ${renderConnectorActionButton({
-            label: 'Share',
-            icon: 'share',
-            tone: 'ghost',
-            onclick: `showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')`
+            tone: 'primary',
+            onclick: `openAuthRequiredModal('${sectionName}', '${listing.id}', null, 'signin')`
+          });
+      return `
+          <div class="connector-action-bar">
+            ${protectedActions}
+            ${renderConnectorActionButton({
+              label: 'Share',
+              icon: 'share',
+              tone: 'ghost',
+              onclick: `showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')`
           })}
           ${listing.brokerEmail ? renderConnectorActionButton({
             label: 'Email',
@@ -4577,15 +4787,15 @@
       const detailTitle = selected.sourceType === 'lead'
         ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${selected.propertyType || selected.category || 'Requirement'}`
         : `${String(selected.purpose || '--').toUpperCase()} - ${selected.propertyType || selected.category || 'Listing'}`;
-      const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
-        .filter(Boolean)
-        .join(' - ');
-      const phoneAvailable = String(selected.brokerMobile || '').trim();
-      const contactRevealControl = phoneAvailable
-        ? isPublicContactRevealed(sectionName, selected)
-          ? `<span class="contact-reveal-value">${escapeHtml(formatPhoneDisplay(selected.brokerMobile))}</span>`
-          : `<button class="contact-reveal-trigger" type="button" onclick="event.stopPropagation();revealPublicContact('${sectionName}', '${selected.id}')">${getConnectorActionIcon('call')}<span>Show number</span></button>`
-        : '<span class="contact-reveal-value">Not shared</span>';
+        const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
+          .filter(Boolean)
+          .join(' - ');
+        const phoneAvailable = canAccessBrokerContact(selected);
+        const contactRevealControl = phoneAvailable
+          ? isPublicContactRevealed(sectionName, selected)
+            ? `<span class="contact-reveal-value">${escapeHtml(formatPhoneDisplay(selected.brokerMobile))}</span>`
+            : `<button class="contact-reveal-trigger" type="button" onclick="event.stopPropagation();revealPublicContact('${sectionName}', '${selected.id}')">${getConnectorActionIcon('call')}<span>Show number</span></button>`
+          : renderProtectedBrokerContact(selected, sectionName, { compact: true, unlockLabel: 'Unlock Broker Details' });
       target.innerHTML = `
         <div class="connector-detail-header">
           <div class="connector-detail-head-row">
@@ -4621,13 +4831,13 @@
           <h4>Safe Shared Details</h4>
           <div class="connector-detail-note">${escapeHtml(selected.publicNotes || 'No extra public note was shared for this record.')}</div>
         </div>
-        <div class="connector-detail-section">
-          <h4>Broker Contact</h4>
-          ${renderBcpBrokerIdentity(selected)}
-          <div class="connector-detail-grid">
-            <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
-          </div>
-          <div class="connector-detail-toolbar">
+          <div class="connector-detail-section">
+            <h4>Broker Contact</h4>
+            ${renderBcpBrokerIdentity(selected)}
+            <div class="connector-detail-grid">
+              <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
+            </div>
+            <div class="connector-detail-toolbar">
             ${renderConnectorReportButton({
               label: 'Report Broker',
               onClick: `openBrokerComplaint('${sectionName}', '${selected.id}')`,
@@ -4884,7 +5094,13 @@
     }
 
     async function loadPublicListings() {
-      const response = await fetch('/api/public-marketplace');
+      const response = await fetch('/api/public-marketplace', {
+        headers: state.sessionToken
+          ? {
+              Authorization: `Bearer ${state.sessionToken}`
+            }
+          : {}
+      });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(result?.message || 'Broker Connector Page could not load.');
@@ -4998,8 +5214,11 @@
     Object.assign(window, {
       openRecordComplaint,
       openBrokerComplaint,
+      openAuthRequiredModal,
       openConnectorWhatsappContactById,
       openConnectorWhatsappContact,
+      openProtectedCallPopoverById,
+      sendProtectedMatchInterest,
       showContactPopover,
       copyContactNumber,
       closeAllPopovers
@@ -5027,19 +5246,25 @@
     }
 
     function setAuthMode(mode) {
+      const authIntent = getActiveAuthIntent();
+      const contactRevealIntent = authIntent?.type === 'contact-reveal';
       state.authMode = mode;
       document.getElementById('tabSignin').classList.toggle('active', mode === 'signin');
       document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
-      document.getElementById('authTitle').textContent = mode === 'register'
-        ? 'Register Broker Account'
-        : mode === 'forgot'
-          ? 'Forgot Password'
-          : 'Sign In Broker Account';
-      document.getElementById('authCopy').textContent = mode === 'register'
-        ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
-        : mode === 'forgot'
-          ? 'Enter your email address and we will send you a secure password reset link.'
-          : 'Sign in with your email address and password to open your separate private dashboard.';
+      document.getElementById('authTitle').textContent = contactRevealIntent
+        ? 'Sign in to your account to reveal broker number'
+        : mode === 'register'
+          ? 'Register Broker Account'
+          : mode === 'forgot'
+            ? 'Forgot Password'
+            : 'Sign In Broker Account';
+      document.getElementById('authCopy').textContent = contactRevealIntent
+        ? 'Create an account to unlock broker contact details.'
+        : mode === 'register'
+          ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
+          : mode === 'forgot'
+            ? 'Enter your email address and we will send you a secure password reset link.'
+            : 'Sign in with your email address and password to open your separate private dashboard.';
       document.getElementById('authSubmitBtn').textContent = mode === 'register'
         ? 'Register and Continue'
         : mode === 'forgot'
@@ -5154,6 +5379,57 @@
       document.getElementById('authModal').classList.remove('active');
       closeAuthCompanyMenu();
       setAuthStatus('');
+      clearMarketplaceAuthIntent();
+    }
+
+    async function completeMarketplaceContactRevealAuth() {
+      const intent = getActiveAuthIntent();
+      if (!intent || intent.type !== 'contact-reveal') return false;
+
+      state.forcePublicView = true;
+      const returnUrl = normalizeText(intent.returnTo) || buildMarketplaceReturnUrl(intent.sectionName, intent.listingId);
+      if (returnUrl) {
+        const nextUrl = new URL(returnUrl, window.location.href);
+        window.history.replaceState({}, document.title, nextUrl.toString());
+      }
+
+      closeAuthModal();
+      try {
+        await loadPublicListings();
+      } catch (error) {
+        console.error('Could not reload Broker Connector Page after auth.', error);
+      }
+
+      if (intent.sectionName) {
+        openSection(intent.sectionName);
+      }
+      if (intent.listingId && intent.sectionName) {
+        state.selectedPublicListingKeys[intent.sectionName] = `${intent.sectionName}:${intent.listingId}`;
+        state.revealedPublicContactKeys[intent.sectionName] = `${intent.sectionName}:${intent.listingId}`;
+      }
+      safeRenderPublicViews();
+      clearMarketplaceAuthIntent();
+      setSystemBanner('Broker contact details unlocked.', 'success');
+      return true;
+    }
+
+    function restoreMarketplaceContactRevealIfNeeded() {
+      if (!isMarketplaceBrokerAuthenticated()) return false;
+      const intent = getActiveAuthIntent();
+      const params = new URLSearchParams(window.location.search);
+      const revealRequested = params.get('revealContact') === '1';
+      const sectionName = normalizeText(intent?.sectionName || params.get('section') || state.activeSection || 'marketplace');
+      const listingId = normalizeText(intent?.listingId || params.get('listing'));
+      if (!revealRequested && !intent?.listingId) return false;
+      if (!sectionName || !listingId) return false;
+      const listing = findMarketplaceListing(sectionName, listingId);
+      if (!canAccessBrokerContact(listing)) return false;
+      state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
+      state.revealedPublicContactKeys[sectionName] = `${sectionName}:${listingId}`;
+      openSection(sectionName);
+      safeRenderPublicViews();
+      clearMarketplaceAuthIntent();
+      return true;
     }
 
     async function verifyBrokerSession() {
@@ -5350,6 +5626,9 @@
           console.warn('Broker auth returned invalid payload.', result);
           throw new Error('Login failed, please try again.');
         }
+        if (await completeMarketplaceContactRevealAuth()) {
+          return;
+        }
         window.location.href = 'dashboard.html';
       } catch (error) {
         if (state.authRequestId === requestId) {
@@ -5434,6 +5713,8 @@
           console.error('BCP fallback filters could not render.', filterError);
         }
         renderPublicViewsFallback();
+      } else {
+        restoreMarketplaceContactRevealIfNeeded();
       }
     })();
   </script>

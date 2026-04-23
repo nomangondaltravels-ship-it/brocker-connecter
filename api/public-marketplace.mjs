@@ -1,13 +1,16 @@
 import {
   buildPostgrestInFilter,
   formatSizeLabel,
+  getBearerToken,
   getSupabaseConfig,
   json,
   normalizeText,
   parseLeadMeta,
   parsePropertyMeta,
+  requiredEnv,
   sanitizePublicListing,
-  supabaseSelect
+  supabaseSelect,
+  verifyToken
 } from '../server/_broker-platform.mjs';
 
 function applySectionFilter(rows, section) {
@@ -182,6 +185,22 @@ export async function GET(request) {
       return json({ message: 'Missing required environment variables for Broker Connector Page.' }, 500);
     }
 
+    let exposeBrokerContact = false;
+    const brokerSecret = requiredEnv('BROKER_SESSION_SECRET');
+    const sessionToken = getBearerToken(request);
+    const session = verifyToken(sessionToken, brokerSecret);
+    if (session?.brokerUuid) {
+      const brokers = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'brokers',
+        select: 'id,is_blocked',
+        filters: { id: session.brokerUuid }
+      }).catch(() => []);
+      const broker = Array.isArray(brokers) ? brokers[0] : null;
+      exposeBrokerContact = Boolean(broker?.id && !broker?.is_blocked);
+    }
+
     const section = new URL(request.url).searchParams.get('section') || 'all';
     const rows = await supabaseSelect({
       supabaseUrl,
@@ -218,9 +237,9 @@ export async function GET(request) {
     });
 
     const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows });
-    const filtered = applySectionFilter(validRows, section).map(sanitizePublicListing);
+    const filtered = applySectionFilter(validRows, section).map(row => sanitizePublicListing(row, { exposeBrokerContact }));
     return json(
-      { listings: filtered },
+      { listings: filtered, authenticated: exposeBrokerContact },
       200,
       { 'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120' }
     );

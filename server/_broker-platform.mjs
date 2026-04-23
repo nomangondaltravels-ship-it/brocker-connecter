@@ -1376,19 +1376,21 @@ export function sanitizeAiMatch(row) {
   };
 }
 
-export function sanitizePublicListing(row) {
+export function sanitizePublicListing(row, options = {}) {
   if (!row) return null;
+  const exposeBrokerContact = Boolean(options?.exposeBrokerContact);
   const isLead = row.source_type === 'lead';
   const propertyType = normalizePropertyTypeValue(row.property_type || row.category);
   const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
-    brokerUuid: normalizeText(row.broker_uuid),
-    brokerIdNumber: normalizeText(row.broker_id_number),
-    brokerName: row.broker_display_name,
-    brokerMobile: row.broker_mobile,
-    brokerLastActivity: normalizeText(row.broker_last_activity),
-    brokerAvatarUrl: normalizeText(row.broker_avatar_url || row.broker_avatar_data_url || row.broker_profile_image_url),
+    brokerUuid: exposeBrokerContact ? normalizeText(row.broker_uuid) : '',
+    brokerIdNumber: exposeBrokerContact ? normalizeText(row.broker_id_number) : '',
+    brokerName: exposeBrokerContact ? normalizeText(row.broker_display_name) : 'Broker Hidden',
+    brokerMobile: exposeBrokerContact ? normalizeText(row.broker_mobile) : '',
+    brokerLastActivity: exposeBrokerContact ? normalizeText(row.broker_last_activity) : '',
+    brokerAvatarUrl: exposeBrokerContact ? normalizeText(row.broker_avatar_url || row.broker_avatar_data_url || row.broker_profile_image_url) : '',
+    contactLocked: !exposeBrokerContact,
     sourceType: row.source_type,
     sourceId: row.source_id,
     listingKind: row.listing_kind,
