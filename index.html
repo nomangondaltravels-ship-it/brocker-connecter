@@ -2680,11 +2680,53 @@
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
     const SUPPORT_SUBJECT_OPTIONS = ['General Help', 'Report Issue', 'Complaint', 'Account Problem'];
-    const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
-    const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
-      version: 'default',
-      acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.'
-    };
+      const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+      const APPROVED_COMPANY_FALLBACKS = [
+        'Xsite Real Estate',
+        'Emaar Properties',
+        'DAMAC Properties',
+        'Nakheel',
+        'Sobha Realty',
+        'Azizi Developments',
+        'Binghatti Developers',
+        'Ellington Properties',
+        'Danube Properties',
+        'MAG Property Development',
+        'Deyaar',
+        'Meraas',
+        'Dubai Properties',
+        'Tiger Group',
+        'Select Group',
+        'Omniyat',
+        'Imtiaz Developments',
+        'Reportage Properties',
+        'Samana Developers',
+        'Nshama',
+        'Arada',
+        'Union Properties',
+        'Wasl Properties',
+        'Al Habtoor Group',
+        'Allsopp & Allsopp',
+        'Betterhomes',
+        'Driven Properties',
+        'fam Properties',
+        'haus & haus',
+        'Metropolitan Premium Properties',
+        'AX Capital',
+        'LuxuryProperty.com',
+        'Espace Real Estate',
+        'D&B Properties',
+        'White & Co Real Estate',
+        'Coldwell Banker UAE',
+        'Engel & Volkers Dubai',
+        'Provident Estate',
+        'Seven Century Real Estate',
+        'Key One Realty'
+      ];
+      const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
+        version: 'default',
+        acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.'
+      };
     const authSupabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
     const authSupabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
 
@@ -3499,14 +3541,22 @@
       return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
     }
 
-    function getApprovedCompanySuggestions(query = '') {
-      const normalizedQuery = normalizeCompanyName(query);
-      const companies = Array.isArray(state.approvedCompanies) ? state.approvedCompanies : [];
-      if (!normalizedQuery) return companies.slice(0, 8);
-      return companies
-        .filter(company => normalizeCompanyName(company?.name).includes(normalizedQuery))
-        .slice(0, 8);
-    }
+      function getApprovedCompanySuggestions(query = '') {
+        const normalizedQuery = normalizeCompanyName(query);
+        const companies = Array.isArray(state.approvedCompanies) ? state.approvedCompanies : [];
+        if (!normalizedQuery) return companies.slice(0, 8);
+        return companies
+          .filter(company => normalizeCompanyName(company?.name).includes(normalizedQuery))
+          .slice(0, 8);
+      }
+
+      function getApprovedCompanyFallbackRows() {
+        return APPROVED_COMPANY_FALLBACKS.map((name, index) => ({
+          id: `fallback-company-${index + 1}`,
+          name,
+          status: 'approved'
+        }));
+      }
 
     function closeAuthCompanyMenu() {
       state.authCompanyMenuOpen = false;
@@ -3537,35 +3587,43 @@
       closeAuthCompanyMenu();
     }
 
-    async function loadApprovedCompanySuggestions() {
-      if (state.approvedCompaniesLoaded) {
-        return state.approvedCompanies;
-      }
-      if (state.approvedCompaniesRequest) {
-        return state.approvedCompaniesRequest;
-      }
-      state.approvedCompaniesRequest = (async () => {
-        try {
-          const response = await fetch('/api/companies');
-          const result = await response.json().catch(() => ({}));
-          if (!response.ok) {
-            throw new Error(result?.message || 'Company suggestions could not load.');
-          }
+      async function loadApprovedCompanySuggestions() {
+        if (state.approvedCompaniesLoaded) {
+          return state.approvedCompanies;
+        }
+        if (state.approvedCompaniesRequest) {
+          return state.approvedCompaniesRequest;
+        }
+        state.approvedCompaniesRequest = (async () => {
+          const controller = typeof AbortController === 'function' ? new AbortController() : null;
+          const timeoutId = controller ? window.setTimeout(() => controller.abort(), 4000) : null;
+          try {
+            const response = await fetch('/api/companies', {
+              signal: controller?.signal
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(result?.message || 'Company suggestions could not load.');
+            }
             state.approvedCompanies = Array.isArray(result?.companies)
               ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
               : [];
+            if (!state.approvedCompanies.length) {
+              state.approvedCompanies = getApprovedCompanyFallbackRows();
+            }
             state.approvedCompaniesLoaded = true;
             renderAuthCompanySuggestions();
           } catch (error) {
-            state.approvedCompanies = [];
-            state.approvedCompaniesLoaded = false;
+            state.approvedCompanies = getApprovedCompanyFallbackRows();
+            state.approvedCompaniesLoaded = true;
             renderAuthCompanySuggestions();
           } finally {
+            if (timeoutId) window.clearTimeout(timeoutId);
             state.approvedCompaniesRequest = null;
           }
           return state.approvedCompanies;
         })();
-      return state.approvedCompaniesRequest;
+        return state.approvedCompaniesRequest;
     }
 
     function ensureApprovedCompanySuggestionsLoaded() {

@@ -16,6 +16,20 @@ import {
   parseCompanyRow
 } from '../server/_real_estate_companies.mjs';
 
+async function withTimeout(task, timeoutMs, fallbackValue) {
+  let timer = null;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(task),
+      new Promise(resolve => {
+        timer = setTimeout(() => resolve(fallbackValue), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 function verifyAdminToken(token, secret) {
   return verifyToken(token, secret);
 }
@@ -215,7 +229,11 @@ export default async function handler(request) {
 
       const context = await getDbContext().catch(() => null);
       const companies = context
-        ? await listApprovedCompanies(context).catch(() => getCuratedApprovedCompanyRows())
+        ? await withTimeout(
+            () => listApprovedCompanies(context).catch(() => getCuratedApprovedCompanyRows()),
+            2500,
+            getCuratedApprovedCompanyRows()
+          )
         : getCuratedApprovedCompanyRows();
       return json(
         { companies },
