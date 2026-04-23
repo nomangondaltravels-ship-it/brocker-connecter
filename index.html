@@ -2628,6 +2628,8 @@
       sessionToken: localStorage.getItem('broker_session_token') || '',
       brokerProfile: null,
       approvedCompanies: [],
+      approvedCompaniesLoaded: false,
+      approvedCompaniesRequest: null,
       authCompanyQuery: '',
       authCompanyMenuOpen: false,
       authCompanyActiveIndex: -1,
@@ -3191,7 +3193,7 @@
       state.supportModalSubmitting = true;
       renderSupportModal();
       try {
-        const response = await fetch('/api/broker-support', {
+        const response = await fetch('/api/support', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -3536,18 +3538,36 @@
     }
 
     async function loadApprovedCompanySuggestions() {
-      try {
-        const response = await fetch('/api/company-suggestions');
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(result?.message || 'Company suggestions could not load.');
-        }
-        state.approvedCompanies = Array.isArray(result?.companies)
-          ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
-          : [];
-      } catch (error) {
-        state.approvedCompanies = [];
+      if (state.approvedCompaniesLoaded) {
+        return state.approvedCompanies;
       }
+      if (state.approvedCompaniesRequest) {
+        return state.approvedCompaniesRequest;
+      }
+      state.approvedCompaniesRequest = (async () => {
+        try {
+          const response = await fetch('/api/companies');
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(result?.message || 'Company suggestions could not load.');
+          }
+          state.approvedCompanies = Array.isArray(result?.companies)
+            ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
+            : [];
+          state.approvedCompaniesLoaded = true;
+        } catch (error) {
+          state.approvedCompanies = [];
+          state.approvedCompaniesLoaded = false;
+        } finally {
+          state.approvedCompaniesRequest = null;
+        }
+        return state.approvedCompanies;
+      })();
+      return state.approvedCompaniesRequest;
+    }
+
+    function ensureApprovedCompanySuggestionsLoaded() {
+      return loadApprovedCompanySuggestions();
     }
 
     function initAuthCompanyAutocomplete() {
@@ -3857,19 +3877,47 @@
       ].join(' ').toLowerCase();
     }
 
-    function populateConnectorFilterOptions() {
-      const configs = [
+    function getConnectorFilterSelectConfigs() {
+      return [
         { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
         { id: 'connectorTypeFilter', field: 'propertyType', defaultLabel: 'All Types' },
         { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' },
         { id: 'connectorStatusFilter', field: 'status', defaultLabel: 'All Statuses' }
       ];
+    }
 
-      configs.forEach(config => {
+    function getFallbackConnectorFieldValue(field, listing) {
+      if (field === 'purpose') return String(listing?.purpose || '').trim().toLowerCase();
+      if (field === 'propertyType') return String(listing?.propertyType || listing?.category || '').trim();
+      if (field === 'location') return String(listing?.location || '').trim();
+      if (field === 'status') return String(listing?.status || '').trim().toLowerCase();
+      return String(listing?.[field] || '').trim();
+    }
+
+    function getFallbackConnectorFilterOptions(field) {
+      const values = dedupeConnectorValues(
+        state.listings
+          .map(listing => {
+            try {
+              return getConnectorCanonicalFieldValue(field, listing);
+            } catch (error) {
+              return getFallbackConnectorFieldValue(field, listing);
+            }
+          })
+          .filter(Boolean)
+      );
+      return values.map(value => ({
+        value,
+        label: String(value || '').trim()
+      }));
+    }
+
+    function populateConnectorFilterOptionsFallback() {
+      getConnectorFilterSelectConfigs().forEach(config => {
         const select = document.getElementById(config.id);
         if (!select) return;
         const currentValue = state.publicFilters[config.field] || 'all';
-        const options = getConnectorFilterOptions(config.field);
+        const options = getFallbackConnectorFilterOptions(config.field);
         select.innerHTML = [
           `<option value="all">${config.defaultLabel}</option>`,
           ...options.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
@@ -3877,6 +3925,26 @@
         select.value = options.some(option => option.value === currentValue) ? currentValue : 'all';
         state.publicFilters[config.field] = select.value;
       });
+    }
+
+    function populateConnectorFilterOptions() {
+      try {
+        getConnectorFilterSelectConfigs().forEach(config => {
+          const select = document.getElementById(config.id);
+          if (!select) return;
+          const currentValue = state.publicFilters[config.field] || 'all';
+          const options = getConnectorFilterOptions(config.field);
+          select.innerHTML = [
+            `<option value="all">${config.defaultLabel}</option>`,
+            ...options.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+          ].join('');
+          select.value = options.some(option => option.value === currentValue) ? currentValue : 'all';
+          state.publicFilters[config.field] = select.value;
+        });
+      } catch (error) {
+        console.error('BCP filter options fallback activated.', error);
+        populateConnectorFilterOptionsFallback();
+      }
     }
 
     function applyConnectorFilters() {
@@ -3887,7 +3955,7 @@
       state.pagination.requirements = 1;
       state.pagination.marketplace = 1;
       state.pagination['distress-deals'] = 1;
-      renderPublicViews();
+      safeRenderPublicViews();
     }
 
     function clearConnectorFilters() {
@@ -3904,7 +3972,7 @@
       state.pagination.requirements = 1;
       state.pagination.marketplace = 1;
       state.pagination['distress-deals'] = 1;
-      renderPublicViews();
+      safeRenderPublicViews();
     }
 
     function getPublicSelectionKey(sectionName, listing) {
@@ -3932,7 +4000,7 @@
       queuePublicSplitScroll(sectionName, 'open', listingId);
       state.selectedPublicListingKeys[sectionName] = `${sectionName}:${listingId}`;
       state.revealedPublicContactKeys[sectionName] = '';
-      renderPublicViews();
+      safeRenderPublicViews();
     }
 
     function queuePublicSplitScroll(sectionName, mode, listingId) {
@@ -3984,12 +4052,12 @@
       queuePublicSplitScroll(sectionName, 'restore', listingId);
       state.selectedPublicListingKeys[sectionName] = '';
       state.revealedPublicContactKeys[sectionName] = '';
-      renderPublicViews();
+      safeRenderPublicViews();
     }
 
     function revealPublicContact(sectionName, listingId) {
       state.revealedPublicContactKeys[sectionName] = `${sectionName}:${listingId}`;
-      renderPublicViews();
+      safeRenderPublicViews();
     }
 
     function getFilteredPublicListings() {
@@ -4045,7 +4113,7 @@
       state.pagination['distress-deals'] = 1;
       document.getElementById('publicSearchInput').value = state.publicSearchQuery;
       renderPublicSuggestions('');
-      renderPublicViews();
+      safeRenderPublicViews();
       if (state.publicSearchQuery) {
         setSystemBanner(`Showing results for "${state.publicSearchQuery}".`, 'success');
       } else {
@@ -4060,7 +4128,7 @@
       state.pagination['distress-deals'] = 1;
       document.getElementById('publicSearchInput').value = '';
       renderPublicSuggestions('');
-      renderPublicViews();
+      safeRenderPublicViews();
       setSystemBanner('');
     }
 
@@ -4418,7 +4486,7 @@
 
     function changePublicPage(sectionName, delta) {
       state.pagination[sectionName] = Math.max(1, Number(state.pagination?.[sectionName] || 1) + Number(delta || 0));
-      renderPublicViews();
+      safeRenderPublicViews();
       document.getElementById(`${sectionName}-section`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -4652,6 +4720,75 @@
       flushPublicSplitScroll(sectionName);
     }
 
+    function renderPublicFallbackCards(targetId, items) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      if (!Array.isArray(items) || !items.length) {
+        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
+        return;
+      }
+      target.innerHTML = items.map((listing, index) => `
+        <div class="listing-card" data-listing-id="${listing.id}">
+          <div class="listing-top">
+            <div class="listing-title">
+              <h3>${escapeHtml((listing.sourceType === 'lead' ? 'Requirement' : 'Listing'))} ${index + 1}</h3>
+              <div class="muted">${escapeHtml(String(listing.purpose || '').toUpperCase() || '--')} | ${escapeHtml(listing.propertyType || listing.category || '--')}</div>
+            </div>
+            <div class="badges">
+              <span class="badge ${listing.isDistress ? 'badge-hot' : badgeClass(listing)}">${escapeHtml(badgeText(listing))}</span>
+              ${listing.status ? `<span class="badge badge-gold">${escapeHtml(listing.status)}</span>` : ''}
+            </div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-cell">
+              <small>Location</small>
+              <strong>${escapeHtml(listing.location || '--')}</strong>
+            </div>
+            <div class="detail-cell">
+              <small>Building / Project</small>
+              <strong>${escapeHtml(listing.buildingLabel || '--')}</strong>
+            </div>
+            <div class="detail-cell">
+              <small>${listing.sourceType === 'lead' ? 'Budget' : 'Price'}</small>
+              <strong>${escapeHtml(listing.priceLabel || '--')}</strong>
+            </div>
+            <div class="detail-cell">
+              <small>${listing.sourceType === 'lead' ? 'Type' : 'Size'}</small>
+              <strong>${escapeHtml((listing.sourceType === 'lead' ? (listing.propertyType || listing.category) : (listing.sizeLabel || listing.propertyType || listing.category)) || '--')}</strong>
+            </div>
+          </div>
+          <div class="muted">${escapeHtml(listing.publicNotes || (listing.sourceType === 'lead' ? 'Shared broker requirement' : 'Shared broker connector listing'))}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderPublicViewsFallback(error = null) {
+      const filtered = getFilteredPublicListings();
+      const requirements = filtered.filter(item => item.sourceType === 'lead');
+      const marketplace = filtered.filter(item => item.sourceType === 'property');
+      const distress = marketplace.filter(item => item.isDistress);
+      updateStats();
+      renderPublicFallbackCards('requirementsGrid', requirements);
+      renderPublicFallbackCards('marketplaceGrid', marketplace);
+      renderPublicFallbackCards('distressDealsGrid', distress);
+      if (error) {
+        console.error('BCP primary renderer failed, fallback view used.', error);
+      }
+    }
+
+    function safeRenderPublicViews() {
+      try {
+        renderPublicViews();
+      } catch (error) {
+        try {
+          populateConnectorFilterOptionsFallback();
+        } catch (filterError) {
+          console.error('BCP fallback filters could not render during safe render.', filterError);
+        }
+        renderPublicViewsFallback(error);
+      }
+    }
+
     function updateStats() {
       const filtered = getFilteredPublicListings();
       const requirements = filtered.filter(item => item.sourceType === 'lead');
@@ -4687,9 +4824,30 @@
         throw new Error(result?.message || 'Broker Connector Page could not load.');
       }
       state.listings = Array.isArray(result.listings) ? result.listings : [];
-      populateConnectorFilterOptions();
-      renderPublicViews();
-      revealSharedListingFromUrl();
+      try {
+        populateConnectorFilterOptions();
+        renderPublicViews();
+        revealSharedListingFromUrl();
+      } catch (error) {
+        try {
+          populateConnectorFilterOptionsFallback();
+        } catch (filterError) {
+          console.error('BCP filter fallback failed.', filterError);
+        }
+        renderPublicViewsFallback(error);
+      }
+    }
+
+    async function runPublicInitStep(label, handler, { silent = true } = {}) {
+      try {
+        return await handler();
+      } catch (error) {
+        console.error(`BCP init step failed: ${label}`, error);
+        if (!silent) {
+          setSystemBanner(error?.message || `Could not complete ${label}.`, 'error');
+        }
+        return null;
+      }
     }
 
     function positionFloatingCard(button, card) {
@@ -4793,7 +4951,7 @@
       }
       if (normalizedSection) {
         state.selectedPublicListingKeys[normalizedSection] = `${normalizedSection}:${listingId}`;
-        renderPublicViews();
+        safeRenderPublicViews();
       }
       const target = document.querySelector(`[data-listing-id="${listingId}"]`);
       if (target) {
@@ -4839,6 +4997,9 @@
       state.authCompanyMenuOpen = false;
       state.authCompanyActiveIndex = -1;
       renderAuthCompanySuggestions();
+      if (mode === 'register') {
+        ensureApprovedCompanySuggestionsLoaded();
+      }
       state.authRequestId += 1;
       setAuthSubmitLoading(false, mode);
     }
@@ -4918,6 +5079,9 @@
     function openAuthModal(mode = 'signin') {
       setAuthMode(mode);
       document.getElementById('authModal').classList.add('active');
+      if (mode === 'register') {
+        ensureApprovedCompanySuggestionsLoaded();
+      }
     }
 
     function closeAuthModal() {
@@ -5170,29 +5334,40 @@
     });
 
     (async function init() {
-      try {
-        if (redirectIncomingAuthLink()) {
-          return;
-        }
-        const forcedRelogin = enforceBrokerSessionVersion();
-        initPublicComplaintModal();
-        initSupportModal();
-        initAuthCompanyAutocomplete();
-        handleAuthReturnMessage();
-        showForcedReloginNotice();
-        await loadApprovedCompanySuggestions();
-        const authenticated = await verifyBrokerSession();
-        const showDashboardButton = true;
-        document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
-        document.getElementById('signInBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
-        document.getElementById('registerBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
-        document.getElementById('registerCta').classList.toggle('hidden', authenticated || state.forcePublicView);
-        if (forcedRelogin && !authenticated && !state.forcePublicView) {
-          openAuthModal('signin');
-        }
+      if (redirectIncomingAuthLink()) {
+        return;
+      }
+
+      const forcedRelogin = enforceBrokerSessionVersion();
+      await runPublicInitStep('complaint modal', async () => initPublicComplaintModal());
+      await runPublicInitStep('support modal', async () => initSupportModal());
+      await runPublicInitStep('company autocomplete', async () => initAuthCompanyAutocomplete());
+      await runPublicInitStep('auth return message', async () => handleAuthReturnMessage());
+      await runPublicInitStep('forced re-login notice', async () => showForcedReloginNotice());
+
+      const authenticated = Boolean(await runPublicInitStep('broker session verification', async () => verifyBrokerSession()));
+      const showDashboardButton = true;
+      document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
+      document.getElementById('signInBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
+      document.getElementById('registerBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
+      document.getElementById('registerCta').classList.toggle('hidden', authenticated || state.forcePublicView);
+      if (forcedRelogin && !authenticated && !state.forcePublicView) {
+        openAuthModal('signin');
+      }
+
+      const listingsLoaded = await runPublicInitStep('Broker Connector Page records', async () => {
         await loadPublicListings();
-      } catch (error) {
-        setSystemBanner(error.message || 'Could not load Broker Connector Page.', 'error');
+        return true;
+      }, { silent: false });
+
+      if (!listingsLoaded) {
+        state.listings = Array.isArray(state.listings) ? state.listings : [];
+        try {
+          populateConnectorFilterOptionsFallback();
+        } catch (filterError) {
+          console.error('BCP fallback filters could not render.', filterError);
+        }
+        renderPublicViewsFallback();
       }
     })();
   </script>

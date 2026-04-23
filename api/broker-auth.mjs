@@ -24,13 +24,13 @@ import {
   supabaseSelect,
   verifyPassword,
   verifyToken
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 import {
   findApprovedCompanyName,
   getCuratedApprovedCompanyRows,
   normalizeCompanyName,
   parseCompanyRow
-} from './_real_estate_companies.mjs';
+} from '../server/_real_estate_companies.mjs';
 
 function sanitizeBroker(broker) {
   return {

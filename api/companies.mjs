@@ -7,24 +7,34 @@ import {
   supabasePatch,
   supabaseSelect,
   verifyToken
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 import {
   findApprovedCompanyName,
   getCuratedApprovedCompanyRows,
   mergeCompanyRows,
+  normalizeCompanyName,
   parseCompanyRow
-} from './_real_estate_companies.mjs';
+} from '../server/_real_estate_companies.mjs';
 
 function verifyAdminToken(token, secret) {
   return verifyToken(token, secret);
 }
 
-async function requireAdmin(request) {
+async function getDbContext() {
   const supabaseUrl = requiredEnv('SUPABASE_URL');
   const serviceRoleKey = requiredEnv('SUPABASE_SERVICE_ROLE_KEY');
-  const sessionSecret = requiredEnv('ADMIN_SESSION_SECRET');
+  if (!supabaseUrl || !serviceRoleKey) {
+    const error = new Error('Missing required environment variables for company suggestions.');
+    error.status = 500;
+    throw error;
+  }
+  return { supabaseUrl, serviceRoleKey };
+}
 
-  if (!supabaseUrl || !serviceRoleKey || !sessionSecret) {
+async function requireAdmin(request) {
+  const context = await getDbContext();
+  const sessionSecret = requiredEnv('ADMIN_SESSION_SECRET');
+  if (!sessionSecret) {
     const error = new Error('Missing required environment variables for company review.');
     error.status = 500;
     throw error;
@@ -39,8 +49,7 @@ async function requireAdmin(request) {
   }
 
   return {
-    supabaseUrl,
-    serviceRoleKey,
+    ...context,
     reviewerLabel: normalizeText(tokenPayload?.u) || 'admin'
   };
 }
@@ -51,6 +60,7 @@ async function listApprovedCompanies(context) {
     serviceRoleKey: context.serviceRoleKey,
     table: 'real_estate_companies',
     select: '*',
+    filters: { status: 'approved' },
     order: { column: 'name', ascending: true }
   }).catch(() => []);
 
@@ -70,6 +80,42 @@ async function listPendingCompanies(context) {
   }).catch(() => []);
 
   return (Array.isArray(rows) ? rows : []).map(parseCompanyRow);
+}
+
+async function createPendingCompany(context, body) {
+  const companyName = normalizeText(body?.name);
+  if (!companyName) {
+    return json({ message: 'Company name is required.' }, 400);
+  }
+
+  const approvedCompanies = await listApprovedCompanies(context);
+  if (findApprovedCompanyName(companyName, approvedCompanies)) {
+    return json({ message: 'Company is already approved.' });
+  }
+
+  const normalizedName = normalizeCompanyName(companyName);
+  const pendingCompanies = await listPendingCompanies(context);
+  const duplicatePending = pendingCompanies.some(item =>
+    normalizeCompanyName(item?.name) === normalizedName
+    && String(item?.status || 'pending').toLowerCase() === 'pending'
+  );
+
+  if (!duplicatePending) {
+    await supabaseInsert({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'pending_real_estate_companies',
+      payload: {
+        name: companyName,
+        submitted_by_user_id: normalizeText(body?.submittedByUserId) || null,
+        source: normalizeText(body?.source) || 'registration_form',
+        status: 'pending',
+        created_at: new Date().toISOString()
+      }
+    }).catch(() => []);
+  }
+
+  return json({ success: true });
 }
 
 async function approvePendingCompany(context, body) {
@@ -157,25 +203,43 @@ async function rejectPendingCompany(context, body) {
 
 export default async function handler(request) {
   try {
-    const context = await requireAdmin(request);
-
     if (request.method === 'GET') {
-      return json({
-        approvedCompanies: await listApprovedCompanies(context),
-        pendingCompanies: await listPendingCompanies(context)
-      });
+      const scope = new URL(request.url).searchParams.get('scope');
+      if (scope === 'admin') {
+        const context = await requireAdmin(request);
+        return json({
+          approvedCompanies: await listApprovedCompanies(context),
+          pendingCompanies: await listPendingCompanies(context)
+        });
+      }
+
+      const context = await getDbContext().catch(() => null);
+      const companies = context
+        ? await listApprovedCompanies(context).catch(() => getCuratedApprovedCompanyRows())
+        : getCuratedApprovedCompanyRows();
+      return json(
+        { companies },
+        200,
+        { 'Cache-Control': 'public, max-age=300, s-maxage=900, stale-while-revalidate=1800' }
+      );
     }
 
     if (request.method === 'POST') {
       const body = await request.json().catch(() => ({}));
       const action = normalizeText(body?.action).toLowerCase();
-      if (action === 'approve') return await approvePendingCompany(context, body);
-      if (action === 'reject') return await rejectPendingCompany(context, body);
-      return json({ message: 'Unsupported company admin action.' }, 400);
+
+      if (action === 'approve' || action === 'reject') {
+        const context = await requireAdmin(request);
+        if (action === 'approve') return await approvePendingCompany(context, body);
+        return await rejectPendingCompany(context, body);
+      }
+
+      const context = await getDbContext();
+      return await createPendingCompany(context, body);
     }
 
     return json({ message: 'Method not allowed.' }, 405);
   } catch (error) {
-    return json({ message: error?.message || 'Admin company review failed.' }, error?.status || 500);
+    return json({ message: error?.message || 'Company request failed.' }, error?.status || 500);
   }
 }

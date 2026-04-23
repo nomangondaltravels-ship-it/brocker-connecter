@@ -11,7 +11,7 @@ import {
   supabaseDelete,
   supabasePatch,
   supabaseSelect
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 
 const EMPTY_SUMMARY = Object.freeze({
   requirementCount: 0,

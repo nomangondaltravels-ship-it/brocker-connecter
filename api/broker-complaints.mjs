@@ -5,19 +5,25 @@ import {
   requireBrokerSession,
   supabaseInsert,
   supabaseSelect
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 import {
+  buildComplaintReporterSignal,
   buildComplaintMessage,
+  COMPLAINT_SAFETY_RULES,
   COMPLAINT_REASONS,
   normalizeComplaintReason,
   normalizeComplaintTargetType,
   parseComplaintRecord,
+  sanitizeComplaintText,
   sanitizeComplaintProofAttachment
-} from './_complaints.mjs';
+} from '../server/_complaints.mjs';
+import {
+  buildComplaintSubmittedNotification,
+  insertComplaintNotifications
+} from '../server/_complaint-notifications.mjs';
 
 const MAX_COMPLAINT_DESCRIPTION_LENGTH = 4000;
 const MAX_PROOF_ATTACHMENT_BYTES = 2 * 1024 * 1024;
-const DUPLICATE_COMPLAINT_WINDOW_MS = 15 * 60 * 1000;
 const ALLOWED_PROOF_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -69,8 +75,11 @@ function validateProofAttachment(value) {
   if (!proofAttachment.type || !ALLOWED_PROOF_TYPES.has(proofAttachment.type)) {
     throw new Error('Proof upload must be an image or PDF.');
   }
-  if (!proofAttachment.dataUrl.startsWith(`data:${proofAttachment.type}`)) {
+  if (!proofAttachment.dataUrl.startsWith(`data:${proofAttachment.type};base64,`)) {
     throw new Error('Proof upload format is invalid.');
+  }
+  if (!/^[a-z0-9+/=]+$/i.test(proofAttachment.dataUrl.split(',')[1] || '')) {
+    throw new Error('Proof upload contents are invalid.');
   }
   if (!proofAttachment.size || proofAttachment.size > MAX_PROOF_ATTACHMENT_BYTES) {
     throw new Error('Proof upload must be 2 MB or smaller.');
@@ -103,37 +112,57 @@ async function ensureComplaintAllowed(context, reporterIdentity, payload) {
     supabaseUrl: context.supabaseUrl,
     serviceRoleKey: context.serviceRoleKey,
     table: 'complaints',
-    select: 'id,created_at',
+    select: '*',
     filters: {
-      reporter_id: reporterId,
-      target_type: payload.targetType,
-      target_id: payload.targetId
+      reporter_id: reporterId
     },
     order: { column: 'created_at', ascending: false }
   }).catch(() => []);
 
-  const latestCreatedAt = Array.isArray(previousRows) && previousRows[0]?.created_at
-    ? Date.parse(previousRows[0].created_at)
+  const previousComplaints = (Array.isArray(previousRows) ? previousRows : []).map(parseComplaintRecord);
+  const duplicateComplaint = previousComplaints.find(item =>
+    item.targetType === payload.targetType
+    && String(item.targetId || '').trim() === String(payload.targetId || '').trim()
+  );
+
+  const latestCreatedAt = duplicateComplaint?.created_at
+    ? Date.parse(duplicateComplaint.created_at)
     : NaN;
 
-  if (Number.isFinite(latestCreatedAt) && (Date.now() - latestCreatedAt) < DUPLICATE_COMPLAINT_WINDOW_MS) {
+  if (Number.isFinite(latestCreatedAt) && (Date.now() - latestCreatedAt) < COMPLAINT_SAFETY_RULES.duplicateWindowMs) {
     const error = new Error('You already submitted a complaint for this target recently. Please wait 15 minutes before sending another one.');
     error.status = 429;
     throw error;
   }
+
+  const recentCount = previousComplaints.filter(item => {
+    const createdAt = Date.parse(String(item?.created_at || ''));
+    return Number.isFinite(createdAt) && (Date.now() - createdAt) <= COMPLAINT_SAFETY_RULES.rateLimitWindowMs;
+  }).length;
+
+  if (recentCount >= COMPLAINT_SAFETY_RULES.maxComplaintsPerRateWindow) {
+    const error = new Error('Complaint submissions are temporarily rate-limited. Please wait before sending more reports.');
+    error.status = 429;
+    throw error;
+  }
+
+  return {
+    previousComplaints,
+    reporterSignal: buildComplaintReporterSignal(previousComplaints, reporterId)
+  };
 }
 
 async function createComplaint(context, body) {
   const reporterIdentity = getReporterIdentity(context.broker);
   const reason = normalizeComplaintReason(body?.reason);
-  const description = normalizeText(body?.description);
+  const description = sanitizeComplaintText(body?.description, MAX_COMPLAINT_DESCRIPTION_LENGTH);
   const targetType = normalizeComplaintTargetType(body?.targetType);
-  const targetId = normalizeText(body?.targetId);
+  const targetId = sanitizeComplaintText(body?.targetId, 120);
   const reportedUserId = normalizeText(body?.reportedUserId);
-  const reportedBrokerIdNumber = normalizeText(body?.reportedBrokerIdNumber);
-  const reportedBrokerName = normalizeText(body?.reportedBrokerName);
-  const targetLabel = normalizeText(body?.targetLabel);
-  const sourceSection = normalizeText(body?.sourceSection);
+  const reportedBrokerIdNumber = sanitizeComplaintText(body?.reportedBrokerIdNumber, 120);
+  const reportedBrokerName = sanitizeComplaintText(body?.reportedBrokerName, 180);
+  const targetLabel = sanitizeComplaintText(body?.targetLabel, 240);
+  const sourceSection = sanitizeComplaintText(body?.sourceSection, 80);
   const proofAttachment = validateProofAttachment(body?.proofAttachment);
   const proofUrl = normalizeText(proofAttachment?.dataUrl);
   const { listingId, requirementId } = normalizeComplaintTargetLinks(targetType, targetId);
@@ -165,7 +194,7 @@ async function createComplaint(context, body) {
     throw error;
   }
 
-  await ensureComplaintAllowed(context, reporterIdentity, {
+  const complaintAccess = await ensureComplaintAllowed(context, reporterIdentity, {
     targetType,
     targetId,
     reportedUserId
@@ -205,7 +234,9 @@ async function createComplaint(context, body) {
       targetId,
       targetLabel,
       sourceSection,
-      proofAttachment
+      proofAttachment,
+      reporterSoftFlag: Boolean(complaintAccess?.reporterSignal?.softFlag),
+      reporterSignalSummary: complaintAccess?.reporterSignal?.summary || ''
     }),
     status: 'new'
   };
@@ -216,9 +247,25 @@ async function createComplaint(context, body) {
     table: 'complaints',
     payload: insertPayload
   });
-
-  return (Array.isArray(inserted) ? inserted : [])
+  const complaints = (Array.isArray(inserted) ? inserted : [])
     .map(parseComplaintRecord);
+
+  const createdComplaint = complaints[0];
+  if (createdComplaint?.id) {
+    await insertComplaintNotifications({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      notifications: [
+        buildComplaintSubmittedNotification({
+          reporterId: reporterIdentity.reporterBrokerId || reporterIdentity.reporterUserId,
+          complaintId: createdComplaint.id,
+          targetType
+        })
+      ]
+    });
+  }
+
+  return complaints;
 }
 
 export async function GET(request) {

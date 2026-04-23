@@ -7,15 +7,23 @@ import {
   supabasePatch,
   supabaseSelect,
   verifyToken
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 import {
+  buildComplaintReporterSignal,
+  getComplaintModerationDecision,
   getComplaintRepeatOffenseLevel,
   getComplaintReportedBrokerKey,
+  getComplaintReporterKey,
   normalizeComplaintAction,
   normalizeComplaintStatus,
   parseComplaintRecord,
   isComplaintValidForOffense
-} from './_complaints.mjs';
+} from '../server/_complaints.mjs';
+import {
+  buildComplaintStatusNotification,
+  buildModerationNotification,
+  insertComplaintNotifications
+} from '../server/_complaint-notifications.mjs';
 
 function verifyAdminToken(token, secret) {
   return verifyToken(token, secret);
@@ -70,25 +78,60 @@ function buildComplaintFilters(complaintId, match = {}) {
   return match;
 }
 
+function requireAdminNote(value) {
+  const adminNote = normalizeText(value);
+  if (!adminNote) {
+    const error = new Error('Admin note is required for complaint review actions.');
+    error.status = 400;
+    throw error;
+  }
+  return adminNote;
+}
+
 function normalizeComplaintRows(rows = []) {
   const parsed = (Array.isArray(rows) ? rows : []).map(parseComplaintRecord);
-  const validCountByBroker = new Map();
-
-  parsed.forEach(item => {
-    const brokerKey = getComplaintReportedBrokerKey(item);
-    if (!brokerKey || !isComplaintValidForOffense(item.normalizedStatus)) return;
-    validCountByBroker.set(brokerKey, (validCountByBroker.get(brokerKey) || 0) + 1);
-  });
 
   return parsed.map(item => {
     const brokerKey = getComplaintReportedBrokerKey(item);
-    const repeatOffenseCount = brokerKey ? (validCountByBroker.get(brokerKey) || 0) : 0;
+    const reporterKey = getComplaintReporterKey(item);
+    const repeatOffenseCount = brokerKey
+      ? parsed.filter(candidate =>
+        getComplaintReportedBrokerKey(candidate) === brokerKey
+        && isComplaintValidForOffense(candidate.normalizedStatus)
+      ).length
+      : 0;
+    const moderation = getComplaintModerationDecision({
+      complaint: item,
+      records: parsed,
+      currentComplaintId: item.id
+    });
+    const reporterSignal = buildComplaintReporterSignal(parsed, reporterKey, item.id);
     return {
       ...item,
       repeat_offense_count: repeatOffenseCount,
       repeatOffenseCount,
-      suggested_action: getComplaintRepeatOffenseLevel(repeatOffenseCount),
-      suggestedAction: getComplaintRepeatOffenseLevel(repeatOffenseCount)
+      suggested_action: moderation.recommendedAction || getComplaintRepeatOffenseLevel(repeatOffenseCount),
+      suggestedAction: moderation.recommendedAction || getComplaintRepeatOffenseLevel(repeatOffenseCount),
+      resolved_valid_complaint_count: moderation.resolvedValidCount,
+      resolvedValidComplaintCount: moderation.resolvedValidCount,
+      next_valid_complaint_count: moderation.nextValidCount,
+      nextValidComplaintCount: moderation.nextValidCount,
+      serious_reason: moderation.seriousReason,
+      seriousReason: moderation.seriousReason,
+      serious_reason_label: moderation.seriousReasonLabel,
+      seriousReasonLabel: moderation.seriousReasonLabel,
+      moderation_override_applied: moderation.overrideApplied,
+      moderationOverrideApplied: moderation.overrideApplied,
+      reporter_recent_complaint_count: reporterSignal.recentComplaintCount,
+      reporterRecentComplaintCount: reporterSignal.recentComplaintCount,
+      reporter_rejected_complaint_count: reporterSignal.rejectedComplaintCount,
+      reporterRejectedComplaintCount: reporterSignal.rejectedComplaintCount,
+      reporter_distinct_target_count: reporterSignal.distinctTargetCount,
+      reporterDistinctTargetCount: reporterSignal.distinctTargetCount,
+      reporter_soft_flag: reporterSignal.softFlag || Boolean(item.reporterSoftFlag),
+      reporterSoftFlag: reporterSignal.softFlag || Boolean(item.reporterSoftFlag),
+      reporter_flag_reason: reporterSignal.summary || item.reporterSignalSummary || '',
+      reporterFlagReason: reporterSignal.summary || item.reporterSignalSummary || ''
     };
   });
 }
@@ -264,6 +307,56 @@ async function applyComplaintAction(context, complaint, actionTaken) {
   }
 }
 
+async function dispatchComplaintNotifications(context, complaint, { status = '', actionTaken = '' } = {}) {
+  const notifications = [];
+  const reporterId = normalizeText(complaint.reporterId || complaint.reporterBrokerId || complaint.reporterUserId || complaint.reporter_id);
+  const affectedBrokerId = normalizeText(
+    complaint.reportedBrokerId
+    || complaint.reportedUserId
+    || complaint.reported_broker_id
+    || complaint.reported_user_id
+  );
+  const complaintId = complaint.id;
+  const normalizedStatus = normalizeComplaintStatus(status, '');
+  const normalizedAction = normalizeComplaintAction(actionTaken, '');
+
+  if (reporterId && normalizedStatus) {
+    notifications.push(buildComplaintStatusNotification({
+      reporterId,
+      complaintId,
+      status: normalizedStatus
+    }));
+  }
+
+  if (affectedBrokerId && normalizedAction && normalizedAction !== 'none') {
+    const relatedSourceType = normalizedAction === 'delete_listing'
+      ? 'listing'
+      : normalizedAction === 'delete_requirement'
+        ? 'requirement'
+        : 'complaint';
+    const relatedSourceId = normalizedAction === 'delete_listing'
+      ? (complaint.listingId || complaint.listing_id || complaintId)
+      : normalizedAction === 'delete_requirement'
+        ? (complaint.requirementId || complaint.requirement_id || complaintId)
+        : complaintId;
+    notifications.push(buildModerationNotification({
+      brokerId: affectedBrokerId,
+      complaintId,
+      actionTaken: normalizedAction,
+      relatedSourceType,
+      relatedSourceId
+    }));
+  }
+
+  if (!notifications.length) return;
+
+  await insertComplaintNotifications({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    notifications
+  });
+}
+
 export async function GET(request) {
   try {
     const context = await requireAdmin(request);
@@ -292,10 +385,15 @@ export async function POST(request) {
       if (!status) {
         return json({ message: 'Complaint status is required.' }, 400);
       }
+      const adminNote = requireAdminNote(body?.adminNote);
       const complaints = await patchComplaint(context, filters, {
         status,
+        admin_note: adminNote,
         reviewed_by: context.reviewerLabel,
         reviewed_at: new Date().toISOString()
+      });
+      await dispatchComplaintNotifications(context, complaints[0] || await fetchComplaintByFilters(context, filters), {
+        status
       });
       return json({ complaints });
     }
@@ -305,29 +403,43 @@ export async function POST(request) {
       if (!actionTaken) {
         return json({ message: 'Complaint action is required.' }, 400);
       }
+      const adminNote = requireAdminNote(body?.adminNote);
 
       const complaint = await fetchComplaintByFilters(context, filters);
       if (!complaint) {
         return json({ message: 'Complaint not found.' }, 404);
       }
 
-      const actionResult = await applyComplaintAction(context, complaint, actionTaken);
+      const moderation = getComplaintModerationDecision({
+        complaint,
+        records: await fetchComplaintRows(context),
+        currentComplaintId: complaint.id,
+        overrideAction: actionTaken
+      });
+      const finalActionTaken = moderation.finalAction || actionTaken;
+      const actionResult = await applyComplaintAction(context, complaint, finalActionTaken);
       const nextStatus = normalizeComplaintStatus(
         body?.status,
-        actionTaken === 'none' ? complaint.normalizedStatus || 'under-review' : 'resolved'
+        finalActionTaken === 'none' ? complaint.normalizedStatus || 'under-review' : 'resolved'
       );
 
       const complaints = await patchComplaint(context, { id: complaint.id }, {
         status: nextStatus,
-        admin_note: normalizeText(body?.adminNote),
-        action_taken: actionTaken,
+        admin_note: adminNote,
+        action_taken: finalActionTaken,
         reviewed_by: context.reviewerLabel,
         reviewed_at: new Date().toISOString()
+      });
+      await dispatchComplaintNotifications(context, complaints[0] || complaint, {
+        status: nextStatus,
+        actionTaken: finalActionTaken
       });
 
       return json({
         complaints,
-        actionTaken,
+        actionTaken: finalActionTaken,
+        recommendedAction: moderation.recommendedAction,
+        overrideApplied: moderation.overrideApplied,
         actionResult
       });
     }

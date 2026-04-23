@@ -35,7 +35,32 @@ export const COMPLAINT_ACTIONS = Object.freeze([
 ]);
 
 const VALID_REPEAT_OFFENSE_STATUSES = new Set(['new', 'under-review', 'resolved']);
+const RESOLVED_VALID_COMPLAINT_STATUSES = new Set(['resolved']);
 const COMPLAINT_META_SUFFIX_PATTERN = /\[\[BC_META:([\s\S]+?)\]\]\s*$/;
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
+
+export const COMPLAINT_MODERATION_RULES = Object.freeze({
+  firstValidMinorAction: 'warning',
+  repeatValidAction: 'restrict',
+  repeatedAbuseAction: 'block',
+  repeatValidThresholdStart: 2,
+  repeatValidThresholdEnd: 3,
+  repeatedAbuseThreshold: 4,
+  seriousReasons: Object.freeze([
+    'Fraud / Scam',
+    'Harassment'
+  ])
+});
+
+export const COMPLAINT_SAFETY_RULES = Object.freeze({
+  duplicateWindowMs: 15 * 60 * 1000,
+  rateLimitWindowMs: 60 * 60 * 1000,
+  maxComplaintsPerRateWindow: 6,
+  suspiciousWindowMs: 24 * 60 * 60 * 1000,
+  suspiciousRecentComplaintThreshold: 5,
+  suspiciousDistinctTargetThreshold: 4,
+  suspiciousRejectedComplaintThreshold: 3
+});
 
 function normalizeComplaintToken(value) {
   return String(value || '')
@@ -73,12 +98,24 @@ export function normalizeComplaintAction(value, fallback = 'none') {
   return COMPLAINT_ACTIONS.includes(normalized) ? normalized : fallback;
 }
 
+export function sanitizeComplaintText(value, maxLength = 0) {
+  const sanitized = normalizeText(value)
+    .replace(CONTROL_CHARACTER_PATTERN, '')
+    .replace(/\r\n/g, '\n');
+  if (maxLength && sanitized.length > maxLength) {
+    return sanitized.slice(0, maxLength);
+  }
+  return sanitized;
+}
+
 export function sanitizeComplaintProofAttachment(value) {
   if (!value || typeof value !== 'object') return null;
 
-  const name = normalizeText(value.name);
+  const name = sanitizeComplaintText(value.name)
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .slice(0, 160);
   const type = normalizeText(value.type).toLowerCase();
-  const dataUrl = normalizeText(value.dataUrl || value.data_url || value.proofUrl || value.proof_url);
+  const dataUrl = sanitizeComplaintText(value.dataUrl || value.data_url || value.proofUrl || value.proof_url);
   const size = Number(value.size || 0);
 
   if (!name && !dataUrl) return null;
@@ -106,6 +143,8 @@ export function serializeComplaintMeta(meta = {}) {
     reporterUserId: normalizeText(meta.reporterUserId),
     reporterEmail: normalizeEmail(meta.reporterEmail),
     reporterName: normalizeText(meta.reporterName),
+    reporterSoftFlag: Boolean(meta.reporterSoftFlag),
+    reporterSignalSummary: sanitizeComplaintText(meta.reporterSignalSummary, 280),
     reportedUserId: normalizeText(meta.reportedUserId),
     reportedBrokerIdNumber: normalizeText(meta.reportedBrokerIdNumber),
     reportedBrokerName: normalizeText(meta.reportedBrokerName),
@@ -120,7 +159,7 @@ export function serializeComplaintMeta(meta = {}) {
 }
 
 export function buildComplaintMessage(description, meta = {}) {
-  const body = normalizeText(description);
+  const body = sanitizeComplaintText(description);
   const encodedMeta = serializeComplaintMeta(meta);
   return body ? `${body}\n\n[[BC_META:${encodedMeta}]]` : `[[BC_META:${encodedMeta}]]`;
 }
@@ -129,10 +168,73 @@ export function isComplaintValidForOffense(status) {
   return VALID_REPEAT_OFFENSE_STATUSES.has(normalizeComplaintStatus(status));
 }
 
+export function isResolvedValidComplaint(status) {
+  return RESOLVED_VALID_COMPLAINT_STATUSES.has(normalizeComplaintStatus(status));
+}
+
+export function isComplaintSeriousReason(reason) {
+  const normalizedReason = normalizeComplaintReason(reason, '');
+  return COMPLAINT_MODERATION_RULES.seriousReasons.includes(normalizedReason);
+}
+
+export function countResolvedValidComplaints(records = [], brokerKey = '', currentComplaintId = '') {
+  const normalizedBrokerKey = normalizeText(brokerKey);
+  const excludedComplaintId = normalizeText(currentComplaintId);
+  if (!normalizedBrokerKey) return 0;
+
+  return (Array.isArray(records) ? records : []).reduce((count, item) => {
+    if (!item) return count;
+    const itemComplaintId = normalizeText(item?.id);
+    if (excludedComplaintId && itemComplaintId === excludedComplaintId) return count;
+    if (getComplaintReportedBrokerKey(item) !== normalizedBrokerKey) return count;
+    return isResolvedValidComplaint(item?.normalizedStatus || item?.status) ? count + 1 : count;
+  }, 0);
+}
+
+export function getComplaintModerationDecision({
+  complaint = {},
+  records = [],
+  overrideAction = '',
+  currentComplaintId = ''
+} = {}) {
+  const normalizedOverride = normalizeComplaintAction(overrideAction, '');
+  const brokerKey = getComplaintReportedBrokerKey(complaint);
+  const resolvedValidCount = countResolvedValidComplaints(records, brokerKey, currentComplaintId || complaint?.id);
+  const nextValidCount = brokerKey ? resolvedValidCount + 1 : resolvedValidCount;
+  const seriousReason = isComplaintSeriousReason(complaint?.reason);
+
+  let recommendedAction = 'none';
+  if (seriousReason) {
+    recommendedAction = COMPLAINT_MODERATION_RULES.repeatedAbuseAction;
+  } else if (nextValidCount >= COMPLAINT_MODERATION_RULES.repeatedAbuseThreshold) {
+    recommendedAction = COMPLAINT_MODERATION_RULES.repeatedAbuseAction;
+  } else if (
+    nextValidCount >= COMPLAINT_MODERATION_RULES.repeatValidThresholdStart
+    && nextValidCount <= COMPLAINT_MODERATION_RULES.repeatValidThresholdEnd
+  ) {
+    recommendedAction = COMPLAINT_MODERATION_RULES.repeatValidAction;
+  } else if (nextValidCount >= 1) {
+    recommendedAction = COMPLAINT_MODERATION_RULES.firstValidMinorAction;
+  }
+
+  const finalAction = normalizedOverride || recommendedAction;
+
+  return {
+    brokerKey,
+    seriousReason,
+    seriousReasonLabel: seriousReason ? normalizeComplaintReason(complaint?.reason, '') : '',
+    resolvedValidCount,
+    nextValidCount,
+    recommendedAction,
+    finalAction,
+    overrideApplied: Boolean(normalizedOverride && normalizedOverride !== recommendedAction)
+  };
+}
+
 export function getComplaintRepeatOffenseLevel(count) {
   const numericCount = Number(count || 0);
-  if (numericCount >= 5) return 'block';
-  if (numericCount >= 3) return 'restrict';
+  if (numericCount >= COMPLAINT_MODERATION_RULES.repeatedAbuseThreshold) return 'block';
+  if (numericCount >= COMPLAINT_MODERATION_RULES.repeatValidThresholdStart) return 'restrict';
   if (numericCount >= 1) return 'warning';
   return 'none';
 }
@@ -146,6 +248,85 @@ export function getComplaintReportedBrokerKey(item) {
     || normalizeText(item?.reported_broker_id_number)
     || normalizeText(item?.reportedBrokerIdNumber)
   );
+}
+
+export function getComplaintReporterKey(item) {
+  return (
+    normalizeText(item?.reporter_id)
+    || normalizeText(item?.reporterId)
+    || normalizeText(item?.reporter_broker_id)
+    || normalizeText(item?.reporterBrokerId)
+    || normalizeText(item?.reporter_user_id)
+    || normalizeText(item?.reporterUserId)
+    || normalizeEmail(item?.reporter_email)
+    || normalizeEmail(item?.reporterEmail)
+  );
+}
+
+export function getComplaintTargetKey(item) {
+  return [
+    normalizeComplaintTargetType(item?.target_type || item?.targetType),
+    normalizeText(item?.target_id || item?.targetId || item?.listing_id || item?.listingId || item?.requirement_id || item?.requirementId)
+  ].filter(Boolean).join(':');
+}
+
+export function buildComplaintReporterSignal(records = [], reporterKey = '', currentComplaintId = '') {
+  const normalizedReporterKey = normalizeText(reporterKey);
+  const excludedComplaintId = normalizeText(currentComplaintId);
+  if (!normalizedReporterKey) {
+    return {
+      reporterKey: '',
+      recentComplaintCount: 0,
+      rejectedComplaintCount: 0,
+      distinctTargetCount: 0,
+      softFlag: false,
+      reasons: [],
+      summary: ''
+    };
+  }
+
+  const now = Date.now();
+  const recentRecords = [];
+  let rejectedComplaintCount = 0;
+  const distinctTargets = new Set();
+
+  (Array.isArray(records) ? records : []).forEach(item => {
+    if (!item) return;
+    if (getComplaintReporterKey(item) !== normalizedReporterKey) return;
+    const itemComplaintId = normalizeText(item?.id);
+    if (excludedComplaintId && itemComplaintId === excludedComplaintId) return;
+
+    const createdAt = Date.parse(String(item?.created_at || item?.createdAt || ''));
+    const targetKey = getComplaintTargetKey(item);
+    if (targetKey) distinctTargets.add(targetKey);
+    if ((item?.normalizedStatus || item?.status) && normalizeComplaintStatus(item?.normalizedStatus || item?.status) === 'rejected') {
+      rejectedComplaintCount += 1;
+    }
+    if (Number.isFinite(createdAt) && (now - createdAt) <= COMPLAINT_SAFETY_RULES.suspiciousWindowMs) {
+      recentRecords.push(item);
+    }
+  });
+
+  const reasons = [];
+  if (recentRecords.length >= COMPLAINT_SAFETY_RULES.suspiciousRecentComplaintThreshold) {
+    reasons.push(`${recentRecords.length} complaints in the last 24 hours`);
+  }
+  if (distinctTargets.size >= COMPLAINT_SAFETY_RULES.suspiciousDistinctTargetThreshold) {
+    reasons.push(`${distinctTargets.size} unique targets reported`);
+  }
+  if (rejectedComplaintCount >= COMPLAINT_SAFETY_RULES.suspiciousRejectedComplaintThreshold) {
+    reasons.push(`${rejectedComplaintCount} rejected complaints on record`);
+  }
+
+  return {
+    reporterKey: normalizedReporterKey,
+    recentComplaintCount: recentRecords.length,
+    rejectedComplaintCount,
+    distinctTargetCount: distinctTargets.size,
+    softFlag: reasons.length > 0,
+    reasons,
+    summary: reasons.join(' - ')
+  };
 }
 
 export function parseComplaintRecord(item) {
@@ -198,6 +379,8 @@ export function parseComplaintRecord(item) {
     reporterUserId: normalizeText(item?.reporter_id || meta.reporterUserId || meta.reporterBrokerId),
     reporterEmail: normalizeEmail(item?.reporter_email || meta.reporterEmail),
     reporterName: normalizeText(item?.reporter_name || meta.reporterName || item?.name),
+    reporterSoftFlag: Boolean(item?.reporter_soft_flag || meta.reporterSoftFlag),
+    reporterSignalSummary: sanitizeComplaintText(item?.reporter_signal_summary || meta.reporterSignalSummary, 280),
     reportedBrokerId: normalizeText(item?.reported_broker_id || item?.reported_user_id || meta.reportedUserId),
     reportedUserId: normalizeText(item?.reported_user_id || meta.reportedUserId),
     reportedBrokerIdNumber: normalizeText(item?.reported_broker_id_number || meta.reportedBrokerIdNumber),

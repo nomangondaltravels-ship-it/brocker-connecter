@@ -8,7 +8,7 @@ import {
   parsePropertyMeta,
   sanitizePublicListing,
   supabaseSelect
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 
 function applySectionFilter(rows, section) {
   const items = Array.isArray(rows) ? rows : [];
@@ -219,7 +219,11 @@ export async function GET(request) {
 
     const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows });
     const filtered = applySectionFilter(validRows, section).map(sanitizePublicListing);
-    return json({ listings: filtered });
+    return json(
+      { listings: filtered },
+      200,
+      { 'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120' }
+    );
   } catch (error) {
     return json({ message: error.message || 'Broker Connector Page load failed.' }, 500);
   }

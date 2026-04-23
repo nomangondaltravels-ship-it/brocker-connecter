@@ -33,7 +33,7 @@ import {
   supabaseInsert,
   supabasePatch,
   supabaseSelect
-} from './_broker-platform.mjs';
+} from '../server/_broker-platform.mjs';
 
 const LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost', 'inactive'];
 const LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market', 'draft'];

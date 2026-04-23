@@ -1904,7 +1904,7 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/admin-support', {
+      const response = await fetch('/api/support', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
@@ -1929,8 +1929,8 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/admin-support', {
-        method: 'POST',
+      const response = await fetch('/api/support', {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -1956,7 +1956,7 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/admin-company-suggestions', {
+      const response = await fetch('/api/companies?scope=admin', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
@@ -1984,7 +1984,7 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/admin-company-suggestions', {
+      const response = await fetch('/api/companies', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
