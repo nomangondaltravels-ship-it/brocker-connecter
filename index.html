@@ -3124,6 +3124,17 @@
       return `${url.pathname}${url.search}${url.hash || ''}`;
     }
 
+    function clearMarketplaceRevealParams(sectionName = state.activeSection) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', 'public');
+      if (sectionName) {
+        url.searchParams.set('section', sectionName);
+      }
+      url.searchParams.delete('listing');
+      url.searchParams.delete('revealContact');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+
     function saveMarketplaceAuthIntent(intent = null) {
       state.authIntent = intent ? { ...intent } : null;
       try {
@@ -3907,7 +3918,8 @@
       };
     }
 
-    function openSection(name) {
+    function openSection(name, options = {}) {
+      const preserveRevealParams = Boolean(options?.preserveRevealParams);
       const normalized = name === 'shared-leads' ? 'requirements' : name;
       const targetSection = document.getElementById(`${normalized}-section`) ? normalized : 'requirements';
       state.activeSection = targetSection;
@@ -3918,7 +3930,9 @@
       document.querySelector(`.menu-btn[data-target="${targetSection}"]`)?.classList.add('active');
       document.querySelector(`.section-switch-btn[data-target="${targetSection}"]`)?.classList.add('is-active');
       closeMenuDrawer();
-      revealSharedListingFromUrl();
+      if (!preserveRevealParams) {
+        clearMarketplaceRevealParams(targetSection);
+      }
     }
 
     function openBrokerEmail(email) {
@@ -5232,11 +5246,12 @@
       const normalizedSection = section === 'shared-leads' ? 'requirements' : section;
       if (normalizedSection && normalizedSection !== state.activeSection) {
         document.getElementById(`${normalizedSection}-section`)?.classList.add('active');
-        openSection(normalizedSection);
+        openSection(normalizedSection, { preserveRevealParams: true });
       }
       if (normalizedSection) {
         state.selectedPublicListingKeys[normalizedSection] = `${normalizedSection}:${listingId}`;
         safeRenderPublicViews();
+        clearMarketplaceRevealParams(normalizedSection);
       }
       const target = document.querySelector(`[data-listing-id="${listingId}"]`);
       if (target) {
@@ -5408,6 +5423,7 @@
         state.revealedPublicContactKeys[intent.sectionName] = `${intent.sectionName}:${intent.listingId}`;
       }
       safeRenderPublicViews();
+      clearMarketplaceRevealParams(intent.sectionName || state.activeSection);
       clearMarketplaceAuthIntent();
       setSystemBanner('Broker contact details unlocked.', 'success');
       return true;
@@ -5428,6 +5444,7 @@
       state.revealedPublicContactKeys[sectionName] = `${sectionName}:${listingId}`;
       openSection(sectionName);
       safeRenderPublicViews();
+      clearMarketplaceRevealParams(sectionName);
       clearMarketplaceAuthIntent();
       return true;
     }
