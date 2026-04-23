@@ -3551,18 +3551,20 @@
           if (!response.ok) {
             throw new Error(result?.message || 'Company suggestions could not load.');
           }
-          state.approvedCompanies = Array.isArray(result?.companies)
-            ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
-            : [];
-          state.approvedCompaniesLoaded = true;
-        } catch (error) {
-          state.approvedCompanies = [];
-          state.approvedCompaniesLoaded = false;
-        } finally {
-          state.approvedCompaniesRequest = null;
-        }
-        return state.approvedCompanies;
-      })();
+            state.approvedCompanies = Array.isArray(result?.companies)
+              ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
+              : [];
+            state.approvedCompaniesLoaded = true;
+            renderAuthCompanySuggestions();
+          } catch (error) {
+            state.approvedCompanies = [];
+            state.approvedCompaniesLoaded = false;
+            renderAuthCompanySuggestions();
+          } finally {
+            state.approvedCompaniesRequest = null;
+          }
+          return state.approvedCompanies;
+        })();
       return state.approvedCompaniesRequest;
     }
 
@@ -3575,18 +3577,24 @@
       const menu = document.getElementById('authCompanyMenu');
       if (!input || input.dataset.ready === 'true') return;
 
-      input.addEventListener('input', event => {
-        state.authCompanyQuery = String(event.target.value || '');
-        state.authCompanyMenuOpen = true;
-        state.authCompanyActiveIndex = -1;
-        renderAuthCompanySuggestions();
-      });
+        input.addEventListener('input', event => {
+          if (!state.approvedCompaniesLoaded && !state.approvedCompaniesRequest) {
+            ensureApprovedCompanySuggestionsLoaded();
+          }
+          state.authCompanyQuery = String(event.target.value || '');
+          state.authCompanyMenuOpen = true;
+          state.authCompanyActiveIndex = -1;
+          renderAuthCompanySuggestions();
+        });
 
-      input.addEventListener('focus', event => {
-        state.authCompanyQuery = String(event.target.value || '');
-        state.authCompanyMenuOpen = true;
-        renderAuthCompanySuggestions();
-      });
+        input.addEventListener('focus', event => {
+          if (!state.approvedCompaniesLoaded && !state.approvedCompaniesRequest) {
+            ensureApprovedCompanySuggestionsLoaded();
+          }
+          state.authCompanyQuery = String(event.target.value || '');
+          state.authCompanyMenuOpen = true;
+          renderAuthCompanySuggestions();
+        });
 
       input.addEventListener('keydown', event => {
         const suggestions = getApprovedCompanySuggestions(state.authCompanyQuery);
