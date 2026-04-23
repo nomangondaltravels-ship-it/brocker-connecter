@@ -6128,8 +6128,6 @@
   <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/whatsapp-contact-config.js?v=2026-04-23-whatsapp-reasons"></script>
-  <script src="assets/whatsapp-contact-ui.js?v=2026-04-23-whatsapp-reasons"></script>
   <script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
       uaeLocations: [],
@@ -6833,56 +6831,6 @@
         || state.broker?.email
         || 'Broker Connector user'
       );
-    }
-
-    function buildLeadWhatsappReference(lead) {
-      if (!lead) return 'Broker requirement';
-      const parts = [
-        getLeadClientPurposeLabel(lead.clientPurpose),
-        lead.propertyType,
-        lead.location,
-        lead.preferredBuildingProject
-      ].map(normalizeText).filter(Boolean);
-      return parts.length ? parts.join(' | ') : 'Broker requirement';
-    }
-
-    function buildPropertyWhatsappReference(property) {
-      if (!property) return 'Broker property';
-      const parts = [
-        getPropertyPurposeLabel(property.purpose),
-        property.propertyType,
-        property.buildingName,
-        property.location
-      ].map(normalizeText).filter(Boolean);
-      return parts.length ? parts.join(' | ') : 'Broker property';
-    }
-
-    function openDashboardWhatsAppReasonModal(options = {}) {
-      const phoneDigits = String(options.phoneDigits || '').replace(/[^\d]/g, '');
-      if (!phoneDigits) {
-        setStatus(options.missingMessage || 'WhatsApp number is not available for this contact.', 'error');
-        return false;
-      }
-      if (!window.WhatsAppContactUi?.open) {
-        setStatus('WhatsApp contact could not be prepared right now.', 'error');
-        return false;
-      }
-      const referenceLabel = normalizeText(options.referenceLabel) || 'Broker Connector post';
-      return window.WhatsAppContactUi.open({
-        title: options.title || 'Contact on WhatsApp',
-        copy: options.copy || 'Select a reason so the WhatsApp message opens with clear context.',
-        phoneDigits,
-        phoneDisplay: options.phoneDisplay || `+${phoneDigits}`,
-        sourcePage: 'dashboard',
-        itemType: options.itemType || 'record',
-        itemId: options.itemId || '',
-        currentUserName: getDashboardCurrentUserName(),
-        referenceLabel,
-        defaultReasonValue: options.defaultReasonValue || '',
-        onError: message => setStatus(message, 'error'),
-        onCopySuccess: () => setStatus('WhatsApp number copied.', 'success'),
-        onAfterOpen: options.onAfterOpen
-      });
     }
 
     async function copyTextToClipboard(value) {
@@ -12024,21 +11972,13 @@
         });
         return;
       } else {
-        openDashboardWhatsAppReasonModal({
-          title: 'WhatsApp Client',
-          copy: 'Select why you are contacting this requirement so WhatsApp opens with a clear professional message.',
-          phoneDigits,
-          phoneDisplay: formatPhoneDisplay(lead.clientPhone),
-          itemType: 'requirement',
-          itemId: lead.id,
-          referenceLabel: buildLeadWhatsappReference(lead),
-          defaultReasonValue: 'discuss-requirement',
-          missingMessage: 'Client WhatsApp number is not available for this lead.',
-          onAfterOpen: () => dashboardAction({ action: 'track-lead-contact', id, method }).catch(error => {
-            console.error('Lead WhatsApp tracking failed', error);
-          })
-        });
-        return;
+        const message = encodeURIComponent('Hello, I am following up regarding your property requirement.');
+        window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
+      }
+      try {
+        await dashboardAction({ action: 'track-lead-contact', id, method });
+      } catch (error) {
+        setStatus(error.message, 'error');
       }
     }
 
@@ -12059,21 +11999,13 @@
         });
         return;
       } else {
-        openDashboardWhatsAppReasonModal({
-          title: 'WhatsApp Owner',
-          copy: 'Select why you are contacting this property so WhatsApp opens with a clear professional message.',
-          phoneDigits,
-          phoneDisplay: formatPhoneDisplay(property.ownerPhone),
-          itemType: property.isDistress ? 'distress' : 'listing',
-          itemId: property.id,
-          referenceLabel: buildPropertyWhatsappReference(property),
-          defaultReasonValue: getPropertyPurpose(property.purpose) === 'sale' ? 'buyer-for-property' : 'tenant-for-property',
-          missingMessage: 'Owner WhatsApp number is not available for this listing.',
-          onAfterOpen: () => dashboardAction({ action: 'track-property-contact', id, method }).catch(error => {
-            console.error('Listing WhatsApp tracking failed', error);
-          })
-        });
-        return;
+        const message = encodeURIComponent('Hello, I am following up regarding your property listing.');
+        window.open(`https://wa.me/${phoneDigits}?text=${message}`, '_blank', 'noopener');
+      }
+      try {
+        await dashboardAction({ action: 'track-property-contact', id, method });
+      } catch (error) {
+        setStatus(error.message, 'error');
       }
     }
 

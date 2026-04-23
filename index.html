@@ -2456,8 +2456,6 @@
   <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/whatsapp-contact-config.js?v=2026-04-23-whatsapp-reasons"></script>
-  <script src="assets/whatsapp-contact-ui.js?v=2026-04-23-whatsapp-reasons"></script>
   <script>
     const state = {
       authMode: 'signin',
@@ -3251,7 +3249,7 @@
         state.brokerProfile?.fullName
         || state.brokerProfile?.name
         || state.brokerProfile?.email
-        || 'Broker Connector user'
+        || ''
       );
     }
 
@@ -3259,13 +3257,13 @@
       if (!listing) return 'Broker Connector post';
       const parts = listing.sourceType === 'lead'
         ? [
-            listing.purpose,
+            listing.purpose ? String(listing.purpose).toUpperCase() : '',
             listing.propertyType || listing.category,
             listing.location,
             listing.buildingLabel
           ]
         : [
-            listing.purpose,
+            listing.purpose ? String(listing.purpose).toUpperCase() : '',
             listing.propertyType || listing.category,
             listing.buildingLabel,
             listing.location
@@ -3274,13 +3272,54 @@
       return cleaned.length ? cleaned.join(' | ') : 'Broker Connector post';
     }
 
-    function openConnectorWhatsappReason(listing, sourcePage = 'connector', defaultReasonValue = '') {
+    function getConnectorWhatsappIntro(listing) {
+      return listing?.sourceType === 'lead'
+        ? 'I checked your requirement on BCP.'
+        : 'I checked your listing on BCP.';
+    }
+
+    function getConnectorWhatsappIdentityLine() {
+      const brokerName = getConnectorCurrentUserName();
+      return brokerName ? `I am ${brokerName}.` : 'I am a broker from BCP.';
+    }
+
+    function buildConnectorWhatsappMessage(listing, sectionName) {
+      const referenceLabel = buildConnectorWhatsappReference(listing);
+      const link = listing ? buildListingLink(listing, sectionName) : '';
+      return [
+        getConnectorWhatsappIdentityLine(),
+        getConnectorWhatsappIntro(listing),
+        referenceLabel ? `Reference: ${referenceLabel}` : '',
+        link ? `Link: ${link}` : '',
+        'I have a client/buyer for this.'
+      ].filter(Boolean).join('\n');
+    }
+
+    function logConnectorContactAttempt(listing, sectionName) {
+      const payload = {
+        event: 'contact_attempt',
+        source_page: normalizeText(sectionName || 'connector') || 'connector',
+        item_type: listing?.sourceType === 'lead' ? 'requirement' : (listing?.isDistress ? 'distress' : 'listing'),
+        item_id: normalizeText(listing?.sourceId || listing?.id),
+        selected_reason: 'bcp-auto-message',
+        custom_reason_used: false
+      };
+      try {
+        console.info('contact_attempt', payload);
+      } catch (error) {
+        // noop
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('contact_attempt', { detail: payload }));
+      } catch (error) {
+        // noop
+      }
+      return payload;
+    }
+
+    function openConnectorWhatsappContact(listing, sectionName = 'connector') {
       if (!listing?.brokerMobile) {
         setSystemBanner('WhatsApp number is not available for this broker.', 'error');
-        return false;
-      }
-      if (!window.WhatsAppContactUi?.open) {
-        setSystemBanner('WhatsApp contact could not be prepared right now.', 'error');
         return false;
       }
       const normalized = normalizePhoneNumber(listing.brokerMobile);
@@ -3288,29 +3327,26 @@
         setSystemBanner('WhatsApp number is not available for this broker.', 'error');
         return false;
       }
-      return window.WhatsAppContactUi.open({
-        title: 'Contact Broker on WhatsApp',
-        copy: 'Select a reason so the broker receives a clear professional WhatsApp message.',
-        phoneDigits: normalized,
-        phoneDisplay: formatPhoneDisplay(listing.brokerMobile),
-        sourcePage,
-        itemType: listing.sourceType === 'lead' ? 'requirement' : (listing.isDistress ? 'distress' : 'listing'),
-        itemId: listing.sourceId || listing.id,
-        referenceLabel: buildConnectorWhatsappReference(listing),
-        currentUserName: getConnectorCurrentUserName(),
-        defaultReasonValue,
-        onError: message => setSystemBanner(message, 'error'),
-        onCopySuccess: () => setSystemBanner('WhatsApp number copied.', 'success')
-      });
+      const message = buildConnectorWhatsappMessage(listing, sectionName);
+      const url = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+      logConnectorContactAttempt(listing, sectionName);
+      window.open(url, '_blank', 'noopener');
+      return true;
     }
 
-    function openConnectorWhatsappReasonById(sectionName, listingId, defaultReasonValue = '') {
+    function openConnectorWhatsappContactById(sectionName, listingId) {
       const listing = state.listings.find(item => String(item.id) === String(listingId));
       if (!listing) {
         setSystemBanner('Broker post could not be loaded for WhatsApp.', 'error');
         return false;
       }
-      return openConnectorWhatsappReason(listing, sectionName, defaultReasonValue);
+      return openConnectorWhatsappContact(listing, sectionName);
+    }
+
+    function prefilledMatchText(listing) {
+      return listing?.sourceType === 'lead'
+        ? 'I have a matching property for your requirement.'
+        : 'I have a matching client for your property.';
     }
 
     function buildListingLink(listing, sectionName) {
@@ -3568,8 +3604,8 @@
           </div>
           <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
           <div class="actions" style="margin-top:12px;">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="openConnectorWhatsappReasonById('${sectionName}', '${listing.id}', 'matching-unit')">I Have Match</button>
-            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappReasonById('${sectionName}', '${listing.id}', '${listing.sourceType === 'lead' ? 'discuss-requirement' : 'discuss-property'}')">WhatsApp Broker</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">I Have Match</button>
+            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="showContactPopover(this, '${listing.brokerMobile}')">Call Broker</button>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
           </div>
@@ -3599,8 +3635,8 @@
           </div>
           <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
           <div class="actions" style="margin-top:12px;">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="openConnectorWhatsappReasonById('${sectionName}', '${listing.id}', 'matching-unit')">I Have Match</button>
-            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappReasonById('${sectionName}', '${listing.id}', '${listing.sourceType === 'lead' ? 'discuss-requirement' : 'discuss-property'}')">WhatsApp Broker</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')">I Have Match</button>
+            <button class="btn btn-green btn-tiny" type="button" onclick="openConnectorWhatsappContactById('${sectionName}', '${listing.id}')">WhatsApp Broker</button>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="showContactPopover(this, '${listing.brokerMobile}')">Call Broker</button>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
           </div>
@@ -3795,7 +3831,7 @@
             label: 'WhatsApp',
             icon: 'whatsapp',
             tone: 'primary',
-            onclick: `openConnectorWhatsappReasonById('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}', '${listing.sourceType === 'lead' ? 'discuss-requirement' : 'discuss-property'}')`,
+            onclick: `openConnectorWhatsappContactById('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`,
             disabled: !listing.brokerMobile
           })}
           ${renderConnectorActionButton({
@@ -3809,7 +3845,7 @@
             label: 'I Have Match',
             icon: 'match',
             tone: 'secondary',
-            onclick: `openConnectorWhatsappReasonById('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}', 'matching-unit')`,
+            onclick: `sendMatchInterest('${listing.brokerMobile}', '${encodeURIComponent(prefilledMatchText(listing))}')`,
             disabled: !listing.brokerMobile
           })}
           ${renderConnectorActionButton({
@@ -4214,24 +4250,8 @@
         setSystemBanner('WhatsApp number is not available for this broker.', 'error');
         return;
       }
-      if (!window.WhatsAppContactUi?.open) {
-        setSystemBanner('WhatsApp contact could not be prepared right now.', 'error');
-        return;
-      }
-      window.WhatsAppContactUi.open({
-        title: 'Contact Broker on WhatsApp',
-        copy: 'Select a reason so WhatsApp opens with a clear professional message.',
-        phoneDigits: normalized,
-        phoneDisplay: `+${normalized}`,
-        sourcePage: 'connector',
-        itemType: 'listing',
-        itemId: '',
-        referenceLabel: 'Broker Connector post',
-        currentUserName: getConnectorCurrentUserName(),
-        defaultReasonValue: 'discuss-property',
-        onError: message => setSystemBanner(message, 'error'),
-        onCopySuccess: () => setSystemBanner('WhatsApp number copied.', 'success')
-      });
+      const text = decodeURIComponent(encodedText || '');
+      window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     }
 
     function sendMatchInterest(phone, encodedText) {
@@ -4240,24 +4260,8 @@
         setSystemBanner('WhatsApp number is not available for this broker.', 'error');
         return;
       }
-      if (!window.WhatsAppContactUi?.open) {
-        setSystemBanner('WhatsApp contact could not be prepared right now.', 'error');
-        return;
-      }
-      window.WhatsAppContactUi.open({
-        title: 'Send Match on WhatsApp',
-        copy: 'Select a reason before opening WhatsApp with this broker.',
-        phoneDigits: normalized,
-        phoneDisplay: `+${normalized}`,
-        sourcePage: 'connector',
-        itemType: 'listing',
-        itemId: '',
-        referenceLabel: 'Broker Connector post',
-        currentUserName: getConnectorCurrentUserName(),
-        defaultReasonValue: 'matching-unit',
-        onError: message => setSystemBanner(message, 'error'),
-        onCopySuccess: () => setSystemBanner('WhatsApp number copied.', 'success')
-      });
+      const text = decodeURIComponent(encodedText || '');
+      window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     }
 
     function revealSharedListingFromUrl() {
