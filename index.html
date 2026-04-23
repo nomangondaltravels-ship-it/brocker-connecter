@@ -3777,7 +3777,7 @@
       `;
     }
 
-    function renderConnectorDetailActions(listing, shareLink, matchText) {
+    function renderConnectorDetailActions(listing, shareLink) {
       const reportRecordButton = window.ComplaintCenterUi?.renderReportButton({
         label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
         iconHtml: getConnectorActionIcon('report'),
@@ -3932,7 +3932,7 @@
             <span>Updated ${escapeHtml(formatCompactRelativeTime(selected.updatedAt || selected.createdAt))}</span>
           </div>
           <div class="connector-detail-toolbar">
-            ${renderConnectorDetailActions(selected, shareLink, matchText)}
+            ${renderConnectorDetailActions(selected, shareLink)}
           </div>
         </div>
         <div class="connector-detail-section">
