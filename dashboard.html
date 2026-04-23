@@ -148,6 +148,10 @@
       display: none;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     .activity-brokers-head {
       display: flex;
       align-items: center;
@@ -4934,6 +4938,11 @@
       padding: 24px;
     }
 
+    .complaint-modal-backdrop.hidden,
+    .rules-prompt-backdrop.hidden {
+      display: none !important;
+    }
+
     .complaint-modal-card {
       width: min(680px, calc(100vw - 32px));
       max-height: calc(100vh - 48px);
@@ -5253,6 +5262,11 @@
       padding: 20px;
       display: grid;
       gap: 16px;
+    }
+
+    .complaint-modal-card:empty,
+    .rules-prompt-card:empty {
+      display: none;
     }
 
     .rules-prompt-grid {
@@ -14015,6 +14029,9 @@
             console.error('Complaint rules prompt init failed.', error);
           }
         }
+        renderComplaintModal();
+        renderDashboardRulesPrompt();
+        syncComplaintModalBodyLock();
         wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();
