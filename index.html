@@ -3366,7 +3366,10 @@
       const message = buildConnectorWhatsappMessage(listing, sectionName);
       const url = `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
       logConnectorContactAttempt(listing, sectionName);
-      window.open(url, '_blank', 'noopener');
+      const popup = window.open(url, '_blank', 'noopener');
+      if (!popup) {
+        window.location.href = url;
+      }
       return true;
     }
 
@@ -3849,18 +3852,33 @@
       `;
     }
 
+    function renderConnectorReportButton({ label, onClick, currentUserId, reportedUserId, targetType, targetId, selfDisabledText }) {
+      const buttonState = window.ComplaintCenterUi?.getReportButtonState({
+        currentUserId,
+        reportedUserId,
+        targetType,
+        targetId,
+        selfDisabledText
+      }) || { hidden: false, disabled: false, disabledReason: '' };
+      if (buttonState.hidden) return '';
+      return `
+        <button class="btn connector-action-btn btn-ghost" type="button" ${buttonState.disabled ? 'disabled' : ''} ${buttonState.disabledReason ? `title="${escapeHtml(buttonState.disabledReason)}"` : ''} onclick="${buttonState.disabled ? '' : onClick}">
+          ${getConnectorActionIcon('report')}
+          <span>${escapeHtml(label)}</span>
+        </button>
+      `;
+    }
+
     function renderConnectorDetailActions(listing, shareLink) {
-      const reportRecordButton = window.ComplaintCenterUi?.renderReportButton({
+      const reportRecordButton = renderConnectorReportButton({
         label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
-        iconHtml: getConnectorActionIcon('report'),
-        className: 'btn connector-action-btn btn-ghost',
         onClick: `openRecordComplaint('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`,
         currentUserId: state.brokerProfile?.id || '',
         reportedUserId: listing.brokerUuid || '',
         targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
         targetId: listing.sourceId || listing.id,
         selfDisabledText: 'You cannot report your own shared record.'
-      }) || '';
+      });
       return `
         <div class="connector-action-bar">
           ${renderConnectorActionButton({
@@ -4029,17 +4047,15 @@
             <div class="connector-detail-cell"><small>Contact Number</small>${contactRevealControl}</div>
           </div>
           <div class="connector-detail-toolbar">
-            ${window.ComplaintCenterUi?.renderReportButton({
+            ${renderConnectorReportButton({
               label: 'Report Broker',
-              iconHtml: getConnectorActionIcon('report'),
-              className: 'btn connector-action-btn btn-ghost',
               onClick: `openBrokerComplaint('${sectionName}', '${selected.id}')`,
               currentUserId: state.brokerProfile?.id || '',
               reportedUserId: selected.brokerUuid || '',
               targetType: 'broker',
               targetId: selected.brokerUuid || selected.brokerIdNumber || selected.id,
               selfDisabledText: 'You cannot report your own broker account.'
-            }) || ''}
+            })}
           </div>
         </div>
       `;
@@ -4287,7 +4303,11 @@
         return;
       }
       const text = decodeURIComponent(encodedText || '');
-      window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+      const url = `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+      const popup = window.open(url, '_blank', 'noopener');
+      if (!popup) {
+        window.location.href = url;
+      }
     }
 
     function sendMatchInterest(phone, encodedText) {
@@ -4297,7 +4317,11 @@
         return;
       }
       const text = decodeURIComponent(encodedText || '');
-      window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+      const url = `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+      const popup = window.open(url, '_blank', 'noopener');
+      if (!popup) {
+        window.location.href = url;
+      }
     }
 
     Object.assign(window, {
