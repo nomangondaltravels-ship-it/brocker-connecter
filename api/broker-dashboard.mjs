@@ -2,7 +2,9 @@ import {
   buildLeadPublicSummary,
   buildPublicListingPayload,
   deriveBrokerActivity,
+  getPropertyDimensionDbFields,
   getSupabasePublishableKey,
+  isPropertyDimensionColumnError,
   json,
   normalizeBool,
   normalizeDecimalValue,
@@ -26,6 +28,7 @@ import {
   sanitizePublicListing,
   serializeLeadMeta,
   serializePropertyMeta,
+  stripPropertyDimensionFields,
   supabaseAuthAdminGetUser,
   supabaseAuthGetUser,
   supabaseAuthAdminUpdateUser,
@@ -110,6 +113,34 @@ function prependActivityLog(existingLog, text, type = 'system') {
   const message = normalizeText(text);
   if (!message) return Array.isArray(existingLog) ? existingLog : [];
   return [createActivityEntry(message, type), ...(Array.isArray(existingLog) ? existingLog : [])].slice(0, 80);
+}
+
+async function safeSupabaseInsertWithPropertyDimensions(options) {
+  try {
+    return await supabaseInsert(options);
+  } catch (error) {
+    if (!isPropertyDimensionColumnError(error)) {
+      throw error;
+    }
+    return supabaseInsert({
+      ...options,
+      payload: stripPropertyDimensionFields(options.payload)
+    });
+  }
+}
+
+async function safeSupabasePatchWithPropertyDimensions(options) {
+  try {
+    return await supabasePatch(options);
+  } catch (error) {
+    if (!isPropertyDimensionColumnError(error)) {
+      throw error;
+    }
+    return supabasePatch({
+      ...options,
+      payload: stripPropertyDimensionFields(options.payload)
+    });
+  }
 }
 
 function buildFollowUpText(dateValue, timeValue, urgent) {
@@ -288,6 +319,11 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
     lead_type: clientPurpose === 'rent' ? 'tenant' : 'buyer',
     purpose,
     category: propertyType,
+    ...getPropertyDimensionDbFields({
+      propertyCategory: body?.propertyCategory ?? existingLead?.property_category,
+      unitLayout: body?.unitLayout ?? existingLead?.unit_layout,
+      propertyType
+    }),
     location: normalizeLocationValue(body?.location || existingLead?.location),
     budget: normalizeText(body?.budget || existingLead?.budget),
     notes: normalizeText(body?.privateNotes ?? body?.notes ?? existingLead?.notes),
@@ -336,6 +372,11 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     purpose,
     property_type: propertyType,
     category: propertyType,
+    ...getPropertyDimensionDbFields({
+      propertyCategory: body?.propertyCategory ?? existingProperty?.property_category,
+      unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
+      propertyType
+    }),
     location: normalizeLocationValue(body?.location || existingProperty?.location),
     price: effectivePrice,
     size: normalizeDecimalValue(body?.size || body?.sizeSqft || existingProperty?.size),
@@ -416,7 +457,7 @@ async function syncPublicListing(context, sourceType, item, broker) {
   const payload = buildPublicListingPayload(sourceType, broker, item);
 
   if (Array.isArray(existing) && existing[0]) {
-    await supabasePatch({
+    await safeSupabasePatchWithPropertyDimensions({
       supabaseUrl,
       serviceRoleKey,
       table: 'public_listings',
@@ -426,7 +467,7 @@ async function syncPublicListing(context, sourceType, item, broker) {
     return;
   }
 
-  await supabaseInsert({
+  await safeSupabaseInsertWithPropertyDimensions({
     supabaseUrl,
     serviceRoleKey,
     table: 'public_listings',
@@ -1005,7 +1046,7 @@ export async function POST(request) {
         ...getLeadPayload(body, broker.id, null, { activityLog: baseLog }),
         created_at: nowIso()
       };
-      const rows = await supabaseInsert({
+      const rows = await safeSupabaseInsertWithPropertyDimensions({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_leads',
@@ -1025,7 +1066,7 @@ export async function POST(request) {
       if (!existingLead) return json({ message: 'Lead not found.' }, 404);
 
       const activityLog = buildLeadActivityLog(existingLead, body, [{ text: 'Lead details updated.', type: 'updated' }]);
-      const rows = await supabasePatch({
+      const rows = await safeSupabasePatchWithPropertyDimensions({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_leads',
@@ -1061,7 +1102,7 @@ export async function POST(request) {
         ...getPropertyPayload(body, broker.id, null, { activityLog: baseLog }),
         created_at: nowIso()
       };
-      const rows = await supabaseInsert({
+      const rows = await safeSupabaseInsertWithPropertyDimensions({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_properties',
@@ -1081,7 +1122,7 @@ export async function POST(request) {
       if (!existingProperty) return json({ message: 'Property not found.' }, 404);
 
       const activityLog = buildPropertyActivityLog(existingProperty, body, [{ text: 'Listing details updated.', type: 'updated' }]);
-      const rows = await supabasePatch({
+      const rows = await safeSupabasePatchWithPropertyDimensions({
         supabaseUrl,
         serviceRoleKey,
         table: 'broker_properties',

@@ -35,24 +35,42 @@ export function normalizeText(value) {
 }
 
 const PROPERTY_TYPE_ALIASES = Object.freeze({
+  apartment: 'Apartment',
   studio: 'Studio',
   '1bhk': '1 BHK',
   '1 bhk': '1 BHK',
+  '1br': '1 BHK',
+  '1 br': '1 BHK',
   '1 bedroom': '1 BHK',
   '2bhk': '2 BHK',
   '2 bhk': '2 BHK',
+  '2br': '2 BHK',
+  '2 br': '2 BHK',
   '2 bedroom': '2 BHK',
   '3bhk': '3 BHK',
   '3 bhk': '3 BHK',
+  '3br': '3 BHK',
+  '3 br': '3 BHK',
   '3 bedroom': '3 BHK',
   '4bhk': '4 BHK',
   '4 bhk': '4 BHK',
+  '4br': '4 BHK',
+  '4 br': '4 BHK',
   '4 bedroom': '4 BHK',
   '5bhk': '5 BHK',
   '5 bhk': '5 BHK',
+  '5br': '5 BHK',
+  '5 br': '5 BHK',
   '5 bedroom': '5 BHK',
   '5+bhk': '5+ BHK',
   '5+ bhk': '5+ BHK',
+  '6bhk': '6+ BHK',
+  '6 bhk': '6+ BHK',
+  '6br': '6+ BHK',
+  '6 br': '6+ BHK',
+  '6 bedroom': '6+ BHK',
+  '6+': '6+ BHK',
+  '6+ bhk': '6+ BHK',
   villa: 'Villa',
   townhouse: 'Townhouse',
   penthouse: 'Penthouse',
@@ -75,6 +93,85 @@ const PROPERTY_TYPE_ALIASES = Object.freeze({
   bedspace: 'Room / Bedspace / Partition',
   partition: 'Room / Bedspace / Partition',
   other: 'Other'
+});
+
+const PROPERTY_CATEGORY_VALUES = Object.freeze([
+  'Apartment',
+  'Villa',
+  'Townhouse',
+  'Office',
+  'Shop / Retail',
+  'Warehouse',
+  'Land / Plot',
+  'Other'
+]);
+
+const UNIT_LAYOUT_VALUES = Object.freeze([
+  'Studio',
+  '1 BHK',
+  '2 BHK',
+  '3 BHK',
+  '4 BHK',
+  '5 BHK',
+  '6+ BHK',
+  'N/A'
+]);
+
+const PROPERTY_CATEGORY_ALIASES = Object.freeze({
+  apartment: 'Apartment',
+  flat: 'Apartment',
+  villa: 'Villa',
+  townhouse: 'Townhouse',
+  office: 'Office',
+  shop: 'Shop / Retail',
+  retail: 'Shop / Retail',
+  'shop / retail': 'Shop / Retail',
+  warehouse: 'Warehouse',
+  land: 'Land / Plot',
+  plot: 'Land / Plot',
+  'land / plot': 'Land / Plot',
+  other: 'Other'
+});
+
+const UNIT_LAYOUT_ALIASES = Object.freeze({
+  studio: 'Studio',
+  '1bhk': '1 BHK',
+  '1 bhk': '1 BHK',
+  '1br': '1 BHK',
+  '1 br': '1 BHK',
+  '1 bedroom': '1 BHK',
+  '2bhk': '2 BHK',
+  '2 bhk': '2 BHK',
+  '2br': '2 BHK',
+  '2 br': '2 BHK',
+  '2 bedroom': '2 BHK',
+  '3bhk': '3 BHK',
+  '3 bhk': '3 BHK',
+  '3br': '3 BHK',
+  '3 br': '3 BHK',
+  '3 bedroom': '3 BHK',
+  '4bhk': '4 BHK',
+  '4 bhk': '4 BHK',
+  '4br': '4 BHK',
+  '4 br': '4 BHK',
+  '4 bedroom': '4 BHK',
+  '5bhk': '5 BHK',
+  '5 bhk': '5 BHK',
+  '5br': '5 BHK',
+  '5 br': '5 BHK',
+  '5 bedroom': '5 BHK',
+  '5+bhk': '6+ BHK',
+  '5+ bhk': '6+ BHK',
+  '6bhk': '6+ BHK',
+  '6 bhk': '6+ BHK',
+  '6br': '6+ BHK',
+  '6 br': '6+ BHK',
+  '6 bedroom': '6+ BHK',
+  '6+': '6+ BHK',
+  '6+ bhk': '6+ BHK',
+  'n/a': 'N/A',
+  na: 'N/A',
+  'not applicable': 'N/A'
 });
 
 const LOCATION_ALIASES = Object.freeze({
@@ -170,6 +267,115 @@ export function normalizePropertyTypeValue(value) {
   const rawValue = normalizeText(value);
   if (!rawValue) return '';
   return PROPERTY_TYPE_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+}
+
+export function normalizePropertyCategoryValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  const normalized = PROPERTY_CATEGORY_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+  return PROPERTY_CATEGORY_VALUES.includes(normalized) ? normalized : '';
+}
+
+export function normalizeUnitLayoutValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  const normalized = UNIT_LAYOUT_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+  return UNIT_LAYOUT_VALUES.includes(normalized) ? normalized : '';
+}
+
+export function derivePropertyDimensions(source, options = {}) {
+  const record = source && typeof source === 'object' ? source : { propertyType: source };
+  let propertyCategory = normalizePropertyCategoryValue(record?.propertyCategory || record?.property_category);
+  let unitLayout = normalizeUnitLayoutValue(record?.unitLayout || record?.unit_layout);
+
+  const legacyPropertyType = normalizePropertyTypeValue(
+    record?.propertyType
+    || record?.property_type
+    || record?.category
+    || (options.includeLeadType ? record?.lead_type : '')
+    || ''
+  );
+
+  const inferredLayout = normalizeUnitLayoutValue(legacyPropertyType);
+  const inferredCategory = normalizePropertyCategoryValue(legacyPropertyType);
+
+  if (!unitLayout && inferredLayout) {
+    unitLayout = inferredLayout;
+  }
+  if (!propertyCategory && inferredLayout) {
+    propertyCategory = 'Apartment';
+  }
+  if (!propertyCategory && inferredCategory) {
+    propertyCategory = inferredCategory;
+  }
+  if (!propertyCategory && unitLayout) {
+    propertyCategory = unitLayout === 'N/A' ? 'Other' : 'Apartment';
+  }
+  if (!unitLayout && propertyCategory) {
+    unitLayout = 'N/A';
+  }
+  if (!propertyCategory && legacyPropertyType) {
+    propertyCategory = 'Other';
+  }
+  if (!unitLayout && legacyPropertyType) {
+    unitLayout = 'N/A';
+  }
+
+  return {
+    propertyCategory,
+    unitLayout,
+    legacyPropertyType
+  };
+}
+
+export function getDisplayPropertyType(record) {
+  const directValue = normalizePropertyTypeValue(
+    record?.propertyType
+    || record?.property_type
+    || record?.legacyPropertyType
+    || record?.category
+    || ''
+  );
+  if (directValue) return directValue;
+  const dimensions = derivePropertyDimensions(record, { includeLeadType: true });
+  if (dimensions.unitLayout && dimensions.unitLayout !== 'N/A') {
+    return dimensions.unitLayout;
+  }
+  return dimensions.propertyCategory || '';
+}
+
+export function getDisplayPropertyCategory(record) {
+  return derivePropertyDimensions(record, { includeLeadType: true }).propertyCategory || '';
+}
+
+export function getDisplayUnitLayout(record) {
+  return derivePropertyDimensions(record, { includeLeadType: true }).unitLayout || '';
+}
+
+export function getPropertyDimensionDbFields(source, options = {}) {
+  const dimensions = derivePropertyDimensions(source, options);
+  return {
+    property_category: dimensions.propertyCategory || null,
+    unit_layout: dimensions.unitLayout || null
+  };
+}
+
+export function stripPropertyDimensionFields(payload) {
+  if (Array.isArray(payload)) {
+    return payload.map(item => stripPropertyDimensionFields(item));
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  const clone = { ...payload };
+  delete clone.property_category;
+  delete clone.unit_layout;
+  return clone;
+}
+
+export function isPropertyDimensionColumnError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return message.includes('property_category') || message.includes('unit_layout');
 }
 
 export function normalizeLocationValue(value) {
@@ -535,7 +741,11 @@ function normalizeLeadClientPurpose(value) {
 export function buildLeadPublicSummary(item) {
   const meta = parseLeadMeta(item?.follow_up_notes || item?.followUpNotes);
   const clientPurpose = normalizeLeadClientPurpose(item?.clientPurpose || item?.purpose);
-  const propertyType = normalizePropertyTypeValue(item?.propertyType || item?.property_type || item?.category);
+  const propertyType = getDisplayPropertyType({
+    propertyType: item?.propertyType || item?.property_type || item?.category,
+    propertyCategory: item?.propertyCategory || item?.property_category,
+    unitLayout: item?.unitLayout || item?.unit_layout
+  });
   const location = normalizeLocationValue(item?.location);
   const buildingProject = normalizeText(item?.preferredBuildingProject || meta.preferredBuildingProject);
   const budget = normalizeText(item?.budget || item?.price_label || item?.priceLabel);
@@ -1170,7 +1380,19 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const purpose = isLead
     ? normalizeLeadClientPurpose(item.clientPurpose || item.purpose)
     : normalizeListingPurposeValue(item.purpose);
-  const category = normalizePropertyTypeValue(item.category);
+  const dimensions = derivePropertyDimensions({
+    propertyCategory: item?.propertyCategory || item?.property_category,
+    unitLayout: item?.unitLayout || item?.unit_layout,
+    propertyType: item?.propertyType || item?.property_type || item?.category,
+    category: item?.category,
+    lead_type: item?.lead_type
+  }, { includeLeadType: isLead });
+  const propertyType = getDisplayPropertyType({
+    propertyType: item?.propertyType || item?.property_type || item?.category,
+    propertyCategory: dimensions.propertyCategory,
+    unitLayout: dimensions.unitLayout
+  });
+  const category = propertyType;
   const location = normalizeLocationValue(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const propertyMeta = !isLead ? parsePropertyMeta(item.description) : null;
@@ -1183,9 +1405,6 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const generalNotes = isLead
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes);
-  const propertyType = isLead
-    ? normalizePropertyTypeValue(item.property_type || item.category || item.lead_type || '')
-    : normalizePropertyTypeValue(item.property_type || '');
   const status = isLead
     ? normalizeLeadStatusValue(item.status || 'new')
     : normalizeListingStatusValue(item.status || 'available');
@@ -1202,6 +1421,8 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     purpose,
     property_type: propertyType,
     category,
+    property_category: dimensions.propertyCategory || null,
+    unit_layout: dimensions.unitLayout || null,
     location,
     price_label: priceLabel,
     size_label: isLead ? projectOrBuilding : sizeLabel,
@@ -1219,7 +1440,9 @@ export function sanitizeLead(row) {
   if (!row) return null;
   const meta = parseLeadMeta(row.follow_up_notes);
   const clientPurpose = normalizeLeadClientPurpose(row.purpose);
-  const propertyType = normalizePropertyTypeValue(row.category || row.property_type || row.lead_type || '');
+  const propertyCategory = getDisplayPropertyCategory(row);
+  const unitLayout = getDisplayUnitLayout(row);
+  const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
@@ -1227,6 +1450,8 @@ export function sanitizeLead(row) {
     clientPurpose,
     category: propertyType,
     propertyType,
+    propertyCategory,
+    unitLayout,
     location,
     preferredLocation: location || '',
     budget: row.budget,
@@ -1279,13 +1504,17 @@ export function sanitizeLead(row) {
 export function sanitizeProperty(row) {
   if (!row) return null;
   const meta = parsePropertyMeta(row.description);
-  const propertyType = normalizePropertyTypeValue(row.property_type || row.category);
+  const propertyCategory = getDisplayPropertyCategory(row);
+  const unitLayout = getDisplayUnitLayout(row);
+  const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
     purpose: normalizeListingPurposeValue(row.purpose) || row.purpose,
     propertyType,
     category: propertyType,
+    propertyCategory,
+    unitLayout,
     location,
     price: row.price,
     rentPrice: normalizeText(row.purpose).toLowerCase() === 'rent' ? row.price || '' : '',
@@ -1380,7 +1609,9 @@ export function sanitizePublicListing(row, options = {}) {
   if (!row) return null;
   const exposeBrokerContact = Boolean(options?.exposeBrokerContact);
   const isLead = row.source_type === 'lead';
-  const propertyType = normalizePropertyTypeValue(row.property_type || row.category);
+  const propertyCategory = getDisplayPropertyCategory(row);
+  const unitLayout = getDisplayUnitLayout(row);
+  const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
   return {
     id: row.id,
@@ -1397,6 +1628,8 @@ export function sanitizePublicListing(row, options = {}) {
     purpose: isLead ? normalizeLeadClientPurpose(row.purpose) : (normalizeListingPurposeValue(row.purpose) || row.purpose),
     propertyType,
     category: propertyType,
+    propertyCategory,
+    unitLayout,
     location,
     priceLabel: row.price_label,
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
