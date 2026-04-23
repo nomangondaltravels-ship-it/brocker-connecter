@@ -19,6 +19,7 @@ Before complaint moderation can use the full backend fields, run:
 
 - `supabase-complaints-center.sql`
 - `supabase-support-center.sql`
+- `supabase-real-estate-companies.sql`
 
 This safely adds the complaint schema, admin action fields, and repeat-offense summary view on top of the existing project.
 

@@ -1590,6 +1590,7 @@
               </select>
               <button class="btn btn-secondary" type="button" onclick="jumpToComplaintReview()">Complaint Review</button>
               <button class="btn btn-secondary" type="button" onclick="jumpToSupportInbox()">Help Desk</button>
+              <button class="btn btn-secondary" type="button" onclick="jumpToCompanySuggestions()">Pending Companies</button>
               <button class="btn btn-secondary" type="button" onclick="clearAdminFilters()">Clear Filters</button>
             </div>
           </div>
@@ -1698,6 +1699,18 @@
                 <div class="item"><p>No support requests found.</p></div>
               </div>
             </div>
+
+            <div class="admin-section-card" id="companySuggestionsSection">
+              <div class="admin-section-head">
+                <div class="admin-section-copy">
+                  <h3>Company Suggestions</h3>
+                  <p>Review new company names submitted from registration and approve or reject them for future autocomplete.</p>
+                </div>
+              </div>
+              <div class="admin-table-wrap" id="companySuggestionsList">
+                <div class="item"><p>No pending company suggestions found.</p></div>
+              </div>
+            </div>
           </div>
 
           <div class="admin-detail-stack" id="adminDetailStack">
@@ -1760,6 +1773,8 @@
     let deals = [];
     let complaints = [];
     let supportRequests = [];
+    let approvedCompanySuggestions = [];
+    let pendingCompanySuggestions = [];
     let complaintsReadable = true;
     let adminBrokerAccounts = [];
     let brokerApprovals = {};
@@ -1775,6 +1790,7 @@
       supportLoading: false,
       complaintActionBusy: false,
       supportActionBusy: false,
+      companyActionBusy: false,
       selectedType: 'broker',
       selectedKey: '',
       selectedRowMemory: {
@@ -1929,6 +1945,61 @@
           handleAdminSessionFailure('Admin session expired. Please sign in again.');
         }
         throw new Error(result?.message || 'Support inbox action failed.');
+      }
+
+      return result;
+    }
+
+    async function fetchAdminCompanySuggestions() {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-company-suggestions', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
+        throw new Error(result?.message || 'Company suggestions request failed.');
+      }
+
+      return {
+        approvedCompanies: Array.isArray(result?.approvedCompanies) ? result.approvedCompanies : [],
+        pendingCompanies: Array.isArray(result?.pendingCompanies) ? result.pendingCompanies : []
+      };
+    }
+
+    async function requestCompanySuggestionAction(payload) {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/admin-company-suggestions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
+        throw new Error(result?.message || 'Company suggestion update failed.');
       }
 
       return result;
@@ -2276,6 +2347,7 @@
     async function loadAdminData() {
       adminUiState.complaintsLoading = true;
       adminUiState.supportLoading = true;
+      adminUiState.companyActionBusy = false;
       renderAdminWorkspace();
       loadLocalAdminState();
       let accounts = [];
@@ -2367,11 +2439,22 @@
         supportLoadError = error?.message || 'Support inbox could not load.';
         supportRequests = [];
       }
+      let companyLoadError = '';
+      try {
+        const companyResult = await fetchAdminCompanySuggestions();
+        approvedCompanySuggestions = companyResult.approvedCompanies || [];
+        pendingCompanySuggestions = companyResult.pendingCompanies || [];
+      } catch (error) {
+        console.error(error);
+        companyLoadError = error?.message || 'Company suggestions could not load.';
+        approvedCompanySuggestions = [];
+        pendingCompanySuggestions = [];
+      }
 
       adminUiState.complaintsLoading = false;
       adminUiState.supportLoading = false;
-      if (!document.getElementById('adminStatus')?.textContent && supportLoadError) {
-        setAdminStatus(supportLoadError, 'error');
+      if (!document.getElementById('adminStatus')?.textContent && (supportLoadError || companyLoadError)) {
+        setAdminStatus(supportLoadError || companyLoadError, 'error');
       }
       renderAdminWorkspace();
     }
@@ -2929,6 +3012,11 @@
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    function jumpToCompanySuggestions() {
+      const target = document.getElementById('companySuggestionsSection');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function normalizeSupportStatus(value) {
       const normalized = String(value || 'new').trim().toLowerCase();
       if (normalized === 'in progress') return 'in_progress';
@@ -2941,6 +3029,20 @@
       if (normalized === 'resolved') return { label: 'Resolved', tone: 'green' };
       if (normalized === 'in_progress') return { label: 'In Progress', tone: 'blue' };
       return { label: 'New', tone: 'gold' };
+    }
+
+    function getFilteredPendingCompanySuggestions() {
+      const search = normalizeAdminText(adminUiState.search);
+      const rows = pendingCompanySuggestions.filter(item => String(item?.status || '').toLowerCase() === 'pending');
+      if (!search) return rows;
+      return rows.filter(item => {
+        const haystack = [
+          item?.name,
+          item?.source,
+          item?.submitted_by_user_id
+        ].map(normalizeAdminText).join(' ');
+        return haystack.includes(search);
+      });
     }
 
     function renderComplaintFilterMenu(activeValue, complaintEntries) {
@@ -3536,6 +3638,7 @@
       renderComplaintFilterMenu(getComplaintQueueFilterValue(), collections.complaints);
       renderComplaints(collections.complaints);
       renderSupportRequests();
+      renderCompanySuggestions();
       renderAdminDetailPanel(collections);
       renderBrokerAccountModal(selected && selected.type === 'broker' ? selected : null);
       renderComplaintReviewModal(selected && selected.type === 'complaint' ? selected : null);
@@ -3921,6 +4024,74 @@
               </div>
             `;
           }).join('')}
+        </div>
+      `;
+    }
+
+    async function handleCompanySuggestionAction(pendingId, action) {
+      if (!pendingId || adminUiState.companyActionBusy) return;
+      adminUiState.companyActionBusy = true;
+      renderAdminWorkspace();
+      try {
+        const result = await requestCompanySuggestionAction({
+          action,
+          pendingId
+        });
+        approvedCompanySuggestions = Array.isArray(result?.approvedCompanies) ? result.approvedCompanies : approvedCompanySuggestions;
+        pendingCompanySuggestions = Array.isArray(result?.pendingCompanies) ? result.pendingCompanies : pendingCompanySuggestions;
+        setAdminStatus(
+          action === 'approve' ? 'Company suggestion approved successfully.' : 'Company suggestion rejected successfully.',
+          'success'
+        );
+      } catch (error) {
+        setAdminStatus(error?.message || 'Company suggestion update failed.', 'error');
+      }
+      adminUiState.companyActionBusy = false;
+      renderAdminWorkspace();
+    }
+
+    function renderCompanySuggestions() {
+      const target = document.getElementById('companySuggestionsList');
+      if (!target) return;
+      const entries = getFilteredPendingCompanySuggestions();
+      if (!entries.length) {
+        target.innerHTML = `<div class="admin-detail-empty">No pending company suggestions found.</div>`;
+        return;
+      }
+
+      const columns = '1.35fr 1fr 0.9fr 1fr 1.1fr';
+      target.innerHTML = `
+        <div class="admin-table-inner">
+          <div class="admin-table-head" style="grid-template-columns:${columns};">
+            <div>Company Name</div>
+            <div>Source</div>
+            <div>Status</div>
+            <div class="admin-head-right">Submitted</div>
+            <div class="admin-head-right">Actions</div>
+          </div>
+          ${entries.map(item => `
+            <div class="admin-table-row" style="grid-template-columns:${columns};">
+              <div class="admin-cell">
+                <strong>${escapeHtml(item.name || 'Unnamed company')}</strong>
+                <span>${escapeHtml(item.submitted_by_user_id || 'Submitted without user link')}</span>
+              </div>
+              <div class="admin-cell">
+                <strong>${escapeHtml(item.source || 'registration_form')}</strong>
+                <span>${approvedCompanySuggestions.length} approved companies live</span>
+              </div>
+              <div class="admin-cell">
+                <span class="badge gold">Pending</span>
+              </div>
+              <div class="admin-cell admin-cell-right">
+                <strong>${escapeHtml(formatAdminDateTime(item.created_at))}</strong>
+                <span>${escapeHtml(formatPostedTime(item.created_at))}</span>
+              </div>
+              <div class="admin-table-actions">
+                <button class="btn btn-secondary tiny-btn" type="button" ${adminUiState.companyActionBusy ? 'disabled' : ''} onclick="handleCompanySuggestionAction('${escapeHtml(item.id)}', 'approve')">Approve</button>
+                <button class="btn btn-danger tiny-btn" type="button" ${adminUiState.companyActionBusy ? 'disabled' : ''} onclick="handleCompanySuggestionAction('${escapeHtml(item.id)}', 'reject')">Reject</button>
+              </div>
+            </div>
+          `).join('')}
         </div>
       `;
     }

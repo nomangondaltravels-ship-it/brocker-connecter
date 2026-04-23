@@ -25,6 +25,12 @@ import {
   verifyPassword,
   verifyToken
 } from './_broker-platform.mjs';
+import {
+  findApprovedCompanyName,
+  getCuratedApprovedCompanyRows,
+  normalizeCompanyName,
+  parseCompanyRow
+} from './_real_estate_companies.mjs';
 
 function sanitizeBroker(broker) {
   return {
@@ -61,6 +67,66 @@ function buildSessionToken(broker) {
 function buildInternalBrokerId(authUserId) {
   const compact = normalizeText(authUserId).replace(/[^a-z0-9]/gi, '').toUpperCase();
   return `BC-${(compact || 'BROKER').slice(0, 10)}`;
+}
+
+async function listApprovedCompanies({ supabaseUrl, serviceRoleKey }) {
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'real_estate_companies',
+    select: '*',
+    filters: { status: 'approved' },
+    order: { column: 'name', ascending: true }
+  }).catch(() => []);
+
+  return (Array.isArray(rows) ? rows : []).map(parseCompanyRow);
+}
+
+async function savePendingCompanySuggestion({
+  supabaseUrl,
+  serviceRoleKey,
+  name,
+  submittedByUserId = '',
+  source = 'registration_form'
+}) {
+  const companyName = normalizeText(name);
+  if (!companyName) return;
+
+  const normalizedName = normalizeCompanyName(companyName);
+  const approvedCompanies = await listApprovedCompanies({ supabaseUrl, serviceRoleKey }).catch(() => []);
+  if (findApprovedCompanyName(companyName, approvedCompanies.length ? approvedCompanies : getCuratedApprovedCompanyRows())) {
+    return;
+  }
+
+  const existingPending = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'pending_real_estate_companies',
+    select: '*',
+    order: { column: 'created_at', ascending: false }
+  }).catch(() => []);
+
+  const hasMatch = (Array.isArray(existingPending) ? existingPending : [])
+    .map(parseCompanyRow)
+    .some(item =>
+      normalizeCompanyName(item.name) === normalizedName
+      && String(item.status || 'pending').toLowerCase() === 'pending'
+    );
+
+  if (hasMatch) return;
+
+  await supabaseInsert({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'pending_real_estate_companies',
+    payload: {
+      name: companyName,
+      submitted_by_user_id: normalizeText(submittedByUserId) || null,
+      source: normalizeText(source) || 'registration_form',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    }
+  }).catch(() => []);
 }
 
 async function resolveAuthUserFromSession({
@@ -371,7 +437,7 @@ export async function POST(request) {
     const email = normalizeEmail(body?.email);
     const password = String(body?.password || '');
     const confirmPassword = String(body?.confirmPassword || '');
-    const companyName = normalizeText(body?.companyName);
+    const rawCompanyName = normalizeText(body?.companyName);
     const redirectTo = normalizeText(body?.redirectTo) || new URL('/auth-callback.html', request.url).toString();
 
     if (fullName.length < 2) {
@@ -403,6 +469,12 @@ export async function POST(request) {
     if (duplicate) {
       return json({ message: 'This broker account already exists. Please sign in instead.' }, 409);
     }
+
+    const approvedCompanies = await listApprovedCompanies({ supabaseUrl, serviceRoleKey }).catch(() => []);
+    const companyName = findApprovedCompanyName(
+      rawCompanyName,
+      approvedCompanies.length ? approvedCompanies : getCuratedApprovedCompanyRows()
+    ) || rawCompanyName;
 
     let authUser = null;
     let emailConfirmationRequired = false;
@@ -437,6 +509,16 @@ export async function POST(request) {
       });
       if (!broker) {
         throw new Error('Broker profile creation failed.');
+      }
+
+      if (rawCompanyName && !findApprovedCompanyName(rawCompanyName, approvedCompanies.length ? approvedCompanies : getCuratedApprovedCompanyRows())) {
+        await savePendingCompanySuggestion({
+          supabaseUrl,
+          serviceRoleKey,
+          name: rawCompanyName,
+          submittedByUserId: broker.id || authUser.id,
+          source: 'registration_form'
+        });
       }
 
       if (emailConfirmationRequired) {

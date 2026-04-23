@@ -531,6 +531,52 @@
       color: #fecaca;
     }
 
+    .auth-company-combobox {
+      position: relative;
+      display: grid;
+      gap: 8px;
+    }
+
+    .auth-company-helper {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .auth-company-menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 1800;
+      display: grid;
+      gap: 4px;
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      box-shadow: var(--shadow-deep);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .auth-company-option {
+      border: 0;
+      background: transparent;
+      border-radius: 12px;
+      padding: 10px 12px;
+      text-align: left;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .auth-company-option:hover,
+    .auth-company-option.is-active {
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-deep);
+    }
+
     .auth-inline-link {
       border: none;
       background: transparent;
@@ -2534,7 +2580,14 @@
       <div class="auth-status" id="authStatus"></div>
       <form id="authForm" class="grid-2" style="margin-top:16px;">
         <div class="full" id="fullNameWrap"><label class="small">Full Name</label><input id="authFullName"></div>
-        <div class="full" id="companyWrap"><label class="small">Company Name (Optional)</label><input id="authCompany"></div>
+        <div class="full" id="companyWrap">
+          <label class="small">Company Name (Optional)</label>
+          <div class="auth-company-combobox">
+            <input id="authCompany" type="text" autocomplete="off" placeholder="Start typing company name">
+            <div class="auth-company-menu hidden" id="authCompanyMenu"></div>
+            <div class="auth-company-helper">Choose an approved company suggestion or type a new company name.</div>
+          </div>
+        </div>
         <div id="brokerIdWrap" style="display:none;"><label class="small">Broker ID Number</label><input id="authBrokerId"></div>
         <div id="mobileWrap"><label class="small">Mobile Number (Optional)</label><input id="authMobile" placeholder="058XXXXXXX or +9715XXXXXXXX"></div>
         <div class="full" id="emailWrap"><label class="small">Email Address</label><input id="authEmail" type="email" placeholder="name@example.com"></div>
@@ -2574,6 +2627,10 @@
       authRequestId: 0,
       sessionToken: localStorage.getItem('broker_session_token') || '',
       brokerProfile: null,
+      approvedCompanies: [],
+      authCompanyQuery: '',
+      authCompanyMenuOpen: false,
+      authCompanyActiveIndex: -1,
       listings: [],
       activeSection: 'requirements',
       publicSearchQuery: '',
@@ -3068,11 +3125,11 @@
             <div class="support-form-grid">
               <div class="complaint-form-card">
                 <label class="small" for="supportName">Name</label>
-                <input id="supportName" type="text" value="${escapeHtml(draft.name || '')}" onchange="updateSupportDraft('name', this.value)" required>
+                <input id="supportName" type="text" value="${escapeHtml(draft.name || '')}" oninput="updateSupportDraft('name', this.value)" required>
               </div>
               <div class="complaint-form-card">
                 <label class="small" for="supportEmail">Email</label>
-                <input id="supportEmail" type="email" value="${escapeHtml(draft.email || '')}" onchange="updateSupportDraft('email', this.value)" required>
+                <input id="supportEmail" type="email" value="${escapeHtml(draft.email || '')}" oninput="updateSupportDraft('email', this.value)" required>
               </div>
               <div class="complaint-form-card is-full">
                 <label class="small" for="supportSubject">Subject</label>
@@ -3083,7 +3140,7 @@
               </div>
               <div class="complaint-form-card is-full">
                 <label class="small" for="supportMessage">Message</label>
-                <textarea id="supportMessage" placeholder="Tell us how we can help." onchange="updateSupportDraft('message', this.value)" required>${escapeHtml(draft.message || '')}</textarea>
+                <textarea id="supportMessage" placeholder="Tell us how we can help." oninput="updateSupportDraft('message', this.value)" required>${escapeHtml(draft.message || '')}</textarea>
               </div>
             </div>
             <div class="complaint-actions-row">
@@ -3434,6 +3491,121 @@
         }
       });
       overlay.dataset.ready = 'true';
+    }
+
+    function normalizeCompanyName(value) {
+      return String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function getApprovedCompanySuggestions(query = '') {
+      const normalizedQuery = normalizeCompanyName(query);
+      const companies = Array.isArray(state.approvedCompanies) ? state.approvedCompanies : [];
+      if (!normalizedQuery) return companies.slice(0, 8);
+      return companies
+        .filter(company => normalizeCompanyName(company?.name).includes(normalizedQuery))
+        .slice(0, 8);
+    }
+
+    function closeAuthCompanyMenu() {
+      state.authCompanyMenuOpen = false;
+      state.authCompanyActiveIndex = -1;
+      renderAuthCompanySuggestions();
+    }
+
+    function renderAuthCompanySuggestions() {
+      const menu = document.getElementById('authCompanyMenu');
+      if (!menu) return;
+      const suggestions = getApprovedCompanySuggestions(state.authCompanyQuery);
+      if (state.authMode !== 'register' || !state.authCompanyMenuOpen || !suggestions.length) {
+        menu.classList.add('hidden');
+        menu.innerHTML = '';
+        return;
+      }
+
+      menu.classList.remove('hidden');
+      menu.innerHTML = suggestions.map((company, index) => `
+        <button class="auth-company-option${index === state.authCompanyActiveIndex ? ' is-active' : ''}" type="button" data-company-name="${escapeHtml(company.name)}" onclick="selectApprovedCompanySuggestion(this.dataset.companyName)">${escapeHtml(company.name)}</button>
+      `).join('');
+    }
+
+    function selectApprovedCompanySuggestion(name) {
+      const input = document.getElementById('authCompany');
+      if (input) input.value = name;
+      state.authCompanyQuery = name;
+      closeAuthCompanyMenu();
+    }
+
+    async function loadApprovedCompanySuggestions() {
+      try {
+        const response = await fetch('/api/company-suggestions');
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Company suggestions could not load.');
+        }
+        state.approvedCompanies = Array.isArray(result?.companies)
+          ? result.companies.map(company => ({ ...company, name: String(company?.name || '').trim() })).filter(company => company.name)
+          : [];
+      } catch (error) {
+        state.approvedCompanies = [];
+      }
+    }
+
+    function initAuthCompanyAutocomplete() {
+      const input = document.getElementById('authCompany');
+      const menu = document.getElementById('authCompanyMenu');
+      if (!input || input.dataset.ready === 'true') return;
+
+      input.addEventListener('input', event => {
+        state.authCompanyQuery = String(event.target.value || '');
+        state.authCompanyMenuOpen = true;
+        state.authCompanyActiveIndex = -1;
+        renderAuthCompanySuggestions();
+      });
+
+      input.addEventListener('focus', event => {
+        state.authCompanyQuery = String(event.target.value || '');
+        state.authCompanyMenuOpen = true;
+        renderAuthCompanySuggestions();
+      });
+
+      input.addEventListener('keydown', event => {
+        const suggestions = getApprovedCompanySuggestions(state.authCompanyQuery);
+        if (!suggestions.length) return;
+
+        if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          state.authCompanyMenuOpen = true;
+          state.authCompanyActiveIndex = Math.min(state.authCompanyActiveIndex + 1, suggestions.length - 1);
+          renderAuthCompanySuggestions();
+          return;
+        }
+
+        if (event.key === 'ArrowUp') {
+          event.preventDefault();
+          state.authCompanyActiveIndex = Math.max(state.authCompanyActiveIndex - 1, 0);
+          renderAuthCompanySuggestions();
+          return;
+        }
+
+        if (event.key === 'Enter' && state.authCompanyMenuOpen && state.authCompanyActiveIndex >= 0) {
+          event.preventDefault();
+          selectApprovedCompanySuggestion(suggestions[state.authCompanyActiveIndex]?.name || '');
+          return;
+        }
+
+        if (event.key === 'Escape') {
+          closeAuthCompanyMenu();
+        }
+      });
+
+      document.addEventListener('click', event => {
+        if (!event.target.closest('#companyWrap')) {
+          closeAuthCompanyMenu();
+        }
+      });
+
+      menu?.addEventListener('mousedown', event => event.preventDefault());
+      input.dataset.ready = 'true';
     }
 
     function normalizeBrokerIdInput(value) {
@@ -4663,6 +4835,10 @@
       document.getElementById('authConfirmPassword').required = mode === 'register';
       document.getElementById('authStatus').className = 'auth-status';
       document.getElementById('authStatus').textContent = '';
+      state.authCompanyQuery = String(document.getElementById('authCompany')?.value || '');
+      state.authCompanyMenuOpen = false;
+      state.authCompanyActiveIndex = -1;
+      renderAuthCompanySuggestions();
       state.authRequestId += 1;
       setAuthSubmitLoading(false, mode);
     }
@@ -4746,6 +4922,7 @@
 
     function closeAuthModal() {
       document.getElementById('authModal').classList.remove('active');
+      closeAuthCompanyMenu();
       setAuthStatus('');
     }
 
@@ -5000,8 +5177,10 @@
         const forcedRelogin = enforceBrokerSessionVersion();
         initPublicComplaintModal();
         initSupportModal();
+        initAuthCompanyAutocomplete();
         handleAuthReturnMessage();
         showForcedReloginNotice();
+        await loadApprovedCompanySuggestions();
         const authenticated = await verifyBrokerSession();
         const showDashboardButton = true;
         document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
