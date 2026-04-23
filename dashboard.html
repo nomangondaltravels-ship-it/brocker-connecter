@@ -5200,7 +5200,68 @@
       background: rgba(200, 169, 107, 0.08);
     }
 
-    body.complaint-modal-open {
+    .rules-agreement-card {
+      border: 1px solid rgba(200, 169, 107, 0.28);
+      border-radius: 16px;
+      background: rgba(200, 169, 107, 0.08);
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rules-agreement-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #243041;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .rules-agreement-label input {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      accent-color: #c8a96b;
+      flex: 0 0 16px;
+    }
+
+    .rules-agreement-status {
+      color: #64748B;
+      font-size: 0.84rem;
+    }
+
+    .rules-prompt-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1610;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .rules-prompt-card {
+      width: min(620px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .rules-prompt-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    body.complaint-modal-open,
+    body.rules-prompt-open {
       overflow: hidden;
     }
 
@@ -6046,7 +6107,12 @@
     </div>
   </div>
 
+  <div class="rules-prompt-backdrop hidden" id="dashboardRulesPromptBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardRulesPromptTitle">
+    <div class="rules-prompt-card" id="dashboardRulesPromptCard"></div>
+  </div>
+
   <script src="assets/dashboard-lead-config.js"></script>
+  <script src="assets/platform-rules-config.js"></script>
   <script src="assets/complaint-center-ui.js"></script>
   <script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
@@ -6161,6 +6227,10 @@
       complaintDraft: null,
       complaintModalOpen: false,
       complaintModalSubmitting: false,
+      rulesPromptOpen: false,
+      rulesPromptChecked: false,
+      rulesPromptSource: '',
+      pendingRulesShareAction: null,
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
@@ -6196,23 +6266,15 @@
       resolved: 'Resolved',
       rejected: 'Rejected'
     };
-    const COMPLAINT_CENTER_RULES = [
-      {
-        title: 'Use complaints for real conduct or record issues',
-        copy: 'Submit reports only when a listing, requirement, or broker behavior genuinely needs admin review.',
-        points: ['Choose the closest reason', 'Explain what is wrong clearly', 'Attach proof when available']
-      },
-      {
-        title: 'Respect marketplace integrity',
-        copy: 'Spam, duplicate complaints, and misleading reports slow down review for everyone and may be rejected.',
-        points: ['Do not report your own records', 'Do not submit repeat complaints for the same issue', 'Keep language factual and professional']
-      },
-      {
-        title: 'Admin reviews every valid submission',
-        copy: 'Complaints can move through review, resolution, or rejection based on the evidence and platform rules.',
-        points: ['Statuses update inside My Complaints', 'Admin notes appear when available', 'Severe repeat offenses may trigger restrictions']
-      }
-    ];
+    const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
+      version: 'default',
+      title: 'Platform Rules & Conduct',
+      intro: 'Complaint review and broker sharing work best when every report is factual, respectful, and tied to real platform conduct.',
+      acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.',
+      promptTitle: 'Accept Platform Rules',
+      promptCopy: 'Before you submit complaints or publish records to Broker Connector, confirm that you understand the platform conduct rules.',
+      categories: []
+    };
 
     const DISPLAY_SEPARATOR = ' · ';
 
@@ -7731,6 +7793,7 @@
         reason: '',
         description: '',
         proofAttachment: null,
+        rulesAccepted: Boolean(context?.rulesAccepted),
         targetType: String(context?.targetType || '').trim().toLowerCase(),
         targetId: String(context?.targetId || '').trim(),
         targetLabel: String(context?.targetLabel || '').trim(),
@@ -7745,6 +7808,67 @@
 
     function countComplaintsByStatus(status) {
       return state.complaints.filter(item => String(item?.normalizedStatus || item?.status || '').trim().toLowerCase() === status).length;
+    }
+
+    function getPlatformRulesStorageKey() {
+      const broker = state.overview?.broker || state.broker || {};
+      const keyPart = String(broker.id || broker.email || broker.brokerIdNumber || state.token || 'guest').trim() || 'guest';
+      return `broker_platform_rules_acceptance_${keyPart}`;
+    }
+
+    function getPlatformRulesAcceptanceRecord() {
+      try {
+        const raw = localStorage.getItem(getPlatformRulesStorageKey());
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.version !== PLATFORM_RULES.version) return null;
+        return parsed;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function hasAcceptedPlatformRules() {
+      return Boolean(getPlatformRulesAcceptanceRecord()?.acceptedAt);
+    }
+
+    function storePlatformRulesAcceptance(source = 'dashboard') {
+      const record = {
+        acceptedAt: new Date().toISOString(),
+        version: PLATFORM_RULES.version,
+        source
+      };
+      try {
+        localStorage.setItem(getPlatformRulesStorageKey(), JSON.stringify(record));
+      } catch (error) {
+        console.debug('Could not store platform rules acceptance', error?.message || error);
+      }
+      return record;
+    }
+
+    function getPlatformRulesAcceptedLabel() {
+      const record = getPlatformRulesAcceptanceRecord();
+      if (!record?.acceptedAt) return '';
+      return `Accepted ${formatDateTime(record.acceptedAt)}`;
+    }
+
+    function renderPlatformRulesAgreementControl(prefix, accepted, checked, onChange) {
+      const statusText = accepted ? getPlatformRulesAcceptedLabel() || 'Rules already accepted for this broker session.' : 'Required before complaint submission or public sharing.';
+      return `
+        <div class="rules-agreement-card">
+          <label class="rules-agreement-label" for="${escapeHtml(prefix)}RulesAcceptance">
+            <input id="${escapeHtml(prefix)}RulesAcceptance" type="checkbox" ${checked ? 'checked' : ''} onchange="${onChange}">
+            <span>${escapeHtml(PLATFORM_RULES.acceptanceText)}</span>
+          </label>
+          <div class="rules-agreement-status">${escapeHtml(statusText)}</div>
+        </div>
+      `;
+    }
+
+    function syncComplaintModalBodyLock() {
+      const shouldLock = Boolean(state.complaintModalOpen || state.rulesPromptOpen);
+      document.body.classList.toggle('complaint-modal-open', shouldLock);
+      document.body.classList.toggle('rules-prompt-open', shouldLock);
     }
 
     function normalizeComplaintCenterTab(value) {
@@ -7767,7 +7891,8 @@
           sourceSection: 'complaints',
           title: 'Report New Complaint',
           copy: 'Submit a complaint manually when you need admin review for a broker, listing, or requirement.',
-          targetType: 'listing'
+          targetType: 'listing',
+          rulesAccepted: hasAcceptedPlatformRules()
         });
       }
       return state.complaintCenterDraft;
@@ -7784,10 +7909,6 @@
       draft[field] = value;
     }
 
-    function syncComplaintModalBodyLock() {
-      document.body.classList.toggle('complaint-modal-open', Boolean(state.complaintModalOpen));
-    }
-
     function closeComplaintComposer() {
       state.complaintModalOpen = false;
       state.complaintModalSubmitting = false;
@@ -7797,7 +7918,10 @@
     }
 
     function openComplaintComposer(context = {}) {
-      state.complaintDraft = getDefaultComplaintDraft(context);
+      state.complaintDraft = getDefaultComplaintDraft({
+        ...context,
+        rulesAccepted: hasAcceptedPlatformRules()
+      });
       state.complaintModalSubmitting = false;
       state.complaintModalOpen = true;
       renderComplaintModal();
@@ -7947,6 +8071,7 @@
 
     function validateComplaintDraft(draft) {
       if (!draft) return 'Complaint form is not ready.';
+      if (!hasAcceptedPlatformRules() && !draft.rulesAccepted) return 'Accept platform rules before submitting a complaint.';
       if (!String(draft.targetType || '').trim()) return 'Select what you are reporting.';
       if (!String(draft.targetId || '').trim()) return 'Add the target ID or reference.';
       if (!String(draft.reason || '').trim()) return 'Select a complaint reason.';
@@ -8059,6 +8184,7 @@
 
     function renderComplaintReportNewTab() {
       const draft = ensureComplaintCenterDraft();
+      const accepted = hasAcceptedPlatformRules();
       return `
         <form class="complaint-form-shell" onsubmit="submitComplaintCenterDraft(event)">
           <div class="complaint-form-layout">
@@ -8130,6 +8256,7 @@
               </div>
             </div>
             <aside class="complaint-form-aside">
+              ${renderPlatformRulesAgreementControl('complaintCenterForm', accepted, accepted || Boolean(draft.rulesAccepted), "updateComplaintCenterDraftField('rulesAccepted', this.checked)")}
               <div class="complaint-context-card">
                 <label class="small">Submission Summary</label>
                 <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
@@ -8150,20 +8277,25 @@
     }
 
     function renderComplaintRulesTab() {
+      const accepted = hasAcceptedPlatformRules();
+      const categories = Array.isArray(PLATFORM_RULES.categories) ? PLATFORM_RULES.categories : [];
       return `
         <div class="complaint-rules-grid">
-          ${COMPLAINT_CENTER_RULES.map(rule => `
+          <div class="complaint-rule-card">
+            <small>${escapeHtml(PLATFORM_RULES.title || 'Platform Rules')}</small>
+            <strong>${escapeHtml(PLATFORM_RULES.title || 'Platform Rules & Conduct')}</strong>
+            <p>${escapeHtml(PLATFORM_RULES.intro || '')}</p>
+            ${renderPlatformRulesAgreementControl('complaintCenterRules', accepted, accepted, "if(this.checked){storePlatformRulesAcceptance('rules-tab');renderComplaintCenter();setStatus('Platform rules accepted for this broker session.','success')}")}
+          </div>
+          ${categories.map(rule => `
             <div class="complaint-rule-card">
               <small>Complaint Rule</small>
               <strong>${escapeHtml(rule.title)}</strong>
-              <p>${escapeHtml(rule.copy)}</p>
-              <ul class="complaint-rule-points">
-                ${(Array.isArray(rule.points) ? rule.points : []).map(point => `<li>${escapeHtml(point)}</li>`).join('')}
-              </ul>
+              <p>${escapeHtml(rule.description || rule.copy || '')}</p>
             </div>
           `).join('')}
           <div class="complaint-acceptance-note">
-            By submitting a complaint, you confirm that the information you provide is truthful, relevant to platform conduct, and shared for admin review in good faith.
+            ${escapeHtml(PLATFORM_RULES.acceptanceText)} Reports should stay factual, relevant, and submitted in good faith.
           </div>
         </div>
       `;
@@ -8266,6 +8398,7 @@
       }
 
       const draft = state.complaintDraft;
+      const accepted = hasAcceptedPlatformRules();
       backdrop.classList.remove('hidden');
       content.innerHTML = window.ComplaintCenterUi?.renderComplaintFormModal({
         variant: 'dashboard',
@@ -8291,6 +8424,7 @@
         reasonChangeHandler: "updateComplaintDraftField('reason', this.value)",
         descriptionChangeHandler: "updateComplaintDraftField('description', this.value)",
         descriptionPlaceholder: 'Explain the issue clearly so admin can review it quickly.',
+        extraContentHtml: renderPlatformRulesAgreementControl('dashboardComplaint', accepted, accepted || Boolean(draft.rulesAccepted), "updateComplaintDraftField('rulesAccepted', this.checked)"),
         submitting: state.complaintModalSubmitting,
         submitLabel: 'Submit Complaint',
         submittingLabel: 'Submitting...'
@@ -8355,6 +8489,9 @@
       state.complaintModalSubmitting = true;
       renderComplaintModal();
       try {
+        if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
+          storePlatformRulesAcceptance('complaint-modal');
+        }
         const result = await submitComplaintDraftRequest(draft);
         setStatus(result?.message || 'Complaint submitted successfully.', 'success');
         await loadBrokerComplaints();
@@ -8378,6 +8515,9 @@
       state.complaintCenterSubmitting = true;
       renderComplaintCenter();
       try {
+        if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
+          storePlatformRulesAcceptance('complaint-center');
+        }
         const result = await submitComplaintDraftRequest(draft);
         setStatus(result?.message || 'Complaint submitted successfully.', 'success');
         await loadBrokerComplaints();
@@ -8404,6 +8544,90 @@
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && state.complaintModalOpen) {
           closeComplaintComposer();
+        }
+      });
+      backdrop.dataset.ready = 'true';
+    }
+
+    function renderDashboardRulesPrompt() {
+      const backdrop = document.getElementById('dashboardRulesPromptBackdrop');
+      const card = document.getElementById('dashboardRulesPromptCard');
+      if (!backdrop || !card) return;
+      if (!state.rulesPromptOpen) {
+        backdrop.classList.add('hidden');
+        card.innerHTML = '';
+        return;
+      }
+      const categories = (Array.isArray(PLATFORM_RULES.categories) ? PLATFORM_RULES.categories : []).slice(0, 4);
+      backdrop.classList.remove('hidden');
+      card.innerHTML = `
+        <div class="complaint-center-head">
+          <div class="complaint-center-head-copy">
+            <h3 id="dashboardRulesPromptTitle">${escapeHtml(PLATFORM_RULES.promptTitle || 'Accept Platform Rules')}</h3>
+            <p>${escapeHtml(PLATFORM_RULES.promptCopy || 'Before you publish records to Broker Connector, confirm that you understand the platform conduct rules.')}</p>
+          </div>
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="closeDashboardRulesPrompt()">Close</button>
+        </div>
+        <div class="rules-prompt-grid">
+          ${categories.map(rule => `
+            <div class="complaint-context-card">
+              <label class="small">${escapeHtml(rule.title || 'Rule')}</label>
+              <strong>${escapeHtml(rule.title || 'Rule')}</strong>
+              <span>${escapeHtml(rule.description || '')}</span>
+            </div>
+          `).join('')}
+        </div>
+        ${renderPlatformRulesAgreementControl('dashboardSharePrompt', false, state.rulesPromptChecked, "state.rulesPromptChecked=this.checked")}
+        <div class="complaint-modal-actions">
+          <button class="btn btn-secondary" type="button" onclick="closeDashboardRulesPrompt()">Cancel</button>
+          <button class="btn btn-primary" type="button" onclick="acceptDashboardRulesPrompt()">Accept and Continue</button>
+        </div>
+      `;
+    }
+
+    function closeDashboardRulesPrompt() {
+      state.rulesPromptOpen = false;
+      state.rulesPromptChecked = false;
+      state.rulesPromptSource = '';
+      state.pendingRulesShareAction = null;
+      renderDashboardRulesPrompt();
+      syncComplaintModalBodyLock();
+    }
+
+    function openDashboardRulesPromptForShare(entityType, id, listed) {
+      state.rulesPromptOpen = true;
+      state.rulesPromptChecked = false;
+      state.rulesPromptSource = 'share';
+      state.pendingRulesShareAction = { entityType, id, listed };
+      renderDashboardRulesPrompt();
+      syncComplaintModalBodyLock();
+    }
+
+    async function acceptDashboardRulesPrompt() {
+      if (!state.rulesPromptChecked) {
+        setStatus('Accept platform rules before sharing records publicly.', 'error');
+        return;
+      }
+      const pending = state.pendingRulesShareAction;
+      storePlatformRulesAcceptance('share-prompt');
+      closeDashboardRulesPrompt();
+      setStatus('Platform rules accepted for this broker session.', 'success');
+      if (pending) {
+        await proceedToggleListItem(pending.entityType, pending.id, pending.listed);
+      }
+    }
+
+    function initDashboardRulesPrompt() {
+      const backdrop = document.getElementById('dashboardRulesPromptBackdrop');
+      if (!backdrop || backdrop.dataset.ready === 'true') return;
+      backdrop.addEventListener('click', event => {
+        if (event.target === backdrop) {
+          closeDashboardRulesPrompt();
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.rulesPromptOpen) {
+          closeDashboardRulesPrompt();
         }
       });
       backdrop.dataset.ready = 'true';
@@ -9984,7 +10208,7 @@
       }
     }
 
-    async function toggleListItem(entityType, id, listed) {
+    async function proceedToggleListItem(entityType, id, listed) {
       try {
         await dashboardAction({
           action: listed ? 'unlist-item' : 'list-item',
@@ -12821,6 +13045,14 @@
       }
     }
 
+    async function toggleListItem(entityType, id, listed) {
+      if (!listed && !hasAcceptedPlatformRules()) {
+        openDashboardRulesPromptForShare(entityType, id, listed);
+        return;
+      }
+      await proceedToggleListItem(entityType, id, listed);
+    }
+
     async function saveLeadFollowUpFromPanel(id, prefix = 'requirement') {
       try {
         await dashboardAction({
@@ -13678,6 +13910,7 @@
       try {
         initDashboardCallPopover();
         initDashboardComplaintModal();
+        initDashboardRulesPrompt();
         wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();

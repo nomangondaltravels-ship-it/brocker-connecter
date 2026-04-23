@@ -2197,6 +2197,37 @@
       gap: 10px;
     }
 
+    .rules-agreement-card {
+      border: 1px solid rgba(200, 169, 107, 0.28);
+      border-radius: 16px;
+      background: rgba(200, 169, 107, 0.08);
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .rules-agreement-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #243041;
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .rules-agreement-label input {
+      margin-top: 2px;
+      width: 16px;
+      height: 16px;
+      accent-color: #c8a96b;
+      flex: 0 0 16px;
+    }
+
+    .rules-agreement-status {
+      color: #64748B;
+      font-size: 0.84rem;
+    }
+
     body.complaint-modal-open {
       overflow: hidden;
     }
@@ -2438,6 +2469,7 @@
   </div>
 
   <script src="assets/dashboard-lead-config.js"></script>
+  <script src="assets/platform-rules-config.js"></script>
   <script src="assets/complaint-center-ui.js"></script>
   <script>
     const state = {
@@ -2485,6 +2517,10 @@
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
+    const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
+      version: 'default',
+      acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.'
+    };
     const authSupabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
     const authSupabaseKey = 'sb_publishable_32o5MAuNPn1e0Uy6ZC09Wg_2skR1xQW';
 
@@ -2496,6 +2532,65 @@
         console.error(error);
         return fallback;
       }
+    }
+
+    function getPlatformRulesStorageKey() {
+      const broker = state.brokerProfile || {};
+      const keyPart = String(broker.id || broker.email || state.sessionToken || 'public').trim() || 'public';
+      return `broker_platform_rules_acceptance_${keyPart}`;
+    }
+
+    function getPlatformRulesAcceptanceRecord() {
+      try {
+        const raw = localStorage.getItem(getPlatformRulesStorageKey());
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || parsed.version !== PLATFORM_RULES.version) return null;
+        return parsed;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function hasAcceptedPlatformRules() {
+      return Boolean(getPlatformRulesAcceptanceRecord()?.acceptedAt);
+    }
+
+    function storePlatformRulesAcceptance(source = 'connector') {
+      const record = {
+        acceptedAt: new Date().toISOString(),
+        version: PLATFORM_RULES.version,
+        source
+      };
+      try {
+        localStorage.setItem(getPlatformRulesStorageKey(), JSON.stringify(record));
+      } catch (error) {
+        console.debug('Could not store platform rules acceptance', error?.message || error);
+      }
+      return record;
+    }
+
+    function getPlatformRulesAcceptedLabel() {
+      const record = getPlatformRulesAcceptanceRecord();
+      if (!record?.acceptedAt) return '';
+      try {
+        return `Accepted ${new Date(record.acceptedAt).toLocaleString('en-AE', { dateStyle: 'medium', timeStyle: 'short' })}`;
+      } catch (error) {
+        return 'Rules already accepted';
+      }
+    }
+
+    function renderPlatformRulesAgreementControl(prefix, accepted, checked, onChange) {
+      const statusText = accepted ? getPlatformRulesAcceptedLabel() || 'Rules already accepted for this broker session.' : 'Required before complaint submission.';
+      return `
+        <div class="rules-agreement-card">
+          <label class="rules-agreement-label" for="${escapeHtml(prefix)}RulesAcceptance">
+            <input id="${escapeHtml(prefix)}RulesAcceptance" type="checkbox" ${checked ? 'checked' : ''} onchange="${onChange}">
+            <span>${escapeHtml(PLATFORM_RULES.acceptanceText)}</span>
+          </label>
+          <div class="rules-agreement-status">${escapeHtml(statusText)}</div>
+        </div>
+      `;
     }
 
     function escapeHtml(str) {
@@ -2768,6 +2863,7 @@
         reason: '',
         description: '',
         proofAttachment: null,
+        rulesAccepted: Boolean(context?.rulesAccepted),
         targetType: String(context?.targetType || '').trim().toLowerCase(),
         targetId: String(context?.targetId || '').trim(),
         targetLabel: String(context?.targetLabel || '').trim(),
@@ -2782,7 +2878,10 @@
 
     function openPublicComplaintModal(context = {}) {
       if (!ensureComplaintAuth()) return;
-      state.complaintDraft = createPublicComplaintDraft(context);
+      state.complaintDraft = createPublicComplaintDraft({
+        ...context,
+        rulesAccepted: hasAcceptedPlatformRules()
+      });
       state.complaintModalOpen = true;
       state.complaintModalSubmitting = false;
       renderPublicComplaintModal();
@@ -2867,6 +2966,7 @@
       }
 
       const draft = state.complaintDraft;
+      const accepted = hasAcceptedPlatformRules();
       overlay.classList.remove('hidden');
       content.innerHTML = window.ComplaintCenterUi?.renderComplaintFormModal({
         variant: 'public',
@@ -2892,6 +2992,7 @@
         reasonChangeHandler: "updatePublicComplaintDraft('reason', this.value)",
         descriptionChangeHandler: "updatePublicComplaintDraft('description', this.value)",
         descriptionPlaceholder: 'Describe what is wrong with this listing, requirement, or broker.',
+        extraContentHtml: renderPlatformRulesAgreementControl('publicComplaint', accepted, accepted || Boolean(draft.rulesAccepted), "updatePublicComplaintDraft('rulesAccepted', this.checked)"),
         submitting: state.complaintModalSubmitting,
         submitLabel: 'Submit Complaint',
         submittingLabel: 'Submitting...'
@@ -2930,6 +3031,10 @@
       event?.preventDefault?.();
       if (!state.complaintDraft || state.complaintModalSubmitting) return;
       const draft = state.complaintDraft;
+      if (!hasAcceptedPlatformRules() && !draft.rulesAccepted) {
+        setSystemBanner('Accept platform rules before submitting a complaint.', 'error');
+        return;
+      }
       if (!draft.reason) {
         setSystemBanner('Select a complaint reason.', 'error');
         return;
@@ -2941,6 +3046,9 @@
       state.complaintModalSubmitting = true;
       renderPublicComplaintModal();
       try {
+        if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
+          storePlatformRulesAcceptance('connector-complaint');
+        }
         const response = await fetch('/api/broker-complaints', {
           method: 'POST',
           headers: {

@@ -86,6 +86,7 @@
     const cancelLabel = normalizeValue(options.cancelLabel) || 'Cancel';
     const submitLabel = normalizeValue(options.submitLabel) || 'Submit Complaint';
     const submittingLabel = normalizeValue(options.submittingLabel) || 'Submitting...';
+    const extraContentHtml = typeof options.extraContentHtml === 'string' ? options.extraContentHtml : '';
 
     return `
       <form class="${shellClass}" onsubmit="${submitHandler}">
@@ -130,6 +131,7 @@
             <textarea id="${escapeHtml(normalizeValue(options.descriptionInputId) || 'complaintDescription')}" rows="6" placeholder="${escapeHtml(normalizeValue(options.descriptionPlaceholder) || 'Describe the issue clearly so admin can review it quickly.')}" ${descriptionChangeHandler ? `oninput="${descriptionChangeHandler}"` : ''}>${escapeHtml(normalizeValue(options.description))}</textarea>
           </div>
         </div>
+        ${extraContentHtml}
         <div class="${actionsClass}">
           <button class="btn btn-secondary" type="button" onclick="${cancelHandler}" ${options.submitting ? 'disabled' : ''}>${escapeHtml(cancelLabel)}</button>
           <button class="btn btn-primary" type="submit" ${options.submitting ? 'disabled' : ''}>${escapeHtml(options.submitting ? submittingLabel : submitLabel)}</button>
