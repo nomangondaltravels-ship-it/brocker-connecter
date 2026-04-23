@@ -1788,8 +1788,11 @@
       complaintQueue: 'all',
       complaintsLoading: false,
       supportLoading: false,
+      supportLoaded: false,
       complaintActionBusy: false,
       supportActionBusy: false,
+      companyLoading: false,
+      companiesLoaded: false,
       companyActionBusy: false,
       selectedType: 'broker',
       selectedKey: '',
@@ -1801,6 +1804,20 @@
       },
       pendingDetailScroll: null
     };
+
+    async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
+      const controller = new AbortController();
+      let timer = null;
+      try {
+        timer = setTimeout(() => controller.abort(), timeoutMs);
+        return await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
 
     function safeJsonRead(key, fallback) {
       try {
@@ -1904,12 +1921,20 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/support', {
+      let response;
+      try {
+        response = await fetchJsonWithTimeout('/api/support', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+        }, 4500);
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          throw new Error('Support inbox is taking too long to respond.');
+        }
+        throw error;
+      }
 
       const result = await response.json().catch(() => ({}));
 
@@ -1956,12 +1981,20 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/companies?scope=admin', {
+      let response;
+      try {
+        response = await fetchJsonWithTimeout('/api/companies?scope=admin', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
         }
-      });
+        }, 4500);
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          throw new Error('Pending companies are taking too long to respond.');
+        }
+        throw error;
+      }
 
       const result = await response.json().catch(() => ({}));
 
@@ -2346,7 +2379,10 @@
 
     async function loadAdminData() {
       adminUiState.complaintsLoading = true;
-      adminUiState.supportLoading = true;
+      adminUiState.supportLoading = false;
+      adminUiState.supportLoaded = false;
+      adminUiState.companyLoading = false;
+      adminUiState.companiesLoaded = false;
       adminUiState.companyActionBusy = false;
       renderAdminWorkspace();
       loadLocalAdminState();
@@ -2425,31 +2461,11 @@
       }));
 
       complaints = (resolvedComplaints || []).map(parseComplaintRecord);
-      let supportLoadError = '';
-      try {
-        supportRequests = await fetchAdminSupportRequests();
-      } catch (error) {
-        console.error(error);
-        supportLoadError = error?.message || 'Support inbox could not load.';
-        supportRequests = [];
-      }
-      let companyLoadError = '';
-      try {
-        const companyResult = await fetchAdminCompanySuggestions();
-        approvedCompanySuggestions = companyResult.approvedCompanies || [];
-        pendingCompanySuggestions = companyResult.pendingCompanies || [];
-      } catch (error) {
-        console.error(error);
-        companyLoadError = error?.message || 'Company suggestions could not load.';
-        approvedCompanySuggestions = [];
-        pendingCompanySuggestions = [];
-      }
+      supportRequests = [];
+      approvedCompanySuggestions = [];
+      pendingCompanySuggestions = [];
 
       adminUiState.complaintsLoading = false;
-      adminUiState.supportLoading = false;
-      if (!document.getElementById('adminStatus')?.textContent && (supportLoadError || companyLoadError)) {
-        setAdminStatus(supportLoadError || companyLoadError, 'error');
-      }
       renderAdminWorkspace();
     }
 
@@ -3004,11 +3020,51 @@
     function jumpToSupportInbox() {
       const target = document.getElementById('supportInboxSection');
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      ensureSupportRequestsLoaded();
     }
 
     function jumpToCompanySuggestions() {
       const target = document.getElementById('companySuggestionsSection');
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      ensureCompanySuggestionsLoaded();
+    }
+
+    async function ensureSupportRequestsLoaded(force = false) {
+      if ((adminUiState.supportLoaded && !force) || adminUiState.supportLoading) return;
+      adminUiState.supportLoading = true;
+      renderAdminWorkspace();
+      try {
+        supportRequests = await fetchAdminSupportRequests();
+        adminUiState.supportLoaded = true;
+        if (document.getElementById('adminStatus')?.textContent.includes('Support inbox')) {
+          setAdminStatus('');
+        }
+      } catch (error) {
+        console.error(error);
+        supportRequests = [];
+        setAdminStatus(error?.message || 'Support inbox could not load.', 'error');
+      }
+      adminUiState.supportLoading = false;
+      renderAdminWorkspace();
+    }
+
+    async function ensureCompanySuggestionsLoaded(force = false) {
+      if ((adminUiState.companiesLoaded && !force) || adminUiState.companyLoading) return;
+      adminUiState.companyLoading = true;
+      renderAdminWorkspace();
+      try {
+        const companyResult = await fetchAdminCompanySuggestions();
+        approvedCompanySuggestions = companyResult.approvedCompanies || [];
+        pendingCompanySuggestions = companyResult.pendingCompanies || [];
+        adminUiState.companiesLoaded = true;
+      } catch (error) {
+        console.error(error);
+        approvedCompanySuggestions = [];
+        pendingCompanySuggestions = [];
+        setAdminStatus(error?.message || 'Company suggestions could not load.', 'error');
+      }
+      adminUiState.companyLoading = false;
+      renderAdminWorkspace();
     }
 
     function normalizeSupportStatus(value) {
@@ -3966,6 +4022,11 @@
         return;
       }
 
+      if (!adminUiState.supportLoaded) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Help Desk to load support requests.</div>`;
+        return;
+      }
+
       const entries = getFilteredSupportRequests();
       if (!entries.length) {
         target.innerHTML = `<div class="admin-detail-empty">No support requests found.</div>`;
@@ -4047,6 +4108,14 @@
     function renderCompanySuggestions() {
       const target = document.getElementById('companySuggestionsList');
       if (!target) return;
+      if (adminUiState.companyLoading) {
+        target.innerHTML = `<div class="admin-detail-empty">Loading pending companies...</div>`;
+        return;
+      }
+      if (!adminUiState.companiesLoaded) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Pending Companies to load suggestions.</div>`;
+        return;
+      }
       const entries = getFilteredPendingCompanySuggestions();
       if (!entries.length) {
         target.innerHTML = `<div class="admin-detail-empty">No pending company suggestions found.</div>`;
