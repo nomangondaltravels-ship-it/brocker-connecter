@@ -3280,6 +3280,10 @@
       return listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing';
     }
 
+    function normalizeText(value) {
+      return String(value ?? '').replace(/\s+/g, ' ').trim();
+    }
+
     function getConnectorCurrentUserName() {
       return normalizeText(
         state.brokerProfile?.fullName
