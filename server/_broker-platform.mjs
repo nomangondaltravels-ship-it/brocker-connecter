@@ -1176,7 +1176,8 @@ export async function supabaseSelect({
   table,
   select = '*',
   filters = {},
-  order
+  order,
+  signal
   }) {
     const url = createRestUrl(supabaseUrl, table);
     url.searchParams.set('select', select);
@@ -1198,7 +1199,8 @@ export async function supabaseSelect({
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
       'Content-Type': 'application/json'
-    }
+    },
+    signal
   });
 
   if (!response.ok) {
@@ -1241,7 +1243,8 @@ export async function supabasePatch({
   serviceRoleKey,
   table,
   filters = {},
-  payload
+  payload,
+  signal
 }) {
   const url = createRestUrl(supabaseUrl, table);
   url.searchParams.set('select', '*');
@@ -1262,7 +1265,8 @@ export async function supabasePatch({
       'Content-Type': 'application/json',
       Prefer: 'return=representation'
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal
   });
 
   if (!response.ok) {

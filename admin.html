@@ -2367,27 +2367,21 @@
       brokerApprovals = Object.fromEntries(accounts.filter(item => item.approved).map(item => [item.brokerId, true]));
       blockedBrokerIds = Object.fromEntries(accounts.filter(item => item.blocked).map(item => [item.brokerId, true]));
 
-      const [{ data: reqData, error: reqError }, { data: dealData, error: dealError }, { data: compData, error: compError }] = await Promise.all([
+      const [{ data: reqData, error: reqError }, { data: dealData, error: dealError }] = await Promise.all([
         supabaseClient.from('requirements').select('*').order('created_at', { ascending: false }),
-        supabaseClient.from('deals').select('*').order('created_at', { ascending: false }),
-        supabaseClient.from('complaints').select('*').order('created_at', { ascending: false })
+        supabaseClient.from('deals').select('*').order('created_at', { ascending: false })
       ]);
 
       if (reqError) console.error(reqError);
       if (dealError) console.error(dealError);
-      if (compError) console.error(compError);
 
-      let resolvedComplaints = compData || [];
-      complaintsReadable = !compError;
-
-      if (compError) {
-        try {
-          resolvedComplaints = await fetchAdminComplaints();
-          complaintsReadable = true;
-        } catch (fallbackError) {
-          console.error(fallbackError);
-          complaintsReadable = false;
-        }
+      let resolvedComplaints = [];
+      complaintsReadable = true;
+      try {
+        resolvedComplaints = await fetchAdminComplaints();
+      } catch (fallbackError) {
+        console.error(fallbackError);
+        complaintsReadable = false;
       }
 
       if (reqError || dealError) {

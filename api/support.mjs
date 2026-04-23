@@ -17,6 +17,23 @@ import {
 } from '../server/_support.mjs';
 
 const MAX_SUPPORT_MESSAGE_LENGTH = 4000;
+const SUPPORT_ROUTE_TIMEOUT_MS = 2500;
+
+async function withTimeout(task, timeoutMs, fallbackValue) {
+  const controller = new AbortController();
+  let timer = null;
+  try {
+    timer = setTimeout(() => controller.abort(), timeoutMs);
+    return await Promise.resolve().then(() => task(controller.signal));
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return fallbackValue;
+    }
+    throw error;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 async function getSupportContext(request) {
   const supabaseUrl = requiredEnv('SUPABASE_URL');
@@ -133,13 +150,14 @@ async function requireAdmin(request) {
   };
 }
 
-async function listSupportRequests(context) {
+async function listSupportRequests(context, signal) {
   const rows = await supabaseSelect({
     supabaseUrl: context.supabaseUrl,
     serviceRoleKey: context.serviceRoleKey,
     table: 'support_requests',
     select: '*',
-    order: { column: 'created_at', ascending: false }
+    order: { column: 'created_at', ascending: false },
+    signal
   }).catch(() => []);
   return (Array.isArray(rows) ? rows : []).map(parseSupportRequestRecord);
 }
@@ -166,14 +184,26 @@ async function updateSupportStatus(context, body) {
     }
   });
 
-  return json({ supportRequests: await listSupportRequests(context) });
+  return json({
+    supportRequests: await withTimeout(
+      signal => listSupportRequests(context, signal),
+      SUPPORT_ROUTE_TIMEOUT_MS,
+      []
+    )
+  });
 }
 
 export default async function handler(request) {
   try {
     if (request.method === 'GET') {
       const context = await requireAdmin(request);
-      return json({ supportRequests: await listSupportRequests(context) });
+      return json({
+        supportRequests: await withTimeout(
+          signal => listSupportRequests(context, signal),
+          SUPPORT_ROUTE_TIMEOUT_MS,
+          []
+        )
+      });
     }
 
     if (request.method === 'PATCH') {
