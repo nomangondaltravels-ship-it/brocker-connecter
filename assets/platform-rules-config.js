@@ -1,4 +1,31 @@
 (function attachPlatformRulesConfig(global) {
+  const fallbackComplaintCenterRules = [
+    {
+      title: 'Fake Listings',
+      description: 'Posting fake or non-existing properties is prohibited.'
+    },
+    {
+      title: 'Misleading Information',
+      description: 'Wrong price, size, or details are not allowed.'
+    },
+    {
+      title: 'Harassment / Abuse',
+      description: 'Abusive or disrespectful behavior is not allowed.'
+    },
+    {
+      title: 'Spam',
+      description: 'Repeated unnecessary posting or reporting is not allowed.'
+    },
+    {
+      title: 'Fraud / Scam',
+      description: 'Fraudulent activity may result in immediate block.'
+    },
+    {
+      title: 'Duplicate Content',
+      description: 'Duplicate listings or repeated misleading content are not allowed.'
+    }
+  ];
+
   global.BROKER_PLATFORM_RULES_CONFIG = {
     version: '2026-04-23',
     title: 'Platform Rules & Conduct',
@@ -44,4 +71,12 @@
       }
     ]
   };
+
+  const resolvedComplaintCenterRules = Array.isArray(global.BROKER_PLATFORM_RULES_CONFIG?.categories)
+    && global.BROKER_PLATFORM_RULES_CONFIG.categories.length
+    ? global.BROKER_PLATFORM_RULES_CONFIG.categories
+    : fallbackComplaintCenterRules;
+
+  global.BROKER_PLATFORM_RULES_CONFIG.categories = resolvedComplaintCenterRules;
+  global.COMPLAINT_CENTER_RULES = resolvedComplaintCenterRules;
 })(window);

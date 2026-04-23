@@ -6173,6 +6173,40 @@
     };
     const DASHBOARD_LEAD_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.leads || []).map(option => option.value);
     const DASHBOARD_LISTING_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.listings || []).map(option => option.value);
+    const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
+    const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
+    const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
+
+    function clearBrokerClientSessionStorage() {
+      localStorage.removeItem('broker_session_token');
+      localStorage.removeItem('broker_session_profile');
+      localStorage.removeItem('broker_supabase_session');
+    }
+
+    function enforceBrokerSessionVersion(redirectOnMismatch = false) {
+      const storedVersion = String(localStorage.getItem(BROKER_SESSION_VERSION_KEY) || '').trim();
+      const hasStoredSession = Boolean(
+        localStorage.getItem('broker_session_token')
+        || localStorage.getItem('broker_session_profile')
+        || localStorage.getItem('broker_supabase_session')
+      );
+      if (storedVersion === BROKER_SESSION_VERSION) {
+        return false;
+      }
+      clearBrokerClientSessionStorage();
+      localStorage.setItem(BROKER_SESSION_VERSION_KEY, BROKER_SESSION_VERSION);
+      if (hasStoredSession) {
+        localStorage.setItem(
+          BROKER_FORCE_RELOGIN_REASON_KEY,
+          'Broker Desk was refreshed after a safety update. Please sign in again.'
+        );
+        if (redirectOnMismatch) {
+          window.location.href = 'index.html?reauth=1';
+          return true;
+        }
+      }
+      return false;
+    }
 
     const state = {
       token: localStorage.getItem('broker_session_token') || '',
@@ -6260,6 +6294,7 @@
     const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
+    const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
     const COMPLAINT_STATUS_LABELS = {
       new: 'New',
       'under-review': 'Under Review',
@@ -6275,6 +6310,29 @@
       promptCopy: 'Before you submit complaints or publish records to Broker Connector, confirm that you understand the platform conduct rules.',
       categories: []
     };
+    const COMPLAINT_CENTER_RULES = Array.isArray(window.COMPLAINT_CENTER_RULES)
+      ? window.COMPLAINT_CENTER_RULES
+      : Array.isArray(PLATFORM_RULES.categories)
+      ? PLATFORM_RULES.categories
+      : [];
+
+    function getComplaintCenterRules() {
+      try {
+        if (Array.isArray(window.COMPLAINT_CENTER_RULES)) {
+          return window.COMPLAINT_CENTER_RULES;
+        }
+      } catch (error) {
+        console.debug('Complaint rules global is unavailable.', error?.message || error);
+      }
+      try {
+        if (Array.isArray(COMPLAINT_CENTER_RULES)) {
+          return COMPLAINT_CENTER_RULES;
+        }
+      } catch (error) {
+        console.debug('Complaint rules fallback constant is unavailable.', error?.message || error);
+      }
+      return Array.isArray(PLATFORM_RULES.categories) ? PLATFORM_RULES.categories : [];
+    }
 
     const DISPLAY_SEPARATOR = ' · ';
 
@@ -8048,7 +8106,7 @@
         {
           value: 'rules',
           label: 'Rules',
-          count: COMPLAINT_CENTER_RULES.length
+          count: getComplaintCenterRules().length
         }
       ];
     }
@@ -8093,6 +8151,9 @@
     }
 
     function readComplaintProofAttachment(file) {
+      if (!COMPLAINT_ALLOWED_PROOF_TYPES.includes(String(file?.type || '').toLowerCase())) {
+        return Promise.reject(new Error('Proof upload must be JPG, PNG, WEBP, GIF, or PDF.'));
+      }
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = loadEvent => resolve({
@@ -8243,7 +8304,7 @@
                   <div class="complaint-form-section is-full">
                     <label class="small" for="complaintCenterProof">Optional Proof</label>
                     <div class="complaint-upload-row">
-                      <input id="complaintCenterProof" type="file" accept="image/*,application/pdf" class="crm-hidden">
+                      <input id="complaintCenterProof" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="crm-hidden">
                       <button class="btn btn-secondary btn-tiny" type="button" onclick="document.getElementById('complaintCenterProof').click()">Upload Proof</button>
                       <span class="complaint-upload-note">${escapeHtml(draft.proofAttachment?.name || 'Images or PDF up to 2 MB')}</span>
                     </div>
@@ -8278,7 +8339,7 @@
 
     function renderComplaintRulesTab() {
       const accepted = hasAcceptedPlatformRules();
-      const categories = Array.isArray(PLATFORM_RULES.categories) ? PLATFORM_RULES.categories : [];
+      const categories = getComplaintCenterRules();
       return `
         <div class="complaint-rules-grid">
           <div class="complaint-rule-card">
@@ -8287,13 +8348,19 @@
             <p>${escapeHtml(PLATFORM_RULES.intro || '')}</p>
             ${renderPlatformRulesAgreementControl('complaintCenterRules', accepted, accepted, "if(this.checked){storePlatformRulesAcceptance('rules-tab');renderComplaintCenter();setStatus('Platform rules accepted for this broker session.','success')}")}
           </div>
-          ${categories.map(rule => `
+          ${categories.length ? categories.map(rule => `
             <div class="complaint-rule-card">
               <small>Complaint Rule</small>
               <strong>${escapeHtml(rule.title)}</strong>
               <p>${escapeHtml(rule.description || rule.copy || '')}</p>
             </div>
-          `).join('')}
+          `).join('') : `
+            <div class="complaint-rule-card">
+              <small>Complaint Rules</small>
+              <strong>Rules unavailable right now</strong>
+              <p>Platform complaint and conduct rules are not available right now. You can still use the Complaint Center safely.</p>
+            </div>
+          `}
           <div class="complaint-acceptance-note">
             ${escapeHtml(PLATFORM_RULES.acceptanceText)} Reports should stay factual, relevant, and submitted in good faith.
           </div>
@@ -8304,60 +8371,74 @@
     function renderComplaintCenter() {
       const target = document.getElementById('complaintsCard');
       if (!target) return;
-      const complaints = Array.isArray(state.complaints) ? state.complaints : [];
-      const activeTab = normalizeComplaintCenterTab(state.complaintsView);
-      const totalLabel = state.complaintsLoading && !complaints.length ? '--' : complaints.length;
-      const newLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('new');
-      const reviewLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('under-review');
-      const resolvedLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('resolved');
-      const tabItems = getComplaintCenterTabItems();
-      let tabContent = renderComplaintMyComplaintsTab(complaints);
+      try {
+        const complaints = Array.isArray(state.complaints) ? state.complaints : [];
+        const activeTab = normalizeComplaintCenterTab(state.complaintsView);
+        const totalLabel = state.complaintsLoading && !complaints.length ? '--' : complaints.length;
+        const newLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('new');
+        const reviewLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('under-review');
+        const resolvedLabel = state.complaintsLoading && !complaints.length ? '--' : countComplaintsByStatus('resolved');
+        const tabItems = getComplaintCenterTabItems();
+        let tabContent = renderComplaintMyComplaintsTab(complaints);
 
-      if (activeTab === 'report-new') {
-        tabContent = renderComplaintReportNewTab();
-      } else if (activeTab === 'rules') {
-        tabContent = renderComplaintRulesTab();
-      }
+        if (activeTab === 'report-new') {
+          tabContent = renderComplaintReportNewTab();
+        } else if (activeTab === 'rules') {
+          tabContent = renderComplaintRulesTab();
+        }
 
-      target.innerHTML = `
-        <div class="complaint-center-shell">
-          <div class="complaint-summary-grid">
-            <div class="complaint-summary-card"><small>Total Complaints</small><strong>${totalLabel}</strong><span>All reports you submitted</span></div>
-            <div class="complaint-summary-card"><small>New</small><strong>${newLabel}</strong><span>Waiting for review</span></div>
-            <div class="complaint-summary-card"><small>Under Review</small><strong>${reviewLabel}</strong><span>Currently with admin</span></div>
-            <div class="complaint-summary-card"><small>Resolved</small><strong>${resolvedLabel}</strong><span>Completed reports</span></div>
-          </div>
-          <div class="complaint-center-card">
-            <div class="complaint-center-head">
-              <div class="complaint-center-head-copy">
-                <h3>Complaint Workspace</h3>
-                <p>Submit new complaints, review current statuses, and understand the conduct rules that guide admin action.</p>
+        target.innerHTML = `
+          <div class="complaint-center-shell">
+            <div class="complaint-summary-grid">
+              <div class="complaint-summary-card"><small>Total Complaints</small><strong>${totalLabel}</strong><span>All reports you submitted</span></div>
+              <div class="complaint-summary-card"><small>New</small><strong>${newLabel}</strong><span>Waiting for review</span></div>
+              <div class="complaint-summary-card"><small>Under Review</small><strong>${reviewLabel}</strong><span>Currently with admin</span></div>
+              <div class="complaint-summary-card"><small>Resolved</small><strong>${resolvedLabel}</strong><span>Completed reports</span></div>
+            </div>
+            <div class="complaint-center-card">
+              <div class="complaint-center-head">
+                <div class="complaint-center-head-copy">
+                  <h3>Complaint Workspace</h3>
+                  <p>Submit new complaints, review current statuses, and understand the conduct rules that guide admin action.</p>
+                </div>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="loadBrokerComplaints(true)">${state.complaintsLoading ? 'Refreshing...' : 'Refresh'}</button>
               </div>
-              <button class="btn btn-secondary btn-tiny" type="button" onclick="loadBrokerComplaints(true)">${state.complaintsLoading ? 'Refreshing...' : 'Refresh'}</button>
-            </div>
-            <div class="complaint-tabs" role="tablist" aria-label="Complaint Center tabs">
-              ${tabItems.map(item => `
-                <button
-                  class="complaint-tab ${activeTab === item.value ? 'is-active' : ''}"
-                  type="button"
-                  role="tab"
-                  aria-selected="${activeTab === item.value ? 'true' : 'false'}"
-                  onclick="setComplaintCenterTab('${item.value}')"
-                >
-                  <span>${escapeHtml(item.label)}</span>
-                  ${item.count === null ? '' : `<span class="complaint-tab-count">${escapeHtml(String(item.count))}</span>`}
-                </button>
-              `).join('')}
-            </div>
-            <div class="complaint-page-grid">
-              ${tabContent}
+              <div class="complaint-tabs" role="tablist" aria-label="Complaint Center tabs">
+                ${tabItems.map(item => `
+                  <button
+                    class="complaint-tab ${activeTab === item.value ? 'is-active' : ''}"
+                    type="button"
+                    role="tab"
+                    aria-selected="${activeTab === item.value ? 'true' : 'false'}"
+                    onclick="setComplaintCenterTab('${item.value}')"
+                  >
+                    <span>${escapeHtml(item.label)}</span>
+                    ${item.count === null ? '' : `<span class="complaint-tab-count">${escapeHtml(String(item.count))}</span>`}
+                  </button>
+                `).join('')}
+              </div>
+              <div class="complaint-page-grid">
+                ${tabContent}
+              </div>
             </div>
           </div>
-        </div>
-      `;
+        `;
 
-      if (activeTab === 'report-new') {
-        document.getElementById('complaintCenterProof')?.addEventListener('change', handleComplaintCenterProofSelection);
+        if (activeTab === 'report-new') {
+          document.getElementById('complaintCenterProof')?.addEventListener('change', handleComplaintCenterProofSelection);
+        }
+      } catch (error) {
+        console.error('Complaint Center render failed.', error);
+        target.innerHTML = `
+          <div class="complaint-center-card">
+            <div class="complaint-empty-state">
+              <small>Complaint Center</small>
+              <strong>Rules unavailable right now</strong>
+              <span>Complaint tools could not load completely, but Broker Desk is still available.</span>
+              <div><button class="btn btn-secondary btn-tiny" type="button" onclick="renderComplaintCenter()">Retry</button></div>
+            </div>
+          </div>
+        `;
       }
     }
 
@@ -8446,6 +8527,11 @@
         event.target.value = '';
         return;
       }
+      if (!COMPLAINT_ALLOWED_PROOF_TYPES.includes(String(file.type || '').toLowerCase())) {
+        setStatus('Proof upload must be JPG, PNG, WEBP, GIF, or PDF.', 'error');
+        event.target.value = '';
+        return;
+      }
       try {
         state.complaintDraft.proofAttachment = await readComplaintProofAttachment(file);
         renderComplaintModal();
@@ -8465,6 +8551,11 @@
       }
       if (file.size > (2 * 1024 * 1024)) {
         setStatus('Proof upload must be 2 MB or smaller.', 'error');
+        event.target.value = '';
+        return;
+      }
+      if (!COMPLAINT_ALLOWED_PROOF_TYPES.includes(String(file.type || '').toLowerCase())) {
+        setStatus('Proof upload must be JPG, PNG, WEBP, GIF, or PDF.', 'error');
         event.target.value = '';
         return;
       }
@@ -8829,8 +8920,7 @@
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok || !result?.authenticated) {
-        localStorage.removeItem('broker_session_token');
-        localStorage.removeItem('broker_session_profile');
+        clearBrokerClientSessionStorage();
         window.location.href = 'index.html';
         return false;
       }
@@ -13901,16 +13991,30 @@
         clearInterval(brokerActivityHeartbeatTimer);
         brokerActivityHeartbeatTimer = null;
       }
-      localStorage.removeItem('broker_session_token');
-      localStorage.removeItem('broker_session_profile');
+      clearBrokerClientSessionStorage();
       window.location.href = 'index.html';
     }
 
     (async function init() {
       try {
+        if (enforceBrokerSessionVersion(true)) {
+          return;
+        }
         initDashboardCallPopover();
-        initDashboardComplaintModal();
-        initDashboardRulesPrompt();
+        if (typeof initDashboardComplaintModal === 'function') {
+          try {
+            initDashboardComplaintModal();
+          } catch (error) {
+            console.error('Complaint modal init failed.', error);
+          }
+        }
+        if (typeof initDashboardRulesPrompt === 'function') {
+          try {
+            initDashboardRulesPrompt();
+          } catch (error) {
+            console.error('Complaint rules prompt init failed.', error);
+          }
+        }
         wireLeadFormSubmission();
         wirePropertyFormSubmission();
         ensureLeadFormEnhancements();

@@ -2516,7 +2516,11 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
+    const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
+    const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
+    const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
+    const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
     const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
       version: 'default',
       acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.'
@@ -2795,6 +2799,39 @@
       state.brokerProfile = null;
     }
 
+    function enforceBrokerSessionVersion() {
+      const storedVersion = String(localStorage.getItem(BROKER_SESSION_VERSION_KEY) || '').trim();
+      const hasStoredSession = Boolean(
+        localStorage.getItem('broker_session_token')
+        || localStorage.getItem('broker_session_profile')
+        || localStorage.getItem('broker_supabase_session')
+      );
+      if (storedVersion === BROKER_SESSION_VERSION) {
+        return false;
+      }
+      clearBrokerSessionState();
+      localStorage.setItem(BROKER_SESSION_VERSION_KEY, BROKER_SESSION_VERSION);
+      if (hasStoredSession) {
+        localStorage.setItem(
+          BROKER_FORCE_RELOGIN_REASON_KEY,
+          'Broker Desk was refreshed after a safety update. Please sign in again.'
+        );
+        return true;
+      }
+      return false;
+    }
+
+    function showForcedReloginNotice() {
+      const message = String(localStorage.getItem(BROKER_FORCE_RELOGIN_REASON_KEY) || '').trim();
+      if (!message) return false;
+      localStorage.removeItem(BROKER_FORCE_RELOGIN_REASON_KEY);
+      setSystemBanner(message, 'success');
+      if (!state.forcePublicView) {
+        openAuthModal('signin');
+      }
+      return true;
+    }
+
     function normalizeAuthPayload(payload) {
       if (!payload || typeof payload !== 'object') {
         return null;
@@ -3011,6 +3048,11 @@
       }
       if (file.size > (2 * 1024 * 1024)) {
         setSystemBanner('Proof upload must be 2 MB or smaller.', 'error');
+        event.target.value = '';
+        return;
+      }
+      if (!COMPLAINT_ALLOWED_PROOF_TYPES.includes(String(file.type || '').toLowerCase())) {
+        setSystemBanner('Proof upload must be JPG, PNG, WEBP, GIF, or PDF.', 'error');
         event.target.value = '';
         return;
       }
@@ -4536,14 +4578,19 @@
         if (redirectIncomingAuthLink()) {
           return;
         }
+        const forcedRelogin = enforceBrokerSessionVersion();
         initPublicComplaintModal();
         handleAuthReturnMessage();
+        showForcedReloginNotice();
         const authenticated = await verifyBrokerSession();
         const showDashboardButton = true;
         document.getElementById('dashboardBtn').classList.toggle('hidden', !showDashboardButton);
         document.getElementById('signInBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
         document.getElementById('registerBtn').classList.toggle('hidden', authenticated || state.forcePublicView);
         document.getElementById('registerCta').classList.toggle('hidden', authenticated || state.forcePublicView);
+        if (forcedRelogin && !authenticated && !state.forcePublicView) {
+          openAuthModal('signin');
+        }
         await loadPublicListings();
       } catch (error) {
         setSystemBanner(error.message || 'Could not load Broker Connector Page.', 'error');
