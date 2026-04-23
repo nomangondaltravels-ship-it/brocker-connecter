@@ -1,4 +1,11 @@
 (() => {
+  if (!Array.isArray(window.COMPLAINT_CENTER_RULES)) {
+    const platformCategories = Array.isArray(window.BROKER_PLATFORM_RULES_CONFIG?.categories)
+      ? window.BROKER_PLATFORM_RULES_CONFIG.categories
+      : [];
+    window.COMPLAINT_CENTER_RULES = platformCategories;
+  }
+
   const CORE_LOCATIONS = [
     'JVC',
     'JVT',

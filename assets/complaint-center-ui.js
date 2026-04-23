@@ -1,4 +1,11 @@
 (function attachComplaintCenterUi(global) {
+  if (!Array.isArray(global.COMPLAINT_CENTER_RULES)) {
+    const platformCategories = Array.isArray(global.BROKER_PLATFORM_RULES_CONFIG?.categories)
+      ? global.BROKER_PLATFORM_RULES_CONFIG.categories
+      : [];
+    global.COMPLAINT_CENTER_RULES = platformCategories;
+  }
+
   function escapeHtml(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -121,7 +128,7 @@
           <div class="${fieldClass}">
             <label class="small" for="${escapeHtml(uploadInputId)}">Optional Proof</label>
             <div class="complaint-upload-row">
-              <input id="${escapeHtml(uploadInputId)}" type="file" accept="image/*,application/pdf" class="${escapeHtml(hiddenInputClass)}">
+              <input id="${escapeHtml(uploadInputId)}" type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="${escapeHtml(hiddenInputClass)}">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${uploadHandler}">Upload Proof</button>
               <span class="complaint-upload-note">${escapeHtml(proofName)}</span>
             </div>
