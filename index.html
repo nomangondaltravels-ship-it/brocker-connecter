@@ -2261,13 +2261,77 @@
       font-size: 0.84rem;
     }
 
+    .support-menu-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .support-menu-kicker {
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748B;
+    }
+
+    .support-rules-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .support-rule-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      background: #F8FAFC;
+      padding: 14px 16px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .support-rule-card h4 {
+      margin: 0;
+      color: #0F172A;
+      font-size: 0.95rem;
+    }
+
+    .support-rule-card p {
+      margin: 0;
+      color: #64748B;
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    .support-form-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    .support-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .support-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .support-form-shell textarea {
+      min-height: 136px;
+      resize: vertical;
+    }
+
     body.complaint-modal-open {
       overflow: hidden;
     }
 
     @media (max-width: 760px) {
       .complaint-context-grid,
-      .complaint-form-grid {
+      .complaint-form-grid,
+      .support-form-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -2321,6 +2385,13 @@
         <button class="btn btn-secondary menu-btn active" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
         <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
+      </div>
+      <div class="support-menu-group">
+        <div class="support-menu-kicker">Support</div>
+        <div class="menu">
+          <button class="btn btn-secondary menu-btn" type="button" onclick="openSupportRules()">Rules</button>
+          <button class="btn btn-secondary menu-btn" type="button" onclick="openSupportHelp()">Help</button>
+        </div>
       </div>
     </aside>
 
@@ -2488,6 +2559,11 @@
       <div id="publicComplaintModalContent"></div>
     </div>
   </div>
+  <div class="complaint-overlay hidden" id="supportModal" role="dialog" aria-modal="true" aria-labelledby="supportModalTitle">
+    <div class="complaint-dialog">
+      <div id="supportModalContent"></div>
+    </div>
+  </div>
 
   <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
@@ -2526,6 +2602,10 @@
       complaintDraft: null,
       complaintModalOpen: false,
       complaintModalSubmitting: false,
+      supportModalOpen: false,
+      supportModalSubmitting: false,
+      supportModalView: '',
+      supportDraft: null,
       pagination: {
         requirements: 1,
         marketplace: 1,
@@ -2540,6 +2620,7 @@
     const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
+    const SUPPORT_SUBJECT_OPTIONS = ['General Help', 'Report Issue', 'Complaint', 'Account Problem'];
     const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
     const PLATFORM_RULES = window.BROKER_PLATFORM_RULES_CONFIG || {
       version: 'default',
@@ -2889,7 +2970,7 @@
     }
 
     function syncPublicComplaintBodyLock() {
-      document.body.classList.toggle('complaint-modal-open', Boolean(state.complaintModalOpen));
+      document.body.classList.toggle('complaint-modal-open', Boolean(state.complaintModalOpen || state.supportModalOpen));
     }
 
     function closePublicComplaintModal() {
@@ -2898,6 +2979,185 @@
       state.complaintDraft = null;
       renderPublicComplaintModal();
       syncPublicComplaintBodyLock();
+    }
+
+    function getSupportRulesEntries() {
+      return Array.isArray(PLATFORM_RULES?.categories) ? PLATFORM_RULES.categories : [];
+    }
+
+    function createSupportDraft() {
+      return {
+        name: normalizeText(state.brokerProfile?.fullName || state.brokerProfile?.name || ''),
+        email: normalizeText(state.brokerProfile?.email || ''),
+        subject: '',
+        message: ''
+      };
+    }
+
+    function closeSupportModal() {
+      state.supportModalOpen = false;
+      state.supportModalSubmitting = false;
+      state.supportModalView = '';
+      state.supportDraft = null;
+      renderSupportModal();
+      syncPublicComplaintBodyLock();
+    }
+
+    function openSupportRules() {
+      state.supportModalOpen = true;
+      state.supportModalSubmitting = false;
+      state.supportModalView = 'rules';
+      state.supportDraft = null;
+      renderSupportModal();
+      syncPublicComplaintBodyLock();
+      closeMenuDrawer();
+    }
+
+    function openSupportHelp() {
+      state.supportModalOpen = true;
+      state.supportModalSubmitting = false;
+      state.supportModalView = 'help';
+      state.supportDraft = createSupportDraft();
+      renderSupportModal();
+      syncPublicComplaintBodyLock();
+      closeMenuDrawer();
+    }
+
+    function updateSupportDraft(field, value) {
+      if (!state.supportDraft) return;
+      state.supportDraft[field] = value;
+    }
+
+    function renderSupportRulesMarkup() {
+      const rules = getSupportRulesEntries();
+      return `
+        <div class="complaint-shell">
+          <div class="complaint-head">
+            <div>
+              <h3 id="supportModalTitle">${escapeHtml(PLATFORM_RULES?.title || 'Platform Rules')}</h3>
+              <p class="complaint-copy">${escapeHtml(PLATFORM_RULES?.intro || 'Review the current platform rules before you continue.')}</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeSupportModal()">Close</button>
+          </div>
+          ${
+            rules.length
+              ? `<div class="support-rules-list">${rules.map(rule => `
+                  <div class="support-rule-card">
+                    <h4>${escapeHtml(rule?.title || 'Rule')}</h4>
+                    <p>${escapeHtml(rule?.description || '')}</p>
+                  </div>
+                `).join('')}</div>`
+              : '<div class="support-rule-card"><h4>Rules unavailable</h4><p>Rules unavailable right now.</p></div>'
+          }
+        </div>
+      `;
+    }
+
+    function renderSupportHelpMarkup() {
+      const draft = state.supportDraft || createSupportDraft();
+      return `
+        <div class="complaint-shell">
+          <div class="complaint-head">
+            <div>
+              <h3 id="supportModalTitle">Contact Center</h3>
+              <p class="complaint-copy">Send a support request for admin review without leaving Broker Connector Page.</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeSupportModal()">Close</button>
+          </div>
+          <form class="support-form-shell" onsubmit="submitSupportRequest(event)">
+            <div class="support-form-grid">
+              <div class="complaint-form-card">
+                <label class="small" for="supportName">Name</label>
+                <input id="supportName" type="text" value="${escapeHtml(draft.name || '')}" onchange="updateSupportDraft('name', this.value)" required>
+              </div>
+              <div class="complaint-form-card">
+                <label class="small" for="supportEmail">Email</label>
+                <input id="supportEmail" type="email" value="${escapeHtml(draft.email || '')}" onchange="updateSupportDraft('email', this.value)" required>
+              </div>
+              <div class="complaint-form-card is-full">
+                <label class="small" for="supportSubject">Subject</label>
+                <select id="supportSubject" onchange="updateSupportDraft('subject', this.value)" required>
+                  <option value="">Select subject</option>
+                  ${SUPPORT_SUBJECT_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${draft.subject === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+                </select>
+              </div>
+              <div class="complaint-form-card is-full">
+                <label class="small" for="supportMessage">Message</label>
+                <textarea id="supportMessage" placeholder="Tell us how we can help." onchange="updateSupportDraft('message', this.value)" required>${escapeHtml(draft.message || '')}</textarea>
+              </div>
+            </div>
+            <div class="complaint-actions-row">
+              <button class="btn btn-secondary" type="button" onclick="closeSupportModal()">Cancel</button>
+              <button class="btn btn-primary" type="submit" ${state.supportModalSubmitting ? 'disabled' : ''}>${state.supportModalSubmitting ? 'Submitting...' : 'Submit Request'}</button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderSupportModal() {
+      const overlay = document.getElementById('supportModal');
+      const content = document.getElementById('supportModalContent');
+      if (!overlay || !content) return;
+      if (!state.supportModalOpen || !state.supportModalView) {
+        overlay.classList.add('hidden');
+        content.innerHTML = '';
+        return;
+      }
+      overlay.classList.remove('hidden');
+      content.innerHTML = state.supportModalView === 'rules'
+        ? renderSupportRulesMarkup()
+        : renderSupportHelpMarkup();
+    }
+
+    async function submitSupportRequest(event) {
+      event?.preventDefault?.();
+      if (state.supportModalSubmitting) return;
+      const draft = state.supportDraft || createSupportDraft();
+      if (!normalizeText(draft.name)) {
+        setSystemBanner('Name is required.', 'error');
+        return;
+      }
+      if (!normalizeText(draft.email)) {
+        setSystemBanner('Email is required.', 'error');
+        return;
+      }
+      if (!normalizeText(draft.subject)) {
+        setSystemBanner('Select a support subject.', 'error');
+        return;
+      }
+      if (normalizeText(draft.message).length < 10) {
+        setSystemBanner('Message is required.', 'error');
+        return;
+      }
+
+      state.supportModalSubmitting = true;
+      renderSupportModal();
+      try {
+        const response = await fetch('/api/broker-support', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(state.sessionToken ? { Authorization: `Bearer ${state.sessionToken}` } : {})
+          },
+          body: JSON.stringify({
+            name: draft.name,
+            email: draft.email,
+            subject: draft.subject,
+            message: draft.message
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Support request failed.');
+        }
+        closeSupportModal();
+        setSystemBanner('We have received your request. Our help desk will contact you soon.', 'success');
+      } catch (error) {
+        state.supportModalSubmitting = false;
+        renderSupportModal();
+        setSystemBanner(error?.message || 'Support request failed.', 'error');
+      }
     }
 
     function getComplaintTargetTypeLabel(value) {
@@ -3160,6 +3420,17 @@
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape' && state.complaintModalOpen) {
           closePublicComplaintModal();
+        }
+      });
+      overlay.dataset.ready = 'true';
+    }
+
+    function initSupportModal() {
+      const overlay = document.getElementById('supportModal');
+      if (!overlay || overlay.dataset.ready === 'true') return;
+      overlay.addEventListener('click', event => {
+        if (event.target === overlay) {
+          closeSupportModal();
         }
       });
       overlay.dataset.ready = 'true';
@@ -4728,6 +4999,7 @@
         }
         const forcedRelogin = enforceBrokerSessionVersion();
         initPublicComplaintModal();
+        initSupportModal();
         handleAuthReturnMessage();
         showForcedReloginNotice();
         const authenticated = await verifyBrokerSession();

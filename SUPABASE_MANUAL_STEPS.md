@@ -18,6 +18,7 @@ These items cannot be completed from this local code session because they depend
 Before complaint moderation can use the full backend fields, run:
 
 - `supabase-complaints-center.sql`
+- `supabase-support-center.sql`
 
 This safely adds the complaint schema, admin action fields, and repeat-offense summary view on top of the existing project.
 
