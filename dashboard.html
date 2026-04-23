@@ -3945,6 +3945,30 @@
       border-color: rgba(245, 158, 11, 0.2) !important;
     }
 
+    .btn-bcp-share {
+      background: #eff6ff !important;
+      color: #1d4ed8 !important;
+      border-color: rgba(59, 130, 246, 0.24) !important;
+    }
+
+    .btn-bcp-share:hover {
+      background: #dbeafe !important;
+      color: #1e40af !important;
+      border-color: rgba(59, 130, 246, 0.34) !important;
+    }
+
+    .btn-bcp-unshare {
+      background: #fff7ed !important;
+      color: #b45309 !important;
+      border-color: rgba(245, 158, 11, 0.24) !important;
+    }
+
+    .btn-bcp-unshare:hover {
+      background: #ffedd5 !important;
+      color: #9a3412 !important;
+      border-color: rgba(245, 158, 11, 0.34) !important;
+    }
+
     .btn-danger {
       background: #fef2f2 !important;
       color: #b91c1c !important;
@@ -9304,7 +9328,7 @@
           <div class="actions">
             <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
             <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
-            <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+            <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
           </div>
         </div>
       `).join('');
@@ -9342,7 +9366,7 @@
           <div class="actions">
             <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
             <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-            <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+            <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
           </div>
         </div>
       `).join('');
@@ -9373,7 +9397,7 @@
           </div>
           <div class="muted">${item.publicNotes || 'No public note added.'}</div>
           <div class="actions">
-            <button class="btn btn-warning btn-tiny" type="button" onclick="toggleListItem('${item.sourceType}', ${item.sourceId}, true)">Unlist from Broker Connector</button>
+            <button class="btn btn-bcp-unshare btn-tiny" type="button" onclick="toggleListItem('${item.sourceType}', ${item.sourceId}, true)" title="Remove from Broker Connector Page">${getBcpShareButtonLabel(true)}</button>
           </div>
         </div>
       `).join('');
@@ -10777,7 +10801,7 @@
           <div class="actions">
             <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
             <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-            <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist from Broker Connector' : 'List on Broker Connector'}</button>
+            <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
           </div>
         </div>
       `).join('');
@@ -11369,7 +11393,7 @@
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
               <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
               <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
-              <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
               <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
             </div>
@@ -11468,7 +11492,7 @@
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
               <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
               <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
-              <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'List Public'}</button>
+              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
               <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
             </div>
@@ -12226,7 +12250,7 @@
                 <details class="crm-row-more">
                   <summary class="crm-row-more-toggle">More</summary>
                   <div class="crm-row-more-menu">
-                    <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">History</button>
@@ -12374,7 +12398,7 @@
                 <details class="crm-row-more">
                   <summary class="crm-row-more-toggle">More</summary>
                   <div class="crm-row-more-menu">
-                    <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">Matches</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">History</button>
@@ -12540,7 +12564,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                       <div class="crm-row-more-menu">
-                        <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                        <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">History</button>
@@ -12676,7 +12700,7 @@
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">&#9998; Edit</button>
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">&#9742; Call</button>
                     <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
-                    <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Unlist' : 'Share on Broker Connector'}">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                    <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '&#8634; Restore' : 'Archive'}</button>
                     <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">&times;</button>
                   </div>
@@ -12822,7 +12846,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                       <div class="crm-row-more-menu">
-                        <button class="btn ${lead.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})">${lead.isListedPublic ? 'Unlist' : 'Share'}</button>
+                        <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})" title="${lead.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">History</button>
@@ -12978,7 +13002,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                       <div class="crm-row-more-menu">
-                        <button class="btn ${property.isListedPublic ? 'btn-warning' : 'btn-primary'} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})">${property.isListedPublic ? 'Unlist' : 'Share'}</button>
+                        <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic})" title="${property.isListedPublic ? 'Remove from Broker Connector Page' : 'Share on Broker Connector Page'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">Matches</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">History</button>
@@ -13164,6 +13188,17 @@
         return;
       }
       await proceedToggleListItem(entityType, id, listed);
+    }
+
+    function getBcpShareButtonClass(listed) {
+      return listed ? 'btn-bcp-unshare' : 'btn-bcp-share';
+    }
+
+    function getBcpShareButtonLabel(listed, compact = false) {
+      if (listed) {
+        return compact ? 'Unshare BCP' : 'Unshare from BCP';
+      }
+      return compact ? 'Share to BCP' : 'Share to BCP';
     }
 
     async function saveLeadFollowUpFromPanel(id, prefix = 'requirement') {
@@ -13393,10 +13428,11 @@
             disabled: !phoneAvailable
           })}
           ${renderRecordActionButton({
-            label: lead.isListedPublic ? 'Unlist' : 'Share',
+            label: getBcpShareButtonLabel(lead.isListedPublic, true),
             icon: 'share',
             tone: 'ghost',
-            onclick: `toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})`
+            onclick: `toggleListItem('lead', ${lead.id}, ${lead.isListedPublic})`,
+            extraClass: getBcpShareButtonClass(lead.isListedPublic)
           })}
         </div>
       `;
@@ -13457,10 +13493,11 @@
             disabled: !phoneAvailable
           })}
           ${renderRecordActionButton({
-            label: property.isListedPublic ? 'Unlist' : 'Share',
+            label: getBcpShareButtonLabel(property.isListedPublic, true),
             icon: 'share',
             tone: 'ghost',
-            onclick: `toggleListItem('property', ${property.id}, ${property.isListedPublic})`
+            onclick: `toggleListItem('property', ${property.id}, ${property.isListedPublic})`,
+            extraClass: getBcpShareButtonClass(property.isListedPublic)
           })}
         </div>
       `;
