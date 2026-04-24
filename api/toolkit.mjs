@@ -12,11 +12,8 @@ import {
 } from '../server/_broker-platform.mjs';
 import {
   buildToolkitAnalytics,
-  getDefaultToolkitRows,
   isValidToolkitUrl,
-  mergeToolkitRows,
   parseToolkitToolRow,
-  seedDefaultToolkitTools,
   sanitizeToolkitToolInput
 } from '../server/_toolkit.mjs';
 
@@ -72,18 +69,6 @@ async function requireAdmin(request) {
 }
 
 async function listToolkitTools(context, { includeInactive = false, signal } = {}) {
-  try {
-    await seedDefaultToolkitTools({
-      supabaseUrl: context.supabaseUrl,
-      serviceRoleKey: context.serviceRoleKey,
-      signal
-    });
-  } catch (error) {
-    if (!isToolkitRelationError(error)) {
-      throw error;
-    }
-  }
-
   const filters = includeInactive ? {} : { is_active: 'eq.true' };
   const rows = await supabaseSelect({
     supabaseUrl: context.supabaseUrl,
@@ -161,21 +146,36 @@ async function findExistingToolkitTool(context, { toolId = '', title = '', url =
   return null;
 }
 
+async function deleteToolkitRelations(context, toolId) {
+  const normalizedToolId = normalizeText(toolId);
+  if (!normalizedToolId) return;
+
+  await supabaseDelete({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'toolkit_favorites',
+    filters: { tool_id: normalizedToolId }
+  }).catch(() => []);
+
+  await supabaseDelete({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'toolkit_clicks',
+    filters: { tool_id: normalizedToolId }
+  }).catch(() => []);
+}
+
 async function buildBrokerToolkitPayload(context) {
-  const fallbackTools = getDefaultToolkitRows();
   const dbTools = await withTimeout(
     signal => listToolkitTools(context, { includeInactive: false, signal }),
     TOOLKIT_ROUTE_TIMEOUT_MS,
-    null
+    []
   ).catch(error => {
-    if (isToolkitRelationError(error)) return null;
+    if (isToolkitRelationError(error)) return [];
     throw error;
   });
 
-  const tools = mergeToolkitRows(
-    Array.isArray(dbTools) ? dbTools : [],
-    dbTools === null ? fallbackTools : []
-  ).filter(item => item.isActive);
+  const tools = (Array.isArray(dbTools) ? dbTools : []).filter(item => item.isActive);
 
   let favoriteToolIds = [];
   try {
@@ -199,19 +199,15 @@ async function buildBrokerToolkitPayload(context) {
 
 async function buildAdminToolkitPayload(context, options = {}) {
   const useTimeouts = options.useTimeouts !== false;
-  const fallbackTools = getDefaultToolkitRows();
   const loadTools = signal => listToolkitTools(context, { includeInactive: true, signal }).catch(error => {
-    if (isToolkitRelationError(error)) return null;
+    if (isToolkitRelationError(error)) return [];
     throw error;
   });
   const toolsResult = useTimeouts
-    ? await withTimeout(loadTools, TOOLKIT_ROUTE_TIMEOUT_MS, null)
+    ? await withTimeout(loadTools, TOOLKIT_ROUTE_TIMEOUT_MS, [])
     : await loadTools();
 
-  const mergedTools = mergeToolkitRows(
-    Array.isArray(toolsResult) ? toolsResult : [],
-    toolsResult === null ? fallbackTools : []
-  );
+  const mergedTools = Array.isArray(toolsResult) ? toolsResult : [];
 
   const loadAnalytics = async signal => {
     const [favorites, clicks] = await Promise.all([
@@ -429,6 +425,7 @@ async function deleteTool(request) {
   });
 
   if (existingTool?.id) {
+    await deleteToolkitRelations(context, existingTool.id);
     await supabaseDelete({
       supabaseUrl: context.supabaseUrl,
       serviceRoleKey: context.serviceRoleKey,
@@ -481,6 +478,33 @@ async function deleteTool(request) {
   return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
 }
 
+async function deleteAllTools(request) {
+  const context = await requireAdmin(request);
+
+  await supabaseDelete({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'toolkit_favorites',
+    filters: {}
+  }).catch(() => []);
+
+  await supabaseDelete({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'toolkit_clicks',
+    filters: {}
+  }).catch(() => []);
+
+  await supabaseDelete({
+    supabaseUrl: context.supabaseUrl,
+    serviceRoleKey: context.serviceRoleKey,
+    table: 'toolkit_tools',
+    filters: {}
+  }).catch(() => []);
+
+  return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
+}
+
 export default async function handler(request) {
   try {
     if (request.method === 'GET') {
@@ -499,6 +523,7 @@ export default async function handler(request) {
       if (action === 'toggle-favorite') return await toggleFavorite(request);
       if (action === 'track-click') return await trackClick(request);
       if (action === 'create-tool') return await createTool(request);
+      if (action === 'delete-all-tools') return await deleteAllTools(request);
       return json({ message: 'Toolkit action is not supported.' }, 400);
     }
 
