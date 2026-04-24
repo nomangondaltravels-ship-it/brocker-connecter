@@ -5356,7 +5356,7 @@
         <div class="activity-brokers-wrap">
           <button class="btn btn-secondary activity-brokers-trigger" type="button" id="activeBrokersBtn" onclick="toggleBrokerActivityMenu()" aria-haspopup="menu" aria-expanded="false">
             <span class="activity-brokers-indicator" aria-hidden="true"></span>
-            <span id="activeBrokersLabel">0 Active Brokers</span>
+            <span id="activeBrokersLabel">Brokers Online</span>
           </button>
           <div class="activity-brokers-panel hidden" id="activeBrokersPanel" role="menu" aria-label="Active brokers">
             <div class="activity-brokers-head">
@@ -8823,9 +8823,8 @@
       const metaEl = document.getElementById('activeBrokersMeta');
       const listEl = document.getElementById('activeBrokersList');
       const items = Array.isArray(state.brokerActivity?.brokers) ? state.brokerActivity.brokers : [];
-      const activeCount = Number(state.brokerActivity?.activeCount || 0);
       if (labelEl) {
-        labelEl.textContent = `${activeCount} Active Broker${activeCount === 1 ? '' : 's'}`;
+        labelEl.textContent = 'Brokers Online';
       }
       if (metaEl) {
         metaEl.textContent = items.length ? `${items.length} brokers visible` : 'Live activity';
