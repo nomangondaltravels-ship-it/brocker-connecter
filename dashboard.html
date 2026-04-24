@@ -9852,22 +9852,14 @@
         return;
       }
 
-      let opened = null;
-      try {
-        opened = window.open(tool.url, '_blank', 'noopener,noreferrer');
-      } catch (error) {
-        opened = null;
-      }
-      if (!opened) {
-        const anchor = document.createElement('a');
-        anchor.href = tool.url;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-      }
       trackToolkitClick(tool.id);
+      const anchor = document.createElement('a');
+      anchor.href = tool.url;
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
     }
 
     function openSection(name) {
