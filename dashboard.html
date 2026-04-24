@@ -12466,7 +12466,7 @@
       setLeadPurpose(clientPurpose, { preserveValues: false });
       document.getElementById('leadLocation').value = lead.location || '';
       document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
-      populateLeadPropertyTypeOptions(lead.propertyType || '');
+      syncLeadPropertyDimensionControls(lead);
       document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
       populateLeadPaymentMethodOptions(lead.paymentMethod || '');
       document.getElementById('leadClientName').value = lead.clientName || '';
@@ -12597,7 +12597,7 @@
       clearPropertyErrors();
       document.getElementById('propertyId').value = property.id;
       setPropertyPurpose(getPropertyPurpose(property.purpose), { preserveValues: false });
-      populatePropertyTypeOptions(property.propertyType || '');
+      syncPropertyDimensionControls(property);
       populatePropertyFloorOptions(property.floorLevel || '');
       document.getElementById('propertyLocation').value = property.location || '';
       document.getElementById('propertyBuildingName').value = property.buildingName || '';
