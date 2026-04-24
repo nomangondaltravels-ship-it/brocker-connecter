@@ -2499,7 +2499,7 @@
       </section>
 
       <div class="system-banner" id="systemBanner"></div>
-      <div class="connector-toolbar">
+      <div class="connector-toolbar" id="connectorToolbar">
         <div class="connector-toolbar-head">
           <div class="connector-toolbar-copy">
             <h3>Discovery Filters</h3>
@@ -4187,10 +4187,23 @@
       document.getElementById(`${targetSection}-section`)?.classList.add('active');
       document.querySelector(`.menu-btn[data-target="${targetSection}"]`)?.classList.add('active');
       document.querySelector(`.section-switch-btn[data-target="${targetSection}"]`)?.classList.add('is-active');
+      mountConnectorToolbar(targetSection);
       closeMenuDrawer();
       if (!preserveRevealParams) {
         clearMarketplaceRevealParams(targetSection);
       }
+    }
+
+    function mountConnectorToolbar(sectionName = 'requirements') {
+      const toolbar = document.getElementById('connectorToolbar');
+      const section = document.getElementById(`${sectionName}-section`);
+      if (!toolbar || !section) return;
+      const head = section.querySelector('.page-head.compact-head') || section.querySelector('.page-head');
+      if (head) {
+        head.insertAdjacentElement('afterend', toolbar);
+        return;
+      }
+      section.insertAdjacentElement('afterbegin', toolbar);
     }
 
     function openBrokerEmail(email) {
@@ -5968,6 +5981,8 @@
       if (forcedRelogin && !authenticated && !state.forcePublicView) {
         openAuthModal('signin');
       }
+
+      mountConnectorToolbar(state.activeSection || 'requirements');
 
       const listingsLoaded = await runPublicInitStep('Broker Connector Page records', async () => {
         await loadPublicListings();
