@@ -1225,6 +1225,18 @@
       border-color: rgba(34, 197, 94, 0.22) !important;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .topbar-inner {
       padding: 14px 0 12px;
       gap: 18px;
@@ -2429,6 +2441,7 @@
         <div class="search-hub compact-top-search">
           <div class="search-bar" id="publicSearchBox">
             <div class="search-field-wrap">
+              <label class="sr-only" for="publicSearchInput">Search marketplace</label>
               <input id="publicSearchInput" type="search" placeholder="Search locations, buildings, requirements, listings, or keywords" autocomplete="off">
             </div>
             <button class="btn btn-primary" type="button" onclick="applyPublicSearch()">Search</button>
@@ -2611,20 +2624,20 @@
       <p class="auth-copy" id="authCopy">Sign in with your email address and password to open your private dashboard.</p>
       <div class="auth-status" id="authStatus"></div>
       <form id="authForm" class="grid-2" style="margin-top:16px;">
-        <div class="full" id="fullNameWrap"><label class="small">Full Name</label><input id="authFullName"></div>
+        <div class="full" id="fullNameWrap"><label class="small" for="authFullName">Full Name</label><input id="authFullName" type="text" autocomplete="name"></div>
         <div class="full" id="companyWrap">
-          <label class="small">Company Name (Optional)</label>
+          <label class="small" for="authCompany">Company Name (Optional)</label>
           <div class="auth-company-combobox">
-            <input id="authCompany" type="text" autocomplete="off" placeholder="Start typing company name">
+            <input id="authCompany" type="text" autocomplete="organization" placeholder="Start typing company name" aria-describedby="authCompanyHelper">
             <div class="auth-company-menu hidden" id="authCompanyMenu"></div>
-            <div class="auth-company-helper">Choose an approved company suggestion or type a new company name.</div>
+            <div class="auth-company-helper" id="authCompanyHelper">Choose an approved company suggestion or type a new company name.</div>
           </div>
         </div>
-        <div id="brokerIdWrap" style="display:none;"><label class="small">Broker ID Number</label><input id="authBrokerId"></div>
-        <div id="mobileWrap"><label class="small">Mobile Number (Optional)</label><input id="authMobile" placeholder="058XXXXXXX or +9715XXXXXXXX"></div>
-        <div class="full" id="emailWrap"><label class="small">Email Address</label><input id="authEmail" type="email" placeholder="name@example.com"></div>
-        <div class="full" id="passwordWrap"><label class="small">Password</label><input id="authPassword" type="password"></div>
-        <div class="full" id="confirmPasswordWrap"><label class="small">Confirm Password</label><input id="authConfirmPassword" type="password"></div>
+        <div id="brokerIdWrap" style="display:none;"><label class="small" for="authBrokerId">Broker ID Number</label><input id="authBrokerId" type="text" autocomplete="off"></div>
+        <div id="mobileWrap"><label class="small" for="authMobile">Mobile Number (Optional)</label><input id="authMobile" type="tel" placeholder="058XXXXXXX or +9715XXXXXXXX" autocomplete="tel"></div>
+        <div class="full" id="emailWrap"><label class="small" for="authEmail">Email Address</label><input id="authEmail" type="email" placeholder="name@example.com" autocomplete="email"></div>
+        <div class="full" id="passwordWrap"><label class="small" for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password"></div>
+        <div class="full" id="confirmPasswordWrap"><label class="small" for="authConfirmPassword">Confirm Password</label><input id="authConfirmPassword" type="password" autocomplete="new-password"></div>
         <div class="full" id="forgotPasswordRow">
           <button class="auth-inline-link" type="button" onclick="setAuthMode('forgot')">Forgot Password?</button>
         </div>
@@ -3421,11 +3434,11 @@
             <div class="support-form-grid">
               <div class="complaint-form-card">
                 <label class="small" for="supportName">Name</label>
-                <input id="supportName" type="text" value="${escapeHtml(draft.name || '')}" oninput="updateSupportDraft('name', this.value)" required>
+                <input id="supportName" type="text" value="${escapeHtml(draft.name || '')}" oninput="updateSupportDraft('name', this.value)" autocomplete="name" required>
               </div>
               <div class="complaint-form-card">
                 <label class="small" for="supportEmail">Email</label>
-                <input id="supportEmail" type="email" value="${escapeHtml(draft.email || '')}" oninput="updateSupportDraft('email', this.value)" required>
+                <input id="supportEmail" type="email" value="${escapeHtml(draft.email || '')}" oninput="updateSupportDraft('email', this.value)" autocomplete="email" required>
               </div>
               <div class="complaint-form-card is-full">
                 <label class="small" for="supportSubject">Subject</label>
@@ -5401,6 +5414,8 @@
       document.getElementById('authFullName').required = mode === 'register';
       document.getElementById('authEmail').required = true;
       document.getElementById('authConfirmPassword').required = mode === 'register';
+      document.getElementById('authPassword').setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+      document.getElementById('authConfirmPassword').setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'off');
       document.getElementById('authStatus').className = 'auth-status';
       document.getElementById('authStatus').textContent = '';
       state.authCompanyQuery = String(document.getElementById('authCompany')?.value || '');

@@ -4110,6 +4110,18 @@
       border-color: rgba(239, 68, 68, 0.18) !important;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .section {
       padding: 20px 24px 24px !important;
       background: #ffffff !important;
@@ -5559,6 +5571,7 @@
         <div class="search-hub compact-top-search">
           <div class="search-row" id="dashboardSearchBox">
             <div class="search-field-wrap">
+              <label class="sr-only" for="dashboardSearchInput">Search broker desk</label>
               <input id="dashboardSearchInput" type="search" placeholder="Search" autocomplete="off">
             </div>
             <button class="btn btn-primary" type="button" onclick="applyDashboardSearch()">Search</button>
@@ -5742,7 +5755,7 @@
                   <p>Select whether the client wants to rent or buy, then complete only the relevant requirement details.</p>
                 </div>
                 <div class="field-block full">
-                  <label class="small">Client Purpose</label>
+                  <label class="small" for="leadClientPurpose">Client Purpose</label>
                   <div class="segmented-control" id="leadPurposeControl">
                     <button class="segment-btn" type="button" data-purpose="rent">Rent</button>
                     <button class="segment-btn" type="button" data-purpose="buy">Buy</button>
@@ -5753,7 +5766,7 @@
                 <div class="lead-dynamic-layout crm-hidden" id="leadRequirementFields">
                   <div class="form-grid">
                     <div class="field-block">
-                      <label class="small">Preferred Location</label>
+                      <label class="small" for="leadLocation">Preferred Location</label>
                       <div class="combo-field" id="leadLocationBox">
                         <input id="leadLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
                         <span class="combo-icon">&#9906;</span>
@@ -5763,7 +5776,7 @@
                       <div class="field-error" id="leadLocationError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Preferred Building / Project</label>
+                      <label class="small" for="leadBuildingProject">Preferred Building / Project</label>
                       <div class="combo-field" id="leadBuildingBox">
                         <input id="leadBuildingProject" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
                         <span class="combo-icon">&#9906;</span>
@@ -5773,7 +5786,7 @@
                       <div class="field-error" id="leadBuildingProjectError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Property Category</label>
+                      <label class="small" for="leadPropertyCategory">Property Category</label>
                       <select id="leadPropertyCategory">
                         <option value="">Select property category</option>
                       </select>
@@ -5781,7 +5794,7 @@
                       <div class="field-error" id="leadPropertyCategoryError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Unit Layout</label>
+                      <label class="small" for="leadUnitLayout">Unit Layout</label>
                       <select id="leadUnitLayout">
                         <option value="">Select unit layout</option>
                       </select>
@@ -5789,7 +5802,7 @@
                       <div class="field-error" id="leadUnitLayoutError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Budget</label>
+                      <label class="small" for="leadBudget">Budget</label>
                       <div class="currency-field" id="leadBudgetField">
                         <span class="currency-prefix">AED</span>
                         <input id="leadBudget" type="text" inputmode="numeric" placeholder="Enter budget in AED" autocomplete="off">
@@ -5797,7 +5810,7 @@
                       <div class="field-error" id="leadBudgetError"></div>
                     </div>
                     <div class="field-block crm-hidden" id="leadPaymentMethodWrap">
-                      <label class="small">Payment Method</label>
+                      <label class="small" for="leadPaymentMethod">Payment Method</label>
                       <select id="leadPaymentMethod">
                         <option value="">Select payment method</option>
                       </select>
@@ -5814,13 +5827,13 @@
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
-                    <label class="small">Client Name</label>
-                    <input id="leadClientName" type="text" placeholder="Enter client name" autocomplete="off">
+                    <label class="small" for="leadClientName">Client Name</label>
+                    <input id="leadClientName" type="text" placeholder="Enter client name" autocomplete="name">
                     <div class="field-error" id="leadClientNameError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small">Client Phone Number</label>
-                    <input id="leadClientPhone" type="tel" placeholder="Enter client phone number" autocomplete="off">
+                    <label class="small" for="leadClientPhone">Client Phone Number</label>
+                    <input id="leadClientPhone" type="tel" placeholder="Enter client phone number" autocomplete="tel">
                     <div class="field-error" id="leadClientPhoneError"></div>
                   </div>
                 </div>
@@ -5836,7 +5849,7 @@
                   <p>Add private notes for your own follow-up and internal CRM use.</p>
                 </div>
                 <div class="field-block full">
-                  <label class="small">Private Notes</label>
+                  <label class="small" for="leadPrivateNotes">Private Notes</label>
                   <textarea id="leadPrivateNotes" placeholder="Add internal notes for your follow-up"></textarea>
                   <div class="field-error" id="leadPrivateNotesError"></div>
                 </div>
@@ -5849,7 +5862,7 @@
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
-                    <label class="small">Lead Status</label>
+                    <label class="small" for="leadStatus">Lead Status</label>
                     <select id="leadStatus">
                       <option value="new">New</option>
                       <option value="contacted">Contacted</option>
@@ -5861,11 +5874,11 @@
                     </select>
                   </div>
                   <div class="field-block">
-                    <label class="small">Next Follow-up Date</label>
+                    <label class="small" for="leadNextFollowUpDate">Next Follow-up Date</label>
                     <input id="leadNextFollowUpDate" type="date">
                   </div>
                   <div class="field-block">
-                    <label class="small">Next Follow-up Time</label>
+                    <label class="small" for="leadNextFollowUpTime">Next Follow-up Time</label>
                     <input id="leadNextFollowUpTime" type="time">
                   </div>
                   <label class="toggle-card compact-toggle">
@@ -5876,7 +5889,7 @@
                     </span>
                   </label>
                   <div class="field-block full">
-                    <label class="small">Follow-up Note</label>
+                    <label class="small" for="leadFollowUpNote">Follow-up Note</label>
                     <textarea id="leadFollowUpNote" placeholder="Add a reminder note for your next touchpoint"></textarea>
                   </div>
                 </div>
@@ -5900,7 +5913,7 @@
                   <p>Select rent or sale first, then complete the relevant property details in a clean broker workflow.</p>
                 </div>
                 <div class="field-block full">
-                  <label class="small">Purpose</label>
+                  <label class="small" for="propertyPurposeValue">Purpose</label>
                   <div class="segmented-control" id="propertyPurposeControl">
                     <button class="segment-btn" type="button" data-purpose="rent">Rent</button>
                     <button class="segment-btn" type="button" data-purpose="sale">Sale</button>
@@ -5911,7 +5924,7 @@
                 <div class="lead-dynamic-layout crm-hidden" id="propertyBaseFields">
                   <div class="form-grid">
                     <div class="field-block">
-                      <label class="small">Property Category</label>
+                      <label class="small" for="propertyCategory">Property Category</label>
                       <select id="propertyCategory">
                         <option value="">Select property category</option>
                       </select>
@@ -5919,7 +5932,7 @@
                       <div class="field-error" id="propertyCategoryError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Unit Layout</label>
+                      <label class="small" for="propertyUnitLayout">Unit Layout</label>
                       <select id="propertyUnitLayout">
                         <option value="">Select unit layout</option>
                       </select>
@@ -5927,7 +5940,7 @@
                       <div class="field-error" id="propertyUnitLayoutError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Location</label>
+                      <label class="small" for="propertyLocation">Location</label>
                       <div class="combo-field" id="propertyLocationBox">
                         <input id="propertyLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
                         <span class="combo-icon">&#9906;</span>
@@ -5936,7 +5949,7 @@
                       <div class="field-error" id="propertyLocationError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Building Name / Project</label>
+                      <label class="small" for="propertyBuildingName">Building Name / Project</label>
                       <div class="combo-field" id="propertyBuildingBox">
                         <input id="propertyBuildingName" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
                         <span class="combo-icon">&#9906;</span>
@@ -5946,10 +5959,10 @@
                       <div class="field-error" id="propertyBuildingNameError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Size</label>
+                      <label class="small" for="propertySizeSqft">Size</label>
                       <div style="display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;">
                         <input id="propertySizeSqft" type="text" inputmode="decimal" placeholder="Enter size" autocomplete="off">
-                        <select id="propertySizeUnit">
+                        <select id="propertySizeUnit" aria-label="Property size unit">
                           <option value="sqft">sqft</option>
                           <option value="sqm">sqm</option>
                         </select>
@@ -5958,7 +5971,7 @@
                       <div class="field-error" id="propertySizeSqftError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Floor Level</label>
+                      <label class="small" for="propertyFloorLevel">Floor Level</label>
                       <select id="propertyFloorLevel">
                         <option value="">Select floor level</option>
                       </select>
@@ -5975,14 +5988,14 @@
                 </div>
                 <div class="form-grid crm-hidden" id="propertyRentFields">
                   <div class="field-block">
-                    <label class="small">Furnishing</label>
+                    <label class="small" for="propertyFurnishing">Furnishing</label>
                     <select id="propertyFurnishing">
                       <option value="">Select furnishing</option>
                     </select>
                     <div class="field-error" id="propertyFurnishingError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small" id="propertyRentPriceLabel">Rent Price</label>
+                    <label class="small" id="propertyRentPriceLabel" for="propertyRentPrice">Rent Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertyRentPrice" type="text" inputmode="numeric" placeholder="Enter yearly rent" autocomplete="off">
@@ -5990,14 +6003,14 @@
                     <div class="field-error" id="propertyRentPriceError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small">Number of Cheques</label>
+                    <label class="small" for="propertyCheques">Number of Cheques</label>
                     <select id="propertyCheques">
                       <option value="">Select cheques</option>
                     </select>
                     <div class="field-error" id="propertyChequesError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small">Chiller</label>
+                    <label class="small" for="propertyChiller">Chiller</label>
                     <select id="propertyChiller">
                       <option value="">Select chiller status</option>
                     </select>
@@ -6006,7 +6019,7 @@
                 </div>
                 <div class="form-grid crm-hidden" id="propertySaleFields">
                   <div class="field-block">
-                    <label class="small" id="propertySalePriceLabel">Owner Asking Price</label>
+                    <label class="small" id="propertySalePriceLabel" for="propertySalePrice">Owner Asking Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertySalePrice" type="text" inputmode="numeric" placeholder="Enter owner asking price" autocomplete="off">
@@ -6014,7 +6027,7 @@
                     <div class="field-error" id="propertySalePriceError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small">Mortgage Status</label>
+                    <label class="small" for="propertyMortgageStatus">Mortgage Status</label>
                     <select id="propertyMortgageStatus">
                       <option value="">Select mortgage status</option>
                     </select>
@@ -6041,7 +6054,7 @@
                 </div>
                 <div class="form-grid crm-hidden" id="propertyDistressFields">
                   <div class="field-block">
-                    <label class="small">Market Price</label>
+                    <label class="small" for="propertyMarketPrice">Market Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertyMarketPrice" type="text" inputmode="numeric" placeholder="Enter market price" autocomplete="off">
@@ -6066,12 +6079,12 @@
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
-                    <label class="small">Owner Name (Private)</label>
-                    <input id="propertyOwnerName" type="text" placeholder="Enter owner name" autocomplete="off">
+                    <label class="small" for="propertyOwnerName">Owner Name (Private)</label>
+                    <input id="propertyOwnerName" type="text" placeholder="Enter owner name" autocomplete="name">
                   </div>
                   <div class="field-block">
-                    <label class="small">Owner Phone (Private)</label>
-                    <input id="propertyOwnerPhone" type="tel" placeholder="Enter owner phone" autocomplete="off">
+                    <label class="small" for="propertyOwnerPhone">Owner Phone (Private)</label>
+                    <input id="propertyOwnerPhone" type="tel" placeholder="Enter owner phone" autocomplete="tel">
                   </div>
                 </div>
                 <div class="privacy-note">
@@ -6086,11 +6099,11 @@
                   <p>Add only the private notes you need for your internal broker workflow.</p>
                 </div>
                 <div class="field-block full">
-                  <label class="small">Internal Notes</label>
+                  <label class="small" for="propertyInternalNotes">Internal Notes</label>
                   <textarea id="propertyInternalNotes" placeholder="Add private internal notes"></textarea>
                 </div>
                 <div class="field-block full">
-                  <label class="small">Public Notes</label>
+                  <label class="small" for="propertyPublicNotes">Public Notes</label>
                   <textarea id="propertyPublicNotes" placeholder="Only this note can be shown publicly if the listing is published."></textarea>
                   <div class="field-helper">Only this note can be shown publicly if the listing is published.</div>
                 </div>
@@ -6103,7 +6116,7 @@
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
-                    <label class="small">Listing Status</label>
+                    <label class="small" for="propertyStatus">Listing Status</label>
                     <select id="propertyStatus">
                       <option value="available">Available</option>
                       <option value="reserved">Reserved</option>
@@ -6113,11 +6126,11 @@
                     </select>
                   </div>
                   <div class="field-block">
-                    <label class="small">Next Follow-up Date</label>
+                    <label class="small" for="propertyNextFollowUpDate">Next Follow-up Date</label>
                     <input id="propertyNextFollowUpDate" type="date">
                   </div>
                   <div class="field-block">
-                    <label class="small">Next Follow-up Time</label>
+                    <label class="small" for="propertyNextFollowUpTime">Next Follow-up Time</label>
                     <input id="propertyNextFollowUpTime" type="time">
                   </div>
                   <label class="toggle-card compact-toggle">
@@ -6128,7 +6141,7 @@
                     </span>
                   </label>
                   <div class="field-block full">
-                    <label class="small">Follow-up Note</label>
+                    <label class="small" for="propertyFollowUpNote">Follow-up Note</label>
                     <textarea id="propertyFollowUpNote" placeholder="Add your reminder note for the next owner update"></textarea>
                   </div>
                 </div>
@@ -6195,7 +6208,7 @@
         <div class="record-toolbar">
           <div class="record-filter-grid">
             <div class="field-block">
-              <label class="small">Status</label>
+              <label class="small" for="leadStatusFilter">Status</label>
               <select id="leadStatusFilter" onchange="updateDashboardFilter('leads','status', this.value)">
                 <option value="all">All Statuses</option>
                 <option value="new">New</option>
@@ -6208,7 +6221,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Purpose</label>
+              <label class="small" for="leadPurposeFilter">Purpose</label>
               <select id="leadPurposeFilter" onchange="updateDashboardFilter('leads','purpose', this.value)">
                 <option value="all">All Purposes</option>
                 <option value="rent">Rent</option>
@@ -6216,7 +6229,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Visibility</label>
+              <label class="small" for="leadVisibilityFilter">Visibility</label>
               <select id="leadVisibilityFilter" onchange="updateDashboardFilter('leads','visibility', this.value)">
                 <option value="all">Public + Private</option>
                 <option value="listed">Listed Public</option>
@@ -6224,7 +6237,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Follow-up</label>
+              <label class="small" for="leadFollowUpFilter">Follow-up</label>
               <select id="leadFollowUpFilter" onchange="updateDashboardFilter('leads','followUp', this.value)">
                 <option value="all">All Follow-up</option>
                 <option value="today">Follow-up Today</option>
@@ -6234,7 +6247,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Records</label>
+              <label class="small" for="leadArchiveFilter">Records</label>
               <select id="leadArchiveFilter" onchange="updateDashboardFilter('leads','archive', this.value)">
                 <option value="active">Active Only</option>
                 <option value="archived">Archived Only</option>
@@ -6242,7 +6255,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Urgent</label>
+              <label class="small" for="leadUrgentFilter">Urgent</label>
               <select id="leadUrgentFilter" onchange="updateDashboardFilter('leads','urgent', this.value)">
                 <option value="all">All Leads</option>
                 <option value="urgent">Urgent Follow-up</option>
@@ -6250,7 +6263,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Matches</label>
+              <label class="small" for="leadMatchFilter">Matches</label>
               <select id="leadMatchFilter" onchange="updateDashboardFilter('leads','matches', this.value)">
                 <option value="all">All Match States</option>
                 <option value="matched">Matched</option>
@@ -6272,7 +6285,7 @@
         <div class="record-toolbar">
           <div class="record-filter-grid">
             <div class="field-block">
-              <label class="small">Status</label>
+              <label class="small" for="propertyStatusFilter">Status</label>
               <select id="propertyStatusFilter" onchange="updateDashboardFilter('properties','status', this.value)">
                 <option value="all">All Statuses</option>
                 <option value="available">Available</option>
@@ -6283,7 +6296,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Purpose</label>
+              <label class="small" for="propertyPurposeFilter">Purpose</label>
               <select id="propertyPurposeFilter" onchange="updateDashboardFilter('properties','purpose', this.value)">
                 <option value="all">All Purposes</option>
                 <option value="rent">Rent</option>
@@ -6291,7 +6304,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Visibility</label>
+              <label class="small" for="propertyVisibilityFilter">Visibility</label>
               <select id="propertyVisibilityFilter" onchange="updateDashboardFilter('properties','visibility', this.value)">
                 <option value="all">Public + Private</option>
                 <option value="listed">Listed Public</option>
@@ -6299,7 +6312,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Follow-up</label>
+              <label class="small" for="propertyFollowUpFilter">Follow-up</label>
               <select id="propertyFollowUpFilter" onchange="updateDashboardFilter('properties','followUp', this.value)">
                 <option value="all">All Follow-up</option>
                 <option value="today">Follow-up Today</option>
@@ -6309,7 +6322,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Records</label>
+              <label class="small" for="propertyArchiveFilter">Records</label>
               <select id="propertyArchiveFilter" onchange="updateDashboardFilter('properties','archive', this.value)">
                 <option value="active">Active Only</option>
                 <option value="archived">Archived Only</option>
@@ -6317,7 +6330,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Distress</label>
+              <label class="small" for="propertyDistressFilter">Distress</label>
               <select id="propertyDistressFilter" onchange="updateDashboardFilter('properties','distress', this.value)">
                 <option value="all">All Listings</option>
                 <option value="distress">Distress Deals</option>
@@ -6325,7 +6338,7 @@
               </select>
             </div>
             <div class="field-block">
-              <label class="small">Matches</label>
+              <label class="small" for="propertyMatchFilter">Matches</label>
               <select id="propertyMatchFilter" onchange="updateDashboardFilter('properties','matches', this.value)">
                 <option value="all">All Match States</option>
                 <option value="matched">Matched</option>
@@ -8868,12 +8881,12 @@
             <aside class="complaint-form-aside">
               ${renderPlatformRulesAgreementControl('complaintCenterForm', accepted, accepted || Boolean(draft.rulesAccepted), "updateComplaintCenterDraftField('rulesAccepted', this.checked)")}
               <div class="complaint-context-card">
-                <label class="small">Submission Summary</label>
+                <div class="small">Submission Summary</div>
                 <strong>${escapeHtml(getComplaintTargetTypeLabel(draft.targetType))}</strong>
                 <span>${escapeHtml(getComplaintTargetSummary(draft))}</span>
               </div>
               <div class="complaint-context-card">
-                <label class="small">Before You Submit</label>
+                <div class="small">Before You Submit</div>
                 <ul class="complaint-helper-list">
                   <li>Use the exact target ID or reference when possible.</li>
                   <li>Include a broker name or user ID if you know who should be reviewed.</li>
@@ -9211,7 +9224,7 @@
         <div class="rules-prompt-grid">
           ${categories.map(rule => `
             <div class="complaint-context-card">
-              <label class="small">${escapeHtml(rule.title || 'Rule')}</label>
+              <div class="small">${escapeHtml(rule.title || 'Rule')}</div>
               <strong>${escapeHtml(rule.title || 'Rule')}</strong>
               <span>${escapeHtml(rule.description || '')}</span>
             </div>
@@ -10345,12 +10358,12 @@
                 <div class="profile-field-grid">
                   ${isEditing ? `
                     <div class="field-block">
-                      <label class="small">Full Name</label>
-                      <input type="text" data-profile-input="fullName" value="${escapeHtml(profile.fullName)}" placeholder="Enter broker name">
+                      <label class="small" for="profileFullNameInput">Full Name</label>
+                      <input id="profileFullNameInput" type="text" data-profile-input="fullName" value="${escapeHtml(profile.fullName)}" placeholder="Enter broker name" autocomplete="name">
                     </div>
                     <div class="field-block">
-                      <label class="small">Broker ID</label>
-                      <input type="text" value="${escapeHtml(profile.brokerIdNumber)}" readonly>
+                      <label class="small" for="profileBrokerIdInput">Broker ID</label>
+                      <input id="profileBrokerIdInput" type="text" value="${escapeHtml(profile.brokerIdNumber)}" readonly autocomplete="off">
                     </div>
                   ` : `
                     <div class="profile-display-cell"><small>Full Name</small><strong>${escapeHtml(profile.fullName || '--')}</strong></div>
@@ -10369,20 +10382,20 @@
                 <div class="profile-field-grid">
                   ${isEditing ? `
                     <div class="field-block">
-                      <label class="small">Mobile Number</label>
-                      <input type="tel" data-profile-input="mobileNumber" value="${escapeHtml(profile.mobileNumber)}" placeholder="Enter mobile number">
+                      <label class="small" for="profileMobileNumberInput">Mobile Number</label>
+                      <input id="profileMobileNumberInput" type="tel" data-profile-input="mobileNumber" value="${escapeHtml(profile.mobileNumber)}" placeholder="Enter mobile number" autocomplete="tel">
                     </div>
                     <div class="field-block">
-                      <label class="small">Email</label>
-                      <input type="email" data-profile-input="email" value="${escapeHtml(profile.email)}" placeholder="Enter email">
+                      <label class="small" for="profileEmailInput">Email</label>
+                      <input id="profileEmailInput" type="email" data-profile-input="email" value="${escapeHtml(profile.email)}" placeholder="Enter email" autocomplete="email">
                     </div>
                     <div class="field-block">
-                      <label class="small">WhatsApp Number</label>
-                      <input type="tel" data-profile-input="whatsappNumber" value="${escapeHtml(profile.whatsappNumber)}" placeholder="Enter WhatsApp number">
+                      <label class="small" for="profileWhatsappInput">WhatsApp Number</label>
+                      <input id="profileWhatsappInput" type="tel" data-profile-input="whatsappNumber" value="${escapeHtml(profile.whatsappNumber)}" placeholder="Enter WhatsApp number" autocomplete="tel">
                     </div>
                     <div class="field-block">
-                      <label class="small">Office Location</label>
-                      <input type="text" data-profile-input="officeLocation" value="${escapeHtml(profile.officeLocation)}" placeholder="Enter office location">
+                      <label class="small" for="profileOfficeLocationInput">Office Location</label>
+                      <input id="profileOfficeLocationInput" type="text" data-profile-input="officeLocation" value="${escapeHtml(profile.officeLocation)}" placeholder="Enter office location" autocomplete="off">
                     </div>
                   ` : `
                     <div class="profile-display-cell"><small>Mobile</small><strong>${escapeHtml(profile.mobileNumber || '--')}</strong></div>
@@ -10403,16 +10416,16 @@
                 <div class="profile-field-grid">
                   ${isEditing ? `
                     <div class="field-block">
-                      <label class="small">Company Name</label>
-                      <input type="text" data-profile-input="companyName" value="${escapeHtml(profile.companyName)}" placeholder="Enter company name">
+                      <label class="small" for="profileCompanyNameInput">Company Name</label>
+                      <input id="profileCompanyNameInput" type="text" data-profile-input="companyName" value="${escapeHtml(profile.companyName)}" placeholder="Enter company name" autocomplete="organization">
                     </div>
                     <div class="field-block full">
-                      <label class="small">Short Bio</label>
-                      <textarea data-profile-input="bio" placeholder="Add a short broker bio">${escapeHtml(profile.bio)}</textarea>
+                      <label class="small" for="profileBioInput">Short Bio</label>
+                      <textarea id="profileBioInput" data-profile-input="bio" placeholder="Add a short broker bio">${escapeHtml(profile.bio)}</textarea>
                     </div>
                     <div class="field-block full">
-                      <label class="small">Specialization</label>
-                      <div class="choice-chip-grid">
+                      <div class="small" id="profileSpecializationLabel">Specialization</div>
+                      <div class="choice-chip-grid" aria-labelledby="profileSpecializationLabel">
                         ${PROFILE_SPECIALIZATION_OPTIONS.map(option => `
                           <label class="choice-chip ${profile.specializations.includes(option) ? 'is-selected' : ''}">
                             <input type="checkbox" ${profile.specializations.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('specializations', '${escapeHtml(option)}')">
@@ -10422,9 +10435,9 @@
                       </div>
                     </div>
                     <div class="field-block full">
-                      <label class="small">Areas / Communities Served</label>
+                      <label class="small" for="profileAreasInput">Areas / Communities Served</label>
                       <div class="areas-input-row">
-                        <input id="profileAreasInput" type="text" placeholder="Type an area and press Enter">
+                        <input id="profileAreasInput" type="text" placeholder="Type an area and press Enter" autocomplete="off">
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="addProfileAreaTag()">Add</button>
                       </div>
                       <div class="profile-tags">
@@ -10434,8 +10447,8 @@
                       </div>
                     </div>
                     <div class="field-block full">
-                      <label class="small">Languages Spoken</label>
-                      <div class="choice-chip-grid">
+                      <div class="small" id="profileLanguagesLabel">Languages Spoken</div>
+                      <div class="choice-chip-grid" aria-labelledby="profileLanguagesLabel">
                         ${PROFILE_LANGUAGE_OPTIONS.map(option => `
                           <label class="choice-chip ${profile.languages.includes(option) ? 'is-selected' : ''}">
                             <input type="checkbox" ${profile.languages.includes(option) ? 'checked' : ''} onclick="toggleProfileDraftValue('languages', '${escapeHtml(option)}')">
@@ -10464,24 +10477,24 @@
                   isEditing ? `
                     <div class="profile-field-grid">
                       <div class="field-block">
-                        <label class="small">Instagram</label>
-                        <input type="url" data-profile-input="socialLinks.instagram" value="${escapeHtml(profile.socialLinks?.instagram || '')}" placeholder="https://instagram.com/...">
+                        <label class="small" for="profileInstagramInput">Instagram</label>
+                        <input id="profileInstagramInput" type="url" data-profile-input="socialLinks.instagram" value="${escapeHtml(profile.socialLinks?.instagram || '')}" placeholder="https://instagram.com/...">
                       </div>
                       <div class="field-block">
-                        <label class="small">Facebook</label>
-                        <input type="url" data-profile-input="socialLinks.facebook" value="${escapeHtml(profile.socialLinks?.facebook || '')}" placeholder="https://facebook.com/...">
+                        <label class="small" for="profileFacebookInput">Facebook</label>
+                        <input id="profileFacebookInput" type="url" data-profile-input="socialLinks.facebook" value="${escapeHtml(profile.socialLinks?.facebook || '')}" placeholder="https://facebook.com/...">
                       </div>
                       <div class="field-block">
-                        <label class="small">LinkedIn</label>
-                        <input type="url" data-profile-input="socialLinks.linkedin" value="${escapeHtml(profile.socialLinks?.linkedin || '')}" placeholder="https://linkedin.com/in/...">
+                        <label class="small" for="profileLinkedinInput">LinkedIn</label>
+                        <input id="profileLinkedinInput" type="url" data-profile-input="socialLinks.linkedin" value="${escapeHtml(profile.socialLinks?.linkedin || '')}" placeholder="https://linkedin.com/in/...">
                       </div>
                       <div class="field-block">
-                        <label class="small">Website</label>
-                        <input type="url" data-profile-input="socialLinks.website" value="${escapeHtml(profile.socialLinks?.website || '')}" placeholder="https://yourwebsite.com">
+                        <label class="small" for="profileWebsiteInput">Website</label>
+                        <input id="profileWebsiteInput" type="url" data-profile-input="socialLinks.website" value="${escapeHtml(profile.socialLinks?.website || '')}" placeholder="https://yourwebsite.com">
                       </div>
                       <div class="field-block full">
-                        <label class="small">WhatsApp Link</label>
-                        <input type="url" data-profile-input="socialLinks.whatsappLink" value="${escapeHtml(profile.socialLinks?.whatsappLink || '')}" placeholder="https://wa.me/...">
+                        <label class="small" for="profileWhatsappLinkInput">WhatsApp Link</label>
+                        <input id="profileWhatsappLinkInput" type="url" data-profile-input="socialLinks.whatsappLink" value="${escapeHtml(profile.socialLinks?.whatsappLink || '')}" placeholder="https://wa.me/...">
                       </div>
                     </div>
                   ` : `
@@ -12212,15 +12225,15 @@
               </div>
               <div class="record-inline-grid">
                 <div class="field-block">
-                  <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="lead-followup-date-${lead.id}">Next Follow-up Date</label>
                   <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
                 </div>
                 <div class="field-block">
-                  <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="lead-followup-time-${lead.id}">Next Follow-up Time</label>
                   <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
                 </div>
                 <div class="field-block full">
-                  <label class="small">Follow-up Note</label>
+                  <label class="small" for="lead-followup-note-${lead.id}">Follow-up Note</label>
                   <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
                 </div>
                 <label class="toggle-card compact-toggle">
@@ -12311,15 +12324,15 @@
               </div>
               <div class="record-inline-grid">
                 <div class="field-block">
-                  <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="property-followup-date-${property.id}">Next Follow-up Date</label>
                   <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
                 </div>
                 <div class="field-block">
-                  <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="property-followup-time-${property.id}">Next Follow-up Time</label>
                   <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
                 </div>
                 <div class="field-block full">
-                  <label class="small">Follow-up Note</label>
+                  <label class="small" for="property-followup-note-${property.id}">Follow-up Note</label>
                   <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
                 </div>
                 <label class="toggle-card compact-toggle">
@@ -13083,15 +13096,15 @@
               </div>
               <div class="record-inline-grid">
                 <div class="field-block">
-                  <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="lead-followup-date-${lead.id}">Next Follow-up Date</label>
                   <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
                 </div>
                 <div class="field-block">
-                  <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="lead-followup-time-${lead.id}">Next Follow-up Time</label>
                   <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
                 </div>
                 <div class="field-block full">
-                  <label class="small">Follow-up Note</label>
+                  <label class="small" for="lead-followup-note-${lead.id}">Follow-up Note</label>
                   <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
                 </div>
                 <label class="toggle-card compact-toggle">
@@ -13231,15 +13244,15 @@
               </div>
               <div class="record-inline-grid">
                 <div class="field-block">
-                  <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="property-followup-date-${property.id}">Next Follow-up Date</label>
                   <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
                 </div>
                 <div class="field-block">
-                  <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="property-followup-time-${property.id}">Next Follow-up Time</label>
                   <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
                 </div>
                 <div class="field-block full">
-                  <label class="small">Follow-up Note</label>
+                  <label class="small" for="property-followup-note-${property.id}">Follow-up Note</label>
                   <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
                 </div>
                 <label class="toggle-card compact-toggle">
@@ -13400,15 +13413,15 @@
                   </div>
                   <div class="record-inline-grid">
                     <div class="field-block">
-                      <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="lead-followup-date-${lead.id}">Next Follow-up Date</label>
                       <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
                     </div>
                     <div class="field-block">
-                      <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="lead-followup-time-${lead.id}">Next Follow-up Time</label>
                       <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
                     </div>
                     <div class="field-block full">
-                      <label class="small">Follow-up Note</label>
+                  <label class="small" for="lead-followup-note-${lead.id}">Follow-up Note</label>
                       <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
                     </div>
                     <label class="toggle-card compact-toggle">
@@ -13535,15 +13548,15 @@
                   </div>
                   <div class="record-inline-grid">
                     <div class="field-block">
-                      <label class="small">Next Follow-up Date</label>
+                  <label class="small" for="property-followup-date-${property.id}">Next Follow-up Date</label>
                       <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
                     </div>
                     <div class="field-block">
-                      <label class="small">Next Follow-up Time</label>
+                  <label class="small" for="property-followup-time-${property.id}">Next Follow-up Time</label>
                       <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
                     </div>
                     <div class="field-block full">
-                      <label class="small">Follow-up Note</label>
+                  <label class="small" for="property-followup-note-${property.id}">Follow-up Note</label>
                       <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
                     </div>
                     <label class="toggle-card compact-toggle">
@@ -13682,15 +13695,15 @@
                   </div>
                   <div class="record-inline-grid">
                     <div class="field-block">
-                      <label class="small">Next Follow-up Date</label>
+                      <label class="small" for="lead-followup-date-${lead.id}">Next Follow-up Date</label>
                       <input id="lead-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
                     </div>
                     <div class="field-block">
-                      <label class="small">Next Follow-up Time</label>
+                      <label class="small" for="lead-followup-time-${lead.id}">Next Follow-up Time</label>
                       <input id="lead-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
                     </div>
                     <div class="field-block full">
-                      <label class="small">Follow-up Note</label>
+                      <label class="small" for="lead-followup-note-${lead.id}">Follow-up Note</label>
                       <textarea id="lead-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
                     </div>
                     <label class="toggle-card compact-toggle">
@@ -13841,15 +13854,15 @@
                   </div>
                   <div class="record-inline-grid">
                     <div class="field-block">
-                      <label class="small">Next Follow-up Date</label>
+                      <label class="small" for="property-followup-date-${property.id}">Next Follow-up Date</label>
                       <input id="property-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
                     </div>
                     <div class="field-block">
-                      <label class="small">Next Follow-up Time</label>
+                      <label class="small" for="property-followup-time-${property.id}">Next Follow-up Time</label>
                       <input id="property-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
                     </div>
                     <div class="field-block full">
-                      <label class="small">Follow-up Note</label>
+                      <label class="small" for="property-followup-note-${property.id}">Follow-up Note</label>
                       <textarea id="property-followup-note-${property.id}" placeholder="Add next owner or viewing reminder">${escapeHtml(property.followUpNote || '')}</textarea>
                     </div>
                     <label class="toggle-card compact-toggle">
@@ -14417,15 +14430,15 @@
           </div>
           <div class="record-inline-grid">
             <div class="field-block">
-              <label class="small">Next Follow-up Date</label>
+              <label class="small" for="requirement-followup-date-${lead.id}">Next Follow-up Date</label>
               <input id="requirement-followup-date-${lead.id}" type="date" value="${escapeHtml(lead.nextFollowUpDate || '')}">
             </div>
             <div class="field-block">
-              <label class="small">Next Follow-up Time</label>
+              <label class="small" for="requirement-followup-time-${lead.id}">Next Follow-up Time</label>
               <input id="requirement-followup-time-${lead.id}" type="time" value="${escapeHtml(lead.nextFollowUpTime || '')}">
             </div>
             <div class="field-block full">
-              <label class="small">Follow-up Note</label>
+              <label class="small" for="requirement-followup-note-${lead.id}">Follow-up Note</label>
               <textarea id="requirement-followup-note-${lead.id}" placeholder="Add next-step note">${escapeHtml(lead.followUpNote || '')}</textarea>
             </div>
             <label class="toggle-card compact-toggle">
@@ -14516,15 +14529,15 @@
           </div>
           <div class="record-inline-grid">
             <div class="field-block">
-              <label class="small">Next Follow-up Date</label>
+              <label class="small" for="${prefix}-followup-date-${property.id}">Next Follow-up Date</label>
               <input id="${prefix}-followup-date-${property.id}" type="date" value="${escapeHtml(property.nextFollowUpDate || '')}">
             </div>
             <div class="field-block">
-              <label class="small">Next Follow-up Time</label>
+              <label class="small" for="${prefix}-followup-time-${property.id}">Next Follow-up Time</label>
               <input id="${prefix}-followup-time-${property.id}" type="time" value="${escapeHtml(property.nextFollowUpTime || '')}">
             </div>
             <div class="field-block full">
-              <label class="small">Follow-up Note</label>
+              <label class="small" for="${prefix}-followup-note-${property.id}">Follow-up Note</label>
               <textarea id="${prefix}-followup-note-${property.id}" placeholder="Add owner or viewing follow-up">${escapeHtml(property.followUpNote || '')}</textarea>
             </div>
             <label class="toggle-card compact-toggle">

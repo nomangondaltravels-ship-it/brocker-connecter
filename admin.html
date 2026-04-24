@@ -1519,6 +1519,18 @@
         min-width: 100%;
       }
     }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
@@ -1539,8 +1551,10 @@
       <div class="helper">Admin login and delete actions use secure Vercel server functions. Add the required Vercel environment variables before using delete actions on the live site.</div>
       <div class="status" id="loginStatus"></div>
       <form class="form-grid" onsubmit="loginAdmin(event)">
-        <input type="text" id="adminUsername" placeholder="Admin Username" required>
-        <input type="password" id="adminPassword" placeholder="Admin Password" required>
+        <label class="sr-only" for="adminUsername">Admin Username</label>
+        <input type="text" id="adminUsername" placeholder="Admin Username" autocomplete="username" required>
+        <label class="sr-only" for="adminPassword">Admin Password</label>
+        <input type="password" id="adminPassword" placeholder="Admin Password" autocomplete="current-password" required>
         <button class="btn btn-primary" type="submit">Open Admin Portal</button>
       </form>
     </div>
@@ -1562,21 +1576,25 @@
               <h3>Management Workspace</h3>
               <p>Search brokers and moderation queues, then review one selected item with actions and context on the right.</p>
             </div>
-            <div class="admin-toolbar-controls">
-              <div class="admin-search-wrap">
-                <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support, toolkit" oninput="applyAdminFilters()">
-              </div>
+              <div class="admin-toolbar-controls">
+                <div class="admin-search-wrap">
+                  <label class="sr-only" for="adminSearchInput">Search admin workspace</label>
+                  <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support, toolkit" oninput="applyAdminFilters()">
+                </div>
+              <label class="sr-only" for="adminVerificationFilter">Verification filter</label>
               <select id="adminVerificationFilter" onchange="applyAdminFilters()" aria-label="Filter verification status">
                 <option value="all">All Verification</option>
                 <option value="verified">Verified</option>
                 <option value="unverified">Unverified</option>
               </select>
+              <label class="sr-only" for="adminAccountFilter">Account filter</label>
               <select id="adminAccountFilter" onchange="applyAdminFilters()" aria-label="Filter account status">
                 <option value="all">All Accounts</option>
                 <option value="active">Active</option>
                 <option value="blocked">Blocked</option>
                 <option value="pending">Pending</option>
               </select>
+              <label class="sr-only" for="adminQueueFilter">Queue filter</label>
               <select id="adminQueueFilter" onchange="applyAdminFilters()" aria-label="Filter review queue">
                 <option value="all">All Queue States</option>
                 <option value="open">Open</option>
@@ -1626,6 +1644,7 @@
                     <p>Moderate shared requirement posts and clean outdated demand records.</p>
                   </div>
                   <div class="review-toolbar">
+                    <label class="sr-only" for="requirementAgeDays">Delete requirement leads older than</label>
                     <select id="requirementAgeDays" aria-label="Delete requirement leads older than">
                       <option value="10">Older than 10 days</option>
                       <option value="30" selected>Older than 30 days</option>
@@ -1649,6 +1668,7 @@
                     <p>Monitor public listings, distress inventory, and shared deal visibility.</p>
                   </div>
                   <div class="review-toolbar">
+                    <label class="sr-only" for="dealAgeDays">Delete broker connector listings older than</label>
                     <select id="dealAgeDays" aria-label="Delete broker connector listings older than">
                       <option value="10">Older than 10 days</option>
                       <option value="30" selected>Older than 30 days</option>
@@ -3681,6 +3701,7 @@
           <div class="admin-complaint-modal-body">
             <div class="admin-complaint-note-panel">
               <h4>Admin Note</h4>
+              <label class="sr-only" for="complaintAdminNoteField">Admin note</label>
               <textarea id="complaintAdminNoteField" placeholder="Add the review note required for every complaint status or admin action." ${isBusy ? 'disabled' : ''}>${escapeHtml(item.adminNote || '')}</textarea>
               <div class="admin-complaint-note-meta">
                 <span>Every complaint action saves this note with reviewer and review time.</span>
@@ -4528,15 +4549,22 @@
               </div>
             </div>
             <div class="form-grid">
-              <input id="toolkitCreateTitle" placeholder="Tool title">
+              <label class="sr-only" for="toolkitCreateTitle">Tool title</label>
+              <input id="toolkitCreateTitle" placeholder="Tool title" autocomplete="off">
+              <label class="sr-only" for="toolkitCreateDescription">Tool description</label>
               <textarea id="toolkitCreateDescription" rows="3" placeholder="Short description"></textarea>
+              <label class="sr-only" for="toolkitCreateCategory">Tool category</label>
               <select id="toolkitCreateCategory">
                 ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('')}
               </select>
-              <input id="toolkitCreateUrl" placeholder="https://example.com/tool">
-              <input id="toolkitCreateLogoUrl" placeholder="Logo URL (optional)">
-              <input id="toolkitCreateIconName" placeholder="Icon name / short label">
-              <input id="toolkitCreateSortOrder" type="number" value="0" placeholder="Sort order">
+              <label class="sr-only" for="toolkitCreateUrl">Tool URL</label>
+              <input id="toolkitCreateUrl" placeholder="https://example.com/tool" autocomplete="off">
+              <label class="sr-only" for="toolkitCreateLogoUrl">Tool logo URL</label>
+              <input id="toolkitCreateLogoUrl" placeholder="Logo URL (optional)" autocomplete="off">
+              <label class="sr-only" for="toolkitCreateIconName">Tool icon name</label>
+              <input id="toolkitCreateIconName" placeholder="Icon name / short label" autocomplete="off">
+              <label class="sr-only" for="toolkitCreateSortOrder">Tool sort order</label>
+              <input id="toolkitCreateSortOrder" type="number" value="0" placeholder="Sort order" autocomplete="off">
               <label class="helper"><input id="toolkitCreateIsActive" type="checkbox" checked> Active</label>
               <label class="helper"><input id="toolkitCreateIsFeatured" type="checkbox"> Featured</label>
               <button class="btn btn-primary" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="createToolkitTool()">Add Tool</button>
@@ -4555,15 +4583,22 @@
                 </div>
               </div>
               <div class="form-grid">
-                <input id="toolkit-title-${escapeHtml(item.id)}" value="${escapeHtml(item.title || '')}" placeholder="Tool title">
+                <label class="sr-only" for="toolkit-title-${escapeHtml(item.id)}">Tool title</label>
+                <input id="toolkit-title-${escapeHtml(item.id)}" value="${escapeHtml(item.title || '')}" placeholder="Tool title" autocomplete="off">
+                <label class="sr-only" for="toolkit-description-${escapeHtml(item.id)}">Tool description</label>
                 <textarea id="toolkit-description-${escapeHtml(item.id)}" rows="3" placeholder="Short description">${escapeHtml(item.description || '')}</textarea>
+                <label class="sr-only" for="toolkit-category-${escapeHtml(item.id)}">Tool category</label>
                 <select id="toolkit-category-${escapeHtml(item.id)}">
                   ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${item.category === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
                 </select>
-                <input id="toolkit-url-${escapeHtml(item.id)}" value="${escapeHtml(item.url || '')}" placeholder="https://example.com/tool">
-                <input id="toolkit-logo-${escapeHtml(item.id)}" value="${escapeHtml(item.logoUrl || '')}" placeholder="Logo URL (optional)">
-                <input id="toolkit-icon-${escapeHtml(item.id)}" value="${escapeHtml(item.iconName || '')}" placeholder="Icon name / short label">
-                <input id="toolkit-sort-${escapeHtml(item.id)}" type="number" value="${escapeHtml(item.sortOrder || 0)}" placeholder="Sort order">
+                <label class="sr-only" for="toolkit-url-${escapeHtml(item.id)}">Tool URL</label>
+                <input id="toolkit-url-${escapeHtml(item.id)}" value="${escapeHtml(item.url || '')}" placeholder="https://example.com/tool" autocomplete="off">
+                <label class="sr-only" for="toolkit-logo-${escapeHtml(item.id)}">Tool logo URL</label>
+                <input id="toolkit-logo-${escapeHtml(item.id)}" value="${escapeHtml(item.logoUrl || '')}" placeholder="Logo URL (optional)" autocomplete="off">
+                <label class="sr-only" for="toolkit-icon-${escapeHtml(item.id)}">Tool icon name</label>
+                <input id="toolkit-icon-${escapeHtml(item.id)}" value="${escapeHtml(item.iconName || '')}" placeholder="Icon name / short label" autocomplete="off">
+                <label class="sr-only" for="toolkit-sort-${escapeHtml(item.id)}">Tool sort order</label>
+                <input id="toolkit-sort-${escapeHtml(item.id)}" type="number" value="${escapeHtml(item.sortOrder || 0)}" placeholder="Sort order" autocomplete="off">
                 <label class="helper"><input id="toolkit-active-${escapeHtml(item.id)}" type="checkbox" ${item.isActive ? 'checked' : ''}> Active</label>
                 <label class="helper"><input id="toolkit-featured-${escapeHtml(item.id)}" type="checkbox" ${item.isFeatured ? 'checked' : ''}> Featured</label>
               </div>
