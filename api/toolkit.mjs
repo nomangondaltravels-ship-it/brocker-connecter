@@ -505,6 +505,10 @@ async function deleteAllTools(request) {
   return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
 }
 
+async function deleteToolFromBody(request) {
+  return deleteTool(request);
+}
+
 export default async function handler(request) {
   try {
     if (request.method === 'GET') {
@@ -523,6 +527,7 @@ export default async function handler(request) {
       if (action === 'toggle-favorite') return await toggleFavorite(request);
       if (action === 'track-click') return await trackClick(request);
       if (action === 'create-tool') return await createTool(request);
+      if (action === 'delete-tool') return await deleteToolFromBody(request);
       if (action === 'delete-all-tools') return await deleteAllTools(request);
       return json({ message: 'Toolkit action is not supported.' }, 400);
     }
