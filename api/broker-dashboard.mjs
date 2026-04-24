@@ -15,8 +15,11 @@ import {
   normalizeLocationValue,
   normalizePhoneNumber,
   normalizePropertyTypeValue,
+  normalizeSalePropertyStatusValue,
   normalizeSizeUnit,
   normalizeText,
+  normalizeHandoverQuarterValue,
+  normalizeHandoverYearValue,
   parseLeadMeta,
   parsePropertyMeta,
   requireBrokerSession,
@@ -184,6 +187,27 @@ function getLeadMeta(body, existingLead = null, overrides = {}) {
 function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   const existingMeta = parsePropertyMeta(existingProperty?.description);
   const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const salePropertyStatus = purpose === 'sale'
+    ? normalizeSalePropertyStatusValue(
+      body?.salePropertyStatus !== undefined
+        ? body?.salePropertyStatus
+        : existingProperty?.sale_property_status || existingMeta.salePropertyStatus || 'Ready Property'
+    ) || 'Ready Property'
+    : '';
+  const handoverQuarter = purpose === 'sale' && salePropertyStatus === 'Off Plan Property'
+    ? normalizeHandoverQuarterValue(
+      body?.handoverQuarter !== undefined
+        ? body?.handoverQuarter
+        : existingProperty?.handover_quarter || existingMeta.handoverQuarter
+    )
+    : '';
+  const handoverYear = purpose === 'sale' && salePropertyStatus === 'Off Plan Property'
+    ? normalizeHandoverYearValue(
+      body?.handoverYear !== undefined
+        ? body?.handoverYear
+        : existingProperty?.handover_year || existingMeta.handoverYear
+    )
+    : '';
   const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
   const distressAskingPrice = distressDeal
     ? (body?.distressAskingPrice !== undefined
@@ -215,6 +239,9 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
     leasehold: purpose === 'sale'
       ? (body?.leasehold !== undefined ? normalizeBool(body?.leasehold) : Boolean(existingMeta.leasehold))
       : false,
+    salePropertyStatus,
+    handoverQuarter,
+    handoverYear,
     marketPrice,
     distressAskingPrice,
     distressDiscountPercent,
@@ -377,6 +404,11 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
       unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
       propertyType
     }),
+    sale_property_status: purpose === 'sale' ? meta.salePropertyStatus || 'Ready Property' : null,
+    handover_quarter: purpose === 'sale' ? meta.handoverQuarter || null : null,
+    handover_year: purpose === 'sale' ? meta.handoverYear || null : null,
+    market_price: meta.marketPrice || null,
+    distress_gap_percent: meta.distressDiscountPercent || null,
     location: normalizeLocationValue(body?.location || existingProperty?.location),
     price: effectivePrice,
     size: normalizeDecimalValue(body?.size || body?.sizeSqft || existingProperty?.size),

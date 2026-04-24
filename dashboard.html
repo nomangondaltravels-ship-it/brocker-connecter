@@ -6023,6 +6023,30 @@
                     </select>
                     <div class="field-error" id="propertyMortgageStatusError"></div>
                   </div>
+                  <div class="field-block">
+                    <label class="small" for="propertySaleStatus">Sale Status</label>
+                    <select id="propertySaleStatus">
+                      <option value="Ready Property">Ready Property</option>
+                      <option value="Off Plan Property">Off Plan Property</option>
+                    </select>
+                    <div class="field-error" id="propertySaleStatusError"></div>
+                  </div>
+                  <div class="field-block crm-hidden" id="propertyHandoverQuarterWrap">
+                    <label class="small" for="propertyHandoverQuarter">Expected Handover Quarter</label>
+                    <select id="propertyHandoverQuarter">
+                      <option value="">Select quarter</option>
+                      <option value="Q1">Q1</option>
+                      <option value="Q2">Q2</option>
+                      <option value="Q3">Q3</option>
+                      <option value="Q4">Q4</option>
+                    </select>
+                    <div class="field-error" id="propertyHandoverQuarterError"></div>
+                  </div>
+                  <div class="field-block crm-hidden" id="propertyHandoverYearWrap">
+                    <label class="small" for="propertyHandoverYear">Expected Handover Year</label>
+                    <input id="propertyHandoverYear" type="text" inputmode="numeric" placeholder="2026" autocomplete="off">
+                    <div class="field-error" id="propertyHandoverYearError"></div>
+                  </div>
                 </div>
                 <div class="property-toggle-row crm-hidden" id="propertySaleToggleRow">
                   <label class="toggle-card">
@@ -6056,7 +6080,7 @@
                 <div class="distress-metric" id="propertyDistressMetric">
                   <div class="distress-metric-copy">
                     <strong>Distress Gap</strong>
-                    <p id="propertyDistressMetricText">Enable distress deal and enter market plus asking price to see the gap.</p>
+                    <p id="propertyDistressMetricText">Add both market and asking prices to calculate distress gap.</p>
                   </div>
                   <span class="badge badge-red" id="propertyDistressMetricBadge">--</span>
                 </div>
@@ -6748,6 +6772,13 @@
       'N/A'
     ]);
 
+    const DASHBOARD_SALE_PROPERTY_STATUS_OPTIONS = Object.freeze([
+      'Ready Property',
+      'Off Plan Property'
+    ]);
+
+    const DASHBOARD_HANDOVER_QUARTER_OPTIONS = Object.freeze(['Q1', 'Q2', 'Q3', 'Q4']);
+
     const DASHBOARD_PROPERTY_CATEGORY_ALIASES = Object.freeze({
       apartment: 'Apartment',
       flat: 'Apartment',
@@ -6816,6 +6847,27 @@
       if (!rawValue) return '';
       const normalized = DASHBOARD_UNIT_LAYOUT_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
       return DASHBOARD_UNIT_LAYOUT_OPTIONS.includes(normalized) ? normalized : '';
+    }
+
+    function normalizeDashboardSalePropertyStatusValue(value) {
+      const normalized = normalizeText(value);
+      return DASHBOARD_SALE_PROPERTY_STATUS_OPTIONS.includes(normalized) ? normalized : '';
+    }
+
+    function normalizeDashboardHandoverQuarterValue(value) {
+      const normalized = normalizeText(value).toUpperCase();
+      return DASHBOARD_HANDOVER_QUARTER_OPTIONS.includes(normalized) ? normalized : '';
+    }
+
+    function normalizeDashboardHandoverYearValue(value) {
+      const digits = String(value || '').replace(/[^\d]/g, '').slice(0, 4);
+      return digits.length === 4 ? digits : '';
+    }
+
+    function formatPropertyHandoverDisplay(quarter, year) {
+      const normalizedQuarter = normalizeDashboardHandoverQuarterValue(quarter);
+      const normalizedYear = normalizeDashboardHandoverYearValue(year);
+      return normalizedQuarter && normalizedYear ? `${normalizedQuarter} ${normalizedYear}` : '';
     }
 
     function dashboardCategoryAllowsSelectableLayout(category) {
@@ -8023,6 +8075,9 @@
         'propertyLocationError',
         'propertyRentPriceError',
         'propertySalePriceError',
+        'propertySaleStatusError',
+        'propertyHandoverQuarterError',
+        'propertyHandoverYearError',
         'propertyMarketPriceError'
       ].forEach(id => {
         const node = document.getElementById(id);
@@ -8042,6 +8097,9 @@
         'propertySalePrice',
         'propertyMarketPrice',
         'propertyMortgageStatus',
+        'propertySaleStatus',
+        'propertyHandoverQuarter',
+        'propertyHandoverYear',
         'propertyOwnerName',
         'propertyOwnerPhone',
         'propertyInternalNotes',
@@ -8059,6 +8117,9 @@
         location: 'propertyLocationError',
         rentPrice: 'propertyRentPriceError',
         ownerAskingPrice: 'propertySalePriceError',
+        salePropertyStatus: 'propertySaleStatusError',
+        handoverQuarter: 'propertyHandoverQuarterError',
+        handoverYear: 'propertyHandoverYearError',
         marketPrice: 'propertyMarketPriceError'
       };
       const inputMap = {
@@ -8068,6 +8129,9 @@
         location: 'propertyLocation',
         rentPrice: 'propertyRentPrice',
         ownerAskingPrice: 'propertySalePrice',
+        salePropertyStatus: 'propertySaleStatus',
+        handoverQuarter: 'propertyHandoverQuarter',
+        handoverYear: 'propertyHandoverYear',
         marketPrice: 'propertyMarketPrice'
       };
       const errorNode = document.getElementById(errorMap[field]);
@@ -8112,6 +8176,8 @@
       const rentFields = document.getElementById('propertyRentFields');
       const saleFields = document.getElementById('propertySaleFields');
       const saleToggleRow = document.getElementById('propertySaleToggleRow');
+      const handoverQuarterWrap = document.getElementById('propertyHandoverQuarterWrap');
+      const handoverYearWrap = document.getElementById('propertyHandoverYearWrap');
       const distressRow = document.getElementById('propertyDistressRow');
       const distressFields = document.getElementById('propertyDistressFields');
 
@@ -8130,6 +8196,8 @@
       rentFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'rent');
       saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      handoverQuarterWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      handoverYearWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       distressRow?.classList.toggle('crm-hidden', !showSections);
       distressFields?.classList.toggle('crm-hidden', !showSections || !document.getElementById('propertyDistress')?.checked);
 
@@ -8141,11 +8209,39 @@
         document.getElementById('propertySalePrice').value = '';
         document.getElementById('propertyMarketPrice').value = '';
         document.getElementById('propertyMortgageStatus').value = '';
+        document.getElementById('propertySaleStatus').value = 'Ready Property';
+        document.getElementById('propertyHandoverQuarter').value = '';
+        document.getElementById('propertyHandoverYear').value = '';
         document.getElementById('propertyLeasehold').checked = false;
       }
 
       refreshPropertyDistressUI();
+      refreshPropertySaleStatusUI();
       syncWorkspaceFormSummary('property');
+    }
+
+    function refreshPropertySaleStatusUI() {
+      const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
+      const saleStatusField = document.getElementById('propertySaleStatus');
+      const handoverQuarterWrap = document.getElementById('propertyHandoverQuarterWrap');
+      const handoverYearWrap = document.getElementById('propertyHandoverYearWrap');
+      const handoverQuarterField = document.getElementById('propertyHandoverQuarter');
+      const handoverYearField = document.getElementById('propertyHandoverYear');
+      const saleStatus = normalizeDashboardSalePropertyStatusValue(saleStatusField?.value) || 'Ready Property';
+      const showHandover = purpose === 'sale' && saleStatus === 'Off Plan Property';
+
+      if (saleStatusField && purpose === 'sale' && !normalizeDashboardSalePropertyStatusValue(saleStatusField.value)) {
+        saleStatusField.value = 'Ready Property';
+      }
+      handoverQuarterWrap?.classList.toggle('crm-hidden', !showHandover);
+      handoverYearWrap?.classList.toggle('crm-hidden', !showHandover);
+
+      if (!showHandover) {
+        if (handoverQuarterField) handoverQuarterField.value = '';
+        if (handoverYearField) handoverYearField.value = '';
+      } else if (handoverYearField) {
+        handoverYearField.value = normalizeDashboardHandoverYearValue(handoverYearField.value);
+      }
     }
 
     function refreshPropertyDistressUI() {
@@ -8185,7 +8281,7 @@
           distressMetricText.textContent = `Market AED ${marketPrice} vs asking AED ${activePrice}.`;
           distressMetricBadge.textContent = `${discountPercent}% below market`;
         } else {
-          distressMetricText.textContent = 'Add both market and asking prices to highlight the private distress gap.';
+          distressMetricText.textContent = 'Add both market and asking prices to calculate distress gap.';
           distressMetricBadge.textContent = '--';
         }
       }
@@ -8266,6 +8362,8 @@
         'propertyCheques',
         'propertyChiller',
         'propertyMortgageStatus',
+        'propertySaleStatus',
+        'propertyHandoverQuarter',
         'propertyOwnerName',
         'propertyInternalNotes',
         'propertyPublicNotes'
@@ -8279,8 +8377,23 @@
           if (id === 'propertyCategory' || id === 'propertyUnitLayout') {
             syncPropertyDimensionControls();
           }
+          if (id === 'propertySaleStatus' || id === 'propertyHandoverQuarter') {
+            refreshPropertySaleStatusUI();
+          }
           syncWorkspaceFormSummary('property');
         });
+      });
+
+      document.getElementById('propertyHandoverYear')?.addEventListener('input', event => {
+        event.target.value = normalizeDashboardHandoverYearValue(event.target.value);
+        event.target.classList.remove('is-invalid');
+        syncWorkspaceFormSummary('property');
+      });
+      document.getElementById('propertyHandoverYear')?.addEventListener('change', event => {
+        event.target.value = normalizeDashboardHandoverYearValue(event.target.value);
+        event.target.classList.remove('is-invalid');
+        refreshPropertySaleStatusUI();
+        syncWorkspaceFormSummary('property');
       });
 
       ['propertyOwnerPhone'].forEach(id => {
@@ -11310,6 +11423,15 @@
       return `AED ${primaryPrice}${purpose === 'rent' ? ' / year' : ''}`;
     }
 
+    function getPropertySaleStatusLabel(property) {
+      if (getPropertyPurpose(property?.purpose) !== 'sale') return '';
+      return normalizeDashboardSalePropertyStatusValue(property?.salePropertyStatus) || 'Ready Property';
+    }
+
+    function getPropertyHandoverLabel(property) {
+      return formatPropertyHandoverDisplay(property?.handoverQuarter, property?.handoverYear);
+    }
+
     function getPropertyTermsSummary(property) {
       const purpose = getPropertyPurpose(property.purpose);
       if (purpose === 'rent') {
@@ -11321,6 +11443,8 @@
       }
 
       return joinDisplayParts([
+        getPropertySaleStatusLabel(property),
+        getPropertyHandoverLabel(property) ? `Handover: ${getPropertyHandoverLabel(property)}` : '',
         property.leasehold ? 'Leasehold' : 'Freehold / Standard',
         property.mortgageStatus
       ]) || 'Standard sale terms';
@@ -11475,9 +11599,9 @@
         : 'My client is looking to rent';
     }
 
-    function getPropertyDistressLabel(property) {
+    function getPropertyDistressLabel(property, fallback = '') {
       const percent = Number(property?.distressDiscountPercent || 0);
-      if (!property?.isDistress || !percent) return '';
+      if (!property?.isDistress || !percent) return fallback;
       return `${percent}% below market`;
     }
 
@@ -11509,11 +11633,15 @@
           item.cheques,
           item.chiller,
           item.mortgageStatus,
+          item.salePropertyStatus,
+          item.handoverLabel,
           item.rentPrice,
           item.ownerAskingPrice,
           item.price,
           item.sizeSqft,
           item.size,
+          item.marketPrice,
+          item.distressDiscountPercent,
           item.publicNotes,
           item.internalNotes,
           item.status,
@@ -11698,8 +11826,13 @@
           cheques: formData.cheques,
           chiller: formData.chiller,
           ownerAskingPrice: formData.ownerAskingPrice,
+          salePropertyStatus: formData.salePropertyStatus,
+          handoverQuarter: formData.handoverQuarter,
+          handoverYear: formData.handoverYear,
           marketPrice: formData.marketPrice,
           distressAskingPrice: formData.distressAskingPrice,
+          distressGapPercent: formData.distressGapPercent,
+          distressDiscountPercent: formData.distressDiscountPercent,
           mortgageStatus: formData.mortgageStatus,
           leasehold: formData.leasehold,
           isDistress: formData.distressDeal,
@@ -12496,6 +12629,16 @@
       const preserved = getPropertyPreservedState();
       const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue').value);
       const dimensions = syncPropertyDimensionControls();
+      const salePropertyStatus = purpose === 'sale'
+        ? (normalizeDashboardSalePropertyStatusValue(document.getElementById('propertySaleStatus').value) || 'Ready Property')
+        : '';
+      const handoverQuarter = purpose === 'sale' && salePropertyStatus === 'Off Plan Property'
+        ? normalizeDashboardHandoverQuarterValue(document.getElementById('propertyHandoverQuarter').value)
+        : '';
+      const handoverYear = purpose === 'sale' && salePropertyStatus === 'Off Plan Property'
+        ? normalizeDashboardHandoverYearValue(document.getElementById('propertyHandoverYear').value)
+        : '';
+      const handoverLabel = formatPropertyHandoverDisplay(handoverQuarter, handoverYear);
       const distressDeal = document.getElementById('propertyDistress').checked;
       const marketPrice = normalizeBudgetDigits(document.getElementById('propertyMarketPrice').value);
       const activePrice = purpose === 'sale'
@@ -12521,11 +12664,16 @@
         chiller: document.getElementById('propertyChiller').value.trim(),
         ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
         mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
+        salePropertyStatus,
+        handoverQuarter,
+        handoverYear,
+        handoverLabel,
         leasehold: document.getElementById('propertyLeasehold').checked,
         distressDeal,
         marketPrice,
         distressAskingPrice: distressDeal ? activePrice : '',
         distressDiscountPercent,
+        distressGapPercent: distressDiscountPercent,
         ownerName: document.getElementById('propertyOwnerName').value.trim(),
         ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
         internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
@@ -12551,6 +12699,15 @@
       if (formData.purpose === 'sale' && (!formData.ownerAskingPrice || Number(formData.ownerAskingPrice) <= 0)) {
         errors.ownerAskingPrice = 'Enter owner asking price';
       }
+      if (formData.purpose === 'sale' && !formData.salePropertyStatus) {
+        errors.salePropertyStatus = 'Select sale status';
+      }
+      if (formData.purpose === 'sale' && formData.salePropertyStatus === 'Off Plan Property' && !formData.handoverQuarter) {
+        errors.handoverQuarter = 'Select handover quarter';
+      }
+      if (formData.purpose === 'sale' && formData.salePropertyStatus === 'Off Plan Property' && !formData.handoverYear) {
+        errors.handoverYear = 'Enter handover year';
+      }
       if (formData.distressDeal && (!formData.marketPrice || Number(formData.marketPrice) <= 0)) {
         errors.marketPrice = 'Enter market price';
       }
@@ -12569,6 +12726,9 @@
       document.getElementById('propertySizeSqft').value = '';
       document.getElementById('propertySizeUnit').value = 'sqft';
       document.getElementById('propertyMarketPrice').value = '';
+      document.getElementById('propertySaleStatus').value = 'Ready Property';
+      document.getElementById('propertyHandoverQuarter').value = '';
+      document.getElementById('propertyHandoverYear').value = '';
       document.getElementById('propertyOwnerName').value = '';
       document.getElementById('propertyOwnerPhone').value = '';
       document.getElementById('propertyInternalNotes').value = '';
@@ -12608,6 +12768,9 @@
       document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
       document.getElementById('propertyMarketPrice').value = normalizeBudgetDigits(property.marketPrice || '');
       document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
+      document.getElementById('propertySaleStatus').value = normalizeDashboardSalePropertyStatusValue(property.salePropertyStatus) || 'Ready Property';
+      document.getElementById('propertyHandoverQuarter').value = normalizeDashboardHandoverQuarterValue(property.handoverQuarter);
+      document.getElementById('propertyHandoverYear').value = normalizeDashboardHandoverYearValue(property.handoverYear);
       document.getElementById('propertyLeasehold').checked = Boolean(property.leasehold);
       document.getElementById('propertyPublicNotes').value = property.publicNotes || '';
       document.getElementById('propertyInternalNotes').value = property.internalNotes || '';
@@ -12620,6 +12783,7 @@
       document.getElementById('propertyFollowUpNote').value = property.followUpNote || '';
       document.getElementById('propertyUrgentFollowUp').checked = Boolean(property.isUrgentFollowUp);
       document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
+      refreshPropertySaleStatusUI();
       refreshPropertyDistressUI();
       syncWorkspaceFormSummary('property');
     }
@@ -14492,13 +14656,18 @@
           <div class="detail-grid">
             <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong></div>
             <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>Property Category</small><strong>${escapeHtml(getDashboardDisplayPropertyCategory(property) || '--')}</strong></div>
+            <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getDashboardDisplayUnitLayout(property) || '--')}</strong></div>
             <div class="detail-cell"><small>Area / Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
             <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(property.buildingName || '--')}</strong></div>
             <div class="detail-cell"><small>Price</small><strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong></div>
             <div class="detail-cell"><small>Size</small><strong>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</strong></div>
             <div class="detail-cell"><small>Furnishing</small><strong>${escapeHtml(property.furnishing || '--')}</strong></div>
             <div class="detail-cell"><small>Terms</small><strong>${escapeHtml(getPropertyTermsSummary(property))}</strong></div>
-            ${property.isDistress ? `<div class="detail-cell"><small>Market Difference</small><strong>${escapeHtml(distressLabel || '--')}</strong></div>` : ''}
+            ${getPropertyPurpose(property.purpose) === 'sale' ? `<div class="detail-cell"><small>Sale Status</small><strong>${escapeHtml(getPropertySaleStatusLabel(property) || '--')}</strong></div>` : ''}
+            ${getPropertyPurpose(property.purpose) === 'sale' && getPropertyHandoverLabel(property) ? `<div class="detail-cell"><small>Expected Handover</small><strong>${escapeHtml(getPropertyHandoverLabel(property))}</strong></div>` : ''}
+            ${property.isDistress ? `<div class="detail-cell"><small>Distress Gap</small><strong>${escapeHtml(distressLabel || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
+            ${property.isDistress ? `<div class="detail-cell"><small>Market Price</small><strong>${escapeHtml(property.marketPrice ? `AED ${normalizeBudgetDigits(property.marketPrice)}` : 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
             <div class="detail-cell"><small>Owner Name</small><strong>${renderPrivateNameValue('property', property.id, property.ownerName, 'Private contact')}</strong></div>
             <div class="detail-cell"><small>Owner Phone</small><strong>${renderPrivatePhoneValue('property', property.id, property.ownerPhone)}</strong></div>
           </div>
@@ -14721,7 +14890,14 @@
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
-                          <span>${escapeHtml(property.furnishing || '--')}</span>
+                          <span>${escapeHtml(
+                            getPropertyPurpose(property.purpose) === 'sale'
+                              ? joinDisplayParts([
+                                getPropertySaleStatusLabel(property),
+                                getPropertyHandoverLabel(property) ? `Handover ${getPropertyHandoverLabel(property)}` : ''
+                              ]) || '--'
+                              : property.furnishing || '--'
+                          )}</span>
                         </div>
                         <div class="workspace-cell workspace-cell-right">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
@@ -14733,7 +14909,7 @@
                         </div>
                         <div class="workspace-cell">
                           <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
-                          <span>${property.isDistress ? 'Distress deal' : 'Standard inventory'}</span>
+                          <span>${property.isDistress ? (getPropertyDistressLabel(property, 'Add prices for gap') || 'Distress deal') : 'Standard inventory'}</span>
                         </div>
                         <div class="workspace-actions">
                           ${renderRecordActionButton({
@@ -14788,7 +14964,7 @@
                   <div>Type</div>
                   <div>Area / Building</div>
                   <div class="workspace-head-right">Asking Price</div>
-                  <div class="workspace-head-right">Market Difference</div>
+                  <div class="workspace-head-right">Distress Gap</div>
                   <div>Visibility</div>
                   <div class="workspace-head-right">Updated</div>
                   <div class="workspace-head-right">Quick Actions</div>
@@ -14815,7 +14991,11 @@
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
-                          <span>${escapeHtml(property.furnishing || '--')}</span>
+                          <span>${escapeHtml(joinDisplayParts([
+                            getPropertySaleStatusLabel(property),
+                            getPropertyHandoverLabel(property) ? `Handover ${getPropertyHandoverLabel(property)}` : '',
+                            property.furnishing
+                          ]) || '--')}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${escapeHtml(property.location || '--')}</strong>
@@ -14826,8 +15006,8 @@
                           <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
                         <div class="workspace-cell workspace-cell-right">
-                          <strong>${escapeHtml(getPropertyDistressLabel(property) || '--')}</strong>
-                          <span>${escapeHtml(formatStatusLabel(property.status || 'available'))}</span>
+                          <strong>${escapeHtml(getPropertyDistressLabel(property, 'Add prices for gap') || 'Add prices for gap')}</strong>
+                          <span>${escapeHtml(property.marketPrice ? `Market AED ${normalizeBudgetDigits(property.marketPrice)}` : formatStatusLabel(property.status || 'available'))}</span>
                         </div>
                         <div class="workspace-cell">
                           <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>

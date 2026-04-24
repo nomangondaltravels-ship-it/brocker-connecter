@@ -3027,6 +3027,25 @@
       return deriveConnectorPropertyDimensions(record).propertyType || '--';
     }
 
+    function getConnectorSalePropertyStatus(record = {}) {
+      const purpose = String(record?.purpose || '').trim().toLowerCase();
+      if (purpose !== 'sale') return '';
+      const status = String(record?.salePropertyStatus || record?.sale_property_status || '').trim();
+      return status || 'Ready Property';
+    }
+
+    function getConnectorHandoverLabel(record = {}) {
+      const quarter = String(record?.handoverQuarter || record?.handover_quarter || '').trim().toUpperCase();
+      const year = String(record?.handoverYear || record?.handover_year || '').replace(/[^\d]/g, '').slice(0, 4);
+      return quarter && year ? `${quarter} ${year}` : '';
+    }
+
+    function getConnectorDistressGapLabel(record = {}) {
+      const percent = Number(record?.distressDiscountPercent || record?.distress_gap_percent || 0);
+      if (!record?.isDistress || !percent) return '';
+      return `${percent}% below market`;
+    }
+
     function getConnectorTaxonomyOptions(field) {
       if (field === 'purpose') return CORE_TAXONOMY.purposes?.connector || [];
       if (field === 'propertyCategory') {
@@ -4258,6 +4277,9 @@
         getConnectorDisplayPropertyType(listing),
         getConnectorDisplayPropertyCategory(listing),
         getConnectorDisplayUnitLayout(listing),
+        getConnectorSalePropertyStatus(listing),
+        getConnectorHandoverLabel(listing),
+        getConnectorDistressGapLabel(listing),
         listing.location,
         listing.priceLabel,
         listing.publicNotes,
@@ -4952,10 +4974,13 @@
             <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Property Category</small><strong>${escapeHtml(getConnectorDisplayPropertyCategory(selected))}</strong></div>
             <div class="connector-detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
+            ${selected.sourceType === 'property' && String(selected.purpose || '').toLowerCase() === 'sale' ? `<div class="connector-detail-cell"><small>Sale Status</small><strong>${escapeHtml(getConnectorSalePropertyStatus(selected) || '--')}</strong></div>` : ''}
+            ${selected.sourceType === 'property' && getConnectorHandoverLabel(selected) ? `<div class="connector-detail-cell"><small>Expected Handover</small><strong>${escapeHtml(getConnectorHandoverLabel(selected))}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.buildingLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Status</small><strong>${escapeHtml(selected.status || 'Active')}</strong></div>
+            ${selected.sourceType === 'property' && selected.isDistress ? `<div class="connector-detail-cell"><small>Distress Gap</small><strong>${escapeHtml(getConnectorDistressGapLabel(selected) || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
           </div>
         </div>
         <div class="connector-detail-section">
@@ -5019,6 +5044,11 @@
             <div class="sheet-col">
               <span class="sheet-label">Layout</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
+              <span class="sheet-secondary">${escapeHtml(joinDisplayParts([
+                getConnectorSalePropertyStatus(listing),
+                getConnectorHandoverLabel(listing) ? `Handover ${getConnectorHandoverLabel(listing)}` : '',
+                getConnectorDistressGapLabel(listing)
+              ]) || '--')}</span>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Budget</span>
@@ -5163,6 +5193,24 @@
               <small>${listing.sourceType === 'lead' ? 'Layout' : 'Category'}</small>
               <strong>${escapeHtml((listing.sourceType === 'lead' ? getConnectorDisplayUnitLayout(listing) : getConnectorDisplayPropertyCategory(listing)) || '--')}</strong>
             </div>
+            ${listing.sourceType === 'property' ? `
+            <div class="detail-cell">
+              <small>Sale Status</small>
+              <strong>${escapeHtml(getConnectorSalePropertyStatus(listing) || '--')}</strong>
+            </div>
+            ` : ''}
+            ${listing.sourceType === 'property' && getConnectorHandoverLabel(listing) ? `
+            <div class="detail-cell">
+              <small>Expected Handover</small>
+              <strong>${escapeHtml(getConnectorHandoverLabel(listing))}</strong>
+            </div>
+            ` : ''}
+            ${listing.sourceType === 'property' && listing.isDistress ? `
+            <div class="detail-cell">
+              <small>Distress Gap</small>
+              <strong>${escapeHtml(getConnectorDistressGapLabel(listing) || 'Add prices for gap')}</strong>
+            </div>
+            ` : ''}
           </div>
           <div class="muted">${escapeHtml(listing.publicNotes || (listing.sourceType === 'lead' ? 'Shared broker requirement' : 'Shared broker connector listing'))}</div>
         </div>

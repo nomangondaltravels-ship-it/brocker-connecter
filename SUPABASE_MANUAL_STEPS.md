@@ -21,6 +21,7 @@ Before complaint moderation can use the full backend fields, run:
 - `supabase-support-center.sql`
 - `supabase-real-estate-companies.sql`
 - `supabase-property-category-layout.sql`
+- `supabase-sale-offplan-distress.sql`
 - `supabase-broker-toolkit.sql`
 - `supabase-broker-toolkit-seed.sql`
 

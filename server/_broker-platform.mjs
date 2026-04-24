@@ -174,6 +174,28 @@ const UNIT_LAYOUT_ALIASES = Object.freeze({
   'not applicable': 'N/A'
 });
 
+const SALE_PROPERTY_STATUS_VALUES = Object.freeze([
+  'Ready Property',
+  'Off Plan Property'
+]);
+
+const SALE_PROPERTY_STATUS_ALIASES = Object.freeze({
+  ready: 'Ready Property',
+  'ready property': 'Ready Property',
+  offplan: 'Off Plan Property',
+  'off plan': 'Off Plan Property',
+  'off plan property': 'Off Plan Property'
+});
+
+const HANDOVER_QUARTER_VALUES = Object.freeze(['Q1', 'Q2', 'Q3', 'Q4']);
+
+const HANDOVER_QUARTER_ALIASES = Object.freeze({
+  q1: 'Q1',
+  q2: 'Q2',
+  q3: 'Q3',
+  q4: 'Q4'
+});
+
 const LOCATION_ALIASES = Object.freeze({
   'jumeirah village circle': 'JVC',
   jvc: 'JVC',
@@ -283,6 +305,41 @@ export function normalizeUnitLayoutValue(value) {
   return UNIT_LAYOUT_VALUES.includes(normalized) ? normalized : '';
 }
 
+export function normalizeSalePropertyStatusValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  const normalized = SALE_PROPERTY_STATUS_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+  return SALE_PROPERTY_STATUS_VALUES.includes(normalized) ? normalized : '';
+}
+
+export function normalizeHandoverQuarterValue(value) {
+  const rawValue = normalizeText(value);
+  if (!rawValue) return '';
+  const normalized = HANDOVER_QUARTER_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ').toUpperCase();
+  return HANDOVER_QUARTER_VALUES.includes(normalized) ? normalized : '';
+}
+
+export function normalizeHandoverYearValue(value) {
+  const digits = String(value || '').replace(/[^\d]/g, '').slice(0, 4);
+  return digits.length === 4 ? digits : '';
+}
+
+export function formatPropertyHandoverLabel(source) {
+  const quarter = normalizeHandoverQuarterValue(
+    source?.handoverQuarter
+    || source?.handover_quarter
+    || source?.quarter
+    || ''
+  );
+  const year = normalizeHandoverYearValue(
+    source?.handoverYear
+    || source?.handover_year
+    || source?.year
+    || ''
+  );
+  return quarter && year ? `${quarter} ${year}` : '';
+}
+
 export function derivePropertyDimensions(source, options = {}) {
   const record = source && typeof source === 'object' ? source : { propertyType: source };
   let propertyCategory = normalizePropertyCategoryValue(record?.propertyCategory || record?.property_category);
@@ -370,12 +427,25 @@ export function stripPropertyDimensionFields(payload) {
   const clone = { ...payload };
   delete clone.property_category;
   delete clone.unit_layout;
+  delete clone.sale_property_status;
+  delete clone.handover_quarter;
+  delete clone.handover_year;
+  delete clone.market_price;
+  delete clone.distress_gap_percent;
   return clone;
 }
 
 export function isPropertyDimensionColumnError(error) {
   const message = String(error?.message || error || '').toLowerCase();
-  return message.includes('property_category') || message.includes('unit_layout');
+  return (
+    message.includes('property_category')
+    || message.includes('unit_layout')
+    || message.includes('sale_property_status')
+    || message.includes('handover_quarter')
+    || message.includes('handover_year')
+    || message.includes('market_price')
+    || message.includes('distress_gap_percent')
+  );
 }
 
 export function normalizeLocationValue(value) {
@@ -619,6 +689,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      salePropertyStatus: '',
+      handoverQuarter: '',
+      handoverYear: '',
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
@@ -637,6 +710,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      salePropertyStatus: '',
+      handoverQuarter: '',
+      handoverYear: '',
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
@@ -656,6 +732,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: normalizeText(parsed?.chiller),
       mortgageStatus: normalizeText(parsed?.mortgageStatus),
       leasehold: Boolean(parsed?.leasehold),
+      salePropertyStatus: normalizeSalePropertyStatusValue(parsed?.salePropertyStatus || parsed?.sale_property_status),
+      handoverQuarter: normalizeHandoverQuarterValue(parsed?.handoverQuarter || parsed?.handover_quarter),
+      handoverYear: normalizeHandoverYearValue(parsed?.handoverYear || parsed?.handover_year),
       marketPrice: normalizeText(parsed?.marketPrice),
       distressAskingPrice: normalizeText(parsed?.distressAskingPrice),
       distressDiscountPercent: normalizeText(parsed?.distressDiscountPercent),
@@ -672,6 +751,9 @@ export function parsePropertyMeta(rawValue) {
       chiller: '',
       mortgageStatus: '',
       leasehold: false,
+      salePropertyStatus: '',
+      handoverQuarter: '',
+      handoverYear: '',
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
@@ -692,6 +774,9 @@ export function serializePropertyMeta(meta) {
     chiller: normalizeText(meta?.chiller),
     mortgageStatus: normalizeText(meta?.mortgageStatus),
     leasehold: Boolean(meta?.leasehold),
+    salePropertyStatus: normalizeSalePropertyStatusValue(meta?.salePropertyStatus || meta?.sale_property_status),
+    handoverQuarter: normalizeHandoverQuarterValue(meta?.handoverQuarter || meta?.handover_quarter),
+    handoverYear: normalizeHandoverYearValue(meta?.handoverYear || meta?.handover_year),
     marketPrice: normalizeText(meta?.marketPrice),
     distressAskingPrice: normalizeText(meta?.distressAskingPrice),
     distressDiscountPercent: normalizeText(meta?.distressDiscountPercent),
@@ -708,6 +793,9 @@ export function serializePropertyMeta(meta) {
     !payload.chiller &&
     !payload.mortgageStatus &&
     !payload.leasehold &&
+    !payload.salePropertyStatus &&
+    !payload.handoverQuarter &&
+    !payload.handoverYear &&
     !payload.marketPrice &&
     !payload.distressAskingPrice &&
     !payload.distressDiscountPercent &&
@@ -1400,6 +1488,26 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const location = normalizeLocationValue(item.location);
   const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const propertyMeta = !isLead ? parsePropertyMeta(item.description) : null;
+  const salePropertyStatus = !isLead
+    ? normalizeSalePropertyStatusValue(
+      item?.salePropertyStatus
+      || item?.sale_property_status
+      || propertyMeta?.salePropertyStatus
+      || (purpose === 'sale' ? 'Ready Property' : '')
+    )
+    : '';
+  const handoverQuarter = !isLead
+    ? normalizeHandoverQuarterValue(item?.handoverQuarter || item?.handover_quarter || propertyMeta?.handoverQuarter)
+    : '';
+  const handoverYear = !isLead
+    ? normalizeHandoverYearValue(item?.handoverYear || item?.handover_year || propertyMeta?.handoverYear)
+    : '';
+  const marketPrice = !isLead
+    ? normalizeText(item?.marketPrice || item?.market_price || propertyMeta?.marketPrice)
+    : '';
+  const distressGapPercent = !isLead
+    ? normalizeText(item?.distressGapPercent || item?.distress_gap_percent || item?.distressDiscountPercent || propertyMeta?.distressDiscountPercent)
+    : '';
   const projectOrBuilding = isLead
     ? normalizeText(item.preferredBuildingProject)
     : normalizeText(item.buildingName || propertyMeta?.buildingName);
@@ -1427,6 +1535,11 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     category,
     property_category: dimensions.propertyCategory || null,
     unit_layout: dimensions.unitLayout || null,
+    sale_property_status: salePropertyStatus || null,
+    handover_quarter: handoverQuarter || null,
+    handover_year: handoverYear || null,
+    market_price: marketPrice || null,
+    distress_gap_percent: distressGapPercent || null,
     location,
     price_label: priceLabel,
     size_label: isLead ? projectOrBuilding : sizeLabel,
@@ -1512,6 +1625,14 @@ export function sanitizeProperty(row) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
+  const salePropertyStatus = normalizeSalePropertyStatusValue(
+    row.sale_property_status
+    || meta.salePropertyStatus
+    || (normalizeText(row.purpose).toLowerCase() === 'sale' ? 'Ready Property' : '')
+  );
+  const handoverQuarter = normalizeHandoverQuarterValue(row.handover_quarter || meta.handoverQuarter);
+  const handoverYear = normalizeHandoverYearValue(row.handover_year || meta.handoverYear);
+  const handoverLabel = formatPropertyHandoverLabel({ handoverQuarter, handoverYear });
   return {
     id: row.id,
     purpose: normalizeListingPurposeValue(row.purpose) || row.purpose,
@@ -1539,9 +1660,13 @@ export function sanitizeProperty(row) {
     chiller: meta.chiller || '',
     mortgageStatus: meta.mortgageStatus || '',
     leasehold: Boolean(meta.leasehold),
-    marketPrice: meta.marketPrice || '',
+    salePropertyStatus,
+    handoverQuarter,
+    handoverYear,
+    handoverLabel,
+    marketPrice: normalizeText(row.market_price || meta.marketPrice),
     distressAskingPrice: meta.distressAskingPrice || '',
-    distressDiscountPercent: meta.distressDiscountPercent || '',
+    distressDiscountPercent: normalizeText(row.distress_gap_percent || meta.distressDiscountPercent),
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
     nextFollowUpDate: meta.nextFollowUpDate || '',
@@ -1617,6 +1742,15 @@ export function sanitizePublicListing(row, options = {}) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
+  const salePropertyStatus = !isLead
+    ? normalizeSalePropertyStatusValue(
+      row.sale_property_status
+      || (normalizeText(row.purpose).toLowerCase() === 'sale' ? 'Ready Property' : '')
+    )
+    : '';
+  const handoverQuarter = !isLead ? normalizeHandoverQuarterValue(row.handover_quarter) : '';
+  const handoverYear = !isLead ? normalizeHandoverYearValue(row.handover_year) : '';
+  const handoverLabel = !isLead ? formatPropertyHandoverLabel({ handoverQuarter, handoverYear }) : '';
   return {
     id: row.id,
     brokerUuid: exposeBrokerContact ? normalizeText(row.broker_uuid) : '',
@@ -1634,8 +1768,14 @@ export function sanitizePublicListing(row, options = {}) {
     category: propertyType,
     propertyCategory,
     unitLayout,
+    salePropertyStatus,
+    handoverQuarter,
+    handoverYear,
+    handoverLabel,
     location,
     priceLabel: row.price_label,
+    marketPrice: !isLead ? normalizeText(row.market_price) : '',
+    distressDiscountPercent: !isLead ? normalizeText(row.distress_gap_percent) : '',
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
     sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,
