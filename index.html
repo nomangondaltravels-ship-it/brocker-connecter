@@ -2521,9 +2521,9 @@
             </select>
           </div>
           <div class="connector-filter-field">
-            <label for="connectorLayoutFilter">Unit Layout</label>
+            <label for="connectorLayoutFilter">Type</label>
             <select id="connectorLayoutFilter" onchange="applyConnectorFilters()">
-              <option value="all">All Layouts</option>
+              <option value="all">All Types</option>
             </select>
           </div>
           <div class="connector-filter-field">
@@ -2872,7 +2872,6 @@
       purposes: {
         connector: [
           { value: 'rent', label: 'Rent' },
-          { value: 'buy', label: 'Buy' },
           { value: 'sale', label: 'Sale' }
         ]
       },
@@ -3084,8 +3083,19 @@
     function normalizeConnectorPurpose(value, sourceType = '') {
       const normalized = (CORE_TAXONOMY.aliases?.purposes || {})[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
       if (!normalized) return '';
-      if (sourceType === 'lead' && normalized === 'sale') return 'buy';
-      return ['rent', 'buy', 'sale'].includes(normalized) ? normalized : '';
+      if (normalized === 'buy') return 'sale';
+      return ['rent', 'sale'].includes(normalized) ? normalized : '';
+    }
+
+    function getConnectorPublicPurposeValue(record = {}) {
+      return normalizeConnectorPurpose(record?.purpose, record?.sourceType) || '';
+    }
+
+    function getConnectorPublicPurposeLabel(record = {}) {
+      const normalized = getConnectorPublicPurposeValue(record);
+      if (normalized === 'rent') return 'Rent';
+      if (normalized === 'sale') return 'Sale';
+      return '--';
     }
 
     function normalizeConnectorPropertyType(value) {
@@ -3662,8 +3672,8 @@
         targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
         targetId: listing.sourceId || listing.id,
         targetLabel: listing.sourceType === 'lead'
-          ? `${normalizeConnectorPurpose(listing.purpose, listing.sourceType) === 'rent' ? 'Rent' : 'Buy'} - ${listing.propertyType || 'Requirement'}`
-          : `${String(listing.purpose || '').toUpperCase()} - ${listing.propertyType || 'Listing'}`,
+          ? `${getConnectorPublicPurposeLabel(listing)} - ${listing.propertyType || 'Requirement'}`
+          : `${getConnectorPublicPurposeLabel(listing).toUpperCase()} - ${listing.propertyType || 'Listing'}`,
         reportedUserId: listing.brokerUuid || '',
         reportedBrokerIdNumber: listing.brokerIdNumber || '',
         reportedBrokerName: listing.brokerName || '',
@@ -4214,13 +4224,13 @@
       if (!listing) return 'Broker Connector post';
       const parts = listing.sourceType === 'lead'
         ? [
-            listing.purpose ? String(listing.purpose).toUpperCase() : '',
+            getConnectorPublicPurposeLabel(listing).toUpperCase(),
             listing.propertyType || listing.category,
             listing.location,
             listing.buildingLabel
           ]
         : [
-            listing.purpose ? String(listing.purpose).toUpperCase() : '',
+            getConnectorPublicPurposeLabel(listing).toUpperCase(),
             listing.propertyType || listing.category,
             listing.buildingLabel,
             listing.location
@@ -4375,6 +4385,7 @@
       return [
         listing.sourceType === 'lead' ? 'broker requirement' : 'broker connector listing',
         listing.purpose,
+        getConnectorPublicPurposeLabel(listing),
         getConnectorDisplayPropertyType(listing),
         getConnectorDisplayPropertyCategory(listing),
         getConnectorDisplayUnitLayout(listing),
@@ -4393,13 +4404,13 @@
       return [
         { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
         { id: 'connectorCategoryFilter', field: 'propertyCategory', defaultLabel: 'All Categories' },
-        { id: 'connectorLayoutFilter', field: 'unitLayout', defaultLabel: 'All Layouts' },
+        { id: 'connectorLayoutFilter', field: 'unitLayout', defaultLabel: 'All Types' },
         { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' }
       ];
     }
 
     function getFallbackConnectorFieldValue(field, listing) {
-      if (field === 'purpose') return String(listing?.purpose || '').trim().toLowerCase();
+      if (field === 'purpose') return getConnectorPublicPurposeValue(listing);
       if (field === 'propertyCategory') return getConnectorDisplayPropertyCategory(listing);
       if (field === 'unitLayout') return getConnectorDisplayUnitLayout(listing);
       if (field === 'location') return String(listing?.location || '').trim();
@@ -4667,13 +4678,13 @@
           <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
-              <h3>${listing.purpose} · ${getConnectorDisplayPropertyType(listing)}</h3>
+              <h3>${getConnectorPublicPurposeLabel(listing)} · ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} · ${listing.priceLabel}</div>
             </div>
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
-            <div class="detail-cell"><small>Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
+            <div class="detail-cell"><small>Type</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
@@ -4705,7 +4716,7 @@
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
-            <div class="detail-cell"><small>Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
+            <div class="detail-cell"><small>Type</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
@@ -5031,7 +5042,7 @@
       const shareLink = buildListingLink(selected, sectionName);
       const detailTitle = selected.sourceType === 'lead'
         ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${getConnectorDisplayPropertyType(selected) || 'Requirement'}`
-        : `${String(selected.purpose || '--').toUpperCase()} - ${getConnectorDisplayPropertyType(selected) || 'Listing'}`;
+        : `${getConnectorPublicPurposeLabel(selected).toUpperCase()} - ${getConnectorDisplayPropertyType(selected) || 'Listing'}`;
         const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
           .filter(Boolean)
           .join(' - ');
@@ -5062,10 +5073,10 @@
         <div class="connector-detail-section">
           <h4>Overview</h4>
           <div class="connector-detail-grid">
-            <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(getConnectorPublicPurposeLabel(selected))}</strong></div>
             <div class="connector-detail-cell"><small>Property Category</small><strong>${escapeHtml(getConnectorDisplayPropertyCategory(selected))}</strong></div>
-            <div class="connector-detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
-            ${selected.sourceType === 'property' && String(selected.purpose || '').toLowerCase() === 'sale' ? `<div class="connector-detail-cell"><small>Sale Status</small><strong>${escapeHtml(getConnectorSalePropertyStatus(selected) || '--')}</strong></div>` : ''}
+            <div class="connector-detail-cell"><small>Type</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
+            ${selected.sourceType === 'property' && getConnectorPublicPurposeValue(selected) === 'sale' ? `<div class="connector-detail-cell"><small>Sale Status</small><strong>${escapeHtml(getConnectorSalePropertyStatus(selected) || '--')}</strong></div>` : ''}
             ${selected.sourceType === 'property' && getConnectorHandoverLabel(selected) ? `<div class="connector-detail-cell"><small>Expected Handover</small><strong>${escapeHtml(getConnectorHandoverLabel(selected))}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.buildingLabel || '--')}</strong></div>
@@ -5106,7 +5117,7 @@
           <div>Intent</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Layout</div>
+          <div>Type</div>
           <div class="sheet-head-right">Budget</div>
           <div class="sheet-head-right">Updated</div>
           <div class="sheet-head-right">Open</div>
@@ -5131,7 +5142,7 @@
               <span class="sheet-primary">${listing.buildingLabel || listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Layout</span>
+              <span class="sheet-label">Type</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
               <span class="sheet-secondary">${escapeHtml(joinDisplayParts([
                 getConnectorSalePropertyStatus(listing),
@@ -5161,7 +5172,7 @@
           <div>Purpose</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Layout</div>
+          <div>Type</div>
           <div class="sheet-head-right">Price</div>
           <div class="sheet-head-right">Size</div>
           <div class="sheet-head-right">Updated</div>
@@ -5175,7 +5186,7 @@
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Purpose</span>
-              <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${getConnectorDisplayPropertyCategory(listing)}</span>
+              <span class="sheet-primary">${getConnectorPublicPurposeLabel(listing).toUpperCase()} | ${getConnectorDisplayPropertyCategory(listing)}</span>
               <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker connector listing')}</span></span>
             </div>
             <div class="sheet-col">
@@ -5187,7 +5198,7 @@
               <span class="sheet-primary">${listing.buildingLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Layout</span>
+              <span class="sheet-label">Type</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
@@ -5242,7 +5253,7 @@
           <div class="listing-top">
             <div class="listing-title">
               <h3>${escapeHtml((listing.sourceType === 'lead' ? 'Requirement' : 'Listing'))} ${index + 1}</h3>
-              <div class="muted">${escapeHtml(String(listing.purpose || '').toUpperCase() || '--')} | ${escapeHtml(getConnectorDisplayPropertyCategory(listing))} | ${escapeHtml(getConnectorDisplayUnitLayout(listing))}</div>
+              <div class="muted">${escapeHtml(getConnectorPublicPurposeLabel(listing).toUpperCase() || '--')} | ${escapeHtml(getConnectorDisplayPropertyCategory(listing))} | ${escapeHtml(getConnectorDisplayUnitLayout(listing))}</div>
             </div>
           </div>
           <div class="detail-grid">
@@ -5259,7 +5270,7 @@
               <strong>${escapeHtml(listing.priceLabel || '--')}</strong>
             </div>
             <div class="detail-cell">
-              <small>${listing.sourceType === 'lead' ? 'Layout' : 'Category'}</small>
+              <small>${listing.sourceType === 'lead' ? 'Type' : 'Category'}</small>
               <strong>${escapeHtml((listing.sourceType === 'lead' ? getConnectorDisplayUnitLayout(listing) : getConnectorDisplayPropertyCategory(listing)) || '--')}</strong>
             </div>
             ${listing.sourceType === 'property' ? `
