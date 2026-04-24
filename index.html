@@ -2502,21 +2502,21 @@
             </select>
           </div>
           <div class="connector-filter-field">
-            <label for="connectorTypeFilter">Property Type</label>
-            <select id="connectorTypeFilter" onchange="applyConnectorFilters()">
-              <option value="all">All Types</option>
+            <label for="connectorCategoryFilter">Property Category</label>
+            <select id="connectorCategoryFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
+          <div class="connector-filter-field">
+            <label for="connectorLayoutFilter">Unit Layout</label>
+            <select id="connectorLayoutFilter" onchange="applyConnectorFilters()">
+              <option value="all">All Layouts</option>
             </select>
           </div>
           <div class="connector-filter-field">
             <label for="connectorLocationFilter">Location</label>
             <select id="connectorLocationFilter" onchange="applyConnectorFilters()">
               <option value="all">All Areas</option>
-            </select>
-          </div>
-          <div class="connector-filter-field">
-            <label for="connectorStatusFilter">Status</label>
-            <select id="connectorStatusFilter" onchange="applyConnectorFilters()">
-              <option value="all">All Statuses</option>
             </select>
           </div>
           <button class="btn btn-secondary" type="button" onclick="clearConnectorFilters()">Clear Filters</button>
@@ -2671,9 +2671,9 @@
       publicSearchQuery: '',
       publicFilters: {
         purpose: 'all',
-        propertyType: 'all',
-        location: 'all',
-        status: 'all'
+        propertyCategory: 'all',
+        unitLayout: 'all',
+        location: 'all'
       },
       selectedPublicListingKeys: {
         requirements: '',
@@ -2893,28 +2893,134 @@
       return rawValue.replace(/\s+/g, ' ');
     }
 
+    const CONNECTOR_PROPERTY_CATEGORY_OPTIONS = Object.freeze([
+      'Apartment',
+      'Villa',
+      'Townhouse',
+      'Office',
+      'Shop / Retail',
+      'Warehouse',
+      'Land / Plot',
+      'Other'
+    ]);
+
+    const CONNECTOR_UNIT_LAYOUT_OPTIONS = Object.freeze([
+      'Studio',
+      '1 BHK',
+      '2 BHK',
+      '3 BHK',
+      '4 BHK',
+      '5 BHK',
+      '6+ BHK',
+      'N/A'
+    ]);
+
+    const CONNECTOR_PROPERTY_CATEGORY_ALIASES = Object.freeze({
+      apartment: 'Apartment',
+      flat: 'Apartment',
+      villa: 'Villa',
+      townhouse: 'Townhouse',
+      office: 'Office',
+      shop: 'Shop / Retail',
+      retail: 'Shop / Retail',
+      'shop / retail': 'Shop / Retail',
+      warehouse: 'Warehouse',
+      land: 'Land / Plot',
+      plot: 'Land / Plot',
+      'land / plot': 'Land / Plot',
+      other: 'Other'
+    });
+
+    const CONNECTOR_UNIT_LAYOUT_ALIASES = Object.freeze({
+      studio: 'Studio',
+      '1bhk': '1 BHK',
+      '1 bhk': '1 BHK',
+      '1br': '1 BHK',
+      '1 br': '1 BHK',
+      '1 bedroom': '1 BHK',
+      '2bhk': '2 BHK',
+      '2 bhk': '2 BHK',
+      '2br': '2 BHK',
+      '2 br': '2 BHK',
+      '2 bedroom': '2 BHK',
+      '3bhk': '3 BHK',
+      '3 bhk': '3 BHK',
+      '3br': '3 BHK',
+      '3 br': '3 BHK',
+      '3 bedroom': '3 BHK',
+      '4bhk': '4 BHK',
+      '4 bhk': '4 BHK',
+      '4br': '4 BHK',
+      '4 br': '4 BHK',
+      '4 bedroom': '4 BHK',
+      '5bhk': '5 BHK',
+      '5 bhk': '5 BHK',
+      '5br': '5 BHK',
+      '5 br': '5 BHK',
+      '5 bedroom': '5 BHK',
+      '6bhk': '6+ BHK',
+      '6 bhk': '6+ BHK',
+      '6br': '6+ BHK',
+      '6 br': '6+ BHK',
+      '6 bedroom': '6+ BHK',
+      '6+': '6+ BHK',
+      '6+ bhk': '6+ BHK',
+      'n/a': 'N/A',
+      na: 'N/A',
+      'not applicable': 'N/A'
+    });
+
+    function deriveConnectorPropertyDimensions(record = {}) {
+      const rawCategory = String(record?.propertyCategory || record?.property_category || '').trim();
+      const rawLayout = String(record?.unitLayout || record?.unit_layout || '').trim();
+      const legacyType = normalizeConnectorPropertyType(record?.propertyType || record?.property_type || record?.category);
+      let propertyCategory = canonicalizeConnectorValue(rawCategory, CONNECTOR_PROPERTY_CATEGORY_ALIASES, CONNECTOR_PROPERTY_CATEGORY_OPTIONS);
+      let unitLayout = canonicalizeConnectorValue(rawLayout, CONNECTOR_UNIT_LAYOUT_ALIASES, CONNECTOR_UNIT_LAYOUT_OPTIONS);
+
+      if (!propertyCategory || !unitLayout) {
+        const legacyLayout = canonicalizeConnectorValue(legacyType, CONNECTOR_UNIT_LAYOUT_ALIASES, CONNECTOR_UNIT_LAYOUT_OPTIONS);
+        if (!unitLayout && legacyLayout) {
+          unitLayout = legacyLayout;
+        }
+        if (!propertyCategory) {
+          propertyCategory = legacyLayout
+            ? 'Apartment'
+            : canonicalizeConnectorValue(legacyType, CONNECTOR_PROPERTY_CATEGORY_ALIASES, CONNECTOR_PROPERTY_CATEGORY_OPTIONS) || 'Other';
+        }
+        if (!unitLayout) {
+          unitLayout = 'N/A';
+        }
+      }
+
+      if (!propertyCategory) propertyCategory = 'Other';
+      if (!unitLayout) unitLayout = 'N/A';
+
+      return {
+        propertyCategory,
+        unitLayout,
+        propertyType: legacyType || (unitLayout !== 'N/A' ? unitLayout : propertyCategory)
+      };
+    }
+
+    function getConnectorDisplayPropertyCategory(record = {}) {
+      return deriveConnectorPropertyDimensions(record).propertyCategory || '--';
+    }
+
+    function getConnectorDisplayUnitLayout(record = {}) {
+      return deriveConnectorPropertyDimensions(record).unitLayout || '--';
+    }
+
+    function getConnectorDisplayPropertyType(record = {}) {
+      return deriveConnectorPropertyDimensions(record).propertyType || '--';
+    }
+
     function getConnectorTaxonomyOptions(field) {
       if (field === 'purpose') return CORE_TAXONOMY.purposes?.connector || [];
-      if (field === 'status') {
-        const combinedStatusOptions = [
-          ...(CORE_TAXONOMY.statuses?.connector || []),
-          ...(CORE_TAXONOMY.statuses?.leads || []),
-          ...(CORE_TAXONOMY.statuses?.listings || [])
-        ];
-        const seen = new Set();
-        return combinedStatusOptions.filter(option => {
-          const key = normalizeTaxonomyToken(option?.value);
-          if (!key || seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
+      if (field === 'propertyCategory') {
+        return CONNECTOR_PROPERTY_CATEGORY_OPTIONS.map(value => ({ value, label: value }));
       }
-      if (field === 'propertyType') {
-        return dedupeConnectorValues([
-          ...(CORE_TAXONOMY.propertyTypes?.listing || []),
-          ...(CORE_TAXONOMY.propertyTypes?.rent || []),
-          ...(CORE_TAXONOMY.propertyTypes?.buy || [])
-        ]).map(value => ({ value, label: value }));
+      if (field === 'unitLayout') {
+        return CONNECTOR_UNIT_LAYOUT_OPTIONS.map(value => ({ value, label: value }));
       }
       if (field === 'location') {
         return dedupeConnectorValues(CORE_TAXONOMY.locations || []).map(value => ({ value, label: value }));
@@ -2939,8 +3045,20 @@
       return canonicalizeConnectorValue(
         value,
         CORE_TAXONOMY.aliases?.propertyTypes || {},
-        getConnectorTaxonomyOptions('propertyType').map(option => option.value)
+        dedupeConnectorValues([
+          ...(CORE_TAXONOMY.propertyTypes?.listing || []),
+          ...(CORE_TAXONOMY.propertyTypes?.rent || []),
+          ...(CORE_TAXONOMY.propertyTypes?.buy || [])
+        ])
       );
+    }
+
+    function normalizeConnectorPropertyCategory(value) {
+      return canonicalizeConnectorValue(value, CONNECTOR_PROPERTY_CATEGORY_ALIASES, CONNECTOR_PROPERTY_CATEGORY_OPTIONS);
+    }
+
+    function normalizeConnectorUnitLayout(value) {
+      return canonicalizeConnectorValue(value, CONNECTOR_UNIT_LAYOUT_ALIASES, CONNECTOR_UNIT_LAYOUT_OPTIONS);
     }
 
     function normalizeConnectorLocation(value) {
@@ -2951,17 +3069,11 @@
       );
     }
 
-    function normalizeConnectorStatus(value) {
-      const supportedStatuses = getConnectorTaxonomyOptions('status').map(option => option.value);
-      const normalized = canonicalizeConnectorValue(value, CORE_TAXONOMY.aliases?.statuses || {}, supportedStatuses);
-      return supportedStatuses.includes(normalized) ? normalized : '';
-    }
-
     function getConnectorCanonicalFieldValue(field, listing) {
       if (field === 'purpose') return normalizeConnectorPurpose(listing?.purpose, listing?.sourceType);
-      if (field === 'propertyType') return normalizeConnectorPropertyType(listing?.propertyType || listing?.category);
+      if (field === 'propertyCategory') return normalizeConnectorPropertyCategory(getConnectorDisplayPropertyCategory(listing));
+      if (field === 'unitLayout') return normalizeConnectorUnitLayout(getConnectorDisplayUnitLayout(listing));
       if (field === 'location') return normalizeConnectorLocation(listing?.location);
-      if (field === 'status') return normalizeConnectorStatus(listing?.status);
       return String(listing?.[field] || '').trim();
     }
 
@@ -4130,13 +4242,13 @@
       return [
         listing.sourceType === 'lead' ? 'broker requirement' : 'broker connector listing',
         listing.purpose,
-        listing.propertyType,
-        listing.category,
+        getConnectorDisplayPropertyType(listing),
+        getConnectorDisplayPropertyCategory(listing),
+        getConnectorDisplayUnitLayout(listing),
         listing.location,
         listing.priceLabel,
         listing.publicNotes,
         listing.brokerName,
-        listing.status,
         listing.isDistress ? 'distress deal hot deal' : ''
       ].join(' ').toLowerCase();
     }
@@ -4144,17 +4256,17 @@
     function getConnectorFilterSelectConfigs() {
       return [
         { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
-        { id: 'connectorTypeFilter', field: 'propertyType', defaultLabel: 'All Types' },
-        { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' },
-        { id: 'connectorStatusFilter', field: 'status', defaultLabel: 'All Statuses' }
+        { id: 'connectorCategoryFilter', field: 'propertyCategory', defaultLabel: 'All Categories' },
+        { id: 'connectorLayoutFilter', field: 'unitLayout', defaultLabel: 'All Layouts' },
+        { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' }
       ];
     }
 
     function getFallbackConnectorFieldValue(field, listing) {
       if (field === 'purpose') return String(listing?.purpose || '').trim().toLowerCase();
-      if (field === 'propertyType') return String(listing?.propertyType || listing?.category || '').trim();
+      if (field === 'propertyCategory') return getConnectorDisplayPropertyCategory(listing);
+      if (field === 'unitLayout') return getConnectorDisplayUnitLayout(listing);
       if (field === 'location') return String(listing?.location || '').trim();
-      if (field === 'status') return String(listing?.status || '').trim().toLowerCase();
       return String(listing?.[field] || '').trim();
     }
 
@@ -4213,9 +4325,9 @@
 
     function applyConnectorFilters() {
       state.publicFilters.purpose = document.getElementById('connectorPurposeFilter')?.value || 'all';
-      state.publicFilters.propertyType = document.getElementById('connectorTypeFilter')?.value || 'all';
+      state.publicFilters.propertyCategory = document.getElementById('connectorCategoryFilter')?.value || 'all';
+      state.publicFilters.unitLayout = document.getElementById('connectorLayoutFilter')?.value || 'all';
       state.publicFilters.location = document.getElementById('connectorLocationFilter')?.value || 'all';
-      state.publicFilters.status = document.getElementById('connectorStatusFilter')?.value || 'all';
       state.pagination.requirements = 1;
       state.pagination.marketplace = 1;
       state.pagination['distress-deals'] = 1;
@@ -4225,11 +4337,11 @@
     function clearConnectorFilters() {
       state.publicFilters = {
         purpose: 'all',
-        propertyType: 'all',
-        location: 'all',
-        status: 'all'
+        propertyCategory: 'all',
+        unitLayout: 'all',
+        location: 'all'
       };
-      ['connectorPurposeFilter', 'connectorTypeFilter', 'connectorLocationFilter', 'connectorStatusFilter'].forEach(id => {
+      ['connectorPurposeFilter', 'connectorCategoryFilter', 'connectorLayoutFilter', 'connectorLocationFilter'].forEach(id => {
         const element = document.getElementById(id);
         if (element) element.value = 'all';
       });
@@ -4334,9 +4446,9 @@
       return state.listings.filter(listing => {
         if (query && !getPublicSearchText(listing).includes(query)) return false;
         if (state.publicFilters.purpose !== 'all' && getConnectorCanonicalFieldValue('purpose', listing) !== state.publicFilters.purpose) return false;
-        if (state.publicFilters.propertyType !== 'all' && getConnectorCanonicalFieldValue('propertyType', listing) !== state.publicFilters.propertyType) return false;
+        if (state.publicFilters.propertyCategory !== 'all' && getConnectorCanonicalFieldValue('propertyCategory', listing) !== state.publicFilters.propertyCategory) return false;
+        if (state.publicFilters.unitLayout !== 'all' && getConnectorCanonicalFieldValue('unitLayout', listing) !== state.publicFilters.unitLayout) return false;
         if (state.publicFilters.location !== 'all' && getConnectorCanonicalFieldValue('location', listing) !== state.publicFilters.location) return false;
-        if (state.publicFilters.status !== 'all' && getConnectorCanonicalFieldValue('status', listing) !== state.publicFilters.status) return false;
         return true;
       });
     }
@@ -4348,8 +4460,9 @@
       state.listings.forEach(listing => {
         [
           listing.location,
-          listing.category,
-          listing.propertyType,
+          getConnectorDisplayPropertyCategory(listing),
+          getConnectorDisplayUnitLayout(listing),
+          getConnectorDisplayPropertyType(listing),
           listing.purpose,
           listing.brokerName,
           listing.isDistress ? 'Distress Deals' : '',
@@ -4418,7 +4531,7 @@
           <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
-              <h3>${listing.purpose} · ${listing.category}</h3>
+              <h3>${listing.purpose} · ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} · ${listing.priceLabel}</div>
             </div>
             <div class="badges">
@@ -4427,8 +4540,8 @@
             </div>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Type</small><strong>${listing.propertyType || '--'}</strong></div>
-            <div class="detail-cell"><small>Category</small><strong>${listing.category || '--'}</strong></div>
+            <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
+            <div class="detail-cell"><small>Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
@@ -4454,7 +4567,7 @@
           <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
-              <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${listing.category}</h3>
+              <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} &middot; ${listing.priceLabel}</div>
             </div>
             <div class="badges">
@@ -4463,8 +4576,8 @@
             </div>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><small>Type</small><strong>${listing.propertyType || '--'}</strong></div>
-            <div class="detail-cell"><small>Category</small><strong>${listing.category || '--'}</strong></div>
+            <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
+            <div class="detail-cell"><small>Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
@@ -4799,8 +4912,8 @@
       }
       const shareLink = buildListingLink(selected, sectionName);
       const detailTitle = selected.sourceType === 'lead'
-        ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${selected.propertyType || selected.category || 'Requirement'}`
-        : `${String(selected.purpose || '--').toUpperCase()} - ${selected.propertyType || selected.category || 'Listing'}`;
+        ? `${selected.purpose === 'rent' ? 'Looking to rent' : 'Looking to buy'} - ${getConnectorDisplayPropertyType(selected) || 'Requirement'}`
+        : `${String(selected.purpose || '--').toUpperCase()} - ${getConnectorDisplayPropertyType(selected) || 'Listing'}`;
         const locationSummary = [selected.location || '--', selected.buildingLabel && selected.buildingLabel !== '--' ? selected.buildingLabel : '']
           .filter(Boolean)
           .join(' - ');
@@ -4834,7 +4947,8 @@
           <h4>Overview</h4>
           <div class="connector-detail-grid">
             <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(selected.purpose || '--')}</strong></div>
-            <div class="connector-detail-cell"><small>Property Type</small><strong>${escapeHtml(selected.propertyType || selected.category || '--')}</strong></div>
+            <div class="connector-detail-cell"><small>Property Category</small><strong>${escapeHtml(getConnectorDisplayPropertyCategory(selected))}</strong></div>
+            <div class="connector-detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.buildingLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
@@ -4874,7 +4988,7 @@
           <div>Intent</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Type</div>
+          <div>Layout</div>
           <div class="sheet-head-right">Budget</div>
           <div>Status</div>
           <div class="sheet-head-right">Updated</div>
@@ -4900,8 +5014,8 @@
               <span class="sheet-primary">${listing.buildingLabel || listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Type</span>
-              <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
+              <span class="sheet-label">Layout</span>
+              <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Budget</span>
@@ -4932,7 +5046,7 @@
           <div>Purpose</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Type</div>
+          <div>Layout</div>
           <div class="sheet-head-right">Price</div>
           <div class="sheet-head-right">Size</div>
           <div>Status</div>
@@ -4947,7 +5061,7 @@
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Purpose</span>
-              <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${listing.propertyType || listing.category || 'Listing'}</span>
+              <span class="sheet-primary">${(listing.purpose || '--').toUpperCase()} | ${getConnectorDisplayPropertyCategory(listing)}</span>
               <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker connector listing')}</span></span>
             </div>
             <div class="sheet-col">
@@ -4959,8 +5073,8 @@
               <span class="sheet-primary">${listing.buildingLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Type</span>
-              <span class="sheet-primary">${listing.propertyType || listing.category || '--'}</span>
+              <span class="sheet-label">Layout</span>
+              <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Price</span>
@@ -5022,7 +5136,7 @@
           <div class="listing-top">
             <div class="listing-title">
               <h3>${escapeHtml((listing.sourceType === 'lead' ? 'Requirement' : 'Listing'))} ${index + 1}</h3>
-              <div class="muted">${escapeHtml(String(listing.purpose || '').toUpperCase() || '--')} | ${escapeHtml(listing.propertyType || listing.category || '--')}</div>
+              <div class="muted">${escapeHtml(String(listing.purpose || '').toUpperCase() || '--')} | ${escapeHtml(getConnectorDisplayPropertyCategory(listing))} | ${escapeHtml(getConnectorDisplayUnitLayout(listing))}</div>
             </div>
             <div class="badges">
               <span class="badge ${listing.isDistress ? 'badge-hot' : badgeClass(listing)}">${escapeHtml(badgeText(listing))}</span>
@@ -5043,8 +5157,8 @@
               <strong>${escapeHtml(listing.priceLabel || '--')}</strong>
             </div>
             <div class="detail-cell">
-              <small>${listing.sourceType === 'lead' ? 'Type' : 'Size'}</small>
-              <strong>${escapeHtml((listing.sourceType === 'lead' ? (listing.propertyType || listing.category) : (listing.sizeLabel || listing.propertyType || listing.category)) || '--')}</strong>
+              <small>${listing.sourceType === 'lead' ? 'Layout' : 'Category'}</small>
+              <strong>${escapeHtml((listing.sourceType === 'lead' ? getConnectorDisplayUnitLayout(listing) : getConnectorDisplayPropertyCategory(listing)) || '--')}</strong>
             </div>
           </div>
           <div class="muted">${escapeHtml(listing.publicNotes || (listing.sourceType === 'lead' ? 'Shared broker requirement' : 'Shared broker connector listing'))}</div>
