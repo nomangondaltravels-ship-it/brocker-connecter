@@ -17,7 +17,7 @@ import {
 } from '../server/_support.mjs';
 
 const MAX_SUPPORT_MESSAGE_LENGTH = 4000;
-const SUPPORT_ROUTE_TIMEOUT_MS = 2500;
+const SUPPORT_ROUTE_TIMEOUT_MS = 1800;
 
 async function withTimeout(task, timeoutMs, fallbackValue) {
   const controller = new AbortController();
@@ -203,7 +203,7 @@ export default async function handler(request) {
           SUPPORT_ROUTE_TIMEOUT_MS,
           []
         )
-      });
+      }, 200, { 'Cache-Control': 'no-store' });
     }
 
     if (request.method === 'PATCH') {

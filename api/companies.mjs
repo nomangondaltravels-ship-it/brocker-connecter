@@ -16,15 +16,19 @@ import {
   parseCompanyRow
 } from '../server/_real_estate_companies.mjs';
 
+const COMPANY_ROUTE_TIMEOUT_MS = 1800;
+
 async function withTimeout(task, timeoutMs, fallbackValue) {
+  const controller = new AbortController();
   let timer = null;
   try {
-    return await Promise.race([
-      Promise.resolve().then(task),
-      new Promise(resolve => {
-        timer = setTimeout(() => resolve(fallbackValue), timeoutMs);
-      })
-    ]);
+    timer = setTimeout(() => controller.abort(), timeoutMs);
+    return await Promise.resolve().then(() => task(controller.signal));
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return fallbackValue;
+    }
+    throw error;
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -68,14 +72,15 @@ async function requireAdmin(request) {
   };
 }
 
-async function listApprovedCompanies(context) {
+async function listApprovedCompanies(context, signal) {
   const rows = await supabaseSelect({
     supabaseUrl: context.supabaseUrl,
     serviceRoleKey: context.serviceRoleKey,
     table: 'real_estate_companies',
     select: '*',
     filters: { status: 'approved' },
-    order: { column: 'name', ascending: true }
+    order: { column: 'name', ascending: true },
+    signal
   }).catch(() => []);
 
   return mergeCompanyRows(
@@ -84,13 +89,14 @@ async function listApprovedCompanies(context) {
   );
 }
 
-async function listPendingCompanies(context) {
+async function listPendingCompanies(context, signal) {
   const rows = await supabaseSelect({
     supabaseUrl: context.supabaseUrl,
     serviceRoleKey: context.serviceRoleKey,
     table: 'pending_real_estate_companies',
     select: '*',
-    order: { column: 'created_at', ascending: false }
+    order: { column: 'created_at', ascending: false },
+    signal
   }).catch(() => []);
 
   return (Array.isArray(rows) ? rows : []).map(parseCompanyRow);
@@ -215,23 +221,34 @@ async function rejectPendingCompany(context, body) {
   });
 }
 
+async function listAdminCompanySuggestions(context) {
+  return await withTimeout(async signal => {
+    const [approvedCompanies, pendingCompanies] = await Promise.all([
+      listApprovedCompanies(context, signal),
+      listPendingCompanies(context, signal)
+    ]);
+    return { approvedCompanies, pendingCompanies };
+  }, COMPANY_ROUTE_TIMEOUT_MS, {
+    approvedCompanies: getCuratedApprovedCompanyRows(),
+    pendingCompanies: []
+  });
+}
+
 export default async function handler(request) {
   try {
     if (request.method === 'GET') {
       const scope = new URL(request.url).searchParams.get('scope');
       if (scope === 'admin') {
         const context = await requireAdmin(request);
-        return json({
-          approvedCompanies: await listApprovedCompanies(context),
-          pendingCompanies: await listPendingCompanies(context)
-        });
+        const result = await listAdminCompanySuggestions(context);
+        return json(result, 200, { 'Cache-Control': 'no-store' });
       }
 
       const context = await getDbContext().catch(() => null);
       const companies = context
         ? await withTimeout(
-            () => listApprovedCompanies(context).catch(() => getCuratedApprovedCompanyRows()),
-            2500,
+            signal => listApprovedCompanies(context, signal).catch(() => getCuratedApprovedCompanyRows()),
+            COMPANY_ROUTE_TIMEOUT_MS,
             getCuratedApprovedCompanyRows()
           )
         : getCuratedApprovedCompanyRows();

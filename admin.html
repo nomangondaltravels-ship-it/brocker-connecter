@@ -3042,6 +3042,7 @@
       } catch (error) {
         console.error(error);
         supportRequests = [];
+        adminUiState.supportLoaded = true;
         setAdminStatus(error?.message || 'Support inbox could not load.', 'error');
       }
       adminUiState.supportLoading = false;
@@ -3061,6 +3062,7 @@
         console.error(error);
         approvedCompanySuggestions = [];
         pendingCompanySuggestions = [];
+        adminUiState.companiesLoaded = true;
         setAdminStatus(error?.message || 'Company suggestions could not load.', 'error');
       }
       adminUiState.companyLoading = false;
