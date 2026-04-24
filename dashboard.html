@@ -4408,6 +4408,218 @@
       line-height: 1;
     }
 
+    .toolkit-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .toolkit-toolbar-card,
+    .toolkit-grid-card,
+    .toolkit-disclaimer-card,
+    .toolkit-favorites-card {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+    }
+
+    .toolkit-toolbar-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 1.35fr) minmax(220px, 0.7fr);
+      gap: 14px;
+      align-items: end;
+    }
+
+    .toolkit-header-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .toolkit-header-copy h3 {
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+
+    .toolkit-header-copy p {
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .toolkit-header-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(212, 175, 55, 0.12);
+      border: 1px solid rgba(212, 175, 55, 0.18);
+      font-size: 0.8rem;
+      color: var(--gold-deep);
+      white-space: nowrap;
+    }
+
+    .toolkit-header-meta strong {
+      color: var(--text);
+    }
+
+    .toolkit-favorites-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+
+    .toolkit-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+
+    .toolkit-tool-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+      display: grid;
+      gap: 14px;
+      min-height: 240px;
+    }
+
+    .toolkit-tool-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toolkit-tool-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .toolkit-tool-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.98));
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      flex: 0 0 auto;
+      color: var(--gold-deep);
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .toolkit-tool-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .toolkit-tool-copy {
+      min-width: 0;
+      display: grid;
+      gap: 5px;
+    }
+
+    .toolkit-tool-copy h4 {
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+
+    .toolkit-tool-copy p {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.84rem;
+    }
+
+    .toolkit-tool-meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .toolkit-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1px solid var(--line);
+      background: rgba(148, 163, 184, 0.08);
+      color: var(--text);
+    }
+
+    .toolkit-badge.is-featured {
+      background: rgba(212, 175, 55, 0.12);
+      border-color: rgba(212, 175, 55, 0.28);
+      color: var(--gold-deep);
+    }
+
+    .toolkit-badge.is-favorite {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.22);
+      color: #0369a1;
+    }
+
+    .toolkit-tool-actions {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolkit-open-btn {
+      min-width: 110px;
+    }
+
+    .toolkit-favorite-btn {
+      min-width: 44px;
+      padding: 0 14px;
+    }
+
+    .toolkit-favorite-btn.is-active {
+      border-color: rgba(212, 175, 55, 0.34);
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-deep);
+    }
+
+    .toolkit-empty-state {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed var(--line-strong);
+      background: rgba(248, 250, 252, 0.86);
+      color: var(--muted);
+      display: grid;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .toolkit-empty-state strong {
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .toolkit-disclaimer-card p {
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 0.86rem;
+    }
+
     .workspace-actions {
       display: flex;
       align-items: center;
@@ -5326,6 +5538,10 @@
       .complaint-field-grid {
         grid-template-columns: 1fr;
       }
+
+      .toolkit-toolbar-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -5412,6 +5628,7 @@
           <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">Listings</span><span class="menu-sub">Inventory / availability</span></button>
           <button class="btn" data-section="distress" onclick="openSection('distress')"><span class="menu-label">Distress Deals</span><span class="menu-sub">Urgent discounted stock</span></button>
           <button class="btn" data-section="complaints" onclick="openSection('complaints')"><span class="menu-label">Complaint Center</span><span class="menu-sub">Reports / review status</span></button>
+          <button class="btn" data-section="toolkit" onclick="openSection('toolkit')"><span class="menu-label">Broker Toolkit</span><span class="menu-sub">Dubai links / daily utilities</span></button>
           <button class="btn" data-section="settings" onclick="openSection('settings')"><span class="menu-label">Settings</span><span class="menu-sub">Account / controls</span></button>
         </div>
       </aside>
@@ -5556,11 +5773,20 @@
                       <div class="field-error" id="leadBuildingProjectError"></div>
                     </div>
                     <div class="field-block">
-                      <label class="small">Property Type</label>
-                      <select id="leadPropertyType">
-                        <option value="">Select property type</option>
+                      <label class="small">Property Category</label>
+                      <select id="leadPropertyCategory">
+                        <option value="">Select property category</option>
                       </select>
-                      <div class="field-error" id="leadPropertyTypeError"></div>
+                      <input id="leadPropertyType" type="hidden" value="">
+                      <div class="field-error" id="leadPropertyCategoryError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Unit Layout</label>
+                      <select id="leadUnitLayout">
+                        <option value="">Select unit layout</option>
+                      </select>
+                      <div class="field-helper" id="leadUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse requirements.</div>
+                      <div class="field-error" id="leadUnitLayoutError"></div>
                     </div>
                     <div class="field-block">
                       <label class="small">Budget</label>
@@ -5685,11 +5911,20 @@
                 <div class="lead-dynamic-layout crm-hidden" id="propertyBaseFields">
                   <div class="form-grid">
                     <div class="field-block">
-                      <label class="small">Property Type</label>
-                      <select id="propertyType">
-                        <option value="">Select property type</option>
+                      <label class="small">Property Category</label>
+                      <select id="propertyCategory">
+                        <option value="">Select property category</option>
                       </select>
-                      <div class="field-error" id="propertyTypeError"></div>
+                      <input id="propertyType" type="hidden" value="">
+                      <div class="field-error" id="propertyCategoryError"></div>
+                    </div>
+                    <div class="field-block">
+                      <label class="small">Unit Layout</label>
+                      <select id="propertyUnitLayout">
+                        <option value="">Select unit layout</option>
+                      </select>
+                      <div class="field-helper" id="propertyUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse listings.</div>
+                      <div class="field-error" id="propertyUnitLayoutError"></div>
                     </div>
                     <div class="field-block">
                       <label class="small">Location</label>
@@ -6132,6 +6367,16 @@
         <div id="complaintsCard"></div>
       </section>
 
+      <section class="section" id="toolkit-section">
+        <div class="section-head">
+          <div>
+            <h2>Broker Toolkit</h2>
+            <p>Quick access to essential Dubai real estate tools, portals, forms, and utilities.</p>
+          </div>
+        </div>
+        <div id="toolkitCard"></div>
+      </section>
+
       <section class="section" id="profile-section">
         <div class="section-head">
           <div>
@@ -6267,6 +6512,8 @@
       properties: [],
       followUps: [],
       sharedListings: [],
+      toolkitTools: [],
+      toolkitFavoriteToolIds: [],
       complaints: [],
       notifications: [],
       aiMatches: [],
@@ -6312,6 +6559,12 @@
       complaintDraft: null,
       complaintModalOpen: false,
       complaintModalSubmitting: false,
+      toolkitLoaded: false,
+      toolkitLoading: false,
+      toolkitError: '',
+      toolkitSearch: '',
+      toolkitCategory: 'all',
+      toolkitFavoriteBusy: '',
       rulesPromptOpen: false,
       rulesPromptChecked: false,
       rulesPromptSource: '',
@@ -6346,6 +6599,17 @@
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
     const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+    const TOOLKIT_CATEGORIES = [
+      'Government & Compliance',
+      'DLD / RERA',
+      'Trakheesi',
+      'Ejari',
+      'Utilities',
+      'Property Portals',
+      'Forms & Agreements',
+      'Calculators',
+      'Company / Broker Tools'
+    ];
     const COMPLAINT_STATUS_LABELS = {
       new: 'New',
       'under-review': 'Under Review',
@@ -6455,6 +6719,146 @@
         ...(CORE_TAXONOMY.propertyTypes?.buy || [])
       ]);
       return canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.propertyTypes || {}, supportedValues);
+    }
+
+    const DASHBOARD_PROPERTY_CATEGORY_OPTIONS = Object.freeze([
+      'Apartment',
+      'Villa',
+      'Townhouse',
+      'Office',
+      'Shop / Retail',
+      'Warehouse',
+      'Land / Plot',
+      'Other'
+    ]);
+
+    const DASHBOARD_UNIT_LAYOUT_OPTIONS = Object.freeze([
+      'Studio',
+      '1 BHK',
+      '2 BHK',
+      '3 BHK',
+      '4 BHK',
+      '5 BHK',
+      '6+ BHK',
+      'N/A'
+    ]);
+
+    const DASHBOARD_PROPERTY_CATEGORY_ALIASES = Object.freeze({
+      apartment: 'Apartment',
+      flat: 'Apartment',
+      villa: 'Villa',
+      townhouse: 'Townhouse',
+      office: 'Office',
+      shop: 'Shop / Retail',
+      retail: 'Shop / Retail',
+      'shop / retail': 'Shop / Retail',
+      warehouse: 'Warehouse',
+      land: 'Land / Plot',
+      plot: 'Land / Plot',
+      'land / plot': 'Land / Plot',
+      other: 'Other'
+    });
+
+    const DASHBOARD_UNIT_LAYOUT_ALIASES = Object.freeze({
+      studio: 'Studio',
+      '1bhk': '1 BHK',
+      '1 bhk': '1 BHK',
+      '1br': '1 BHK',
+      '1 br': '1 BHK',
+      '1 bedroom': '1 BHK',
+      '2bhk': '2 BHK',
+      '2 bhk': '2 BHK',
+      '2br': '2 BHK',
+      '2 br': '2 BHK',
+      '2 bedroom': '2 BHK',
+      '3bhk': '3 BHK',
+      '3 bhk': '3 BHK',
+      '3br': '3 BHK',
+      '3 br': '3 BHK',
+      '3 bedroom': '3 BHK',
+      '4bhk': '4 BHK',
+      '4 bhk': '4 BHK',
+      '4br': '4 BHK',
+      '4 br': '4 BHK',
+      '4 bedroom': '4 BHK',
+      '5bhk': '5 BHK',
+      '5 bhk': '5 BHK',
+      '5br': '5 BHK',
+      '5 br': '5 BHK',
+      '5 bedroom': '5 BHK',
+      '5+bhk': '6+ BHK',
+      '5+ bhk': '6+ BHK',
+      '6bhk': '6+ BHK',
+      '6 bhk': '6+ BHK',
+      '6br': '6+ BHK',
+      '6 br': '6+ BHK',
+      '6 bedroom': '6+ BHK',
+      '6+': '6+ BHK',
+      '6+ bhk': '6+ BHK',
+      'n/a': 'N/A',
+      na: 'N/A'
+    });
+
+    function normalizeDashboardPropertyCategoryValue(value) {
+      const rawValue = normalizeText(value);
+      if (!rawValue) return '';
+      const normalized = DASHBOARD_PROPERTY_CATEGORY_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+      return DASHBOARD_PROPERTY_CATEGORY_OPTIONS.includes(normalized) ? normalized : '';
+    }
+
+    function normalizeDashboardUnitLayoutValue(value) {
+      const rawValue = normalizeText(value);
+      if (!rawValue) return '';
+      const normalized = DASHBOARD_UNIT_LAYOUT_ALIASES[normalizeTaxonomyToken(rawValue)] || rawValue.replace(/\s+/g, ' ');
+      return DASHBOARD_UNIT_LAYOUT_OPTIONS.includes(normalized) ? normalized : '';
+    }
+
+    function dashboardCategoryAllowsSelectableLayout(category) {
+      return ['Apartment', 'Villa', 'Townhouse'].includes(normalizeDashboardPropertyCategoryValue(category));
+    }
+
+    function deriveDashboardPropertyDimensions(source) {
+      const record = source && typeof source === 'object' ? source : { propertyType: source };
+      let propertyCategory = normalizeDashboardPropertyCategoryValue(record?.propertyCategory || record?.property_category);
+      let unitLayout = normalizeDashboardUnitLayoutValue(record?.unitLayout || record?.unit_layout);
+      const legacyPropertyType = normalizeDashboardPropertyTypeValue(record?.propertyType || record?.property_type || record?.category || '');
+      const inferredLayout = normalizeDashboardUnitLayoutValue(legacyPropertyType);
+      const inferredCategory = normalizeDashboardPropertyCategoryValue(legacyPropertyType);
+
+      if (!unitLayout && inferredLayout) unitLayout = inferredLayout;
+      if (!propertyCategory && inferredLayout) propertyCategory = 'Apartment';
+      if (!propertyCategory && inferredCategory) propertyCategory = inferredCategory;
+      if (!propertyCategory && legacyPropertyType) propertyCategory = 'Other';
+      if (!unitLayout && propertyCategory) {
+        unitLayout = dashboardCategoryAllowsSelectableLayout(propertyCategory) ? '' : 'N/A';
+      }
+
+      const propertyType = legacyPropertyType || (unitLayout && unitLayout !== 'N/A' ? unitLayout : propertyCategory);
+      return {
+        propertyCategory,
+        unitLayout,
+        propertyType
+      };
+    }
+
+    function getDashboardDisplayPropertyType(record) {
+      return deriveDashboardPropertyDimensions(record).propertyType || '';
+    }
+
+    function getDashboardDisplayPropertyCategory(record) {
+      return deriveDashboardPropertyDimensions(record).propertyCategory || '';
+    }
+
+    function getDashboardDisplayUnitLayout(record) {
+      return deriveDashboardPropertyDimensions(record).unitLayout || '';
+    }
+
+    function formatDashboardPropertyDimensions(category, layout) {
+      const normalizedCategory = normalizeDashboardPropertyCategoryValue(category);
+      const normalizedLayout = normalizeDashboardUnitLayoutValue(layout);
+      return [normalizedCategory, normalizedLayout && normalizedLayout !== 'N/A' ? normalizedLayout : '']
+        .filter(Boolean)
+        .join(' · ');
     }
 
     function normalizeDashboardLocationValue(value) {
@@ -7112,17 +7516,45 @@
       return parts.join(' | ');
     }
 
-    function populateLeadPropertyTypeOptions(selectedValue = '') {
-      const purpose = document.getElementById('leadClientPurpose')?.value || '';
-      const select = document.getElementById('leadPropertyType');
+    function populateLeadPropertyCategoryOptions(selectedValue = '') {
+      const select = document.getElementById('leadPropertyCategory');
       if (!select) return;
-      const options = dedupeTaxonomyValues([
-        ...(CORE_TAXONOMY.propertyTypes?.[purpose] || []),
-        ...(LEAD_CONFIG.propertyTypes?.[purpose] || [])
-      ]);
-      const normalizedSelectedValue = normalizeDashboardPropertyTypeValue(selectedValue);
-      select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
-      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
+      select.innerHTML = '<option value="">Select property category</option>' + DASHBOARD_PROPERTY_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      const normalizedSelectedValue = normalizeDashboardPropertyCategoryValue(selectedValue);
+      select.value = normalizedSelectedValue && DASHBOARD_PROPERTY_CATEGORY_OPTIONS.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
+    }
+
+    function populateLeadUnitLayoutOptions(selectedValue = '', propertyCategory = '') {
+      const select = document.getElementById('leadUnitLayout');
+      const helper = document.getElementById('leadUnitLayoutHelper');
+      if (!select) return;
+      const category = normalizeDashboardPropertyCategoryValue(propertyCategory);
+      const allowsLayout = dashboardCategoryAllowsSelectableLayout(category);
+      const options = allowsLayout ? DASHBOARD_UNIT_LAYOUT_OPTIONS : ['N/A'];
+      const normalizedSelectedValue = normalizeDashboardUnitLayoutValue(selectedValue || (allowsLayout ? '' : 'N/A'));
+      select.innerHTML = '<option value="">Select unit layout</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : (allowsLayout ? '' : 'N/A');
+      select.disabled = !category;
+      if (helper) {
+        helper.textContent = !category
+          ? 'Choose a property category first.'
+          : allowsLayout
+            ? 'Select the layout for apartment, villa, or townhouse requirements.'
+            : 'Unit layout defaults to N/A for this property category.';
+      }
+    }
+
+    function syncLeadPropertyDimensionControls(source = null) {
+      const derived = deriveDashboardPropertyDimensions(source || {
+        propertyCategory: document.getElementById('leadPropertyCategory')?.value,
+        unitLayout: document.getElementById('leadUnitLayout')?.value,
+        propertyType: document.getElementById('leadPropertyType')?.value
+      });
+      populateLeadPropertyCategoryOptions(derived.propertyCategory);
+      populateLeadUnitLayoutOptions(derived.unitLayout, derived.propertyCategory);
+      const hiddenInput = document.getElementById('leadPropertyType');
+      if (hiddenInput) hiddenInput.value = derived.propertyType || '';
+      return derived;
     }
 
     function populateLeadPaymentMethodOptions(selectedValue = '') {
@@ -7136,7 +7568,8 @@
       [
         'leadClientPurposeError',
         'leadLocationError',
-        'leadPropertyTypeError',
+        'leadPropertyCategoryError',
+        'leadUnitLayoutError',
         'leadBudgetError',
         'leadPaymentMethodError',
         'leadClientNameError',
@@ -7149,7 +7582,8 @@
       [
         'leadLocation',
         'leadBuildingProject',
-        'leadPropertyType',
+        'leadPropertyCategory',
+        'leadUnitLayout',
         'leadBudget',
         'leadPaymentMethod',
         'leadClientName',
@@ -7163,7 +7597,8 @@
       const errorMap = {
         clientPurpose: 'leadClientPurposeError',
         location: 'leadLocationError',
-        propertyType: 'leadPropertyTypeError',
+        propertyCategory: 'leadPropertyCategoryError',
+        unitLayout: 'leadUnitLayoutError',
         budget: 'leadBudgetError',
         paymentMethod: 'leadPaymentMethodError',
         clientName: 'leadClientNameError',
@@ -7172,7 +7607,8 @@
       const inputMap = {
         clientPurpose: 'leadPurposeControl',
         location: 'leadLocation',
-        propertyType: 'leadPropertyType',
+        propertyCategory: 'leadPropertyCategory',
+        unitLayout: 'leadUnitLayout',
         budget: 'leadBudget',
         paymentMethod: 'leadPaymentMethod',
         clientName: 'leadClientName',
@@ -7220,7 +7656,8 @@
     function syncWorkspaceFormSummary(type) {
       if (type === 'property') {
         const purpose = getPropertyPurposeLabel(document.getElementById('propertyPurposeValue')?.value);
-        const propertyType = document.getElementById('propertyType')?.value || '';
+        const propertyCategory = document.getElementById('propertyCategory')?.value || '';
+        const unitLayout = document.getElementById('propertyUnitLayout')?.value || '';
         const location = document.getElementById('propertyLocation')?.value || '';
         const building = document.getElementById('propertyBuildingName')?.value || '';
         const status = document.getElementById('propertyStatus')?.value || '';
@@ -7229,14 +7666,15 @@
           : `${status ? formatStatusLabel(status) : 'Available'} · Private inventory`;
 
         setWorkspaceSummaryValue('workspaceSummaryPurpose', purpose === 'Listing' ? '' : purpose, 'Choose rent or sale');
-        setWorkspaceSummaryValue('workspaceSummaryType', propertyType, 'Choose a property type');
+        setWorkspaceSummaryValue('workspaceSummaryType', formatDashboardPropertyDimensions(propertyCategory, unitLayout), 'Choose category and layout');
         setWorkspaceSummaryValue('workspaceSummaryLocation', [location, building].filter(Boolean).join(' · '), 'Add area or project details');
         setWorkspaceSummaryValue('workspaceSummaryState', visibilityText, 'Starts private inside Broker Desk');
         return;
       }
 
       const purpose = getLeadClientPurposeLabel(document.getElementById('leadClientPurpose')?.value);
-      const propertyType = document.getElementById('leadPropertyType')?.value || '';
+      const propertyCategory = document.getElementById('leadPropertyCategory')?.value || '';
+      const unitLayout = document.getElementById('leadUnitLayout')?.value || '';
       const location = document.getElementById('leadLocation')?.value || '';
       const building = document.getElementById('leadBuildingProject')?.value || '';
       const status = document.getElementById('leadStatus')?.value || '';
@@ -7244,7 +7682,7 @@
       const stateText = [status ? formatStatusLabel(status) : '', paymentMethod].filter(Boolean).join(' · ');
 
       setWorkspaceSummaryValue('workspaceSummaryPurpose', purpose === 'Requirement' ? '' : purpose, 'Choose rent or buy');
-      setWorkspaceSummaryValue('workspaceSummaryType', propertyType, 'Choose a property type');
+      setWorkspaceSummaryValue('workspaceSummaryType', formatDashboardPropertyDimensions(propertyCategory, unitLayout), 'Choose category and layout');
       setWorkspaceSummaryValue('workspaceSummaryLocation', [location, building].filter(Boolean).join(' · '), 'Add area or project details');
       setWorkspaceSummaryValue('workspaceSummaryState', stateText, 'Starts private inside Broker Desk');
     }
@@ -7258,7 +7696,8 @@
       const workflowSection = document.getElementById('leadWorkflowSection');
       const paymentWrap = document.getElementById('leadPaymentMethodWrap');
       const paymentSelect = document.getElementById('leadPaymentMethod');
-      const propertyTypeSelect = document.getElementById('leadPropertyType');
+      const propertyCategorySelect = document.getElementById('leadPropertyCategory');
+      const unitLayoutSelect = document.getElementById('leadUnitLayout');
 
       if (hiddenInput) hiddenInput.value = normalizedPurpose;
 
@@ -7273,8 +7712,11 @@
       workflowSection?.classList.toggle('crm-hidden', !showDetails);
       paymentWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'buy');
 
-      const previousPropertyType = options.preserveValues ? propertyTypeSelect?.value || '' : '';
-      populateLeadPropertyTypeOptions(previousPropertyType);
+      syncLeadPropertyDimensionControls(options.preserveValues ? {
+        propertyCategory: propertyCategorySelect?.value || '',
+        unitLayout: unitLayoutSelect?.value || '',
+        propertyType: document.getElementById('leadPropertyType')?.value || ''
+      } : {});
 
       const previousPaymentMethod = options.preserveValues ? paymentSelect?.value || '' : '';
       populateLeadPaymentMethodOptions(previousPaymentMethod);
@@ -7432,7 +7874,7 @@
         });
       });
 
-      populateLeadPropertyTypeOptions('');
+      syncLeadPropertyDimensionControls();
       populateLeadPaymentMethodOptions('');
       setLeadPurpose('', { preserveValues: false });
 
@@ -7454,9 +7896,17 @@
         syncWorkspaceFormSummary('lead');
       });
 
-      ['leadPropertyType', 'leadPaymentMethod'].forEach(id => {
+      ['leadPaymentMethod'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', event => {
           event.target.classList.remove('is-invalid');
+          syncWorkspaceFormSummary('lead');
+        });
+      });
+
+      ['leadPropertyCategory', 'leadUnitLayout'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', event => {
+          event.target.classList.remove('is-invalid');
+          syncLeadPropertyDimensionControls();
           syncWorkspaceFormSummary('lead');
         });
       });
@@ -7490,16 +7940,45 @@
       return 'Listing';
     }
 
-    function populatePropertyTypeOptions(selectedValue = '') {
-      const select = document.getElementById('propertyType');
+    function populatePropertyCategoryOptions(selectedValue = '') {
+      const select = document.getElementById('propertyCategory');
       if (!select) return;
-      const options = dedupeTaxonomyValues([
-        ...(CORE_TAXONOMY.propertyTypes?.listing || []),
-        ...(LEAD_CONFIG.listingPropertyTypes || [])
-      ]);
-      const normalizedSelectedValue = normalizeDashboardPropertyTypeValue(selectedValue);
-      select.innerHTML = '<option value="">Select property type</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
-      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
+      select.innerHTML = '<option value="">Select property category</option>' + DASHBOARD_PROPERTY_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      const normalizedSelectedValue = normalizeDashboardPropertyCategoryValue(selectedValue);
+      select.value = normalizedSelectedValue && DASHBOARD_PROPERTY_CATEGORY_OPTIONS.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
+    }
+
+    function populatePropertyUnitLayoutOptions(selectedValue = '', propertyCategory = '') {
+      const select = document.getElementById('propertyUnitLayout');
+      const helper = document.getElementById('propertyUnitLayoutHelper');
+      if (!select) return;
+      const category = normalizeDashboardPropertyCategoryValue(propertyCategory);
+      const allowsLayout = dashboardCategoryAllowsSelectableLayout(category);
+      const options = allowsLayout ? DASHBOARD_UNIT_LAYOUT_OPTIONS : ['N/A'];
+      const normalizedSelectedValue = normalizeDashboardUnitLayoutValue(selectedValue || (allowsLayout ? '' : 'N/A'));
+      select.innerHTML = '<option value="">Select unit layout</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : (allowsLayout ? '' : 'N/A');
+      select.disabled = !category;
+      if (helper) {
+        helper.textContent = !category
+          ? 'Choose a property category first.'
+          : allowsLayout
+            ? 'Select the layout for apartment, villa, or townhouse listings.'
+            : 'Unit layout defaults to N/A for this property category.';
+      }
+    }
+
+    function syncPropertyDimensionControls(source = null) {
+      const derived = deriveDashboardPropertyDimensions(source || {
+        propertyCategory: document.getElementById('propertyCategory')?.value,
+        unitLayout: document.getElementById('propertyUnitLayout')?.value,
+        propertyType: document.getElementById('propertyType')?.value
+      });
+      populatePropertyCategoryOptions(derived.propertyCategory);
+      populatePropertyUnitLayoutOptions(derived.unitLayout, derived.propertyCategory);
+      const hiddenInput = document.getElementById('propertyType');
+      if (hiddenInput) hiddenInput.value = derived.propertyType || '';
+      return derived;
     }
 
     function populatePropertyFloorOptions(selectedValue = '') {
@@ -7534,7 +8013,8 @@
     function clearPropertyErrors() {
       [
         'propertyPurposeError',
-        'propertyTypeError',
+        'propertyCategoryError',
+        'propertyUnitLayoutError',
         'propertyLocationError',
         'propertyRentPriceError',
         'propertySalePriceError',
@@ -7569,7 +8049,8 @@
     function setPropertyFieldError(field, message) {
       const errorMap = {
         purpose: 'propertyPurposeError',
-        propertyType: 'propertyTypeError',
+        propertyCategory: 'propertyCategoryError',
+        unitLayout: 'propertyUnitLayoutError',
         location: 'propertyLocationError',
         rentPrice: 'propertyRentPriceError',
         ownerAskingPrice: 'propertySalePriceError',
@@ -7577,7 +8058,8 @@
       };
       const inputMap = {
         purpose: 'propertyPurposeControl',
-        propertyType: 'propertyType',
+        propertyCategory: 'propertyCategory',
+        unitLayout: 'propertyUnitLayout',
         location: 'propertyLocation',
         rentPrice: 'propertyRentPrice',
         ownerAskingPrice: 'propertySalePrice',
@@ -7741,7 +8223,7 @@
         });
       });
 
-      populatePropertyTypeOptions('');
+      syncPropertyDimensionControls();
       populatePropertyFloorOptions('');
       populatePropertyRentOptions();
       populatePropertySaleOptions();
@@ -7769,7 +8251,8 @@
       });
 
       [
-        'propertyType',
+        'propertyCategory',
+        'propertyUnitLayout',
         'propertyLocation',
         'propertyBuildingName',
         'propertySizeUnit',
@@ -7788,6 +8271,9 @@
         });
         document.getElementById(id)?.addEventListener('change', event => {
           event.target.classList.remove('is-invalid');
+          if (id === 'propertyCategory' || id === 'propertyUnitLayout') {
+            syncPropertyDimensionControls();
+          }
           syncWorkspaceFormSummary('property');
         });
       });
@@ -7853,7 +8339,8 @@
     function validatePropertyFormData(formData) {
       const errors = {};
       if (!formData.purpose) errors.purpose = 'Select purpose';
-      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.propertyCategory) errors.propertyCategory = 'Select property category';
+      if (dashboardCategoryAllowsSelectableLayout(formData.propertyCategory) && !formData.unitLayout) errors.unitLayout = 'Select unit layout';
       if (!formData.location) errors.location = 'Enter location';
       if (getPropertyPurpose(formData.purpose) === 'rent' && (!formData.rentPrice || Number(formData.rentPrice) <= 0)) {
         errors.rentPrice = 'Enter rent price';
@@ -9044,6 +9531,284 @@
       return result;
     }
 
+    async function fetchBrokerToolkit() {
+      const response = await fetch('/api/toolkit', {
+        method: 'GET',
+        headers: apiHeaders()
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Toolkit is temporarily unavailable.');
+      }
+      return {
+        tools: Array.isArray(result?.tools) ? result.tools : [],
+        favoriteToolIds: Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : []
+      };
+    }
+
+    async function ensureToolkitLoaded(force = false) {
+      if ((state.toolkitLoaded && !force) || state.toolkitLoading) {
+        renderToolkit();
+        return;
+      }
+      state.toolkitLoading = true;
+      state.toolkitError = '';
+      renderToolkit();
+      try {
+        const result = await fetchBrokerToolkit();
+        state.toolkitTools = Array.isArray(result.tools) ? result.tools : [];
+        state.toolkitFavoriteToolIds = Array.isArray(result.favoriteToolIds) ? result.favoriteToolIds : [];
+        state.toolkitLoaded = true;
+      } catch (error) {
+        state.toolkitError = error?.message || 'Toolkit is temporarily unavailable.';
+        state.toolkitLoaded = true;
+      }
+      state.toolkitLoading = false;
+      renderToolkit();
+    }
+
+    function setToolkitSearch(value) {
+      state.toolkitSearch = String(value || '');
+      renderToolkit();
+    }
+
+    function setToolkitCategory(value) {
+      state.toolkitCategory = normalizeText(value) || 'all';
+      renderToolkit();
+    }
+
+    function buildToolkitSearchText(tool) {
+      return [
+        tool.title,
+        tool.description,
+        tool.category
+      ].join(' ').toLowerCase();
+    }
+
+    function getFilteredToolkitTools() {
+      const tools = Array.isArray(state.toolkitTools) ? state.toolkitTools : [];
+      const search = normalizeText(state.toolkitSearch).toLowerCase();
+      const category = normalizeText(state.toolkitCategory).toLowerCase();
+      return tools.filter(tool => {
+        if (!tool?.isActive) return false;
+        if (category && category !== 'all' && String(tool.category || '').toLowerCase() !== category) {
+          return false;
+        }
+        if (!search) return true;
+        return buildToolkitSearchText(tool).includes(search);
+      });
+    }
+
+    function renderToolkitLogo(tool) {
+      if (normalizeText(tool.logoUrl)) {
+        return `<div class="toolkit-tool-logo"><img src="${escapeHtml(tool.logoUrl)}" alt="${escapeHtml(tool.title)} logo" loading="lazy"></div>`;
+      }
+      const fallback = normalizeText(tool.iconName || tool.title).slice(0, 4).toUpperCase();
+      return `<div class="toolkit-tool-logo">${escapeHtml(fallback || 'TL')}</div>`;
+    }
+
+    function buildToolkitCard(tool, favoriteSet, options = {}) {
+      const isFavorite = favoriteSet.has(tool.id);
+      const favoriteLabel = isFavorite ? 'Unfavorite' : 'Favorite';
+      const favoriteIcon = isFavorite ? '★' : '☆';
+      return `
+        <div class="toolkit-tool-card">
+          <div class="toolkit-tool-head">
+            <div class="toolkit-tool-brand">
+              ${renderToolkitLogo(tool)}
+              <div class="toolkit-tool-copy">
+                <h4>${escapeHtml(tool.title || 'Tool')}</h4>
+                <p>${escapeHtml(tool.description || 'External resource')}</p>
+              </div>
+            </div>
+            ${tool.isFeatured ? '<span class="toolkit-badge is-featured">Featured</span>' : ''}
+          </div>
+          <div class="toolkit-tool-meta">
+            <span class="toolkit-badge">${escapeHtml(tool.category || 'Toolkit')}</span>
+            ${isFavorite ? '<span class="toolkit-badge is-favorite">Favorite</span>' : ''}
+          </div>
+          <div class="toolkit-tool-actions">
+            <button class="btn btn-primary toolkit-open-btn" type="button" onclick="openToolkitExternalLink('${escapeHtml(tool.id)}')">Open</button>
+            <button class="btn btn-secondary toolkit-favorite-btn ${isFavorite ? 'is-active' : ''}" type="button" ${state.toolkitFavoriteBusy === tool.id ? 'disabled' : ''} onclick="toggleToolkitFavorite('${escapeHtml(tool.id)}')">${favoriteIcon}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderToolkit() {
+      const target = document.getElementById('toolkitCard');
+      if (!target) return;
+
+      const filteredTools = getFilteredToolkitTools();
+      const favoriteSet = new Set((Array.isArray(state.toolkitFavoriteToolIds) ? state.toolkitFavoriteToolIds : []).map(item => String(item || '')));
+      const favoriteTools = filteredTools.filter(tool => favoriteSet.has(tool.id));
+
+      if (state.toolkitLoading && !state.toolkitTools.length) {
+        target.innerHTML = `
+          <div class="toolkit-shell">
+            <div class="toolkit-toolbar-card">
+              <div class="toolkit-empty-state">
+                <strong>Loading toolkit</strong>
+                <span>Essential links, portals, and daily-use utilities are loading now.</span>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.toolkitError && !state.toolkitTools.length) {
+        target.innerHTML = `
+          <div class="toolkit-shell">
+            <div class="toolkit-toolbar-card">
+              <div class="toolkit-empty-state">
+                <strong>Toolkit is temporarily unavailable.</strong>
+                <span>${escapeHtml(state.toolkitError)}</span>
+                <div><button class="btn btn-secondary btn-tiny" type="button" onclick="ensureToolkitLoaded(true)">Retry</button></div>
+              </div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="toolkit-shell">
+          <div class="toolkit-toolbar-card">
+            <div class="toolkit-header-row">
+              <div class="toolkit-header-copy">
+                <h3>Broker Toolkit</h3>
+                <p>Quick access to essential Dubai real estate tools, portals, forms, and utilities from one clean broker workspace.</p>
+              </div>
+              <div class="toolkit-header-meta">
+                <span>Live tools</span>
+                <strong>${filteredTools.length}</strong>
+              </div>
+            </div>
+            <div class="toolkit-toolbar-grid">
+              <div class="field-block">
+                <label class="small" for="toolkitSearchInput">Search Tools</label>
+                <input id="toolkitSearchInput" type="search" placeholder="Search title, description, category" value="${escapeHtml(state.toolkitSearch)}" oninput="setToolkitSearch(this.value)">
+              </div>
+              <div class="field-block">
+                <label class="small" for="toolkitCategoryFilter">Category</label>
+                <select id="toolkitCategoryFilter" onchange="setToolkitCategory(this.value)">
+                  <option value="all">All Categories</option>
+                  ${TOOLKIT_CATEGORIES.map(category => `<option value="${escapeHtml(category)}" ${state.toolkitCategory === category ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="toolkit-favorites-card">
+            <div class="toolkit-header-row">
+              <div class="toolkit-header-copy">
+                <h3>Favorites</h3>
+                <p>Your starred tools stay pinned here for faster daily access.</p>
+              </div>
+            </div>
+            ${favoriteTools.length ? `<div class="toolkit-favorites-row">${favoriteTools.map(tool => buildToolkitCard(tool, favoriteSet, { compact: true })).join('')}</div>` : `
+              <div class="toolkit-empty-state">
+                <strong>No favorites yet</strong>
+                <span>Star important portals and calculators to keep them at the top of your toolkit.</span>
+              </div>
+            `}
+          </div>
+
+          <div class="toolkit-grid-card">
+            <div class="toolkit-header-row">
+              <div class="toolkit-header-copy">
+                <h3>All Tools</h3>
+                <p>External links always open in a new tab. Credentials stay on the official destination platform.</p>
+              </div>
+            </div>
+            ${filteredTools.length ? `<div class="toolkit-tools-grid">${filteredTools.map(tool => buildToolkitCard(tool, favoriteSet)).join('')}</div>` : `
+              <div class="toolkit-empty-state">
+                <strong>No tools matched your search</strong>
+                <span>Try a different category or clear the search to view the full toolkit.</span>
+              </div>
+            `}
+          </div>
+
+          <div class="toolkit-disclaimer-card">
+            <div class="toolkit-header-copy">
+              <h3>Disclaimer</h3>
+            </div>
+            <p>All links redirect to external platforms. Broker Connector is not affiliated with DLD, RERA, DEWA, Trakheesi, Ejari, utility providers, or any government authority unless explicitly stated. This toolkit is provided for convenience and guidance only. Brokers are responsible for using official sources and complying with applicable Dubai real estate regulations.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    async function toggleToolkitFavorite(toolId) {
+      const normalizedId = normalizeText(toolId);
+      if (!normalizedId || state.toolkitFavoriteBusy === normalizedId) return;
+      const currentlyFavorite = (Array.isArray(state.toolkitFavoriteToolIds) ? state.toolkitFavoriteToolIds : []).includes(normalizedId);
+      state.toolkitFavoriteBusy = normalizedId;
+      renderToolkit();
+      try {
+        const response = await fetch('/api/toolkit', {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify({
+            action: 'toggle-favorite',
+            toolId: normalizedId,
+            favorite: !currentlyFavorite
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Toolkit favorite update failed.');
+        }
+        state.toolkitFavoriteToolIds = Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : state.toolkitFavoriteToolIds;
+      } catch (error) {
+        setStatus(error?.message || 'Toolkit favorite update failed.', 'error');
+      }
+      state.toolkitFavoriteBusy = '';
+      renderToolkit();
+    }
+
+    function trackToolkitClick(toolId) {
+      if (!normalizeText(toolId)) return;
+      fetch('/api/toolkit', {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({
+          action: 'track-click',
+          toolId
+        })
+      }).catch(() => {});
+    }
+
+    function openToolkitExternalLink(toolId) {
+      const tool = (Array.isArray(state.toolkitTools) ? state.toolkitTools : []).find(item => item.id === String(toolId || ''));
+      if (!tool || !normalizeText(tool.url)) {
+        setStatus('Toolkit link is unavailable right now.', 'error');
+        return;
+      }
+      if (tool.url === '#') {
+        setStatus('This toolkit item is coming soon.', 'success');
+        return;
+      }
+
+      let opened = null;
+      try {
+        opened = window.open(tool.url, '_blank', 'noopener,noreferrer');
+      } catch (error) {
+        opened = null;
+      }
+      if (!opened) {
+        const anchor = document.createElement('a');
+        anchor.href = tool.url;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      }
+      trackToolkitClick(tool.id);
+    }
+
     function openSection(name) {
       closeAccountMenu();
       state.activeSection = name;
@@ -9053,6 +9818,10 @@
       document.querySelector(`.menu button[data-section="${name}"]`)?.classList.add('active');
       if (name !== 'overview') {
         hideOverviewWorkspace();
+      }
+      if (name === 'toolkit') {
+        renderToolkit();
+        void ensureToolkitLoaded();
       }
     }
 
@@ -10244,6 +11013,7 @@
 
     function collectLeadFormData() {
       const preserved = getLeadPreservedState();
+      const dimensions = syncLeadPropertyDimensionControls();
       return {
         id: Number(document.getElementById('leadId').value || 0),
         clientPurpose: document.getElementById('leadClientPurpose').value,
@@ -10274,7 +11044,8 @@
       const errors = {};
       if (!formData.clientPurpose) errors.clientPurpose = 'Select client purpose';
       if (!formData.location) errors.location = 'Enter preferred location';
-      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.propertyCategory) errors.propertyCategory = 'Select property category';
+      if (dashboardCategoryAllowsSelectableLayout(formData.propertyCategory) && !formData.unitLayout) errors.unitLayout = 'Select unit layout';
       if (!formData.budget || Number(formData.budget) <= 0) errors.budget = 'Enter budget';
       if (getLeadClientPurpose(formData.clientPurpose) === 'buy' && !formData.paymentMethod) {
         errors.paymentMethod = 'Select payment method';
@@ -10306,7 +11077,7 @@
       setLeadPurpose(clientPurpose, { preserveValues: false });
       document.getElementById('leadLocation').value = lead.location || '';
       document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
-      populateLeadPropertyTypeOptions(lead.propertyType || '');
+      syncLeadPropertyDimensionControls(lead);
       document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
       populateLeadPaymentMethodOptions(lead.paymentMethod || '');
       document.getElementById('leadClientName').value = lead.clientName || '';
@@ -10848,7 +11619,7 @@
       clearPropertyErrors();
       document.getElementById('propertyId').value = property.id;
       setPropertyPurpose(getPropertyPurpose(property.purpose), { preserveValues: false });
-      populatePropertyTypeOptions(property.propertyType || '');
+      syncPropertyDimensionControls(property);
       populatePropertyFloorOptions(property.floorLevel || '');
       document.getElementById('propertyLocation').value = property.location || '';
       document.getElementById('propertyBuildingName').value = property.buildingName || '';
@@ -10893,6 +11664,8 @@
           id: formData.id,
           purpose: formData.purpose,
           propertyType: formData.propertyType,
+          propertyCategory: formData.propertyCategory,
+          unitLayout: formData.unitLayout,
           location: formData.location,
           buildingName: formData.buildingName,
           sizeSqft: formData.sizeSqft,
@@ -11588,7 +12361,9 @@
         clientPurpose: document.getElementById('leadClientPurpose').value,
         location: document.getElementById('leadLocation').value.trim(),
         preferredBuildingProject: document.getElementById('leadBuildingProject').value.trim(),
-        propertyType: document.getElementById('leadPropertyType').value.trim(),
+        propertyType: dimensions.propertyType || '',
+        propertyCategory: dimensions.propertyCategory || '',
+        unitLayout: dimensions.unitLayout || '',
         budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
         paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
         clientName: document.getElementById('leadClientName').value.trim(),
@@ -11697,6 +12472,7 @@
     function collectPropertyFormData() {
       const preserved = getPropertyPreservedState();
       const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue').value);
+      const dimensions = syncPropertyDimensionControls();
       const distressDeal = document.getElementById('propertyDistress').checked;
       const marketPrice = normalizeBudgetDigits(document.getElementById('propertyMarketPrice').value);
       const activePrice = purpose === 'sale'
@@ -11708,7 +12484,9 @@
       return {
         id: Number(document.getElementById('propertyId').value || 0),
         purpose,
-        propertyType: normalizeDashboardPropertyTypeValue(document.getElementById('propertyType').value),
+        propertyType: dimensions.propertyType || '',
+        propertyCategory: dimensions.propertyCategory || '',
+        unitLayout: dimensions.unitLayout || '',
         location: normalizeDashboardLocationValue(document.getElementById('propertyLocation').value),
         buildingName: document.getElementById('propertyBuildingName').value.trim(),
         sizeSqft: formatSizeValue(document.getElementById('propertySizeSqft').value),
@@ -11778,6 +12556,7 @@
       document.getElementById('propertyFollowUpNote').value = '';
       document.getElementById('propertyUrgentFollowUp').checked = false;
       document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
+      syncPropertyDimensionControls();
       propertyAutocompleteControllers.location?.close();
       propertyAutocompleteControllers.building?.close();
       refreshPropertyDistressUI();
@@ -11847,6 +12626,8 @@
           purpose: formData.clientPurpose,
           propertyType: formData.propertyType,
           category: formData.propertyType,
+          propertyCategory: formData.propertyCategory,
+          unitLayout: formData.unitLayout,
           location: formData.location,
           budget: formData.budget,
           preferredBuildingProject: formData.preferredBuildingProject,
@@ -14098,6 +14879,7 @@
         syncFilterInputs('leads');
         syncFilterInputs('properties');
         renderComplaintCenter();
+        renderToolkit();
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();
