@@ -12381,6 +12381,7 @@
 
     function collectLeadFormData() {
       const preserved = getLeadPreservedState();
+      const dimensions = syncLeadPropertyDimensionControls();
       return {
         id: Number(document.getElementById('leadId').value || 0),
         clientPurpose: document.getElementById('leadClientPurpose').value,
