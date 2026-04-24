@@ -1,58 +1,3 @@
-create extension if not exists pgcrypto;
-
-create table if not exists public.toolkit_tools (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  description text not null default '',
-  category text not null,
-  url text not null,
-  logo_url text null,
-  icon_name text null,
-  is_active boolean not null default true,
-  is_featured boolean not null default false,
-  sort_order integer not null default 0,
-  created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now())
-);
-
-create table if not exists public.toolkit_favorites (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.brokers(id) on delete cascade,
-  tool_id uuid not null references public.toolkit_tools(id) on delete cascade,
-  created_at timestamptz not null default timezone('utc', now())
-);
-
-create table if not exists public.toolkit_clicks (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references public.brokers(id) on delete cascade,
-  tool_id uuid not null references public.toolkit_tools(id) on delete cascade,
-  clicked_at timestamptz not null default timezone('utc', now())
-);
-
-create index if not exists toolkit_tools_category_idx
-  on public.toolkit_tools (category);
-
-create index if not exists toolkit_tools_active_idx
-  on public.toolkit_tools (is_active);
-
-create index if not exists toolkit_tools_sort_idx
-  on public.toolkit_tools (sort_order, created_at desc);
-
-create unique index if not exists toolkit_tools_title_normalized_uidx
-  on public.toolkit_tools ((lower(trim(title))));
-
-create unique index if not exists toolkit_favorites_user_tool_uidx
-  on public.toolkit_favorites (user_id, tool_id);
-
-create index if not exists toolkit_favorites_tool_idx
-  on public.toolkit_favorites (tool_id);
-
-create index if not exists toolkit_clicks_tool_idx
-  on public.toolkit_clicks (tool_id, clicked_at desc);
-
-create index if not exists toolkit_clicks_user_idx
-  on public.toolkit_clicks (user_id, clicked_at desc);
-
 insert into public.toolkit_tools (
   title,
   description,
@@ -102,7 +47,13 @@ from (
     ('Mortgage Calculator', 'Estimate mortgage payments and finance scenarios.', 'Calculators', '#', null, 'MC', false, 200),
     ('Service Charge Guide', 'Quick reference for service charge and owner cost checks.', 'Company / Broker Tools', '#', null, 'SCI', false, 210)
 ) as seeded(title, description, category, url, logo_url, icon_name, is_featured, sort_order)
-where not exists (
+where exists (
+  select 1
+  from information_schema.tables
+  where table_schema = 'public'
+    and table_name = 'toolkit_tools'
+)
+and not exists (
   select 1
   from public.toolkit_tools tools
   where lower(trim(tools.title)) = lower(trim(seeded.title))

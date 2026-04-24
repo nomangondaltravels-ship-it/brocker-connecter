@@ -16,6 +16,7 @@ import {
   isValidToolkitUrl,
   mergeToolkitRows,
   parseToolkitToolRow,
+  seedDefaultToolkitTools,
   sanitizeToolkitToolInput
 } from '../server/_toolkit.mjs';
 
@@ -71,6 +72,18 @@ async function requireAdmin(request) {
 }
 
 async function listToolkitTools(context, { includeInactive = false, signal } = {}) {
+  try {
+    await seedDefaultToolkitTools({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      signal
+    });
+  } catch (error) {
+    if (!isToolkitRelationError(error)) {
+      throw error;
+    }
+  }
+
   const filters = includeInactive ? {} : { is_active: 'eq.true' };
   const rows = await supabaseSelect({
     supabaseUrl: context.supabaseUrl,
