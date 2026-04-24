@@ -19,7 +19,8 @@ import {
   sanitizeToolkitToolInput
 } from '../server/_toolkit.mjs';
 
-const TOOLKIT_ROUTE_TIMEOUT_MS = 2200;
+const TOOLKIT_ROUTE_TIMEOUT_MS = 1600;
+const TOOLKIT_ANALYTICS_TIMEOUT_MS = 900;
 
 async function withTimeout(task, timeoutMs, fallbackValue) {
   const controller = new AbortController();
@@ -158,30 +159,35 @@ async function buildBrokerToolkitPayload(context) {
 
 async function buildAdminToolkitPayload(context) {
   const fallbackTools = getDefaultToolkitRows();
-  const result = await withTimeout(async signal => {
-    const [tools, favorites, clicks] = await Promise.all([
-      listToolkitTools(context, { includeInactive: true, signal }).catch(error => {
-        if (isToolkitRelationError(error)) return null;
-        throw error;
-      }),
+  const toolsResult = await withTimeout(
+    signal => listToolkitTools(context, { includeInactive: true, signal }).catch(error => {
+      if (isToolkitRelationError(error)) return null;
+      throw error;
+    }),
+    TOOLKIT_ROUTE_TIMEOUT_MS,
+    null
+  );
+
+  const mergedTools = mergeToolkitRows(
+    Array.isArray(toolsResult) ? toolsResult : [],
+    toolsResult === null ? fallbackTools : []
+  );
+
+  const analyticsResult = await withTimeout(async signal => {
+    const [favorites, clicks] = await Promise.all([
       listAllToolkitFavorites(context, signal).catch(() => []),
       listToolkitClicks(context, signal).catch(() => [])
     ]);
-    return { tools, favorites, clicks };
-  }, TOOLKIT_ROUTE_TIMEOUT_MS, {
-    tools: [],
+    return { favorites, clicks };
+  }, TOOLKIT_ANALYTICS_TIMEOUT_MS, {
     favorites: [],
     clicks: []
   });
 
-  const mergedTools = mergeToolkitRows(
-    Array.isArray(result.tools) ? result.tools : [],
-    result.tools === null ? fallbackTools : []
-  );
   const analytics = buildToolkitAnalytics({
     tools: mergedTools,
-    favorites: result.favorites,
-    clicks: result.clicks
+    favorites: analyticsResult.favorites,
+    clicks: analyticsResult.clicks
   });
 
   return {
