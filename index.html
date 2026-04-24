@@ -2884,6 +2884,11 @@
       }
     };
 
+    const CONNECTOR_PURPOSE_OPTIONS = Object.freeze([
+      { value: 'rent', label: 'Rent' },
+      { value: 'sale', label: 'Sale' }
+    ]);
+
     function normalizeTaxonomyToken(value) {
       return String(value || '')
         .trim()
@@ -3061,7 +3066,7 @@
     }
 
     function getConnectorTaxonomyOptions(field) {
-      if (field === 'purpose') return CORE_TAXONOMY.purposes?.connector || [];
+      if (field === 'purpose') return CONNECTOR_PURPOSE_OPTIONS;
       if (field === 'propertyCategory') {
         return CONNECTOR_PROPERTY_CATEGORY_OPTIONS.map(value => ({ value, label: value }));
       }
