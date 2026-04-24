@@ -2857,6 +2857,15 @@
         .replace(/'/g, '&#039;');
     }
 
+    const CONNECTOR_DISPLAY_SEPARATOR = ' · ';
+
+    function joinDisplayParts(parts, separator = CONNECTOR_DISPLAY_SEPARATOR) {
+      return (Array.isArray(parts) ? parts : [parts])
+        .map(item => String(item || '').trim())
+        .filter(Boolean)
+        .join(separator);
+    }
+
     const CORE_TAXONOMY = window.BROKER_CORE_TAXONOMY || {
       locations: [],
       propertyTypes: { listing: [] },
