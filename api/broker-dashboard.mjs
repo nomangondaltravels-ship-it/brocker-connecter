@@ -215,7 +215,11 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
         : existingMeta.distressAskingPrice)
     : '';
   const marketPrice = distressDeal
-    ? (body?.marketPrice !== undefined ? normalizeText(body?.marketPrice) : existingMeta.marketPrice)
+    ? (
+        body?.marketPrice !== undefined
+          ? normalizeText(body?.marketPrice)
+          : normalizeText(existingProperty?.market_price || existingMeta.marketPrice)
+      )
     : '';
   const distressDiscountPercent = distressDeal
     ? calculateDistressDiscountPercent(marketPrice, distressAskingPrice || body?.rentPrice || body?.ownerAskingPrice)

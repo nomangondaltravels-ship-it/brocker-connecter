@@ -469,6 +469,19 @@ export function normalizeConnectorStatusValue(value, fallback = 'active') {
   return CONNECTOR_STATUS_VALUES.has(normalized) ? normalized : fallback;
 }
 
+function parseMoneyLikeValue(value) {
+  const digits = String(value || '').replace(/[^\d]/g, '');
+  return digits ? Number(digits) : 0;
+}
+
+function calculateDistressGapPercentValue(marketPrice, askingPrice) {
+  const market = parseMoneyLikeValue(marketPrice);
+  const asking = parseMoneyLikeValue(askingPrice);
+  if (!market || !asking || asking >= market) return '';
+  const discount = Math.round(((market - asking) / market) * 100);
+  return discount > 0 ? String(discount) : '';
+}
+
 export function normalizeListingPurposeValue(value) {
   const normalized = normalizeTaxonomyToken(value);
   if (normalized === 'rent' || normalized === 'rental') return 'rent';
@@ -1625,6 +1638,11 @@ export function sanitizeProperty(row) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
+  const distressGapPercent = normalizeText(
+    row.distress_gap_percent
+    || meta.distressDiscountPercent
+    || calculateDistressGapPercentValue(row.market_price || meta.marketPrice, row.price || meta.distressAskingPrice)
+  );
   const salePropertyStatus = normalizeSalePropertyStatusValue(
     row.sale_property_status
     || meta.salePropertyStatus
@@ -1666,7 +1684,8 @@ export function sanitizeProperty(row) {
     handoverLabel,
     marketPrice: normalizeText(row.market_price || meta.marketPrice),
     distressAskingPrice: meta.distressAskingPrice || '',
-    distressDiscountPercent: normalizeText(row.distress_gap_percent || meta.distressDiscountPercent),
+    distressDiscountPercent: distressGapPercent,
+    distressGapPercent,
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
     nextFollowUpDate: meta.nextFollowUpDate || '',
@@ -1742,6 +1761,12 @@ export function sanitizePublicListing(row, options = {}) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
+  const distressGapPercent = !isLead
+    ? normalizeText(
+        row.distress_gap_percent
+        || calculateDistressGapPercentValue(row.market_price, row.price)
+      )
+    : '';
   const salePropertyStatus = !isLead
     ? normalizeSalePropertyStatusValue(
       row.sale_property_status
@@ -1775,7 +1800,8 @@ export function sanitizePublicListing(row, options = {}) {
     location,
     priceLabel: row.price_label,
     marketPrice: !isLead ? normalizeText(row.market_price) : '',
-    distressDiscountPercent: !isLead ? normalizeText(row.distress_gap_percent) : '',
+    distressDiscountPercent: distressGapPercent,
+    distressGapPercent,
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
     sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,

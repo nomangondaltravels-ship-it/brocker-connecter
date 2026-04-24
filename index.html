@@ -2663,10 +2663,11 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script>
+<script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+<script>
       const state = {
         authMode: 'signin',
         authRequestId: 0,
@@ -3041,7 +3042,12 @@
     }
 
     function getConnectorDistressGapLabel(record = {}) {
-      const percent = Number(record?.distressDiscountPercent || record?.distress_gap_percent || 0);
+      const marketValue = Number(String(record?.marketPrice || record?.market_price || '').replace(/[^\d]/g, ''));
+      const askingValue = Number(String(record?.priceLabel || '').replace(/[^\d]/g, ''));
+      const fallbackPercent = marketValue > askingValue && marketValue > 0 && askingValue > 0
+        ? Math.round(((marketValue - askingValue) / marketValue) * 100)
+        : 0;
+      const percent = Number(record?.distressDiscountPercent || record?.distressGapPercent || record?.distress_gap_percent || fallbackPercent || 0);
       if (!record?.isDistress || !percent) return '';
       return `${percent}% below market`;
     }
@@ -3498,6 +3504,7 @@
     async function submitSupportRequest(event) {
       event?.preventDefault?.();
       if (state.supportModalSubmitting) return;
+      const submitButton = event?.submitter || document.querySelector('#supportModalContent button[type="submit"]');
       const draft = state.supportDraft || createSupportDraft();
       if (!normalizeText(draft.name)) {
         setSystemBanner('Name is required.', 'error');
@@ -3519,23 +3526,53 @@
       state.supportModalSubmitting = true;
       renderSupportModal();
       try {
-        const response = await fetch('/api/support', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(state.sessionToken ? { Authorization: `Bearer ${state.sessionToken}` } : {})
-          },
-          body: JSON.stringify({
-            name: draft.name,
-            email: draft.email,
-            subject: draft.subject,
-            message: draft.message
-          })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(result?.message || 'Support request failed.');
-        }
+        const result = window.ActionFeedbackUi
+          ? await window.ActionFeedbackUi.withActionFeedback(
+              submitButton,
+              'Submitting...',
+              'Request submitted successfully.',
+              async () => {
+                const response = await fetch('/api/support', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(state.sessionToken ? { Authorization: `Bearer ${state.sessionToken}` } : {})
+                  },
+                  body: JSON.stringify({
+                    name: draft.name,
+                    email: draft.email,
+                    subject: draft.subject,
+                    message: draft.message
+                  })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(payload?.message || 'Failed to submit request.');
+                }
+                return payload;
+              },
+              { showErrorToast: true }
+            )
+          : await (async () => {
+              const response = await fetch('/api/support', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(state.sessionToken ? { Authorization: `Bearer ${state.sessionToken}` } : {})
+                },
+                body: JSON.stringify({
+                  name: draft.name,
+                  email: draft.email,
+                  subject: draft.subject,
+                  message: draft.message
+                })
+              });
+              const payload = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(payload?.message || 'Failed to submit request.');
+              }
+              return payload;
+            })();
         closeSupportModal();
         setSystemBanner('We have received your request. Our help desk will contact you soon.', 'success');
       } catch (error) {
@@ -3737,6 +3774,7 @@
     async function submitPublicComplaint(event) {
       event?.preventDefault?.();
       if (!state.complaintDraft || state.complaintModalSubmitting) return;
+      const submitButton = event?.submitter || document.querySelector('#publicComplaintModalContent button[type="submit"]');
       const draft = state.complaintDraft;
       if (!hasAcceptedPlatformRules() && !draft.rulesAccepted) {
         setSystemBanner('Accept platform rules before submitting a complaint.', 'error');
@@ -3756,30 +3794,67 @@
         if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
           storePlatformRulesAcceptance('connector-complaint');
         }
-        const response = await fetch('/api/broker-complaints', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${state.sessionToken}`
-          },
-          body: JSON.stringify({
-            action: 'create',
-            reason: draft.reason,
-            description: draft.description,
-            proofAttachment: draft.proofAttachment,
-            targetType: draft.targetType,
-            targetId: draft.targetId,
-            targetLabel: draft.targetLabel,
-            reportedUserId: draft.reportedUserId,
-            reportedBrokerIdNumber: draft.reportedBrokerIdNumber,
-            reportedBrokerName: draft.reportedBrokerName,
-            sourceSection: draft.sourceSection
-          })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(result?.message || 'Complaint submission failed.');
-        }
+        const result = window.ActionFeedbackUi
+          ? await window.ActionFeedbackUi.withActionFeedback(
+              submitButton,
+              'Submitting Complaint...',
+              'Complaint submitted successfully.',
+              async () => {
+                const response = await fetch('/api/broker-complaints', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${state.sessionToken}`
+                  },
+                  body: JSON.stringify({
+                    action: 'create',
+                    reason: draft.reason,
+                    description: draft.description,
+                    proofAttachment: draft.proofAttachment,
+                    targetType: draft.targetType,
+                    targetId: draft.targetId,
+                    targetLabel: draft.targetLabel,
+                    reportedUserId: draft.reportedUserId,
+                    reportedBrokerIdNumber: draft.reportedBrokerIdNumber,
+                    reportedBrokerName: draft.reportedBrokerName,
+                    sourceSection: draft.sourceSection
+                  })
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  throw new Error(payload?.message || 'Failed to submit complaint.');
+                }
+                return payload;
+              },
+              { showErrorToast: true }
+            )
+          : await (async () => {
+              const response = await fetch('/api/broker-complaints', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${state.sessionToken}`
+                },
+                body: JSON.stringify({
+                  action: 'create',
+                  reason: draft.reason,
+                  description: draft.description,
+                  proofAttachment: draft.proofAttachment,
+                  targetType: draft.targetType,
+                  targetId: draft.targetId,
+                  targetLabel: draft.targetLabel,
+                  reportedUserId: draft.reportedUserId,
+                  reportedBrokerIdNumber: draft.reportedBrokerIdNumber,
+                  reportedBrokerName: draft.reportedBrokerName,
+                  sourceSection: draft.sourceSection
+                })
+              });
+              const payload = await response.json().catch(() => ({}));
+              if (!response.ok) {
+                throw new Error(payload?.message || 'Failed to submit complaint.');
+              }
+              return payload;
+            })();
         closePublicComplaintModal();
         setSystemBanner(result?.message || 'Complaint submitted successfully.', 'success');
       } catch (error) {
@@ -3997,11 +4072,28 @@
     function setAuthSubmitLoading(isLoading, mode = state.authMode) {
       const button = document.getElementById('authSubmitBtn');
       if (!button) return;
-      button.disabled = Boolean(isLoading);
+      const loadingText = mode === 'register'
+        ? 'Registering...'
+        : mode === 'forgot'
+          ? 'Submitting...'
+          : 'Logging in...';
+      const defaultText = mode === 'register'
+        ? 'Register and Continue'
+        : mode === 'forgot'
+          ? 'Send Reset Link'
+          : 'Sign In and Continue';
       button.dataset.loading = isLoading ? 'true' : 'false';
-      button.textContent = isLoading
-        ? (mode === 'register' ? 'Registering...' : mode === 'forgot' ? 'Sending reset link...' : 'Signing in...')
-        : (mode === 'register' ? 'Register and Continue' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In and Continue');
+      if (window.ActionFeedbackUi) {
+        if (isLoading) {
+          window.ActionFeedbackUi.setButtonLoading(button, loadingText);
+        } else {
+          window.ActionFeedbackUi.resetButtonLoading(button);
+          button.textContent = defaultText;
+        }
+        return;
+      }
+      button.disabled = Boolean(isLoading);
+      button.textContent = isLoading ? loadingText : defaultText;
     }
 
     function getAuthFailureMessage(result, mode = 'signin', fallback = getAuthModeFallbackMessage(mode)) {
@@ -5787,6 +5879,7 @@
         }
 
         if (modeAtSubmit === 'forgot') {
+          window.ActionFeedbackUi?.showToast('success', result?.message || 'Request submitted successfully.');
           setAuthStatus(result?.message || 'If an account exists for this email, a reset link has been sent.', 'success');
           return;
         }
@@ -5796,6 +5889,7 @@
           document.getElementById('authConfirmPassword').value = '';
           setAuthMode('signin');
           document.getElementById('authEmail').value = emailValue;
+          window.ActionFeedbackUi?.showToast('success', 'Registration successful.');
           setAuthStatus(result?.message || 'Check your email to confirm your account.', 'success');
           return;
         }
@@ -5813,11 +5907,14 @@
         if (await completeMarketplaceContactRevealAuth()) {
           return;
         }
+        window.ActionFeedbackUi?.showToast('success', modeAtSubmit === 'register' ? 'Registration successful.' : 'Login successful.');
         window.location.href = 'dashboard.html';
       } catch (error) {
         if (state.authRequestId === requestId) {
           const fallbackMessage = getAuthModeFallbackMessage(modeAtSubmit);
-          setAuthStatus(getAuthFailureMessage({ message: error?.message }, modeAtSubmit, fallbackMessage));
+          const failureMessage = getAuthFailureMessage({ message: error?.message }, modeAtSubmit, fallbackMessage);
+          window.ActionFeedbackUi?.showToast('error', failureMessage);
+          setAuthStatus(failureMessage);
         }
       } finally {
         if (state.authRequestId === requestId) {

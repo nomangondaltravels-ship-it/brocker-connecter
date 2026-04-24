@@ -6434,10 +6434,11 @@
     <div class="rules-prompt-card" id="dashboardRulesPromptCard"></div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
-  <script>
+<script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
+<script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+<script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
       uaeLocations: [],
       buildingProjects: [],
@@ -7226,6 +7227,7 @@
 
     async function saveBrokerProfile() {
       if (!state.profileDraft || state.profileSavePending) return;
+      const actionButton = window.ActionFeedbackUi?.resolveActionButton();
       const draft = cloneBrokerProfile(state.profileDraft);
       draft.fullName = normalizeText(draft.fullName);
       draft.mobileNumber = normalizeLeadPhoneInput(draft.mobileNumber);
@@ -7256,22 +7258,36 @@
       setStatus('Saving profile...', 'success');
 
       try {
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          console.debug('[dashboard-profile] save request', {
-            brokerId: state.broker?.id || '',
-            email: draft.email,
-            targetPath: '/api/broker-dashboard'
-          });
-        }
+        const executeSave = async () => {
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.debug('[dashboard-profile] save request', {
+              brokerId: state.broker?.id || '',
+              email: draft.email,
+              targetPath: '/api/broker-dashboard'
+            });
+          }
 
-        await dashboardAction({
-          action: 'update-profile',
-          fullName: draft.fullName,
-          mobileNumber: draft.mobileNumber,
-          email: draft.email,
-          companyName: draft.companyName,
-          authAccessToken: getStoredBrokerSupabaseAccessToken()
-        }, 'Profile updated.');
+          return dashboardAction({
+            action: 'update-profile',
+            fullName: draft.fullName,
+            mobileNumber: draft.mobileNumber,
+            email: draft.email,
+            companyName: draft.companyName,
+            authAccessToken: getStoredBrokerSupabaseAccessToken()
+          }, 'Profile updated.');
+        };
+
+        if (window.ActionFeedbackUi) {
+          await window.ActionFeedbackUi.withActionFeedback(
+            actionButton,
+            'Saving Profile...',
+            'Profile updated successfully.',
+            executeSave,
+            { showErrorToast: true }
+          );
+        } else {
+          await executeSave();
+        }
 
         persistProfileExtras({
           avatarDataUrl: draft.avatarDataUrl,
@@ -9236,6 +9252,7 @@
     async function submitDashboardComplaint(event) {
       event?.preventDefault?.();
       if (!state.complaintDraft || state.complaintModalSubmitting) return;
+      const submitButton = event?.submitter || document.querySelector('#dashboardComplaintModalContent button[type="submit"]');
       const draft = state.complaintDraft;
       const validationError = validateComplaintDraft(draft);
       if (validationError) {
@@ -9248,7 +9265,15 @@
         if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
           storePlatformRulesAcceptance('complaint-modal');
         }
-        const result = await submitComplaintDraftRequest(draft);
+        const result = window.ActionFeedbackUi
+          ? await window.ActionFeedbackUi.withActionFeedback(
+              submitButton,
+              'Submitting Complaint...',
+              'Complaint submitted successfully.',
+              () => submitComplaintDraftRequest(draft),
+              { showErrorToast: true }
+            )
+          : await submitComplaintDraftRequest(draft);
         setStatus(result?.message || 'Complaint submitted successfully.', 'success');
         await loadBrokerComplaints();
         closeComplaintComposer();
@@ -9263,6 +9288,7 @@
       event?.preventDefault?.();
       const draft = ensureComplaintCenterDraft();
       if (state.complaintCenterSubmitting) return;
+      const submitButton = event?.submitter || document.querySelector('.complaint-center-shell button[type="submit"]');
       const validationError = validateComplaintDraft(draft);
       if (validationError) {
         setStatus(validationError, 'error');
@@ -9274,7 +9300,15 @@
         if (!hasAcceptedPlatformRules() && draft.rulesAccepted) {
           storePlatformRulesAcceptance('complaint-center');
         }
-        const result = await submitComplaintDraftRequest(draft);
+        const result = window.ActionFeedbackUi
+          ? await window.ActionFeedbackUi.withActionFeedback(
+              submitButton,
+              'Submitting Complaint...',
+              'Complaint submitted successfully.',
+              () => submitComplaintDraftRequest(draft),
+              { showErrorToast: true }
+            )
+          : await submitComplaintDraftRequest(draft);
         setStatus(result?.message || 'Complaint submitted successfully.', 'success');
         await loadBrokerComplaints();
         state.complaintCenterSubmitting = false;
@@ -9628,19 +9662,59 @@
       await loadBrokerComplaints();
     }
 
-    async function dashboardAction(payload, successMessage) {
-      const response = await fetch('/api/broker-dashboard', {
-        method: 'POST',
-        headers: apiHeaders(),
-        body: JSON.stringify(payload)
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.message || 'Dashboard action failed.');
+    async function dashboardAction(payload, successMessage, options = {}) {
+      const fallbackButton = options.button && !window.ActionFeedbackUi ? options.button : null;
+      const fallbackOriginalText = fallbackButton ? fallbackButton.textContent : '';
+      const execute = async () => {
+        const response = await fetch('/api/broker-dashboard', {
+          method: 'POST',
+          headers: apiHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Dashboard action failed.');
+        }
+        if (successMessage) setStatus(successMessage, 'success');
+        await loadDashboard();
+        return result;
+      };
+
+      if (window.ActionFeedbackUi && (options.button || options.loadingText)) {
+        return window.ActionFeedbackUi.withActionFeedback(
+          options.button,
+          options.loadingText || 'Processing...',
+          successMessage,
+          execute,
+          {
+            showSuccessToast: Boolean(successMessage),
+            showErrorToast: true,
+            errorMessage: options.errorMessage || ''
+          }
+        );
       }
-      if (successMessage) setStatus(successMessage, 'success');
-      await loadDashboard();
-      return result;
+
+      try {
+        if (fallbackButton) {
+          fallbackButton.disabled = true;
+          fallbackButton.dataset.loading = 'true';
+          fallbackButton.textContent = options.loadingText || fallbackOriginalText || 'Processing...';
+        }
+        const startedAt = Date.now();
+        const result = await execute();
+        const minimumDuration = Math.max(0, Number(options.minimumDuration || 450));
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < minimumDuration) {
+          await new Promise(resolve => setTimeout(resolve, minimumDuration - elapsed));
+        }
+        return result;
+      } finally {
+        if (fallbackButton) {
+          fallbackButton.disabled = false;
+          delete fallbackButton.dataset.loading;
+          fallbackButton.textContent = fallbackOriginalText || fallbackButton.textContent;
+        }
+      }
     }
 
     async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
@@ -11248,7 +11322,10 @@
     async function deleteLead(id) {
       if (!window.confirm('Delete this private broker requirement?')) return;
       try {
-        await dashboardAction({ action: 'delete-lead', id }, 'Broker requirement deleted.');
+        await dashboardAction({ action: 'delete-lead', id }, 'Requirement deleted successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Deleting Requirement...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -11257,7 +11334,10 @@
     async function deleteProperty(id) {
       if (!window.confirm('Delete this private property?')) return;
       try {
-        await dashboardAction({ action: 'delete-property', id }, 'Property deleted.');
+        await dashboardAction({ action: 'delete-property', id }, 'Listing deleted successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Deleting Listing...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -11269,7 +11349,10 @@
           action: listed ? 'unlist-item' : 'list-item',
           entityType,
           id
-        }, listed ? 'Item removed from Broker Connector.' : 'Item listed on Broker Connector.');
+        }, listed ? 'Unshared from BCP successfully.' : 'Shared to BCP successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: listed ? 'Unsharing...' : 'Sharing...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -11599,8 +11682,18 @@
         : 'My client is looking to rent';
     }
 
+    function calculateDashboardDistressPercent(property) {
+      const marketValue = Number(normalizeBudgetDigits(property?.marketPrice || ''));
+      const askingSource = getPropertyPurpose(property?.purpose) === 'sale'
+        ? (property?.ownerAskingPrice || property?.price || '')
+        : (property?.rentPrice || property?.price || '');
+      const askingValue = Number(normalizeBudgetDigits(askingSource));
+      if (!marketValue || !askingValue || askingValue >= marketValue) return 0;
+      return Math.round(((marketValue - askingValue) / marketValue) * 100);
+    }
+
     function getPropertyDistressLabel(property, fallback = '') {
-      const percent = Number(property?.distressDiscountPercent || 0);
+      const percent = Number(property?.distressDiscountPercent || property?.distressGapPercent || calculateDashboardDistressPercent(property) || 0);
       if (!property?.isDistress || !percent) return fallback;
       return `${percent}% below market`;
     }
@@ -12797,6 +12890,7 @@
 
       nextForm.addEventListener('submit', async event => {
         event.preventDefault();
+        const submitButton = event.submitter || nextForm.querySelector('[type="submit"]');
         clearLeadErrors();
         const formData = collectLeadFormData();
         const validationErrors = validateLeadFormData(formData);
@@ -12841,7 +12935,10 @@
         };
 
         try {
-          await dashboardAction(payload, formData.id ? 'Broker requirement updated successfully.' : 'Broker requirement created successfully.');
+          await dashboardAction(payload, formData.id ? 'Requirement updated successfully.' : 'Requirement saved successfully.', {
+            button: submitButton,
+            loadingText: formData.id ? 'Updating Requirement...' : 'Saving Requirement...'
+          });
           resetLeadForm();
           hideOverviewWorkspace();
         } catch (error) {
@@ -12859,6 +12956,7 @@
 
       nextForm.addEventListener('submit', async event => {
         event.preventDefault();
+        const submitButton = event.submitter || nextForm.querySelector('[type="submit"]');
         clearPropertyErrors();
         const formData = collectPropertyFormData();
         const validationErrors = validatePropertyFormData(formData);
@@ -12873,6 +12971,8 @@
           id: formData.id,
           purpose: formData.purpose,
           propertyType: formData.propertyType,
+          propertyCategory: formData.propertyCategory,
+          unitLayout: formData.unitLayout,
           location: formData.location,
           buildingName: formData.buildingName,
           sizeSqft: formData.sizeSqft,
@@ -12883,6 +12983,13 @@
           cheques: formData.cheques,
           chiller: formData.chiller,
           ownerAskingPrice: formData.ownerAskingPrice,
+          salePropertyStatus: formData.salePropertyStatus,
+          handoverQuarter: formData.handoverQuarter,
+          handoverYear: formData.handoverYear,
+          marketPrice: formData.marketPrice,
+          distressAskingPrice: formData.distressAskingPrice,
+          distressGapPercent: formData.distressGapPercent,
+          distressDiscountPercent: formData.distressDiscountPercent,
           mortgageStatus: formData.mortgageStatus,
           leasehold: formData.leasehold,
           isDistress: formData.distressDeal,
@@ -12896,11 +13003,15 @@
           followUpNote: formData.followUpNote,
           isUrgentFollowUp: formData.isUrgentFollowUp,
           bedrooms: formData.bedrooms,
-          bathrooms: formData.bathrooms
+          bathrooms: formData.bathrooms,
+          legacyDescription: formData.legacyDescription
         };
 
         try {
-          await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing created successfully.');
+          await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing saved successfully.', {
+            button: submitButton,
+            loadingText: formData.id ? 'Updating Listing...' : 'Saving Listing...'
+          });
           resetPropertyForm();
           hideOverviewWorkspace();
         } catch (error) {
@@ -12913,7 +13024,10 @@
       const nextStatus = document.getElementById(`lead-status-action-${id}`)?.value;
       if (!nextStatus) return;
       try {
-        await dashboardAction({ action: 'update-lead-status', id, status: nextStatus }, 'Lead status updated.');
+        await dashboardAction({ action: 'update-lead-status', id, status: nextStatus }, 'Requirement updated successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Updating...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -12923,7 +13037,10 @@
       const nextStatus = document.getElementById(`property-status-action-${id}`)?.value;
       if (!nextStatus) return;
       try {
-        await dashboardAction({ action: 'update-property-status', id, status: nextStatus }, 'Listing status updated.');
+        await dashboardAction({ action: 'update-property-status', id, status: nextStatus }, 'Listing updated successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Updating...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -12938,7 +13055,10 @@
           nextFollowUpTime: document.getElementById(`lead-followup-time-${id}`)?.value || '',
           followUpNote: document.getElementById(`lead-followup-note-${id}`)?.value || '',
           isUrgentFollowUp: Boolean(document.getElementById(`lead-followup-urgent-${id}`)?.checked)
-        }, 'Lead follow-up updated.');
+        }, 'Requirement follow-up saved successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Saving Follow-up...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -12953,7 +13073,10 @@
           nextFollowUpTime: document.getElementById(`property-followup-time-${id}`)?.value || '',
           followUpNote: document.getElementById(`property-followup-note-${id}`)?.value || '',
           isUrgentFollowUp: Boolean(document.getElementById(`property-followup-urgent-${id}`)?.checked)
-        }, 'Listing follow-up updated.');
+        }, 'Listing follow-up saved successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Saving Follow-up...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -13015,7 +13138,10 @@
 
     async function archiveLead(id) {
       try {
-        await dashboardAction({ action: 'archive-lead', id }, 'Lead archived.');
+        await dashboardAction({ action: 'archive-lead', id }, 'Requirement archived successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Archiving Requirement...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -13023,7 +13149,10 @@
 
     async function restoreLead(id) {
       try {
-        await dashboardAction({ action: 'restore-lead', id }, 'Lead restored.');
+        await dashboardAction({ action: 'restore-lead', id }, 'Requirement restored successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Restoring Requirement...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -13031,7 +13160,10 @@
 
     async function archiveProperty(id) {
       try {
-        await dashboardAction({ action: 'archive-property', id }, 'Listing archived.');
+        await dashboardAction({ action: 'archive-property', id }, 'Listing archived successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Archiving Listing...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -13039,7 +13171,10 @@
 
     async function restoreProperty(id) {
       try {
-        await dashboardAction({ action: 'restore-property', id }, 'Listing restored.');
+        await dashboardAction({ action: 'restore-property', id }, 'Listing restored successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Restoring Listing...'
+        });
       } catch (error) {
         setStatus(error.message, 'error');
       }
@@ -15042,6 +15177,9 @@
     }
 
     async function logoutBroker() {
+      const button = window.ActionFeedbackUi?.resolveActionButton();
+      window.ActionFeedbackUi?.setButtonLoading(button, 'Logging out...');
+      window.ActionFeedbackUi?.startProgress();
       clearAllPrivateRevealTimers();
       if (brokerActivityHeartbeatTimer) {
         clearInterval(brokerActivityHeartbeatTimer);
