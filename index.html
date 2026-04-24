@@ -4693,7 +4693,6 @@
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
-            <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
             <div class="actions" style="margin-top:12px;">
               ${contactActions}
               <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
@@ -4725,7 +4724,6 @@
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${listing.priceLabel || '--'}</strong></div>
             </div>
-            <div class="muted">${listing.publicNotes || 'No public note added.'}</div>
             <div class="actions" style="margin-top:12px;">
               ${contactActions}
               <button class="btn btn-secondary btn-tiny" type="button" onclick="showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')">Share Listing</button>
@@ -5136,7 +5134,7 @@
             <div class="sheet-col">
               <span class="sheet-label">Intent</span>
               <span class="sheet-primary">${listing.purpose === 'rent' ? 'My client is looking to rent' : 'My client is looking to buy'}</span>
-              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker requirement')}</span></span>
+              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}</span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Location</span>
@@ -5192,7 +5190,7 @@
             <div class="sheet-col">
               <span class="sheet-label">Purpose</span>
               <span class="sheet-primary">${getConnectorPublicPurposeLabel(listing).toUpperCase()} | ${getConnectorDisplayPropertyCategory(listing)}</span>
-              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}<span>${escapeHtml(listing.publicNotes || 'Shared broker connector listing')}</span></span>
+              <span class="sheet-secondary is-rich">${renderBrokerActivityLine(listing)}</span>
             </div>
             <div class="sheet-col">
               <span class="sheet-label">Location</span>
@@ -5297,7 +5295,6 @@
             </div>
             ` : ''}
           </div>
-          <div class="muted">${escapeHtml(listing.publicNotes || (listing.sourceType === 'lead' ? 'Shared broker requirement' : 'Shared broker connector listing'))}</div>
         </div>
       `).join('');
     }
