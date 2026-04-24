@@ -3980,6 +3980,9 @@
       color: #35548a !important;
       border-color: rgba(148, 163, 184, 0.34) !important;
       box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(219, 234, 254, 0.72) inset !important;
+      display: inline-flex !important;
+      align-items: center;
+      gap: 8px;
     }
 
     .page-switch-btn.connector-page-btn:hover {
@@ -5582,20 +5585,7 @@
       </div>
       <div class="top-actions">
         <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
-        <div class="activity-brokers-wrap">
-          <button class="btn btn-secondary activity-brokers-trigger" type="button" id="activeBrokersBtn" onclick="toggleBrokerActivityMenu()" aria-haspopup="menu" aria-expanded="false">
-            <span class="activity-brokers-indicator" aria-hidden="true"></span>
-            <span id="activeBrokersLabel">Brokers Online</span>
-          </button>
-          <div class="activity-brokers-panel hidden" id="activeBrokersPanel" role="menu" aria-label="Active brokers">
-            <div class="activity-brokers-head">
-              <strong>Active Brokers</strong>
-              <span id="activeBrokersMeta">Live activity</span>
-            </div>
-            <div class="activity-brokers-list" id="activeBrokersList"></div>
-          </div>
-        </div>
-        <button class="btn btn-secondary page-switch-btn connector-page-btn" type="button" onclick="window.location.href='index.html?view=public'">Broker Connector Page</button>
+        <button class="btn btn-secondary page-switch-btn connector-page-btn" type="button" onclick="window.location.href='index.html?view=public'"><span class="activity-brokers-indicator" aria-hidden="true"></span><span>Broker Connector Page</span></button>
         <div class="account-menu-wrap">
           <button class="btn btn-secondary page-switch-btn account-menu-trigger" id="brokerIdentityBtn" type="button" onclick="toggleAccountMenu()" aria-haspopup="menu" aria-expanded="false">
             <span class="account-menu-avatar" id="brokerIdentityAvatar">BC</span>
