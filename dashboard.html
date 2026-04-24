@@ -6044,7 +6044,7 @@
                   </div>
                   <div class="field-block crm-hidden" id="propertyHandoverYearWrap">
                     <label class="small" for="propertyHandoverYear">Expected Handover Year</label>
-                    <input id="propertyHandoverYear" type="text" inputmode="numeric" placeholder="2026" autocomplete="off">
+                    <input id="propertyHandoverYear" type="text" inputmode="numeric" maxlength="4" placeholder="2026" autocomplete="off">
                     <div class="field-error" id="propertyHandoverYearError"></div>
                   </div>
                 </div>
@@ -6861,14 +6861,13 @@
     }
 
     function normalizeDashboardHandoverYearValue(value) {
-      const digits = String(value || '').replace(/[^\d]/g, '').slice(0, 4);
-      return digits.length === 4 ? digits : '';
+      return String(value || '').replace(/[^\d]/g, '').slice(0, 4);
     }
 
     function formatPropertyHandoverDisplay(quarter, year) {
       const normalizedQuarter = normalizeDashboardHandoverQuarterValue(quarter);
       const normalizedYear = normalizeDashboardHandoverYearValue(year);
-      return normalizedQuarter && normalizedYear ? `${normalizedQuarter} ${normalizedYear}` : '';
+      return normalizedQuarter && normalizedYear.length === 4 ? `${normalizedQuarter} ${normalizedYear}` : '';
     }
 
     function dashboardCategoryAllowsSelectableLayout(category) {
@@ -12798,7 +12797,7 @@
       if (formData.purpose === 'sale' && formData.salePropertyStatus === 'Off Plan Property' && !formData.handoverQuarter) {
         errors.handoverQuarter = 'Select handover quarter';
       }
-      if (formData.purpose === 'sale' && formData.salePropertyStatus === 'Off Plan Property' && !formData.handoverYear) {
+      if (formData.purpose === 'sale' && formData.salePropertyStatus === 'Off Plan Property' && normalizeDashboardHandoverYearValue(formData.handoverYear).length !== 4) {
         errors.handoverYear = 'Enter handover year';
       }
       if (formData.distressDeal && (!formData.marketPrice || Number(formData.marketPrice) <= 0)) {
