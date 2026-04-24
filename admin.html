@@ -1564,7 +1564,7 @@
             </div>
             <div class="admin-toolbar-controls">
               <div class="admin-search-wrap">
-                <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support" oninput="applyAdminFilters()">
+                <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support, toolkit" oninput="applyAdminFilters()">
               </div>
               <select id="adminVerificationFilter" onchange="applyAdminFilters()" aria-label="Filter verification status">
                 <option value="all">All Verification</option>
@@ -1591,6 +1591,7 @@
               <button class="btn btn-secondary" type="button" onclick="jumpToComplaintReview()">Complaint Review</button>
               <button class="btn btn-secondary" type="button" onclick="jumpToSupportInbox()">Help Desk</button>
               <button class="btn btn-secondary" type="button" onclick="jumpToCompanySuggestions()">Pending Companies</button>
+              <button class="btn btn-secondary" type="button" onclick="jumpToToolkitManager()">Toolkit Manager</button>
               <button class="btn btn-secondary" type="button" onclick="clearAdminFilters()">Clear Filters</button>
             </div>
           </div>
@@ -1711,6 +1712,18 @@
                 <div class="item"><p>No pending company suggestions found.</p></div>
               </div>
             </div>
+
+            <div class="admin-section-card" id="toolkitManagerSection">
+              <div class="admin-section-head">
+                <div class="admin-section-copy">
+                  <h3>Toolkit Manager</h3>
+                  <p>Add, edit, deactivate, feature, and review Broker Toolkit links without changing the broker dashboard layout.</p>
+                </div>
+              </div>
+              <div class="admin-table-wrap" id="toolkitManagerList">
+                <div class="item"><p>Open Toolkit Manager to load toolkit tools.</p></div>
+              </div>
+            </div>
           </div>
 
           <div class="admin-detail-stack" id="adminDetailStack">
@@ -1775,6 +1788,13 @@
     let supportRequests = [];
     let approvedCompanySuggestions = [];
     let pendingCompanySuggestions = [];
+    let toolkitTools = [];
+    let toolkitAnalytics = {
+      totalTools: 0,
+      activeTools: 0,
+      totalClicks: 0,
+      mostUsedTools: []
+    };
     let complaintsReadable = true;
     let adminBrokerAccounts = [];
     let brokerApprovals = {};
@@ -1791,9 +1811,15 @@
       supportLoaded: false,
       complaintActionBusy: false,
       supportActionBusy: false,
+      supportRequested: false,
       companyLoading: false,
       companiesLoaded: false,
       companyActionBusy: false,
+      companiesRequested: false,
+      toolkitLoading: false,
+      toolkitLoaded: false,
+      toolkitActionBusy: false,
+      toolkitRequested: false,
       selectedType: 'broker',
       selectedKey: '',
       selectedRowMemory: {
@@ -1804,6 +1830,18 @@
       },
       pendingDetailScroll: null
     };
+
+    const TOOLKIT_CATEGORY_OPTIONS = [
+      'Government & Compliance',
+      'DLD / RERA',
+      'Trakheesi',
+      'Ejari',
+      'Utilities',
+      'Property Portals',
+      'Forms & Agreements',
+      'Calculators',
+      'Company / Broker Tools'
+    ];
 
     async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
       const controller = new AbortController();
@@ -1925,6 +1963,7 @@
       try {
         response = await fetchJsonWithTimeout('/api/support', {
         method: 'GET',
+        cache: 'no-store',
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -1985,6 +2024,7 @@
       try {
         response = await fetchJsonWithTimeout('/api/companies?scope=admin', {
         method: 'GET',
+        cache: 'no-store',
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -2033,6 +2073,73 @@
           handleAdminSessionFailure('Admin session expired. Please sign in again.');
         }
         throw new Error(result?.message || 'Company suggestion update failed.');
+      }
+
+      return result;
+    }
+
+    async function fetchAdminToolkitData() {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      let response;
+      try {
+        response = await fetchJsonWithTimeout('/api/toolkit?scope=admin', {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }, 4500);
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          throw new Error('Toolkit manager is taking too long to respond.');
+        }
+        throw error;
+      }
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
+        throw new Error(result?.message || 'Toolkit manager request failed.');
+      }
+
+      return {
+        tools: Array.isArray(result?.tools) ? result.tools : [],
+        analytics: result?.analytics || {
+          totalTools: 0,
+          activeTools: 0,
+          totalClicks: 0,
+          mostUsedTools: []
+        }
+      };
+    }
+
+    async function requestToolkitAction(method, payload = {}) {
+      const token = getAdminToken();
+      if (!token) {
+        throw new Error('Admin login required.');
+      }
+
+      const response = await fetch('/api/toolkit', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 401) {
+          handleAdminSessionFailure('Admin session expired. Please sign in again.');
+        }
+        throw new Error(result?.message || 'Toolkit manager update failed.');
       }
 
       return result;
@@ -2381,9 +2488,15 @@
       adminUiState.complaintsLoading = true;
       adminUiState.supportLoading = false;
       adminUiState.supportLoaded = false;
+      adminUiState.supportRequested = false;
       adminUiState.companyLoading = false;
       adminUiState.companiesLoaded = false;
       adminUiState.companyActionBusy = false;
+      adminUiState.companiesRequested = false;
+      adminUiState.toolkitLoading = false;
+      adminUiState.toolkitLoaded = false;
+      adminUiState.toolkitActionBusy = false;
+      adminUiState.toolkitRequested = false;
       renderAdminWorkspace();
       loadLocalAdminState();
       let accounts = [];
@@ -2464,6 +2577,13 @@
       supportRequests = [];
       approvedCompanySuggestions = [];
       pendingCompanySuggestions = [];
+      toolkitTools = [];
+      toolkitAnalytics = {
+        totalTools: 0,
+        activeTools: 0,
+        totalClicks: 0,
+        mostUsedTools: []
+      };
 
       adminUiState.complaintsLoading = false;
       renderAdminWorkspace();
@@ -3020,13 +3140,22 @@
     function jumpToSupportInbox() {
       const target = document.getElementById('supportInboxSection');
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      adminUiState.supportRequested = true;
       ensureSupportRequestsLoaded();
     }
 
     function jumpToCompanySuggestions() {
       const target = document.getElementById('companySuggestionsSection');
       target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      adminUiState.companiesRequested = true;
       ensureCompanySuggestionsLoaded();
+    }
+
+    function jumpToToolkitManager() {
+      const target = document.getElementById('toolkitManagerSection');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      adminUiState.toolkitRequested = true;
+      ensureToolkitManagerLoaded();
     }
 
     async function ensureSupportRequestsLoaded(force = false) {
@@ -3066,6 +3195,31 @@
         setAdminStatus(error?.message || 'Company suggestions could not load.', 'error');
       }
       adminUiState.companyLoading = false;
+      renderAdminWorkspace();
+    }
+
+    async function ensureToolkitManagerLoaded(force = false) {
+      if ((adminUiState.toolkitLoaded && !force) || adminUiState.toolkitLoading) return;
+      adminUiState.toolkitLoading = true;
+      renderAdminWorkspace();
+      try {
+        const toolkitResult = await fetchAdminToolkitData();
+        toolkitTools = toolkitResult.tools || [];
+        toolkitAnalytics = toolkitResult.analytics || toolkitAnalytics;
+        adminUiState.toolkitLoaded = true;
+      } catch (error) {
+        console.error(error);
+        toolkitTools = [];
+        toolkitAnalytics = {
+          totalTools: 0,
+          activeTools: 0,
+          totalClicks: 0,
+          mostUsedTools: []
+        };
+        adminUiState.toolkitLoaded = true;
+        setAdminStatus(error?.message || 'Toolkit manager could not load.', 'error');
+      }
+      adminUiState.toolkitLoading = false;
       renderAdminWorkspace();
     }
 
@@ -3691,6 +3845,7 @@
       renderComplaints(collections.complaints);
       renderSupportRequests();
       renderCompanySuggestions();
+      renderToolkitManager();
       renderAdminDetailPanel(collections);
       renderBrokerAccountModal(selected && selected.type === 'broker' ? selected : null);
       renderComplaintReviewModal(selected && selected.type === 'complaint' ? selected : null);
@@ -4024,6 +4179,11 @@
         return;
       }
 
+      if (!adminUiState.supportRequested) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Help Desk to load support requests.</div>`;
+        return;
+      }
+
       if (!adminUiState.supportLoaded) {
         target.innerHTML = `<div class="admin-detail-empty">Open Help Desk to load support requests.</div>`;
         return;
@@ -4114,6 +4274,11 @@
         target.innerHTML = `<div class="admin-detail-empty">Loading pending companies...</div>`;
         return;
       }
+      if (!adminUiState.companiesRequested) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Pending Companies to load suggestions.</div>`;
+        return;
+      }
+
       if (!adminUiState.companiesLoaded) {
         target.innerHTML = `<div class="admin-detail-empty">Open Pending Companies to load suggestions.</div>`;
         return;
@@ -4157,6 +4322,200 @@
               </div>
             </div>
           `).join('')}
+        </div>
+      `;
+    }
+
+    function getFilteredToolkitTools() {
+      const search = normalizeAdminText(adminUiState.search);
+      if (!search) return toolkitTools;
+      return (Array.isArray(toolkitTools) ? toolkitTools : []).filter(item => {
+        const haystack = [
+          item?.title,
+          item?.description,
+          item?.category,
+          item?.url
+        ].map(normalizeAdminText).join(' ');
+        return haystack.includes(search);
+      });
+    }
+
+    async function createToolkitTool() {
+      if (adminUiState.toolkitActionBusy) return;
+      const title = document.getElementById('toolkitCreateTitle')?.value || '';
+      const description = document.getElementById('toolkitCreateDescription')?.value || '';
+      const category = document.getElementById('toolkitCreateCategory')?.value || '';
+      const url = document.getElementById('toolkitCreateUrl')?.value || '';
+      const logoUrl = document.getElementById('toolkitCreateLogoUrl')?.value || '';
+      const iconName = document.getElementById('toolkitCreateIconName')?.value || '';
+      const sortOrder = document.getElementById('toolkitCreateSortOrder')?.value || '0';
+      const isActive = Boolean(document.getElementById('toolkitCreateIsActive')?.checked);
+      const isFeatured = Boolean(document.getElementById('toolkitCreateIsFeatured')?.checked);
+
+      adminUiState.toolkitActionBusy = true;
+      renderAdminWorkspace();
+      try {
+        const result = await requestToolkitAction('POST', {
+          action: 'create-tool',
+          title,
+          description,
+          category,
+          url,
+          logoUrl,
+          iconName,
+          sortOrder,
+          isActive,
+          isFeatured
+        });
+        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
+        toolkitAnalytics = result?.analytics || toolkitAnalytics;
+        adminUiState.toolkitLoaded = true;
+        setAdminStatus('Toolkit tool created successfully.', 'success');
+      } catch (error) {
+        setAdminStatus(error?.message || 'Toolkit tool creation failed.', 'error');
+      }
+      adminUiState.toolkitActionBusy = false;
+      renderAdminWorkspace();
+    }
+
+    async function saveToolkitTool(toolId) {
+      if (!toolId || adminUiState.toolkitActionBusy) return;
+      adminUiState.toolkitActionBusy = true;
+      renderAdminWorkspace();
+      try {
+        const result = await requestToolkitAction('PATCH', {
+          toolId,
+          title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
+          description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
+          category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
+          url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
+          logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
+          iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
+          sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0',
+          isActive: Boolean(document.getElementById(`toolkit-active-${toolId}`)?.checked),
+          isFeatured: Boolean(document.getElementById(`toolkit-featured-${toolId}`)?.checked)
+        });
+        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
+        toolkitAnalytics = result?.analytics || toolkitAnalytics;
+        adminUiState.toolkitLoaded = true;
+        setAdminStatus('Toolkit tool updated successfully.', 'success');
+      } catch (error) {
+        setAdminStatus(error?.message || 'Toolkit tool update failed.', 'error');
+      }
+      adminUiState.toolkitActionBusy = false;
+      renderAdminWorkspace();
+    }
+
+    async function deleteToolkitTool(toolId) {
+      if (!toolId || adminUiState.toolkitActionBusy) return;
+      if (!window.confirm('Delete this toolkit tool?')) return;
+      adminUiState.toolkitActionBusy = true;
+      renderAdminWorkspace();
+      try {
+        const result = await requestToolkitAction('DELETE', { toolId });
+        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
+        toolkitAnalytics = result?.analytics || toolkitAnalytics;
+        adminUiState.toolkitLoaded = true;
+        setAdminStatus('Toolkit tool deleted successfully.', 'success');
+      } catch (error) {
+        setAdminStatus(error?.message || 'Toolkit tool delete failed.', 'error');
+      }
+      adminUiState.toolkitActionBusy = false;
+      renderAdminWorkspace();
+    }
+
+    function renderToolkitManager() {
+      const target = document.getElementById('toolkitManagerList');
+      if (!target) return;
+      if (adminUiState.toolkitLoading) {
+        target.innerHTML = `<div class="admin-detail-empty">Loading toolkit manager...</div>`;
+        return;
+      }
+      if (!adminUiState.toolkitRequested) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Toolkit Manager to load toolkit tools.</div>`;
+        return;
+      }
+
+      if (!adminUiState.toolkitLoaded) {
+        target.innerHTML = `<div class="admin-detail-empty">Open Toolkit Manager to load toolkit tools.</div>`;
+        return;
+      }
+
+      const entries = getFilteredToolkitTools();
+      const analytics = toolkitAnalytics || {
+        totalTools: 0,
+        activeTools: 0,
+        totalClicks: 0,
+        mostUsedTools: []
+      };
+
+      target.innerHTML = `
+        <div class="list">
+          <div class="item">
+            <div class="item-head">
+              <h4>Toolkit Analytics</h4>
+              <span class="badge blue">${analytics.totalClicks || 0} total clicks</span>
+            </div>
+            <p>${analytics.totalTools || 0} tools · ${analytics.activeTools || 0} active · ${(Array.isArray(analytics.mostUsedTools) ? analytics.mostUsedTools.length : 0)} top-used visible</p>
+            <div class="helper">${Array.isArray(analytics.mostUsedTools) && analytics.mostUsedTools.length
+              ? analytics.mostUsedTools.map(item => `${item.title || 'Tool'} (${item.clickCount || 0} clicks, ${item.favoriteCount || 0} favorites)`).join(' · ')
+              : 'Usage analytics will appear here after brokers start opening toolkit links.'}</div>
+          </div>
+
+          <div class="item">
+            <div class="item-head">
+              <h4>Add New Tool</h4>
+              <span class="badge gold">External link only</span>
+            </div>
+            <div class="form-grid">
+              <input id="toolkitCreateTitle" placeholder="Tool title">
+              <textarea id="toolkitCreateDescription" rows="3" placeholder="Short description"></textarea>
+              <select id="toolkitCreateCategory">
+                ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('')}
+              </select>
+              <input id="toolkitCreateUrl" placeholder="https://example.com/tool">
+              <input id="toolkitCreateLogoUrl" placeholder="Logo URL (optional)">
+              <input id="toolkitCreateIconName" placeholder="Icon name / short label">
+              <input id="toolkitCreateSortOrder" type="number" value="0" placeholder="Sort order">
+              <label class="helper"><input id="toolkitCreateIsActive" type="checkbox" checked> Active</label>
+              <label class="helper"><input id="toolkitCreateIsFeatured" type="checkbox"> Featured</label>
+              <button class="btn btn-primary" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="createToolkitTool()">Add Tool</button>
+            </div>
+          </div>
+
+          ${entries.length ? entries.map(item => `
+            <div class="item">
+              <div class="item-head">
+                <h4>${escapeHtml(item.title || 'Toolkit tool')}</h4>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <span class="badge ${item.isActive ? 'green' : 'red'}">${item.isActive ? 'Active' : 'Inactive'}</span>
+                  ${item.isFeatured ? '<span class="badge gold">Featured</span>' : ''}
+                  <span class="badge blue">${item.clickCount || 0} clicks</span>
+                  <span class="badge blue">${item.favoriteCount || 0} favorites</span>
+                </div>
+              </div>
+              <div class="form-grid">
+                <input id="toolkit-title-${escapeHtml(item.id)}" value="${escapeHtml(item.title || '')}" placeholder="Tool title">
+                <textarea id="toolkit-description-${escapeHtml(item.id)}" rows="3" placeholder="Short description">${escapeHtml(item.description || '')}</textarea>
+                <select id="toolkit-category-${escapeHtml(item.id)}">
+                  ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${item.category === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
+                </select>
+                <input id="toolkit-url-${escapeHtml(item.id)}" value="${escapeHtml(item.url || '')}" placeholder="https://example.com/tool">
+                <input id="toolkit-logo-${escapeHtml(item.id)}" value="${escapeHtml(item.logoUrl || '')}" placeholder="Logo URL (optional)">
+                <input id="toolkit-icon-${escapeHtml(item.id)}" value="${escapeHtml(item.iconName || '')}" placeholder="Icon name / short label">
+                <input id="toolkit-sort-${escapeHtml(item.id)}" type="number" value="${escapeHtml(item.sortOrder || 0)}" placeholder="Sort order">
+                <label class="helper"><input id="toolkit-active-${escapeHtml(item.id)}" type="checkbox" ${item.isActive ? 'checked' : ''}> Active</label>
+                <label class="helper"><input id="toolkit-featured-${escapeHtml(item.id)}" type="checkbox" ${item.isFeatured ? 'checked' : ''}> Featured</label>
+              </div>
+              <div class="item-head" style="margin-top:12px;">
+                <p>${escapeHtml(item.category || 'Toolkit')} · Updated ${escapeHtml(formatAdminDateTime(item.updatedAt || item.updated_at || item.createdAt || ''))}</p>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-secondary tiny-btn" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="saveToolkitTool('${escapeHtml(item.id)}')">Save</button>
+                  <button class="btn btn-danger tiny-btn" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="deleteToolkitTool('${escapeHtml(item.id)}')">Delete</button>
+                </div>
+              </div>
+            </div>
+          `).join('') : '<div class="admin-detail-empty">No toolkit tools matched the current search.</div>'}
         </div>
       `;
     }
