@@ -2503,9 +2503,7 @@
         <div class="connector-toolbar-head">
           <div class="connector-toolbar-copy">
             <h3>Discovery Filters</h3>
-            <p>Filter shared requirements, broker connector listings, and distress opportunities without changing visibility or broker sharing rules.</p>
           </div>
-          <div class="connector-toolbar-meta" id="connectorToolbarMeta">Showing all shared records.</div>
         </div>
         <div class="connector-toolbar-grid">
           <div class="connector-filter-field">
@@ -5339,7 +5337,7 @@
       if (listingCount) listingCount.textContent = listings.length;
       if (distressCount) distressCount.textContent = distress.length;
       if (toolbarMeta) {
-        toolbarMeta.textContent = `Showing ${filtered.length} shared records across ${requirements.length} requirements, ${listings.length} listings, and ${distress.length} distress deals.`;
+        toolbarMeta.textContent = '';
       }
     }
 
