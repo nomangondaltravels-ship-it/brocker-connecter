@@ -1820,6 +1820,7 @@
       toolkitLoaded: false,
       toolkitActionBusy: false,
       toolkitRequested: false,
+      toolkitUsingFallback: false,
       selectedType: 'broker',
       selectedKey: '',
       selectedRowMemory: {
@@ -2159,14 +2160,14 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetch('/api/toolkit', {
+      const response = await fetchJsonWithTimeout('/api/toolkit', {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
-      });
+      }, 6500);
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -3241,6 +3242,7 @@
         toolkitTools = toolkitResult.tools || [];
         toolkitAnalytics = toolkitResult.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
+        adminUiState.toolkitUsingFallback = Boolean(toolkitResult?.fallback);
         if (toolkitResult?.fallback) {
           setAdminStatus('Toolkit manager is showing fallback tools while live data is unavailable.', 'success');
         }
@@ -3254,6 +3256,7 @@
           mostUsedTools: []
         };
         adminUiState.toolkitLoaded = true;
+        adminUiState.toolkitUsingFallback = false;
         setAdminStatus(error?.message || 'Toolkit manager could not load.', 'error');
       }
       adminUiState.toolkitLoading = false;
@@ -4435,6 +4438,7 @@
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
+        adminUiState.toolkitUsingFallback = false;
         setAdminStatus('Toolkit tool updated successfully.', 'success');
       } catch (error) {
         setAdminStatus(error?.message || 'Toolkit tool update failed.', 'error');
@@ -4449,10 +4453,15 @@
       adminUiState.toolkitActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestToolkitAction('DELETE', { toolId });
+        const result = await requestToolkitAction('DELETE', {
+          toolId,
+          title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
+          url: document.getElementById(`toolkit-url-${toolId}`)?.value || ''
+        });
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
+        adminUiState.toolkitUsingFallback = false;
         setAdminStatus('Toolkit tool deleted successfully.', 'success');
       } catch (error) {
         setAdminStatus(error?.message || 'Toolkit tool delete failed.', 'error');

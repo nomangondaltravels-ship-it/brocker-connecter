@@ -6562,6 +6562,7 @@
       toolkitLoaded: false,
       toolkitLoading: false,
       toolkitError: '',
+      toolkitUsingFallback: false,
       toolkitSearch: '',
       toolkitCategory: 'all',
       toolkitFavoriteBusy: '',
@@ -6609,6 +6610,29 @@
       'Forms & Agreements',
       'Calculators',
       'Company / Broker Tools'
+    ];
+    const TOOLKIT_FALLBACK_TOOLS = [
+      { id: 'seed-dld', title: 'Dubai Land Department', description: 'Official Dubai Land Department portal for real estate services and information.', category: 'Government & Compliance', url: 'https://dubailand.gov.ae', logoUrl: '', iconName: 'DLD', isActive: true, isFeatured: true, sortOrder: 10 },
+      { id: 'seed-rera', title: 'RERA', description: 'Real Estate Regulatory Agency information and real estate regulation services.', category: 'DLD / RERA', url: 'https://dubailand.gov.ae', logoUrl: '', iconName: 'RERA', isActive: true, isFeatured: true, sortOrder: 20 },
+      { id: 'seed-trakheesi', title: 'Trakheesi', description: 'Access real estate advertisement permit and Trakheesi-related services.', category: 'Trakheesi', url: 'https://trakheesi.dubailand.gov.ae', logoUrl: '', iconName: 'TR', isActive: true, isFeatured: true, sortOrder: 30 },
+      { id: 'seed-ejari', title: 'Ejari', description: 'Ejari tenancy registration and related services.', category: 'Ejari', url: 'https://dubailand.gov.ae/en/eservices/ejari', logoUrl: '', iconName: 'EJ', isActive: true, isFeatured: true, sortOrder: 40 },
+      { id: 'seed-dubai-rest', title: 'Dubai REST', description: 'Dubai REST app and real estate digital services.', category: 'Government & Compliance', url: 'https://dubailand.gov.ae/en/eservices/dubai-rest', logoUrl: '', iconName: 'REST', isActive: true, isFeatured: true, sortOrder: 50 },
+      { id: 'seed-dewa', title: 'DEWA', description: 'Dubai Electricity and Water Authority services.', category: 'Utilities', url: 'https://www.dewa.gov.ae', logoUrl: '', iconName: 'DEWA', isActive: true, isFeatured: false, sortOrder: 60 },
+      { id: 'seed-empower', title: 'Empower', description: 'District cooling services and customer portal.', category: 'Utilities', url: 'https://www.empower.ae', logoUrl: '', iconName: 'EMP', isActive: true, isFeatured: false, sortOrder: 70 },
+      { id: 'seed-emicool', title: 'Emicool', description: 'District cooling services and customer support.', category: 'Utilities', url: 'https://www.emicool.com', logoUrl: '', iconName: 'EMI', isActive: true, isFeatured: false, sortOrder: 80 },
+      { id: 'seed-etisalat', title: 'Etisalat by e&', description: 'Internet, telecom, and business services.', category: 'Utilities', url: 'https://www.etisalat.ae', logoUrl: '', iconName: 'E&', isActive: true, isFeatured: false, sortOrder: 90 },
+      { id: 'seed-du', title: 'du', description: 'Internet, telecom, and business services.', category: 'Utilities', url: 'https://www.du.ae', logoUrl: '', iconName: 'du', isActive: true, isFeatured: false, sortOrder: 100 },
+      { id: 'seed-property-finder', title: 'Property Finder', description: 'Property listing and broker portal.', category: 'Property Portals', url: 'https://www.propertyfinder.ae', logoUrl: '', iconName: 'PF', isActive: true, isFeatured: true, sortOrder: 110 },
+      { id: 'seed-bayut', title: 'Bayut', description: 'UAE property portal for listings and leads.', category: 'Property Portals', url: 'https://www.bayut.com', logoUrl: '', iconName: 'BY', isActive: true, isFeatured: false, sortOrder: 120 },
+      { id: 'seed-dubizzle', title: 'Dubizzle', description: 'UAE classifieds and property listings.', category: 'Property Portals', url: 'https://dubai.dubizzle.com', logoUrl: '', iconName: 'DZ', isActive: true, isFeatured: false, sortOrder: 130 },
+      { id: 'seed-a2a-guide', title: 'A2A Agreement Guide', description: 'Guide for agents to create agent-to-agent agreement before sharing details or arranging viewing.', category: 'Forms & Agreements', url: '#', logoUrl: '', iconName: 'A2A', isActive: true, isFeatured: false, sortOrder: 140 },
+      { id: 'seed-form-a', title: 'Form A Guide', description: 'Seller and broker agreement guidance.', category: 'Forms & Agreements', url: '#', logoUrl: '', iconName: 'A', isActive: true, isFeatured: false, sortOrder: 150 },
+      { id: 'seed-form-b', title: 'Form B Guide', description: 'Buyer and broker agreement guidance.', category: 'Forms & Agreements', url: '#', logoUrl: '', iconName: 'B', isActive: true, isFeatured: false, sortOrder: 160 },
+      { id: 'seed-form-f', title: 'Form F Guide', description: 'Sale agreement guidance between buyer and seller.', category: 'Forms & Agreements', url: '#', logoUrl: '', iconName: 'F', isActive: true, isFeatured: false, sortOrder: 170 },
+      { id: 'seed-form-i', title: 'Form I Guide', description: 'Agent-to-agent cooperation agreement guidance.', category: 'Forms & Agreements', url: '#', logoUrl: '', iconName: 'I', isActive: true, isFeatured: false, sortOrder: 180 },
+      { id: 'seed-roi-calc', title: 'ROI Calculator', description: 'Quick return on investment calculator for brokers and investors.', category: 'Calculators', url: '#', logoUrl: '', iconName: 'ROI', isActive: true, isFeatured: false, sortOrder: 190 },
+      { id: 'seed-mortgage-calc', title: 'Mortgage Calculator', description: 'Estimate mortgage payments and finance scenarios.', category: 'Calculators', url: '#', logoUrl: '', iconName: 'MC', isActive: true, isFeatured: false, sortOrder: 200 },
+      { id: 'seed-service-charge', title: 'Service Charge Guide', description: 'Quick reference for service charge and owner cost checks.', category: 'Company / Broker Tools', url: '#', logoUrl: '', iconName: 'SCI', isActive: true, isFeatured: false, sortOrder: 210 }
     ];
     const COMPLAINT_STATUS_LABELS = {
       new: 'New',
@@ -9531,18 +9555,45 @@
       return result;
     }
 
+    async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
+      const controller = new AbortController();
+      let timer = null;
+      try {
+        timer = setTimeout(() => controller.abort(), timeoutMs);
+        return await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
+    }
+
     async function fetchBrokerToolkit() {
-      const response = await fetch('/api/toolkit', {
-        method: 'GET',
-        headers: apiHeaders()
-      });
+      let response;
+      try {
+        response = await fetchJsonWithTimeout('/api/toolkit', {
+          method: 'GET',
+          headers: apiHeaders()
+        }, 6500);
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return {
+            tools: TOOLKIT_FALLBACK_TOOLS,
+            favoriteToolIds: [],
+            fallback: true
+          };
+        }
+        throw error;
+      }
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
         throw new Error(result?.message || 'Toolkit is temporarily unavailable.');
       }
       return {
         tools: Array.isArray(result?.tools) ? result.tools : [],
-        favoriteToolIds: Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : []
+        favoriteToolIds: Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : [],
+        fallback: false
       };
     }
 
@@ -9558,9 +9609,13 @@
         const result = await fetchBrokerToolkit();
         state.toolkitTools = Array.isArray(result.tools) ? result.tools : [];
         state.toolkitFavoriteToolIds = Array.isArray(result.favoriteToolIds) ? result.favoriteToolIds : [];
+        state.toolkitUsingFallback = Boolean(result?.fallback);
         state.toolkitLoaded = true;
       } catch (error) {
-        state.toolkitError = error?.message || 'Toolkit is temporarily unavailable.';
+        state.toolkitTools = TOOLKIT_FALLBACK_TOOLS;
+        state.toolkitFavoriteToolIds = [];
+        state.toolkitUsingFallback = true;
+        state.toolkitError = '';
         state.toolkitLoaded = true;
       }
       state.toolkitLoading = false;
@@ -9629,7 +9684,7 @@
           </div>
           <div class="toolkit-tool-actions">
             <button class="btn btn-primary toolkit-open-btn" type="button" onclick="openToolkitExternalLink('${escapeHtml(tool.id)}')">Open</button>
-            <button class="btn btn-secondary toolkit-favorite-btn ${isFavorite ? 'is-active' : ''}" type="button" ${state.toolkitFavoriteBusy === tool.id ? 'disabled' : ''} onclick="toggleToolkitFavorite('${escapeHtml(tool.id)}')">${favoriteIcon}</button>
+            <button class="btn btn-secondary toolkit-favorite-btn ${isFavorite ? 'is-active' : ''}" type="button" ${(state.toolkitFavoriteBusy === tool.id || state.toolkitUsingFallback) ? 'disabled' : ''} onclick="toggleToolkitFavorite('${escapeHtml(tool.id)}')">${favoriteIcon}</button>
           </div>
         </div>
       `;
@@ -9698,6 +9753,12 @@
                 </select>
               </div>
             </div>
+            ${state.toolkitUsingFallback ? `
+              <div class="toolkit-empty-state" style="margin-top:14px;">
+                <strong>Fallback tools are showing</strong>
+                <span>Live toolkit data is slow right now, so default tools are being shown for uninterrupted access.</span>
+              </div>
+            ` : ''}
           </div>
 
           <div class="toolkit-favorites-card">

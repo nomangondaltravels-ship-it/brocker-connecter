@@ -134,6 +134,33 @@ async function listToolkitClicks(context, signal) {
   return Array.isArray(rows) ? rows : [];
 }
 
+function normalizeToolkitMatchValue(value) {
+  return normalizeText(value).trim().toLowerCase();
+}
+
+async function findExistingToolkitTool(context, { toolId = '', title = '', url = '', signal } = {}) {
+  const rows = await listToolkitTools(context, { includeInactive: true, signal }).catch(() => []);
+  const normalizedToolId = normalizeText(toolId);
+  if (normalizedToolId) {
+    const exact = rows.find(item => item.id === normalizedToolId);
+    if (exact) return exact;
+  }
+
+  const normalizedTitle = normalizeToolkitMatchValue(title);
+  if (normalizedTitle) {
+    const titleMatch = rows.find(item => normalizeToolkitMatchValue(item.title) === normalizedTitle);
+    if (titleMatch) return titleMatch;
+  }
+
+  const normalizedUrl = normalizeToolkitMatchValue(url);
+  if (normalizedUrl && normalizedUrl !== '#') {
+    const urlMatch = rows.find(item => normalizeToolkitMatchValue(item.url) === normalizedUrl);
+    if (urlMatch) return urlMatch;
+  }
+
+  return null;
+}
+
 async function buildBrokerToolkitPayload(context) {
   const fallbackTools = getDefaultToolkitRows();
   const dbTools = await withTimeout(
@@ -309,16 +336,34 @@ async function createTool(request) {
     return json({ message: error }, 400);
   }
 
-  await supabaseInsert({
-    supabaseUrl: context.supabaseUrl,
-    serviceRoleKey: context.serviceRoleKey,
-    table: 'toolkit_tools',
-    payload: {
-      ...payload,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
+  const existingTool = await findExistingToolkitTool(context, {
+    title: payload.title,
+    url: payload.url
   });
+
+  if (existingTool?.id) {
+    await supabasePatch({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      filters: { id: existingTool.id },
+      payload: {
+        ...payload,
+        updated_at: new Date().toISOString()
+      }
+    });
+  } else {
+    await supabaseInsert({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      payload: {
+        ...payload,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    });
+  }
 
   return json(await buildAdminToolkitPayload(context));
 }
@@ -327,24 +372,40 @@ async function updateTool(request) {
   const context = await requireAdmin(request);
   const body = await request.json().catch(() => ({}));
   const toolId = normalizeText(body?.toolId);
-  if (!toolId) {
-    return json({ message: 'Toolkit tool is missing.' }, 400);
-  }
   const { payload, error } = validateToolkitToolPayload(body);
   if (error) {
     return json({ message: error }, 400);
   }
 
-  await supabasePatch({
-    supabaseUrl: context.supabaseUrl,
-    serviceRoleKey: context.serviceRoleKey,
-    table: 'toolkit_tools',
-    filters: { id: toolId },
-    payload: {
-      ...payload,
-      updated_at: new Date().toISOString()
-    }
+  const existingTool = await findExistingToolkitTool(context, {
+    toolId,
+    title: payload.title,
+    url: payload.url
   });
+
+  if (existingTool?.id) {
+    await supabasePatch({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      filters: { id: existingTool.id },
+      payload: {
+        ...payload,
+        updated_at: new Date().toISOString()
+      }
+    });
+  } else {
+    await supabaseInsert({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      payload: {
+        ...payload,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    });
+  }
 
   return json(await buildAdminToolkitPayload(context));
 }
@@ -353,16 +414,20 @@ async function deleteTool(request) {
   const context = await requireAdmin(request);
   const body = await request.json().catch(() => ({}));
   const toolId = normalizeText(body?.toolId || new URL(request.url).searchParams.get('toolId'));
-  if (!toolId) {
-    return json({ message: 'Toolkit tool is missing.' }, 400);
-  }
-
-  await supabaseDelete({
-    supabaseUrl: context.supabaseUrl,
-    serviceRoleKey: context.serviceRoleKey,
-    table: 'toolkit_tools',
-    filters: { id: toolId }
+  const existingTool = await findExistingToolkitTool(context, {
+    toolId,
+    title: body?.title,
+    url: body?.url
   });
+
+  if (existingTool?.id) {
+    await supabaseDelete({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      filters: { id: existingTool.id }
+    });
+  }
 
   return json(await buildAdminToolkitPayload(context));
 }
