@@ -3135,8 +3135,8 @@
     }
 
     const CONNECTOR_TABLE_COLUMNS = {
-      requirements: '72px 180px 120px 180px 96px 120px 110px 96px 90px',
-      listings: '72px 180px 120px 180px 96px 120px 110px 110px 96px 90px'
+      requirements: '72px 190px 130px 190px 96px 120px 96px 90px',
+      listings: '72px 190px 130px 190px 96px 120px 110px 96px 90px'
     };
 
     state.brokerProfile = safeJsonRead('broker_session_profile', null);
@@ -4670,10 +4670,6 @@
               <h3>${listing.purpose} · ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} · ${listing.priceLabel}</div>
             </div>
-            <div class="badges">
-              <span class="badge ${badgeClass(listing)}">${badgeText(listing)}</span>
-              ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
-            </div>
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
@@ -4705,10 +4701,6 @@
             <div class="listing-title">
               <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} &middot; ${listing.priceLabel}</div>
-            </div>
-            <div class="badges">
-              <span class="badge ${listing.isDistress ? 'badge-hot' : badgeClass(listing)}">${badgeText(listing)}</span>
-              ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
             </div>
           </div>
           <div class="detail-grid">
@@ -5054,8 +5046,6 @@
           <div class="connector-detail-head-row">
             <div class="connector-detail-meta">
               <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : 'Shared Listing'}</span>
-              ${selected.status ? `<span class="badge badge-gold">${escapeHtml(selected.status)}</span>` : ''}
-              ${selected.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
             </div>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="closePublicDetailPanel('${sectionName}')">Close</button>
           </div>
@@ -5080,7 +5070,6 @@
             <div class="connector-detail-cell"><small>Area / Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(selected.buildingLabel || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
-            <div class="connector-detail-cell"><small>Status</small><strong>${escapeHtml(selected.status || 'Active')}</strong></div>
             ${selected.sourceType === 'property' && selected.isDistress ? `<div class="connector-detail-cell"><small>Distress Gap</small><strong>${escapeHtml(getConnectorDistressGapLabel(selected) || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
           </div>
         </div>
@@ -5119,7 +5108,6 @@
           <div>Building / Project</div>
           <div>Layout</div>
           <div class="sheet-head-right">Budget</div>
-          <div>Status</div>
           <div class="sheet-head-right">Updated</div>
           <div class="sheet-head-right">Open</div>
         </div>
@@ -5155,13 +5143,6 @@
               <span class="sheet-label">Budget</span>
               <span class="sheet-primary">${listing.priceLabel || '--'}</span>
             </div>
-            <div class="sheet-col">
-              <span class="sheet-label">Status</span>
-              <div class="row-badge-stack">
-                <span class="badge badge-blue">Requirement</span>
-                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
-              </div>
-            </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Updated</span>
               <span class="sheet-primary">${formatCompactRelativeTime(listing.updatedAt || listing.createdAt)}</span>
@@ -5183,7 +5164,6 @@
           <div>Layout</div>
           <div class="sheet-head-right">Price</div>
           <div class="sheet-head-right">Size</div>
-          <div>Status</div>
           <div class="sheet-head-right">Updated</div>
           <div class="sheet-head-right">Open</div>
         </div>
@@ -5217,14 +5197,6 @@
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Size</span>
               <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
-            </div>
-            <div class="sheet-col">
-              <span class="sheet-label">Status</span>
-              <div class="row-badge-stack">
-                <span class="badge badge-green">Public</span>
-                ${listing.status ? `<span class="badge badge-gold">${listing.status}</span>` : ''}
-                ${listing.isDistress ? '<span class="badge badge-hot">Distress</span>' : ''}
-              </div>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Updated</span>
@@ -5271,10 +5243,6 @@
             <div class="listing-title">
               <h3>${escapeHtml((listing.sourceType === 'lead' ? 'Requirement' : 'Listing'))} ${index + 1}</h3>
               <div class="muted">${escapeHtml(String(listing.purpose || '').toUpperCase() || '--')} | ${escapeHtml(getConnectorDisplayPropertyCategory(listing))} | ${escapeHtml(getConnectorDisplayUnitLayout(listing))}</div>
-            </div>
-            <div class="badges">
-              <span class="badge ${listing.isDistress ? 'badge-hot' : badgeClass(listing)}">${escapeHtml(badgeText(listing))}</span>
-              ${listing.status ? `<span class="badge badge-gold">${escapeHtml(listing.status)}</span>` : ''}
             </div>
           </div>
           <div class="detail-grid">
