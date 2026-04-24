@@ -2160,14 +2160,15 @@
         throw new Error('Admin login required.');
       }
 
-      const response = await fetchJsonWithTimeout('/api/toolkit', {
+      const response = await fetch('/api/toolkit', {
         method,
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
-      }, 6500);
+      });
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
