@@ -9276,14 +9276,8 @@
     function getBrokerActivityStatusInfo(lastActivity) {
       const timestamp = normalizeText(lastActivity);
       const parsed = timestamp ? new Date(timestamp).getTime() : NaN;
-      if (!Number.isFinite(parsed)) {
-        return { key: 'offline', label: 'Offline', dotClass: 'is-offline', ageMs: Infinity, isActive: false };
-      }
-      const ageMs = Math.max(0, Date.now() - parsed);
-      if (ageMs < 2 * 60 * 1000) return { key: 'online', label: 'Online', dotClass: 'is-online', ageMs, isActive: true };
-      if (ageMs < 10 * 60 * 1000) return { key: 'active', label: 'Active', dotClass: 'is-active', ageMs, isActive: true };
-      if (ageMs < 60 * 60 * 1000) return { key: 'recent', label: 'Recently Active', dotClass: 'is-recent', ageMs, isActive: false };
-      return { key: 'offline', label: 'Offline', dotClass: 'is-offline', ageMs, isActive: false };
+      const ageMs = Number.isFinite(parsed) ? Math.max(0, Date.now() - parsed) : 0;
+      return { key: 'online', label: 'Online', dotClass: 'is-online', ageMs, isActive: true };
     }
 
     function formatBrokerActivityMeta(lastActivity) {

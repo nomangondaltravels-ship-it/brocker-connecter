@@ -4652,17 +4652,7 @@
     }
 
     function getBrokerActivityStatusInfo(lastActivity) {
-      const timestamp = String(lastActivity || '').trim();
-      const parsed = timestamp ? new Date(timestamp).getTime() : NaN;
-      if (!Number.isFinite(parsed)) {
-        return { key: 'offline', label: 'Offline', dotClass: 'is-offline' };
-      }
-      const ageMs = Math.max(0, Date.now() - parsed);
-      const minutes = Math.max(1, Math.floor(ageMs / 60000));
-      if (ageMs < 2 * 60 * 1000) return { key: 'online', label: 'Online', dotClass: 'is-online' };
-      if (ageMs < 10 * 60 * 1000) return { key: 'active', label: `Active ${minutes} min ago`, dotClass: 'is-active' };
-      if (ageMs < 60 * 60 * 1000) return { key: 'recent', label: `Recently active ${minutes} min ago`, dotClass: 'is-recent' };
-      return { key: 'offline', label: 'Offline', dotClass: 'is-offline' };
+      return { key: 'online', label: 'Online', dotClass: 'is-online' };
     }
 
     function renderBrokerActivityLine(listing, brokerLabel = '') {
