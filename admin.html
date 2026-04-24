@@ -4457,7 +4457,12 @@
         const result = await requestToolkitAction('DELETE', {
           toolId,
           title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
-          url: document.getElementById(`toolkit-url-${toolId}`)?.value || ''
+          description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
+          category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
+          url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
+          logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
+          iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
+          sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0'
         });
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;

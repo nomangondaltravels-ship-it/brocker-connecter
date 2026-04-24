@@ -197,32 +197,38 @@ async function buildBrokerToolkitPayload(context) {
   };
 }
 
-async function buildAdminToolkitPayload(context) {
+async function buildAdminToolkitPayload(context, options = {}) {
+  const useTimeouts = options.useTimeouts !== false;
   const fallbackTools = getDefaultToolkitRows();
-  const toolsResult = await withTimeout(
-    signal => listToolkitTools(context, { includeInactive: true, signal }).catch(error => {
-      if (isToolkitRelationError(error)) return null;
-      throw error;
-    }),
-    TOOLKIT_ROUTE_TIMEOUT_MS,
-    null
-  );
+  const loadTools = signal => listToolkitTools(context, { includeInactive: true, signal }).catch(error => {
+    if (isToolkitRelationError(error)) return null;
+    throw error;
+  });
+  const toolsResult = useTimeouts
+    ? await withTimeout(loadTools, TOOLKIT_ROUTE_TIMEOUT_MS, null)
+    : await loadTools();
 
   const mergedTools = mergeToolkitRows(
     Array.isArray(toolsResult) ? toolsResult : [],
     toolsResult === null ? fallbackTools : []
   );
 
-  const analyticsResult = await withTimeout(async signal => {
+  const loadAnalytics = async signal => {
     const [favorites, clicks] = await Promise.all([
       listAllToolkitFavorites(context, signal).catch(() => []),
       listToolkitClicks(context, signal).catch(() => [])
     ]);
     return { favorites, clicks };
-  }, TOOLKIT_ANALYTICS_TIMEOUT_MS, {
-    favorites: [],
-    clicks: []
-  });
+  };
+  const analyticsResult = useTimeouts
+    ? await withTimeout(loadAnalytics, TOOLKIT_ANALYTICS_TIMEOUT_MS, {
+        favorites: [],
+        clicks: []
+      })
+    : await loadAnalytics().catch(() => ({
+        favorites: [],
+        clicks: []
+      }));
 
   const analytics = buildToolkitAnalytics({
     tools: mergedTools,
@@ -365,7 +371,7 @@ async function createTool(request) {
     });
   }
 
-  return json(await buildAdminToolkitPayload(context));
+  return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
 }
 
 async function updateTool(request) {
@@ -407,17 +413,19 @@ async function updateTool(request) {
     });
   }
 
-  return json(await buildAdminToolkitPayload(context));
+  return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
 }
 
 async function deleteTool(request) {
   const context = await requireAdmin(request);
   const body = await request.json().catch(() => ({}));
   const toolId = normalizeText(body?.toolId || new URL(request.url).searchParams.get('toolId'));
+  const fallbackTitle = normalizeText(body?.title);
+  const fallbackUrl = normalizeText(body?.url);
   const existingTool = await findExistingToolkitTool(context, {
     toolId,
-    title: body?.title,
-    url: body?.url
+    title: fallbackTitle,
+    url: fallbackUrl
   });
 
   if (existingTool?.id) {
@@ -427,9 +435,50 @@ async function deleteTool(request) {
       table: 'toolkit_tools',
       filters: { id: existingTool.id }
     });
+  } else if (fallbackTitle) {
+    await supabaseInsert({
+      supabaseUrl: context.supabaseUrl,
+      serviceRoleKey: context.serviceRoleKey,
+      table: 'toolkit_tools',
+      payload: {
+        title: fallbackTitle,
+        description: normalizeText(body?.description) || 'Toolkit item hidden by admin.',
+        category: normalizeText(body?.category) || 'Company / Broker Tools',
+        url: fallbackUrl || '#',
+        logo_url: normalizeText(body?.logoUrl || body?.logo_url) || null,
+        icon_name: normalizeText(body?.iconName || body?.icon_name) || null,
+        is_active: false,
+        is_featured: false,
+        sort_order: Number.isFinite(Number(body?.sortOrder ?? body?.sort_order)) ? Number(body?.sortOrder ?? body?.sort_order) : 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    }).catch(async error => {
+      const message = String(error?.message || '').toLowerCase();
+      if (!message.includes('duplicate')) {
+        throw error;
+      }
+      const matchedTool = await findExistingToolkitTool(context, {
+        title: fallbackTitle,
+        url: fallbackUrl
+      });
+      if (matchedTool?.id) {
+        await supabasePatch({
+          supabaseUrl: context.supabaseUrl,
+          serviceRoleKey: context.serviceRoleKey,
+          table: 'toolkit_tools',
+          filters: { id: matchedTool.id },
+          payload: {
+            is_active: false,
+            updated_at: new Date().toISOString()
+          }
+        });
+      }
+      return [];
+    });
   }
 
-  return json(await buildAdminToolkitPayload(context));
+  return json(await buildAdminToolkitPayload(context, { useTimeouts: false }));
 }
 
 export default async function handler(request) {
