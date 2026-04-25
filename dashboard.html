@@ -2608,6 +2608,10 @@
       background: rgba(245, 158, 11, 0.08);
     }
 
+    .workflow-alert-item.is-read:not(.is-selected) {
+      opacity: 0.78;
+    }
+
     .workflow-alert-item strong {
       display: block;
       margin-bottom: 4px;
@@ -6608,6 +6612,7 @@
     const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const DASHBOARD_NOTIFICATIONS_SEEN_KEY = 'broker_dashboard_notifications_seen';
+    const DASHBOARD_MATCHES_SEEN_KEY = 'broker_dashboard_matches_seen';
 
     function clearBrokerClientSessionStorage() {
       localStorage.removeItem('broker_session_token');
@@ -6708,7 +6713,9 @@
       pendingRulesShareAction: null,
       notificationPanelOpen: false,
       activeNotificationKey: '',
-      notificationSeenSignature: '',
+      notificationSeenKeys: [],
+      activeMatchKey: '',
+      matchSeenKeys: [],
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
@@ -12174,18 +12181,23 @@
       });
     }
 
-    function getDashboardNotificationStorageKey() {
+    function getDashboardNotificationStorageKey(kind = 'notifications') {
       const brokerKey = String(
         state.broker?.id
         || state.broker?.brokerId
         || state.broker?.email
         || 'default'
       ).trim().toLowerCase();
-      return `${DASHBOARD_NOTIFICATIONS_SEEN_KEY}:${brokerKey || 'default'}`;
+      const keyPrefix = kind === 'matches' ? DASHBOARD_MATCHES_SEEN_KEY : DASHBOARD_NOTIFICATIONS_SEEN_KEY;
+      return `${keyPrefix}:${brokerKey || 'default'}`;
     }
 
     function getNotificationItems() {
       return Array.isArray(state.notifications) ? state.notifications : [];
+    }
+
+    function getMatchItems() {
+      return Array.isArray(state.aiMatches) ? state.aiMatches : [];
     }
 
     function getNotificationKey(item, index = 0) {
@@ -12197,8 +12209,41 @@
       ].join('|');
     }
 
-    function getNotificationSignature(list = getNotificationItems()) {
-      return list.map((item, index) => getNotificationKey(item, index)).join('||');
+    function getMatchKey(item, index = 0) {
+      return [
+        String(item?.requirementId || '').trim(),
+        String(item?.propertyId || '').trim(),
+        String(item?.status || '').trim(),
+        String(item?.matchReason || '').trim(),
+        String(index).trim()
+      ].join('|');
+    }
+
+    function getSeenKeys(kind = 'notifications') {
+      const raw = String(localStorage.getItem(getDashboardNotificationStorageKey(kind)) || '').trim();
+      if (!raw) return [];
+      if (raw.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed.filter(item => String(item || '').trim()) : [];
+        } catch (error) {
+          return [];
+        }
+      }
+      if (raw.includes('||')) {
+        return raw.split('||').map(item => String(item || '').trim()).filter(Boolean);
+      }
+      return [raw];
+    }
+
+    function setSeenKeys(kind = 'notifications', keys = []) {
+      const normalized = [...new Set((Array.isArray(keys) ? keys : []).map(item => String(item || '').trim()).filter(Boolean))];
+      localStorage.setItem(getDashboardNotificationStorageKey(kind), JSON.stringify(normalized));
+      if (kind === 'matches') {
+        state.matchSeenKeys = normalized;
+        return;
+      }
+      state.notificationSeenKeys = normalized;
     }
 
     function hasNotificationWithKey(key) {
@@ -12206,34 +12251,82 @@
       return getNotificationItems().some((item, index) => getNotificationKey(item, index) === key);
     }
 
+    function hasMatchWithKey(key) {
+      if (!key) return false;
+      return getMatchItems().some((item, index) => getMatchKey(item, index) === key);
+    }
+
+    function isNotificationRead(key) {
+      return state.notificationSeenKeys.includes(key);
+    }
+
+    function isMatchRead(key) {
+      return state.matchSeenKeys.includes(key);
+    }
+
+    function getUnreadCount(items, keyBuilder, seenKeys = []) {
+      const seenSet = new Set(seenKeys);
+      return items.reduce((count, item, index) => (
+        seenSet.has(keyBuilder(item, index)) ? count : count + 1
+      ), 0);
+    }
+
     function syncNotificationIndicator() {
       const items = getNotificationItems();
-      const signature = getNotificationSignature(items);
-      const seenSignature = String(localStorage.getItem(getDashboardNotificationStorageKey()) || '').trim();
+      const matches = getMatchItems();
+      state.notificationSeenKeys = getSeenKeys('notifications');
+      state.matchSeenKeys = getSeenKeys('matches');
+      const unreadNotifications = getUnreadCount(items, getNotificationKey, state.notificationSeenKeys);
+      const unreadMatches = getUnreadCount(matches, getMatchKey, state.matchSeenKeys);
       const button = document.getElementById('alertsButton');
       const dot = document.getElementById('notificationUnreadDot');
       const meta = document.getElementById('notificationPanelMeta');
-      state.notificationSeenSignature = seenSignature;
       if (!hasNotificationWithKey(state.activeNotificationKey)) {
         state.activeNotificationKey = items.length ? getNotificationKey(items[0], 0) : '';
       }
+      if (!hasMatchWithKey(state.activeMatchKey)) {
+        state.activeMatchKey = matches.length ? getMatchKey(matches[0], 0) : '';
+      }
       if (button) {
-        button.setAttribute('aria-label', items.length ? `Notifications ${items.length}` : 'Notifications');
+        button.setAttribute('aria-label', unreadNotifications ? `Notifications ${unreadNotifications}` : 'Notifications');
+      }
+      const countNode = document.getElementById('notificationCountBadge');
+      const workflowCountNode = document.getElementById('workflowAlertsCount');
+      const workflowMatchesNode = document.getElementById('workflowMatchesCount');
+      if (countNode) countNode.textContent = String(unreadNotifications);
+      if (workflowCountNode) workflowCountNode.textContent = String(unreadNotifications);
+      if (workflowMatchesNode) workflowMatchesNode.textContent = String(unreadMatches);
+      if (countNode) {
+        countNode.classList.toggle('hidden', unreadNotifications < 1);
       }
       if (meta) {
-        meta.textContent = items.length ? `${items.length} notification${items.length === 1 ? '' : 's'}` : 'No notifications';
+        meta.textContent = items.length
+          ? `${unreadNotifications} new of ${items.length} notification${items.length === 1 ? '' : 's'}`
+          : 'No notifications';
       }
       if (dot) {
-        const hasUnread = Boolean(signature) && signature !== seenSignature;
-        dot.classList.toggle('hidden', !hasUnread);
+        dot.classList.toggle('hidden', unreadNotifications < 1);
       }
     }
 
+    function markNotificationRead(notificationKey = '') {
+      const key = String(notificationKey || '').trim();
+      if (!key) return;
+      const nextKeys = [...new Set([...state.notificationSeenKeys, key])];
+      setSeenKeys('notifications', nextKeys);
+    }
+
     function markNotificationsSeen() {
-      const signature = getNotificationSignature();
-      localStorage.setItem(getDashboardNotificationStorageKey(), signature);
-      state.notificationSeenSignature = signature;
+      const keys = getNotificationItems().map((item, index) => getNotificationKey(item, index));
+      setSeenKeys('notifications', keys);
       syncNotificationIndicator();
+    }
+
+    function markMatchRead(matchKey = '') {
+      const key = String(matchKey || '').trim();
+      if (!key) return;
+      const nextKeys = [...new Set([...state.matchSeenKeys, key])];
+      setSeenKeys('matches', nextKeys);
     }
 
     function closeNotificationPanel() {
@@ -12275,9 +12368,37 @@
     function openWorkflowNotification(notificationKey = '') {
       if (notificationKey) {
         state.activeNotificationKey = notificationKey;
+        markNotificationRead(notificationKey);
       }
-      markNotificationsSeen();
       focusWorkflowAlerts();
+    }
+
+    function handleWorkflowMatchKeydown(event, element) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openWorkflowMatchFromElement(element);
+      }
+    }
+
+    function openWorkflowMatchFromElement(element) {
+      const key = String(element?.dataset?.matchKey || '').trim();
+      openWorkflowMatch(key);
+    }
+
+    function openWorkflowMatch(matchKey = '') {
+      if (matchKey) {
+        state.activeMatchKey = matchKey;
+        markMatchRead(matchKey);
+      }
+      renderWorkflowAlerts();
+      const card = document.getElementById('workflowMatchesCard');
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (card) {
+        card.classList.add('is-highlighted');
+        window.setTimeout(() => {
+          card.classList.remove('is-highlighted');
+        }, 1800);
+      }
     }
 
     function focusWorkflowAlerts() {
@@ -13439,9 +13560,10 @@
       return items.slice(0, limit).map((item, index) => {
         const notificationKey = getNotificationKey(item, index);
         const isSelected = notificationKey === state.activeNotificationKey;
+        const isRead = isNotificationRead(notificationKey);
         return `
           <div
-            class="workflow-alert-item is-clickable ${isSelected ? 'is-selected' : ''}"
+            class="workflow-alert-item is-clickable ${isSelected ? 'is-selected' : ''} ${isRead ? 'is-read' : ''}"
             data-notification-key="${escapeHtml(notificationKey)}"
             role="button"
             tabindex="0"
@@ -13461,18 +13583,10 @@
       const panelListTarget = document.getElementById('notificationPanelList');
       const matchesTarget = document.getElementById('workflowMatchesList');
       const notifications = getNotificationItems();
-      const alertCount = notifications.length;
-      const aiMatches = Array.isArray(state.aiMatches) ? state.aiMatches : [];
-      const matchCount = aiMatches.length;
-      const countNode = document.getElementById('notificationCountBadge');
-      const workflowCountNode = document.getElementById('workflowAlertsCount');
-      const workflowMatchesNode = document.getElementById('workflowMatchesCount');
+      const aiMatches = getMatchItems();
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.debug('matchCount value:', matchCount);
+        console.debug('matchCount value:', aiMatches.length);
       }
-      if (countNode) countNode.textContent = String(alertCount);
-      if (workflowCountNode) workflowCountNode.textContent = String(alertCount);
-      if (workflowMatchesNode) workflowMatchesNode.textContent = String(matchCount);
 
       const notificationsMarkup = renderNotificationAlertItems(notifications, 8);
       if (alertsTarget) {
@@ -13484,8 +13598,12 @@
       syncNotificationIndicator();
 
       if (matchesTarget) {
-        matchesTarget.innerHTML = matchCount
+        matchesTarget.innerHTML = aiMatches.length
           ? aiMatches.slice(0, 6).map(match => {
+              const matchIndex = aiMatches.indexOf(match);
+              const matchKey = getMatchKey(match, matchIndex);
+              const isSelected = matchKey === state.activeMatchKey;
+              const isRead = isMatchRead(matchKey);
               const lead = state.leads.find(item => item.id === match.requirementId);
               const property = state.properties.find(item => item.id === match.propertyId);
               const summaryBits = [
@@ -13493,7 +13611,14 @@
                 lead?.propertyType || property?.propertyType || ''
               ].filter(Boolean).join(' | ');
               return `
-                <div class="workflow-alert-item">
+                <div
+                  class="workflow-alert-item is-clickable ${isSelected ? 'is-selected' : ''} ${isRead ? 'is-read' : ''}"
+                  data-match-key="${escapeHtml(matchKey)}"
+                  role="button"
+                  tabindex="0"
+                  onclick="openWorkflowMatchFromElement(this)"
+                  onkeydown="handleWorkflowMatchKeydown(event, this)"
+                >
                   <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
                   <div class="muted">Lead #${escapeHtml(match.requirementId)} &lt;-&gt; Listing #${escapeHtml(match.propertyId)}</div>
                   <div class="muted">${escapeHtml(match.matchReason || '')}</div>
