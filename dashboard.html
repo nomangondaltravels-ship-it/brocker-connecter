@@ -4301,6 +4301,7 @@
       padding: 14px 16px;
       display: grid;
       gap: 12px;
+      align-content: start;
     }
 
     .overview-list-head {
@@ -4327,6 +4328,9 @@
     .overview-mini-list {
       display: grid;
       gap: 8px;
+      align-content: start;
+      align-self: start;
+      min-height: 0;
     }
 
     .overview-mini-row {
@@ -15111,9 +15115,9 @@
     function renderOverviewMiniList(items, type) {
       const records = Array.isArray(items) ? items : [];
       if (!records.length) {
-        return '<div class="empty">No records to show right now.</div>';
+        return '<div class="overview-mini-list"><div class="empty">No records to show right now.</div></div>';
       }
-      return records.map(item => {
+      return `<div class="overview-mini-list">${records.slice(0, 5).map(item => {
         const isLead = type === 'lead';
         const isDistress = type === 'distress';
         const title = isLead
@@ -15139,7 +15143,7 @@
             <small>${escapeHtml(tertiary || '--')}</small>
           </div>
         `;
-      }).join('');
+      }).join('')}</div>`;
     }
 
     function renderOverview() {
