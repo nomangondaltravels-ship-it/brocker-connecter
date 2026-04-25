@@ -652,7 +652,7 @@
     }
 
     #authModal .auth-field-block {
-      display: grid !important;
+      display: grid;
       gap: 10px !important;
       min-width: 0 !important;
     }
@@ -874,6 +874,17 @@
     #authModal .auth-card[data-mode="signin"] #passwordWrap,
     #authModal .auth-card[data-mode="forgot"] #emailWrap {
       grid-column: 1 / -1;
+    }
+
+    #authModal #fullNameWrap[style*="display: none"],
+    #authModal #companyWrap[style*="display: none"],
+    #authModal #brokerIdWrap[style*="display: none"],
+    #authModal #mobileWrap[style*="display: none"],
+    #authModal #emailWrap[style*="display: none"],
+    #authModal #passwordWrap[style*="display: none"],
+    #authModal #confirmPasswordWrap[style*="display: none"],
+    #authModal #forgotPasswordRow[style*="display: none"] {
+      display: none !important;
     }
 
     @media (max-width: 768px) {
