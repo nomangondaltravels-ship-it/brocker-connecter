@@ -713,6 +713,18 @@
       color: var(--text) !important;
     }
 
+    #authModal .auth-input-shell input:-webkit-autofill,
+    #authModal .auth-input-shell input:-webkit-autofill:hover,
+    #authModal .auth-input-shell input:-webkit-autofill:focus,
+    #authModal .auth-input-shell input:-webkit-autofill:active {
+      -webkit-text-fill-color: var(--text) !important;
+      caret-color: var(--text) !important;
+      box-shadow: 0 0 0 1000px rgba(255,255,255,0.98) inset !important;
+      -webkit-box-shadow: 0 0 0 1000px rgba(255,255,255,0.98) inset !important;
+      border-radius: 12px !important;
+      transition: background-color 99999s ease-out 0s;
+    }
+
     #authModal .auth-company-combobox {
       position: relative;
       display: grid;
