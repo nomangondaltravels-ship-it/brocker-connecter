@@ -5631,13 +5631,138 @@
       display: none;
     }
 
+    .workflow-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1615;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .workflow-modal-backdrop.hidden {
+      display: none !important;
+    }
+
+    .workflow-modal-card {
+      width: min(760px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+    }
+
+    .workflow-modal-shell {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .workflow-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .workflow-modal-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(200, 169, 107, 0.24);
+      background: rgba(200, 169, 107, 0.08);
+      color: #8f6a12;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .workflow-modal-head h3 {
+      margin: 10px 0 0;
+      color: #0F172A;
+      font-size: 1.08rem;
+    }
+
+    .workflow-modal-copy {
+      margin: 6px 0 0;
+      color: #64748B;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .workflow-modal-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .workflow-modal-section {
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      background: #FFFFFF;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    }
+
+    .workflow-modal-section h4 {
+      margin: 0;
+      color: #0F172A;
+      font-size: 0.98rem;
+    }
+
+    .workflow-related-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-related-row {
+      border: 1px solid #E5E7EB;
+      border-radius: 14px;
+      background: #F8FAFC;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .workflow-related-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .workflow-related-copy strong {
+      color: #0F172A;
+      font-size: 0.94rem;
+    }
+
+    .workflow-related-copy span,
+    .workflow-related-copy small {
+      color: #64748B;
+      line-height: 1.5;
+    }
+
+    .workflow-modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
     .rules-prompt-grid {
       display: grid;
       gap: 12px;
     }
 
     body.complaint-modal-open,
-    body.rules-prompt-open {
+    body.rules-prompt-open,
+    body.workflow-modal-open {
       overflow: hidden;
     }
 
@@ -6543,6 +6668,12 @@
 
   <div class="rules-prompt-backdrop hidden" id="dashboardRulesPromptBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardRulesPromptTitle">
     <div class="rules-prompt-card" id="dashboardRulesPromptCard"></div>
+  </div>
+
+  <div class="workflow-modal-backdrop hidden" id="dashboardWorkflowModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardWorkflowModalTitle" onclick="if(event.target===this)closeWorkflowContextModal()">
+    <div class="workflow-modal-card" id="dashboardWorkflowModalCard">
+      <div id="dashboardWorkflowModalContent"></div>
+    </div>
   </div>
 
 <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
@@ -11619,6 +11750,7 @@
         closeNotificationPanel();
         closeAccountMenu();
         closeBrokerActivityMenu();
+        closeWorkflowContextModal();
       }
     });
 
@@ -12370,7 +12502,10 @@
         state.activeNotificationKey = notificationKey;
         markNotificationRead(notificationKey);
       }
-      focusWorkflowAlerts();
+      closeNotificationPanel();
+      openSection('overview');
+      renderWorkflowAlerts();
+      openWorkflowContextModal(buildWorkflowNotificationContext(state.activeNotificationKey));
     }
 
     function handleWorkflowMatchKeydown(event, element) {
@@ -12390,15 +12525,10 @@
         state.activeMatchKey = matchKey;
         markMatchRead(matchKey);
       }
+      closeNotificationPanel();
+      openSection('overview');
       renderWorkflowAlerts();
-      const card = document.getElementById('workflowMatchesCard');
-      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (card) {
-        card.classList.add('is-highlighted');
-        window.setTimeout(() => {
-          card.classList.remove('is-highlighted');
-        }, 1800);
-      }
+      openWorkflowContextModal(buildWorkflowMatchContext(state.activeMatchKey));
     }
 
     function focusWorkflowAlerts() {
@@ -12413,6 +12543,249 @@
           card.classList.remove('is-highlighted');
         }, 1800);
       }
+    }
+
+    function getLeadById(id) {
+      return (Array.isArray(state.leads) ? state.leads : []).find(item => String(item.id) === String(id)) || null;
+    }
+
+    function getPropertyById(id) {
+      return (Array.isArray(state.properties) ? state.properties : []).find(item => String(item.id) === String(id)) || null;
+    }
+
+    function openLeadRecordFromWorkflow(id) {
+      closeWorkflowContextModal();
+      openLeadRecord(id);
+    }
+
+    function openPropertyRecordFromWorkflow(id, section = 'properties') {
+      closeWorkflowContextModal();
+      openPropertyRecord(id, section);
+    }
+
+    function renderWorkflowLeadSummary(lead) {
+      if (!lead) {
+        return '<div class="empty">Lead details are not available for this notification.</div>';
+      }
+      return `
+        <div class="detail-grid">
+          <div class="detail-cell"><small>Intent</small><strong>${escapeHtml(getLeadIntentText(lead) || '--')}</strong></div>
+          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
+          <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
+          <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong></div>
+          <div class="detail-cell"><small>Status</small><strong>${escapeHtml(formatStatusLabel(lead.status || 'new'))}</strong></div>
+        </div>
+      `;
+    }
+
+    function renderWorkflowPropertySummary(property) {
+      if (!property) {
+        return '<div class="empty">Listing details are not available for this notification.</div>';
+      }
+      return `
+        <div class="detail-grid">
+          <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong></div>
+          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
+          <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(property.buildingName || '--')}</strong></div>
+          <div class="detail-cell"><small>Price</small><strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong></div>
+          <div class="detail-cell"><small>Status</small><strong>${escapeHtml(formatStatusLabel(property.status || 'available'))}</strong></div>
+        </div>
+      `;
+    }
+
+    function renderWorkflowLeadMatchRows(lead) {
+      const matches = Array.isArray(lead?.matchingListings) ? lead.matchingListings : [];
+      if (!matches.length) {
+        return '<div class="empty">No linked listing details are available right now.</div>';
+      }
+      return `
+        <div class="workflow-related-list">
+          ${matches.slice(0, 6).map(match => {
+            const property = getPropertyById(match.id);
+            const targetSection = property?.isDistress ? 'distress' : 'properties';
+            return `
+              <div class="workflow-related-row">
+                <div class="workflow-related-copy">
+                  <strong>${escapeHtml(`${match.confidence === 'strong' ? 'Strong Match' : 'Partial Match'} | Listing #${match.id}`)}</strong>
+                  <span>${escapeHtml(joinDisplayParts([match.propertyType, match.location, match.price]))}</span>
+                  <small>${escapeHtml(match.matchReason || '')}</small>
+                </div>
+                <div class="workflow-modal-actions">
+                  <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(match.id)}, '${targetSection}')">Open Listing</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderWorkflowPropertyMatchRows(property) {
+      const matches = Array.isArray(property?.matchingLeads) ? property.matchingLeads : [];
+      if (!matches.length) {
+        return '<div class="empty">No linked lead details are available right now.</div>';
+      }
+      return `
+        <div class="workflow-related-list">
+          ${matches.slice(0, 6).map(match => `
+            <div class="workflow-related-row">
+              <div class="workflow-related-copy">
+                <strong>${escapeHtml(`${match.confidence === 'strong' ? 'Strong Match' : 'Partial Match'} | Lead #${match.id}`)}</strong>
+                <span>${escapeHtml(joinDisplayParts([formatStatusLabel(match.clientPurpose), match.propertyType, match.location, formatBudgetLabel(match.budget)]))}</span>
+                <small>${escapeHtml(match.matchReason || '')}</small>
+              </div>
+              <div class="workflow-modal-actions">
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(match.id)})">Open Requirement</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function buildWorkflowNotificationContext(notificationKey = '') {
+      const notifications = getNotificationItems();
+      const item = notifications.find((entry, index) => getNotificationKey(entry, index) === notificationKey) || null;
+      if (!item) {
+        return {
+          kicker: 'Notification',
+          title: 'Notification unavailable',
+          copy: 'This notification could not be opened right now.',
+          sections: [],
+          actions: []
+        };
+      }
+      const relatedType = String(item.relatedSourceType || '').trim().toLowerCase();
+      const relatedId = item.relatedSourceId;
+      const lead = relatedType === 'lead' ? getLeadById(relatedId) : null;
+      const property = relatedType === 'property' ? getPropertyById(relatedId) : null;
+      const sections = [];
+      const actions = [];
+
+      if (lead) {
+        sections.push({
+          title: 'Lead Details',
+          body: renderWorkflowLeadSummary(lead)
+        });
+        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>`);
+        if (String(item.type || '').toLowerCase() === 'match') {
+          sections.push({
+            title: 'Matching Listings',
+            body: renderWorkflowLeadMatchRows(lead)
+          });
+        }
+      }
+
+      if (property) {
+        sections.push({
+          title: property.isDistress ? 'Distress Listing Details' : 'Listing Details',
+          body: renderWorkflowPropertySummary(property)
+        });
+        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>`);
+        if (String(item.type || '').toLowerCase() === 'match') {
+          sections.push({
+            title: 'Matching Requirements',
+            body: renderWorkflowPropertyMatchRows(property)
+          });
+        }
+      }
+
+      if (!sections.length) {
+        sections.push({
+          title: 'Notification Details',
+          body: `<div class="detail-note">${escapeHtml(item.message || 'No additional details available.')}</div>`
+        });
+      }
+
+      return {
+        kicker: 'Workflow Notification',
+        title: item.title || 'Notification',
+        copy: item.message || 'Review the related workflow item and continue where needed.',
+        sections,
+        actions
+      };
+    }
+
+    function buildWorkflowMatchContext(matchKey = '') {
+      const matches = getMatchItems();
+      const match = matches.find((entry, index) => getMatchKey(entry, index) === matchKey) || null;
+      const lead = match ? getLeadById(match.requirementId) : null;
+      const property = match ? getPropertyById(match.propertyId) : null;
+      if (!match) {
+        return {
+          kicker: 'Match Opportunity',
+          title: 'Match unavailable',
+          copy: 'This match could not be opened right now.',
+          sections: [],
+          actions: []
+        };
+      }
+      return {
+        kicker: 'Match Opportunity',
+        title: match.status === 'strong' ? 'Strong Match' : 'Partial Match',
+        copy: match.matchReason || 'Open either side of this match to continue your workflow.',
+        sections: [
+          {
+            title: 'Lead Details',
+            body: renderWorkflowLeadSummary(lead)
+          },
+          {
+            title: property?.isDistress ? 'Matching Distress Listing' : 'Matching Listing',
+            body: renderWorkflowPropertySummary(property)
+          }
+        ],
+        actions: [
+          lead ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>` : '',
+          property ? `<button class="btn btn-primary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>` : ''
+        ].filter(Boolean)
+      };
+    }
+
+    function renderWorkflowContextModal(context) {
+      const sections = Array.isArray(context?.sections) ? context.sections : [];
+      const actions = Array.isArray(context?.actions) ? context.actions.filter(Boolean) : [];
+      return `
+        <div class="workflow-modal-shell">
+          <div class="workflow-modal-head">
+            <div>
+              <div class="workflow-modal-kicker">${escapeHtml(context?.kicker || 'Notification')}</div>
+              <h3 id="dashboardWorkflowModalTitle">${escapeHtml(context?.title || 'Workflow details')}</h3>
+              <p class="workflow-modal-copy">${escapeHtml(context?.copy || 'Review the details below.')}</p>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeWorkflowContextModal()">Close</button>
+          </div>
+          <div class="workflow-modal-grid">
+            ${sections.map(section => `
+              <div class="workflow-modal-section">
+                <h4>${escapeHtml(section.title || 'Details')}</h4>
+                ${section.body || '<div class="empty">No details available.</div>'}
+              </div>
+            `).join('')}
+          </div>
+          <div class="workflow-modal-actions">
+            ${actions.join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function openWorkflowContextModal(context) {
+      const backdrop = document.getElementById('dashboardWorkflowModalBackdrop');
+      const content = document.getElementById('dashboardWorkflowModalContent');
+      if (!backdrop || !content) return;
+      content.innerHTML = renderWorkflowContextModal(context);
+      backdrop.classList.remove('hidden');
+      document.body.classList.add('workflow-modal-open');
+    }
+
+    function closeWorkflowContextModal() {
+      const backdrop = document.getElementById('dashboardWorkflowModalBackdrop');
+      const content = document.getElementById('dashboardWorkflowModalContent');
+      if (backdrop) backdrop.classList.add('hidden');
+      if (content) content.innerHTML = '';
+      document.body.classList.remove('workflow-modal-open');
     }
 
     function openOverviewMetric(metricKey) {
