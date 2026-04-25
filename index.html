@@ -2882,10 +2882,20 @@
       }
     };
 
-    const CONNECTOR_PURPOSE_OPTIONS = Object.freeze([
-      { value: 'rent', label: 'Rent' },
-      { value: 'sale', label: 'Sale' }
-    ]);
+    const CONNECTOR_PURPOSE_OPTIONS = Object.freeze({
+      requirements: [
+        { value: 'rent', label: 'Rent' },
+        { value: 'buy', label: 'Buy' }
+      ],
+      marketplace: [
+        { value: 'rent', label: 'Rent' },
+        { value: 'sale', label: 'Sale' }
+      ],
+      'distress-deals': [
+        { value: 'rent', label: 'Rent' },
+        { value: 'sale', label: 'Sale' }
+      ]
+    });
 
     function normalizeTaxonomyToken(value) {
       return String(value || '')
@@ -3063,8 +3073,11 @@
       return `${percent}% below market`;
     }
 
-    function getConnectorTaxonomyOptions(field) {
-      if (field === 'purpose') return CONNECTOR_PURPOSE_OPTIONS;
+    function getConnectorTaxonomyOptions(field, sectionName = state.activeSection) {
+      if (field === 'purpose') {
+        const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+        return CONNECTOR_PURPOSE_OPTIONS[normalizedSection] || CONNECTOR_PURPOSE_OPTIONS.requirements;
+      }
       if (field === 'propertyCategory') {
         return CONNECTOR_PROPERTY_CATEGORY_OPTIONS.map(value => ({ value, label: value }));
       }
@@ -3077,21 +3090,25 @@
       return [];
     }
 
-    function getConnectorOptionLabel(field, value) {
-      const option = getConnectorTaxonomyOptions(field).find(item => item.value === value);
+    function getConnectorOptionLabel(field, value, sectionName = state.activeSection) {
+      const option = getConnectorTaxonomyOptions(field, sectionName).find(item => item.value === value);
       if (option?.label) return option.label;
       return String(value || '').trim();
     }
 
-    function normalizeConnectorPurpose(value, sourceType = '') {
+    function normalizeConnectorPurpose(value, sourceType = '', sectionName = state.activeSection) {
       const normalized = (CORE_TAXONOMY.aliases?.purposes || {})[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
       if (!normalized) return '';
-      if (normalized === 'buy') return 'sale';
-      return ['rent', 'sale'].includes(normalized) ? normalized : '';
+      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+      if (sourceType === 'lead' && normalized === 'sale') return 'buy';
+      if (normalized === 'buy' && sourceType !== 'lead') {
+        return normalizedSection === 'requirements' ? 'buy' : 'sale';
+      }
+      return ['rent', 'buy', 'sale'].includes(normalized) ? normalized : '';
     }
 
     function getConnectorPublicPurposeValue(record = {}) {
-      return normalizeConnectorPurpose(record?.purpose, record?.sourceType) || '';
+      return normalizeConnectorPurpose(record?.purpose, record?.sourceType, record?.sourceType === 'lead' ? 'requirements' : 'marketplace') || '';
     }
 
     function getConnectorPublicPurposeLabel(record = {}) {
@@ -3129,21 +3146,34 @@
       );
     }
 
-    function getConnectorCanonicalFieldValue(field, listing) {
-      if (field === 'purpose') return normalizeConnectorPurpose(listing?.purpose, listing?.sourceType);
+    function getConnectorCanonicalFieldValue(field, listing, sectionName = state.activeSection) {
+      if (field === 'purpose') return normalizeConnectorPurpose(listing?.purpose, listing?.sourceType, sectionName);
       if (field === 'propertyCategory') return normalizeConnectorPropertyCategory(getConnectorDisplayPropertyCategory(listing));
       if (field === 'unitLayout') return normalizeConnectorUnitLayout(getConnectorDisplayUnitLayout(listing));
       if (field === 'location') return normalizeConnectorLocation(listing?.location);
       return String(listing?.[field] || '').trim();
     }
 
+    function getListingsForActiveConnectorSection(sectionName = state.activeSection) {
+      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+      if (normalizedSection === 'requirements') {
+        return state.listings.filter(listing => listing?.sourceType === 'lead');
+      }
+      if (normalizedSection === 'distress-deals') {
+        return state.listings.filter(listing => listing?.sourceType === 'property' && listing?.isDistress);
+      }
+      return state.listings.filter(listing => listing?.sourceType === 'property');
+    }
+
     function getConnectorFilterOptions(field) {
-      const baseOptions = getConnectorTaxonomyOptions(field);
+      const baseOptions = getConnectorTaxonomyOptions(field, state.activeSection);
       const baseValues = baseOptions.map(option => option.value);
-      const dynamicValues = state.listings.map(listing => getConnectorCanonicalFieldValue(field, listing)).filter(Boolean);
+      const dynamicValues = getListingsForActiveConnectorSection(state.activeSection)
+        .map(listing => getConnectorCanonicalFieldValue(field, listing, state.activeSection))
+        .filter(Boolean);
       return dedupeConnectorValues([...baseValues, ...dynamicValues]).map(value => ({
         value,
-        label: getConnectorOptionLabel(field, value)
+        label: getConnectorOptionLabel(field, value, state.activeSection)
       }));
     }
 
@@ -4188,6 +4218,7 @@
       document.querySelector(`.menu-btn[data-target="${targetSection}"]`)?.classList.add('active');
       document.querySelector(`.section-switch-btn[data-target="${targetSection}"]`)?.classList.add('is-active');
       mountConnectorToolbar(targetSection);
+      populateConnectorFilterOptions();
       closeMenuDrawer();
       if (!preserveRevealParams) {
         clearMarketplaceRevealParams(targetSection);
@@ -4435,10 +4466,10 @@
 
     function getFallbackConnectorFilterOptions(field) {
       const values = dedupeConnectorValues(
-        state.listings
+        getListingsForActiveConnectorSection(state.activeSection)
           .map(listing => {
             try {
-              return getConnectorCanonicalFieldValue(field, listing);
+              return getConnectorCanonicalFieldValue(field, listing, state.activeSection);
             } catch (error) {
               return getFallbackConnectorFieldValue(field, listing);
             }
