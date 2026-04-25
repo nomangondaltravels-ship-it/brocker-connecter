@@ -826,10 +826,22 @@
     }
 
     .page-nav-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       min-height: 40px;
       padding: 0 12px;
       border-radius: 999px;
       font-size: 0.88rem;
+    }
+
+    .activity-brokers-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+      flex: 0 0 auto;
     }
 
     .top-actions .btn:not(.page-nav-btn):not(.menu-toggle) {
@@ -2452,8 +2464,7 @@
       </div>
       <div class="top-actions-wrap">
         <div class="top-actions">
-          <button class="btn btn-secondary page-nav-btn is-active" type="button" aria-current="page">Broker Connector Page</button>
-          <button class="btn btn-secondary page-nav-btn" id="dashboardBtn" type="button" onclick="handleBrokerDeskClick()">Broker Desk</button>
+          <button class="btn btn-secondary page-nav-btn" id="dashboardBtn" type="button" onclick="handleBrokerDeskClick()"><span class="activity-brokers-indicator" aria-hidden="true"></span><span>Broker Desk</span></button>
           <button class="btn btn-secondary menu-toggle" type="button" onclick="toggleMenuDrawer()">
             <span>Menu</span>
             <span class="menu-toggle-lines" aria-hidden="true"><span></span><span></span><span></span></span>
