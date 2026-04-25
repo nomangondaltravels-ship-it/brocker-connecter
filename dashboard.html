@@ -12332,6 +12332,10 @@
       return Array.isArray(state.notifications) ? state.notifications : [];
     }
 
+    function getWorkflowNotificationItems() {
+      return getNotificationItems().filter(item => String(item?.notificationType || '').trim().toLowerCase() !== 'match');
+    }
+
     function getMatchItems() {
       return Array.isArray(state.aiMatches) ? state.aiMatches : [];
     }
@@ -12409,10 +12413,12 @@
 
     function syncNotificationIndicator() {
       const items = getNotificationItems();
+      const workflowItems = getWorkflowNotificationItems();
       const matches = getMatchItems();
       state.notificationSeenKeys = getSeenKeys('notifications');
       state.matchSeenKeys = getSeenKeys('matches');
       const unreadNotifications = getUnreadCount(items, getNotificationKey, state.notificationSeenKeys);
+      const unreadWorkflowNotifications = getUnreadCount(workflowItems, getNotificationKey, state.notificationSeenKeys);
       const unreadMatches = getUnreadCount(matches, getMatchKey, state.matchSeenKeys);
       const button = document.getElementById('alertsButton');
       const dot = document.getElementById('notificationUnreadDot');
@@ -12430,7 +12436,7 @@
       const workflowCountNode = document.getElementById('workflowAlertsCount');
       const workflowMatchesNode = document.getElementById('workflowMatchesCount');
       if (countNode) countNode.textContent = String(unreadNotifications);
-      if (workflowCountNode) workflowCountNode.textContent = String(unreadNotifications);
+      if (workflowCountNode) workflowCountNode.textContent = String(unreadWorkflowNotifications);
       if (workflowMatchesNode) workflowMatchesNode.textContent = String(unreadMatches);
       if (countNode) {
         countNode.classList.toggle('hidden', unreadNotifications < 1);
@@ -12567,6 +12573,20 @@
       openPropertyRecord(id, section);
     }
 
+    function openBrokerConnectorFromWorkflow(section = 'marketplace', listingId = '') {
+      const normalizedSection = ({
+        'broker-requirements': 'requirements',
+        'broker-connector-listings': 'marketplace',
+        'distress-deals': 'distress-deals'
+      })[String(section || '').trim().toLowerCase()] || section || 'marketplace';
+      const url = new URL('index.html', window.location.href);
+      url.searchParams.set('section', normalizedSection);
+      if (listingId) {
+        url.searchParams.set('listing', String(listingId));
+      }
+      window.open(url.toString(), '_blank', 'noopener');
+    }
+
     function renderWorkflowLeadSummary(lead) {
       if (!lead) {
         return '<div class="empty">Lead details are not available for this notification.</div>';
@@ -12611,16 +12631,18 @@
             const targetSection = property?.isDistress ? 'distress' : 'properties';
             return `
               <div class="workflow-related-row">
-                <div class="workflow-related-copy">
-                  <strong>${escapeHtml(`${match.confidence === 'strong' ? 'Strong Match' : 'Partial Match'} | Listing #${match.id}`)}</strong>
-                  <span>${escapeHtml(joinDisplayParts([match.propertyType, match.location, match.price]))}</span>
-                  <small>${escapeHtml(match.matchReason || '')}</small>
-                </div>
-                <div class="workflow-modal-actions">
-                  <button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(match.id)}, '${targetSection}')">Open Listing</button>
-                </div>
+              <div class="workflow-related-copy">
+                <strong>${escapeHtml(`${match.confidence === 'strong' ? 'Strong Match' : 'Partial Match'} | Listing #${match.id}`)}</strong>
+                <span>${escapeHtml(joinDisplayParts([match.propertyType, match.location, match.price]))}</span>
+                <small>${escapeHtml(match.matchReason || '')}</small>
               </div>
-            `;
+              <div class="workflow-modal-actions">
+                ${match.isExternalPublic
+                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'marketplace')}', '${escapeHtml(match.id)}')">Open Broker Connector Page</button>`
+                  : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(match.id)}, '${targetSection}')">Open Listing</button>`}
+              </div>
+            </div>
+          `;
           }).join('')}
         </div>
       `;
@@ -12641,11 +12663,57 @@
                 <small>${escapeHtml(match.matchReason || '')}</small>
               </div>
               <div class="workflow-modal-actions">
-                <button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(match.id)})">Open Requirement</button>
+                ${match.isExternalPublic
+                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'requirements')}', '${escapeHtml(match.id)}')">Open Broker Connector Page</button>`
+                  : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(match.id)})">Open Requirement</button>`}
               </div>
             </div>
           `).join('')}
         </div>
+      `;
+    }
+
+    function getWorkflowMatchInternalLead(match) {
+      if (!match) return null;
+      return getLeadById(match.requirementId || (match.internalType === 'lead' ? match.internalId : null));
+    }
+
+    function getWorkflowMatchInternalProperty(match) {
+      if (!match) return null;
+      return getPropertyById(match.propertyId || (match.internalType === 'property' ? match.internalId : null));
+    }
+
+    function renderWorkflowExternalLeadSummary(match) {
+      if (!match) {
+        return '<div class="empty">Matching requirement details are not available right now.</div>';
+      }
+      return `
+        <div class="detail-grid">
+          <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(formatStatusLabel(match.counterpartPurpose || '--'))}</strong></div>
+          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Location</small><strong>${escapeHtml(match.counterpartLocation || '--')}</strong></div>
+          <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(match.counterpartBuilding || '--')}</strong></div>
+          <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(match.counterpartPriceLabel || '--')}</strong></div>
+          <div class="detail-cell"><small>Broker</small><strong>${escapeHtml(match.counterpartBrokerName || 'Broker')}</strong></div>
+        </div>
+        ${match.counterpartPublicNotes ? `<div class="detail-note">${escapeHtml(match.counterpartPublicNotes)}</div>` : ''}
+      `;
+    }
+
+    function renderWorkflowExternalPropertySummary(match) {
+      if (!match) {
+        return '<div class="empty">Matching listing details are not available right now.</div>';
+      }
+      return `
+        <div class="detail-grid">
+          <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(match.counterpartPurpose || '--'))}</strong></div>
+          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Location</small><strong>${escapeHtml(match.counterpartLocation || '--')}</strong></div>
+          <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(match.counterpartBuilding || '--')}</strong></div>
+          <div class="detail-cell"><small>Price</small><strong>${escapeHtml(match.counterpartPriceLabel || '--')}</strong></div>
+          <div class="detail-cell"><small>Broker</small><strong>${escapeHtml(match.counterpartBrokerName || 'Broker')}</strong></div>
+        </div>
+        ${match.counterpartPublicNotes ? `<div class="detail-note">${escapeHtml(match.counterpartPublicNotes)}</div>` : ''}
       `;
     }
 
@@ -12674,7 +12742,7 @@
           body: renderWorkflowLeadSummary(lead)
         });
         actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>`);
-        if (String(item.type || '').toLowerCase() === 'match') {
+        if (String(item.notificationType || '').toLowerCase() === 'match') {
           sections.push({
             title: 'Matching Listings',
             body: renderWorkflowLeadMatchRows(lead)
@@ -12688,7 +12756,7 @@
           body: renderWorkflowPropertySummary(property)
         });
         actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>`);
-        if (String(item.type || '').toLowerCase() === 'match') {
+        if (String(item.notificationType || '').toLowerCase() === 'match') {
           sections.push({
             title: 'Matching Requirements',
             body: renderWorkflowPropertyMatchRows(property)
@@ -12715,8 +12783,8 @@
     function buildWorkflowMatchContext(matchKey = '') {
       const matches = getMatchItems();
       const match = matches.find((entry, index) => getMatchKey(entry, index) === matchKey) || null;
-      const lead = match ? getLeadById(match.requirementId) : null;
-      const property = match ? getPropertyById(match.propertyId) : null;
+      const lead = getWorkflowMatchInternalLead(match);
+      const property = getWorkflowMatchInternalProperty(match);
       if (!match) {
         return {
           kicker: 'Match Opportunity',
@@ -12726,24 +12794,56 @@
           actions: []
         };
       }
+      const isLeadPrimary = String(match.internalType || '').trim().toLowerCase() === 'lead';
+      const visibilityScope = String(match.visibilityScope || '').trim().toLowerCase();
+      const copy = visibilityScope === 'private-pocket'
+        ? 'A shared public record matches your private / pocket record. Only you were notified so you can contact the other broker directly.'
+        : (match.matchReason || 'A shared public match is available on Broker Connector Page.');
+      const sections = [];
+      const actions = [];
+
+      if (lead) {
+        sections.push({
+          title: isLeadPrimary ? 'Your Requirement' : 'Matching Requirement',
+          body: renderWorkflowLeadSummary(lead)
+        });
+        if (isLeadPrimary) {
+          actions.push(`<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>`);
+        }
+      }
+
+      if (property) {
+        sections.push({
+          title: property?.isDistress ? (isLeadPrimary ? 'Matching Distress Listing' : 'Your Distress Listing') : (isLeadPrimary ? 'Matching Listing' : 'Your Listing'),
+          body: renderWorkflowPropertySummary(property)
+        });
+        if (!isLeadPrimary) {
+          actions.push(`<button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>`);
+        }
+      }
+
+      if (String(match.counterpartType || '').toLowerCase() === 'property') {
+        sections.push({
+          title: 'Shared Public Listing',
+          body: renderWorkflowExternalPropertySummary(match)
+        });
+      } else if (String(match.counterpartType || '').toLowerCase() === 'lead') {
+        sections.push({
+          title: 'Shared Public Requirement',
+          body: renderWorkflowExternalLeadSummary(match)
+        });
+      }
+
+      if (match.counterpartSection) {
+        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.counterpartSection)}', '${escapeHtml(match.counterpartRecordId || '')}')">Open Broker Connector Page</button>`);
+      }
+
       return {
         kicker: 'Match Opportunity',
         title: match.status === 'strong' ? 'Strong Match' : 'Partial Match',
-        copy: match.matchReason || 'Open either side of this match to continue your workflow.',
-        sections: [
-          {
-            title: 'Lead Details',
-            body: renderWorkflowLeadSummary(lead)
-          },
-          {
-            title: property?.isDistress ? 'Matching Distress Listing' : 'Matching Listing',
-            body: renderWorkflowPropertySummary(property)
-          }
-        ],
-        actions: [
-          lead ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>` : '',
-          property ? `<button class="btn btn-primary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>` : ''
-        ].filter(Boolean)
+        copy,
+        sections,
+        actions: actions.filter(Boolean)
       };
     }
 
@@ -13959,7 +14059,8 @@
       const alertsTarget = document.getElementById('workflowAlertsList');
       const panelListTarget = document.getElementById('notificationPanelList');
       const matchesTarget = document.getElementById('workflowMatchesList');
-      const notifications = getNotificationItems();
+      const notifications = getWorkflowNotificationItems();
+      const allNotifications = getNotificationItems();
       const aiMatches = getMatchItems();
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         console.debug('matchCount value:', aiMatches.length);
@@ -13970,7 +14071,7 @@
         alertsTarget.innerHTML = notificationsMarkup;
       }
       if (panelListTarget) {
-        panelListTarget.innerHTML = notificationsMarkup;
+        panelListTarget.innerHTML = renderNotificationAlertItems(allNotifications, 8);
       }
       syncNotificationIndicator();
 
@@ -13981,11 +14082,14 @@
               const matchKey = getMatchKey(match, matchIndex);
               const isSelected = matchKey === state.activeMatchKey;
               const isRead = isMatchRead(matchKey);
-              const lead = state.leads.find(item => item.id === match.requirementId);
-              const property = state.properties.find(item => item.id === match.propertyId);
+              const lead = getWorkflowMatchInternalLead(match);
+              const property = getWorkflowMatchInternalProperty(match);
+              const counterpartLabel = String(match.counterpartType || '').toLowerCase() === 'lead'
+                ? 'Shared Requirement'
+                : 'Shared Listing';
               const summaryBits = [
-                lead?.location || property?.location || '',
-                lead?.propertyType || property?.propertyType || ''
+                lead?.location || property?.location || match.counterpartLocation || '',
+                lead?.propertyType || property?.propertyType || match.counterpartPropertyType || ''
               ].filter(Boolean).join(' | ');
               return `
                 <div
@@ -13997,7 +14101,11 @@
                   onkeydown="handleWorkflowMatchKeydown(event, this)"
                 >
                   <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
-                  <div class="muted">Lead #${escapeHtml(match.requirementId)} &lt;-&gt; Listing #${escapeHtml(match.propertyId)}</div>
+                  <div class="muted">${escapeHtml(
+                    String(match.internalType || '').toLowerCase() === 'lead'
+                      ? `Your Requirement #${match.internalId || match.requirementId} <-> ${counterpartLabel}`
+                      : `Your Listing #${match.internalId || match.propertyId} <-> ${counterpartLabel}`
+                  )}</div>
                   <div class="muted">${escapeHtml(match.matchReason || '')}</div>
                   <small>${escapeHtml(summaryBits)}</small>
                 </div>

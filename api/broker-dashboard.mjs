@@ -600,55 +600,157 @@ function evaluateMatch(lead, property) {
   };
 }
 
-function computeMatchData(leads, properties) {
+function buildPublicLeadCandidate(item) {
+  return {
+    id: item.sourceId || item.id,
+    clientPurpose: item.purpose,
+    purpose: item.purpose,
+    propertyType: item.propertyType,
+    location: item.location,
+    preferredBuildingProject: item.buildingLabel || '',
+    budget: item.priceLabel || '',
+    status: 'new',
+    isArchived: false
+  };
+}
+
+function buildPublicPropertyCandidate(item) {
+  const purpose = normalizeText(item.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  return {
+    id: item.sourceId || item.id,
+    purpose,
+    propertyType: item.propertyType,
+    location: item.location,
+    buildingName: item.buildingLabel || '',
+    price: item.priceLabel || '',
+    rentPrice: purpose === 'rent' ? item.priceLabel || '' : '',
+    ownerAskingPrice: purpose === 'sale' ? item.priceLabel || '' : '',
+    status: 'available',
+    isArchived: false
+  };
+}
+
+function computeMatchData(leads, properties, publicListings = [], currentBrokerId = '') {
   const leadMap = new Map(leads.map(lead => [lead.id, { ...lead, matchingListings: [], matchCount: 0, strongMatchCount: 0 }]));
   const propertyMap = new Map(properties.map(property => [property.id, { ...property, matchingLeads: [], matchCount: 0, strongMatchCount: 0 }]));
   const aiMatches = [];
+  const brokerUuid = normalizeText(currentBrokerId);
+  const publicItems = (Array.isArray(publicListings) ? publicListings : []).filter(item => normalizeText(item?.brokerUuid) && normalizeText(item?.brokerUuid) !== brokerUuid);
+  const publicLeads = publicItems.filter(item => item.sourceType === 'lead');
+  const publicProperties = publicItems.filter(item => item.sourceType === 'property');
 
   leadMap.forEach(lead => {
-    propertyMap.forEach(property => {
-      const match = evaluateMatch(lead, property);
+    publicProperties.forEach(publicProperty => {
+      const match = evaluateMatch(lead, buildPublicPropertyCandidate(publicProperty));
       if (!match) return;
+      const visibilityScope = lead.isListedPublic ? 'shared-both' : 'private-pocket';
 
       aiMatches.push({
-        id: `${match.leadId}-${match.propertyId}`,
+        id: `lead-${match.leadId}-public-property-${publicProperty.id}`,
         requirement_id: match.leadId,
+        property_id: null,
+        match_score: match.matchScore,
+        match_reason: match.matchReason,
+        status: match.confidence,
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        internal_type: 'lead',
+        internal_id: match.leadId,
+        counterpart_type: 'property',
+        counterpart_source: 'public',
+        counterpart_record_id: publicProperty.id,
+        counterpart_source_id: publicProperty.sourceId,
+        counterpart_broker_uuid: publicProperty.brokerUuid,
+        counterpart_broker_name: publicProperty.brokerName,
+        counterpart_broker_mobile: publicProperty.brokerMobile,
+        counterpart_purpose: publicProperty.purpose,
+        counterpart_property_type: publicProperty.propertyType,
+        counterpart_location: publicProperty.location,
+        counterpart_building: publicProperty.buildingLabel,
+        counterpart_price_label: publicProperty.priceLabel,
+        counterpart_public_notes: publicProperty.publicNotes,
+        counterpart_section: publicProperty.isDistress ? 'distress-deals' : 'broker-connector-listings',
+        visibility_scope: visibilityScope
+      });
+
+      lead.matchingListings.push({
+        id: publicProperty.id,
+        sourceId: publicProperty.sourceId,
+        propertyType: publicProperty.propertyType,
+        location: publicProperty.location,
+        price: publicProperty.priceLabel,
+        buildingName: publicProperty.buildingLabel || '',
+        status: publicProperty.status,
+        confidence: match.confidence,
+        matchReason: match.matchReason,
+        isExternalPublic: true,
+        brokerName: publicProperty.brokerName,
+        brokerMobile: publicProperty.brokerMobile,
+        sourceSection: publicProperty.isDistress ? 'distress-deals' : 'broker-connector-listings',
+        publicNotes: publicProperty.publicNotes,
+        visibilityScope
+      });
+      lead.matchCount += 1;
+      if (match.confidence === 'strong') {
+        lead.strongMatchCount += 1;
+      }
+    });
+  });
+
+  propertyMap.forEach(property => {
+    publicLeads.forEach(publicLead => {
+      const match = evaluateMatch(buildPublicLeadCandidate(publicLead), property);
+      if (!match) return;
+      const visibilityScope = property.isListedPublic ? 'shared-both' : 'private-pocket';
+
+      aiMatches.push({
+        id: `property-${match.propertyId}-public-lead-${publicLead.id}`,
+        requirement_id: null,
         property_id: match.propertyId,
         match_score: match.matchScore,
         match_reason: match.matchReason,
         status: match.confidence,
         created_at: nowIso(),
-        updated_at: nowIso()
+        updated_at: nowIso(),
+        internal_type: 'property',
+        internal_id: match.propertyId,
+        counterpart_type: 'lead',
+        counterpart_source: 'public',
+        counterpart_record_id: publicLead.id,
+        counterpart_source_id: publicLead.sourceId,
+        counterpart_broker_uuid: publicLead.brokerUuid,
+        counterpart_broker_name: publicLead.brokerName,
+        counterpart_broker_mobile: publicLead.brokerMobile,
+        counterpart_purpose: publicLead.purpose,
+        counterpart_property_type: publicLead.propertyType,
+        counterpart_location: publicLead.location,
+        counterpart_building: publicLead.buildingLabel,
+        counterpart_price_label: publicLead.priceLabel,
+        counterpart_public_notes: publicLead.publicNotes,
+        counterpart_section: 'broker-requirements',
+        visibility_scope: visibilityScope
       });
 
-      const leadMatchSummary = {
-        id: property.id,
-        propertyType: property.propertyType,
-        location: property.location,
-        price: property.price || property.rentPrice || property.ownerAskingPrice,
-        buildingName: property.buildingName || '',
-        status: property.status,
+      property.matchingLeads.push({
+        id: publicLead.id,
+        sourceId: publicLead.sourceId,
+        clientPurpose: publicLead.purpose,
+        propertyType: publicLead.propertyType,
+        location: publicLead.location,
+        budget: publicLead.priceLabel,
+        preferredBuildingProject: publicLead.buildingLabel || '',
+        status: publicLead.status,
         confidence: match.confidence,
-        matchReason: match.matchReason
-      };
-      const propertyMatchSummary = {
-        id: lead.id,
-        clientPurpose: lead.clientPurpose,
-        propertyType: lead.propertyType,
-        location: lead.location,
-        budget: lead.budget,
-        preferredBuildingProject: lead.preferredBuildingProject || '',
-        status: lead.status,
-        confidence: match.confidence,
-        matchReason: match.matchReason
-      };
-
-      lead.matchingListings.push(leadMatchSummary);
-      property.matchingLeads.push(propertyMatchSummary);
-      lead.matchCount += 1;
+        matchReason: match.matchReason,
+        isExternalPublic: true,
+        brokerName: publicLead.brokerName,
+        brokerMobile: publicLead.brokerMobile,
+        sourceSection: 'broker-requirements',
+        publicNotes: publicLead.publicNotes,
+        visibilityScope
+      });
       property.matchCount += 1;
       if (match.confidence === 'strong') {
-        lead.strongMatchCount += 1;
         property.strongMatchCount += 1;
       }
     });
@@ -661,7 +763,7 @@ function computeMatchData(leads, properties) {
   };
 }
 
-function buildDynamicNotifications(leads, properties, existingNotifications = []) {
+function buildDynamicNotifications(leads, properties, aiMatches = [], existingNotifications = []) {
   const notifications = [];
   const makeNotification = (id, type, title, message, relatedSourceType, relatedSourceId) => ({
     id,
@@ -683,9 +785,6 @@ function buildDynamicNotifications(leads, properties, existingNotifications = []
     } else if (followUpState.key === 'today') {
       notifications.push(makeNotification(`lead-today-${lead.id}`, 'follow-up', `Lead #${lead.id} follow-up due today`, followUpState.label, 'lead', lead.id));
     }
-    if (lead.matchCount) {
-      notifications.push(makeNotification(`lead-match-${lead.id}`, 'match', `${lead.matchCount} matching listings found`, `Lead #${lead.id} has ${lead.matchCount} possible listing match${lead.matchCount === 1 ? '' : 'es'}.`, 'lead', lead.id));
-    }
   });
 
   properties.forEach(property => {
@@ -696,13 +795,50 @@ function buildDynamicNotifications(leads, properties, existingNotifications = []
     } else if (followUpState.key === 'today') {
       notifications.push(makeNotification(`property-today-${property.id}`, 'follow-up', `Listing #${property.id} follow-up due today`, followUpState.label, 'property', property.id));
     }
-    if (property.matchCount) {
-      notifications.push(makeNotification(`property-match-${property.id}`, 'match', `${property.matchCount} matching leads found`, `Listing #${property.id} has ${property.matchCount} possible lead match${property.matchCount === 1 ? '' : 'es'}.`, 'property', property.id));
-    }
+  });
+
+  leads.forEach(lead => {
+    if (!lead.matchCount) return;
+    const sharedMessage = lead.matchCount === 1
+      ? 'Your shared requirement matches 1 shared listing on Broker Connector Page. Both brokers were notified.'
+      : `Your shared requirement matches ${lead.matchCount} shared listings on Broker Connector Page. Both brokers were notified.`;
+    const privateMessage = lead.matchCount === 1
+      ? 'A matching shared listing is available for your private requirement. Only you were notified. Contact that broker if you want to proceed.'
+      : `${lead.matchCount} matching shared listings are available for your private requirement. Only you were notified. Contact the relevant broker if you want to proceed.`;
+    notifications.push(
+      makeNotification(
+        `lead-match-${lead.id}`,
+        'match',
+        `${lead.matchCount} matching listing${lead.matchCount === 1 ? '' : 's'} found`,
+        lead.isListedPublic ? sharedMessage : privateMessage,
+        'lead',
+        lead.id
+      )
+    );
+  });
+
+  properties.forEach(property => {
+    if (!property.matchCount) return;
+    const sharedMessage = property.matchCount === 1
+      ? 'Your shared listing matches 1 shared requirement on Broker Connector Page. Both brokers were notified.'
+      : `Your shared listing matches ${property.matchCount} shared requirements on Broker Connector Page. Both brokers were notified.`;
+    const privateMessage = property.matchCount === 1
+      ? 'A matching requirement is available for your private / pocket listing. Only you were notified. Contact that broker if you want to proceed.'
+      : `${property.matchCount} matching requirements are available for your private / pocket listing. Only you were notified. Contact the relevant broker if you want to proceed.`;
+    notifications.push(
+      makeNotification(
+        `property-match-${property.id}`,
+        'match',
+        `${property.matchCount} matching requirement${property.matchCount === 1 ? '' : 's'} found`,
+        property.isListedPublic ? sharedMessage : privateMessage,
+        'property',
+        property.id
+      )
+    );
   });
 
   const merged = [
-    ...(Array.isArray(existingNotifications) ? existingNotifications : []),
+    ...(Array.isArray(existingNotifications) ? existingNotifications : []).filter(item => String(item?.notification_type || item?.notificationType || '').toLowerCase() !== 'match'),
     ...notifications
   ];
 
@@ -853,7 +989,7 @@ async function fetchBrokerDataset(context) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const brokerFilter = { broker_uuid: broker.id };
 
-  const [leadRows, propertyRows, followUpRows, listingRows, notificationRows, aiMatchRows, brokerRows] = await Promise.all([
+  const [leadRows, propertyRows, followUpRows, listingRows, allPublicRows, notificationRows, aiMatchRows, brokerRows] = await Promise.all([
     supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
@@ -882,6 +1018,13 @@ async function fetchBrokerDataset(context) {
       filters: { broker_uuid: broker.id },
       order: { column: 'created_at', ascending: false }
     }),
+    supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table: 'public_listings',
+      filters: { public_listing_status: 'listed' },
+      order: { column: 'updated_at', ascending: false }
+    }).catch(() => []),
     selectOptionalBrokerRows(context, 'broker_notifications'),
     selectOptionalBrokerRows(context, 'broker_ai_matches'),
     supabaseSelect({
@@ -897,12 +1040,11 @@ async function fetchBrokerDataset(context) {
   const propertyRecords = (Array.isArray(propertyRows) ? propertyRows : []).map(sanitizeProperty);
   const followUps = (Array.isArray(followUpRows) ? followUpRows : []).map(sanitizeFollowUp);
   const sharedListings = (Array.isArray(listingRows) ? listingRows : []).map(sanitizePublicListing);
+  const allSharedListings = (Array.isArray(allPublicRows) ? allPublicRows : []).map(row => sanitizePublicListing(row, { exposeBrokerContact: true }));
   const storedNotifications = Array.isArray(notificationRows) ? notificationRows : [];
-  const storedAiMatches = (Array.isArray(aiMatchRows) ? aiMatchRows : []).map(sanitizeAiMatch);
-
-  const computedMatches = computeMatchData(leadRecords, propertyRecords);
-  const notifications = buildDynamicNotifications(computedMatches.leads, computedMatches.properties, storedNotifications);
-  const aiMatches = computedMatches.aiMatches.length ? computedMatches.aiMatches : storedAiMatches;
+  const computedMatches = computeMatchData(leadRecords, propertyRecords, allSharedListings, broker.id);
+  const notifications = buildDynamicNotifications(computedMatches.leads, computedMatches.properties, computedMatches.aiMatches, storedNotifications);
+  const aiMatches = computedMatches.aiMatches;
 
   return {
     overview: buildOverview(computedMatches.leads, computedMatches.properties, sharedListings, broker, aiMatches),
