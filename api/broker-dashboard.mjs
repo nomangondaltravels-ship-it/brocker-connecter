@@ -640,6 +640,65 @@ function computeMatchData(leads, properties, publicListings = [], currentBrokerI
   const publicProperties = publicItems.filter(item => item.sourceType === 'property');
 
   leadMap.forEach(lead => {
+    propertyMap.forEach(property => {
+      const match = evaluateMatch(lead, property);
+      if (!match) return;
+
+      aiMatches.push({
+        id: `internal-${match.leadId}-${match.propertyId}`,
+        requirement_id: match.leadId,
+        property_id: match.propertyId,
+        match_score: match.matchScore,
+        match_reason: match.matchReason,
+        status: match.confidence,
+        created_at: nowIso(),
+        updated_at: nowIso(),
+        internal_type: 'internal',
+        internal_id: null,
+        counterpart_type: 'internal',
+        counterpart_source: 'private',
+        visibility_scope: 'internal'
+      });
+
+      lead.matchingListings.push({
+        id: property.id,
+        propertyType: property.propertyType,
+        location: property.location,
+        price: property.price || property.rentPrice || property.ownerAskingPrice,
+        buildingName: property.buildingName || '',
+        status: property.status,
+        confidence: match.confidence,
+        matchReason: match.matchReason,
+        isExternalPublic: false,
+        sourceSection: property.isDistress ? 'distress-deals' : 'properties',
+        visibilityScope: 'internal'
+      });
+
+      property.matchingLeads.push({
+        id: lead.id,
+        clientPurpose: lead.clientPurpose,
+        propertyType: lead.propertyType,
+        location: lead.location,
+        budget: lead.budget,
+        preferredBuildingProject: lead.preferredBuildingProject || '',
+        status: lead.status,
+        confidence: match.confidence,
+        matchReason: match.matchReason,
+        isExternalPublic: false,
+        sourceSection: 'leads',
+        visibilityScope: 'internal'
+      });
+
+      lead.matchCount += 1;
+      property.matchCount += 1;
+      if (match.confidence === 'strong') {
+        lead.strongMatchCount += 1;
+        property.strongMatchCount += 1;
+      }
+    });
+  });
+
+  leadMap.forEach(lead => {
     publicProperties.forEach(publicProperty => {
       const match = evaluateMatch(lead, buildPublicPropertyCandidate(publicProperty));
       if (!match) return;
@@ -798,18 +857,19 @@ function buildDynamicNotifications(leads, properties, aiMatches = [], existingNo
   });
 
   leads.forEach(lead => {
-    if (!lead.matchCount) return;
-    const sharedMessage = lead.matchCount === 1
+    const externalMatchCount = (Array.isArray(lead.matchingListings) ? lead.matchingListings : []).filter(item => item?.isExternalPublic).length;
+    if (!externalMatchCount) return;
+    const sharedMessage = externalMatchCount === 1
       ? 'Your shared requirement matches 1 shared listing on Broker Connector Page. Both brokers were notified.'
-      : `Your shared requirement matches ${lead.matchCount} shared listings on Broker Connector Page. Both brokers were notified.`;
-    const privateMessage = lead.matchCount === 1
+      : `Your shared requirement matches ${externalMatchCount} shared listings on Broker Connector Page. Both brokers were notified.`;
+    const privateMessage = externalMatchCount === 1
       ? 'A matching shared listing is available for your private requirement. Only you were notified. Contact that broker if you want to proceed.'
-      : `${lead.matchCount} matching shared listings are available for your private requirement. Only you were notified. Contact the relevant broker if you want to proceed.`;
+      : `${externalMatchCount} matching shared listings are available for your private requirement. Only you were notified. Contact the relevant broker if you want to proceed.`;
     notifications.push(
       makeNotification(
         `lead-match-${lead.id}`,
         'match',
-        `${lead.matchCount} matching listing${lead.matchCount === 1 ? '' : 's'} found`,
+        `${externalMatchCount} matching listing${externalMatchCount === 1 ? '' : 's'} found`,
         lead.isListedPublic ? sharedMessage : privateMessage,
         'lead',
         lead.id
@@ -818,18 +878,19 @@ function buildDynamicNotifications(leads, properties, aiMatches = [], existingNo
   });
 
   properties.forEach(property => {
-    if (!property.matchCount) return;
-    const sharedMessage = property.matchCount === 1
+    const externalMatchCount = (Array.isArray(property.matchingLeads) ? property.matchingLeads : []).filter(item => item?.isExternalPublic).length;
+    if (!externalMatchCount) return;
+    const sharedMessage = externalMatchCount === 1
       ? 'Your shared listing matches 1 shared requirement on Broker Connector Page. Both brokers were notified.'
-      : `Your shared listing matches ${property.matchCount} shared requirements on Broker Connector Page. Both brokers were notified.`;
-    const privateMessage = property.matchCount === 1
+      : `Your shared listing matches ${externalMatchCount} shared requirements on Broker Connector Page. Both brokers were notified.`;
+    const privateMessage = externalMatchCount === 1
       ? 'A matching requirement is available for your private / pocket listing. Only you were notified. Contact that broker if you want to proceed.'
-      : `${property.matchCount} matching requirements are available for your private / pocket listing. Only you were notified. Contact the relevant broker if you want to proceed.`;
+      : `${externalMatchCount} matching requirements are available for your private / pocket listing. Only you were notified. Contact the relevant broker if you want to proceed.`;
     notifications.push(
       makeNotification(
         `property-match-${property.id}`,
         'match',
-        `${property.matchCount} matching requirement${property.matchCount === 1 ? '' : 's'} found`,
+        `${externalMatchCount} matching requirement${externalMatchCount === 1 ? '' : 's'} found`,
         property.isListedPublic ? sharedMessage : privateMessage,
         'property',
         property.id

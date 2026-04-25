@@ -12794,9 +12794,13 @@
           actions: []
         };
       }
+      const isInternalMatch = String(match.internalType || '').trim().toLowerCase() === 'internal'
+        || String(match.visibilityScope || '').trim().toLowerCase() === 'internal';
       const isLeadPrimary = String(match.internalType || '').trim().toLowerCase() === 'lead';
       const visibilityScope = String(match.visibilityScope || '').trim().toLowerCase();
-      const copy = visibilityScope === 'private-pocket'
+      const copy = isInternalMatch
+        ? (match.matchReason || 'Your requirement and listing are aligned inside your private CRM.')
+        : visibilityScope === 'private-pocket'
         ? 'A shared public record matches your private / pocket record. Only you were notified so you can contact the other broker directly.'
         : (match.matchReason || 'A shared public match is available on Broker Connector Page.');
       const sections = [];
@@ -12804,37 +12808,42 @@
 
       if (lead) {
         sections.push({
-          title: isLeadPrimary ? 'Your Requirement' : 'Matching Requirement',
+          title: (isLeadPrimary || isInternalMatch) ? 'Your Requirement' : 'Matching Requirement',
           body: renderWorkflowLeadSummary(lead)
         });
-        if (isLeadPrimary) {
+        if (isLeadPrimary || isInternalMatch) {
           actions.push(`<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(lead.id)})">Open Requirement</button>`);
         }
       }
 
       if (property) {
+        const propertyTitle = isInternalMatch
+          ? (property?.isDistress ? 'Your Distress Listing' : 'Your Listing')
+          : property?.isDistress
+            ? (isLeadPrimary ? 'Matching Distress Listing' : 'Your Distress Listing')
+            : (isLeadPrimary ? 'Matching Listing' : 'Your Listing');
         sections.push({
-          title: property?.isDistress ? (isLeadPrimary ? 'Matching Distress Listing' : 'Your Distress Listing') : (isLeadPrimary ? 'Matching Listing' : 'Your Listing'),
+          title: propertyTitle,
           body: renderWorkflowPropertySummary(property)
         });
-        if (!isLeadPrimary) {
+        if (!isLeadPrimary || isInternalMatch) {
           actions.push(`<button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(property.id)}, '${property.isDistress ? 'distress' : 'properties'}')">${property.isDistress ? 'Open Distress Deal' : 'Open Listing'}</button>`);
         }
       }
 
-      if (String(match.counterpartType || '').toLowerCase() === 'property') {
+      if (!isInternalMatch && String(match.counterpartType || '').toLowerCase() === 'property') {
         sections.push({
           title: 'Shared Public Listing',
           body: renderWorkflowExternalPropertySummary(match)
         });
-      } else if (String(match.counterpartType || '').toLowerCase() === 'lead') {
+      } else if (!isInternalMatch && String(match.counterpartType || '').toLowerCase() === 'lead') {
         sections.push({
           title: 'Shared Public Requirement',
           body: renderWorkflowExternalLeadSummary(match)
         });
       }
 
-      if (match.counterpartSection) {
+      if (!isInternalMatch && match.counterpartSection) {
         actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.counterpartSection)}', '${escapeHtml(match.counterpartRecordId || '')}')">Open Broker Connector Page</button>`);
       }
 
@@ -14084,6 +14093,8 @@
               const isRead = isMatchRead(matchKey);
               const lead = getWorkflowMatchInternalLead(match);
               const property = getWorkflowMatchInternalProperty(match);
+              const isInternalMatch = String(match.internalType || '').toLowerCase() === 'internal'
+                || String(match.visibilityScope || '').toLowerCase() === 'internal';
               const counterpartLabel = String(match.counterpartType || '').toLowerCase() === 'lead'
                 ? 'Shared Requirement'
                 : 'Shared Listing';
@@ -14102,7 +14113,9 @@
                 >
                   <strong>${escapeHtml(match.status === 'strong' ? 'Strong Match' : 'Partial Match')}</strong>
                   <div class="muted">${escapeHtml(
-                    String(match.internalType || '').toLowerCase() === 'lead'
+                    isInternalMatch
+                      ? `Your Requirement #${match.requirementId || ''} <-> Your Listing #${match.propertyId || ''}`
+                      : String(match.internalType || '').toLowerCase() === 'lead'
                       ? `Your Requirement #${match.internalId || match.requirementId} <-> ${counterpartLabel}`
                       : `Your Listing #${match.internalId || match.propertyId} <-> ${counterpartLabel}`
                   )}</div>
