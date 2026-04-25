@@ -261,6 +261,73 @@
       align-items: center;
     }
 
+    .notification-menu-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .notification-menu-wrap > .btn {
+      position: relative;
+    }
+
+    .notification-panel {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: min(360px, calc(100vw - 24px));
+      min-width: 300px;
+      padding: 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+      display: grid;
+      gap: 10px;
+      z-index: 1200;
+    }
+
+    .notification-panel.hidden {
+      display: none;
+    }
+
+    .notification-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 2px 4px 0;
+    }
+
+    .notification-panel-head strong {
+      font-size: 0.92rem;
+      color: #0f172a;
+    }
+
+    .notification-panel-head span {
+      font-size: 0.74rem;
+      color: #64748b;
+    }
+
+    .notification-panel-list {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .notification-unread-dot {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #ef4444;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.12);
+      pointer-events: none;
+    }
+
     .account-menu-trigger {
       min-height: 38px !important;
       padding: 6px 10px !important;
@@ -2519,6 +2586,28 @@
       border: 1px solid rgba(212, 175, 55, 0.08);
     }
 
+    .workflow-alert-item.is-clickable {
+      cursor: pointer;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+    }
+
+    .workflow-alert-item.is-clickable:hover {
+      border-color: rgba(212, 175, 55, 0.2);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .workflow-alert-item.is-clickable:focus-visible {
+      outline: 2px solid rgba(212, 175, 55, 0.32);
+      outline-offset: 2px;
+    }
+
+    .workflow-alert-item.is-selected {
+      border-color: rgba(212, 175, 55, 0.28);
+      box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.18);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
     .workflow-alert-item strong {
       display: block;
       margin-bottom: 4px;
@@ -2528,6 +2617,11 @@
       display: block;
       margin-top: 4px;
       color: var(--muted);
+    }
+
+    .insight-card.is-highlighted {
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.18), 0 18px 36px rgba(15, 23, 42, 0.08);
+      transition: box-shadow 0.22s ease;
     }
 
     .record-toolbar {
@@ -5584,7 +5678,20 @@
         </div>
       </div>
       <div class="top-actions">
-        <button class="btn btn-secondary" type="button" id="alertsButton" onclick="focusWorkflowAlerts()">Alerts <span class="count-pill" id="notificationCountBadge">0</span></button>
+        <div class="notification-menu-wrap">
+          <button class="btn btn-secondary" type="button" id="alertsButton" onclick="toggleNotificationPanel()" aria-haspopup="dialog" aria-expanded="false">
+            <span>Notifications</span>
+            <span class="count-pill" id="notificationCountBadge">0</span>
+            <span class="notification-unread-dot hidden" id="notificationUnreadDot" aria-hidden="true"></span>
+          </button>
+          <div class="notification-panel hidden" id="notificationPanel" role="dialog" aria-label="Notifications panel">
+            <div class="notification-panel-head">
+              <strong>Notifications</strong>
+              <span id="notificationPanelMeta">No notifications</span>
+            </div>
+            <div class="workflow-alert-list notification-panel-list" id="notificationPanelList"></div>
+          </div>
+        </div>
         <button class="btn btn-secondary page-switch-btn connector-page-btn" type="button" onclick="window.location.href='index.html?view=public'"><span class="activity-brokers-indicator" aria-hidden="true"></span><span>Broker Connector Page</span></button>
         <div class="account-menu-wrap">
           <button class="btn btn-secondary page-switch-btn account-menu-trigger" id="brokerIdentityBtn" type="button" onclick="toggleAccountMenu()" aria-haspopup="menu" aria-expanded="false">
@@ -6500,6 +6607,7 @@
     const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
     const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
+    const DASHBOARD_NOTIFICATIONS_SEEN_KEY = 'broker_dashboard_notifications_seen';
 
     function clearBrokerClientSessionStorage() {
       localStorage.removeItem('broker_session_token');
@@ -6598,6 +6706,9 @@
       rulesPromptChecked: false,
       rulesPromptSource: '',
       pendingRulesShareAction: null,
+      notificationPanelOpen: false,
+      activeNotificationKey: '',
+      notificationSeenSignature: '',
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
@@ -9481,6 +9592,7 @@
       const button = document.getElementById('activeBrokersBtn');
       if (!panel || !button) return;
       closeAccountMenu();
+      closeNotificationPanel();
       const willOpen = panel.classList.contains('hidden');
       panel.classList.toggle('hidden', !willOpen);
       button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
@@ -9498,6 +9610,7 @@
       const button = document.getElementById('brokerIdentityBtn');
       if (!panel || !button) return;
       closeBrokerActivityMenu();
+      closeNotificationPanel();
       const willOpen = panel.classList.contains('hidden');
       panel.classList.toggle('hidden', !willOpen);
       button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
@@ -11484,6 +11597,9 @@
       if (!event.target.closest('#dashboardSearchBox') && !event.target.closest('#dashboardSearchSuggestions')) {
         renderDashboardSuggestions('');
       }
+      if (!event.target.closest('.notification-menu-wrap')) {
+        closeNotificationPanel();
+      }
       if (!event.target.closest('.account-menu-wrap')) {
         closeAccountMenu();
       }
@@ -11493,6 +11609,7 @@
     });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
+        closeNotificationPanel();
         closeAccountMenu();
         closeBrokerActivityMenu();
       }
@@ -12057,9 +12174,124 @@
       });
     }
 
+    function getDashboardNotificationStorageKey() {
+      const brokerKey = String(
+        state.broker?.id
+        || state.broker?.brokerId
+        || state.broker?.email
+        || 'default'
+      ).trim().toLowerCase();
+      return `${DASHBOARD_NOTIFICATIONS_SEEN_KEY}:${brokerKey || 'default'}`;
+    }
+
+    function getNotificationItems() {
+      return Array.isArray(state.notifications) ? state.notifications : [];
+    }
+
+    function getNotificationKey(item, index = 0) {
+      return [
+        String(item?.id || item?.notificationId || '').trim(),
+        String(item?.title || 'Notification').trim(),
+        String(item?.message || '').trim(),
+        String(item?.createdAt || item?.updatedAt || index).trim()
+      ].join('|');
+    }
+
+    function getNotificationSignature(list = getNotificationItems()) {
+      return list.map((item, index) => getNotificationKey(item, index)).join('||');
+    }
+
+    function hasNotificationWithKey(key) {
+      if (!key) return false;
+      return getNotificationItems().some((item, index) => getNotificationKey(item, index) === key);
+    }
+
+    function syncNotificationIndicator() {
+      const items = getNotificationItems();
+      const signature = getNotificationSignature(items);
+      const seenSignature = String(localStorage.getItem(getDashboardNotificationStorageKey()) || '').trim();
+      const button = document.getElementById('alertsButton');
+      const dot = document.getElementById('notificationUnreadDot');
+      const meta = document.getElementById('notificationPanelMeta');
+      state.notificationSeenSignature = seenSignature;
+      if (!hasNotificationWithKey(state.activeNotificationKey)) {
+        state.activeNotificationKey = items.length ? getNotificationKey(items[0], 0) : '';
+      }
+      if (button) {
+        button.setAttribute('aria-label', items.length ? `Notifications ${items.length}` : 'Notifications');
+      }
+      if (meta) {
+        meta.textContent = items.length ? `${items.length} notification${items.length === 1 ? '' : 's'}` : 'No notifications';
+      }
+      if (dot) {
+        const hasUnread = Boolean(signature) && signature !== seenSignature;
+        dot.classList.toggle('hidden', !hasUnread);
+      }
+    }
+
+    function markNotificationsSeen() {
+      const signature = getNotificationSignature();
+      localStorage.setItem(getDashboardNotificationStorageKey(), signature);
+      state.notificationSeenSignature = signature;
+      syncNotificationIndicator();
+    }
+
+    function closeNotificationPanel() {
+      const panel = document.getElementById('notificationPanel');
+      const button = document.getElementById('alertsButton');
+      if (panel) panel.classList.add('hidden');
+      if (button) button.setAttribute('aria-expanded', 'false');
+      state.notificationPanelOpen = false;
+    }
+
+    function toggleNotificationPanel() {
+      const panel = document.getElementById('notificationPanel');
+      const button = document.getElementById('alertsButton');
+      if (!panel || !button) return;
+      closeAccountMenu();
+      closeBrokerActivityMenu();
+      const willOpen = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !willOpen);
+      button.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      state.notificationPanelOpen = willOpen;
+      if (willOpen) {
+        markNotificationsSeen();
+        renderWorkflowAlerts();
+      }
+    }
+
+    function handleWorkflowNotificationKeydown(event, element) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openWorkflowNotificationFromElement(element);
+      }
+    }
+
+    function openWorkflowNotificationFromElement(element) {
+      const key = String(element?.dataset?.notificationKey || '').trim();
+      openWorkflowNotification(key);
+    }
+
+    function openWorkflowNotification(notificationKey = '') {
+      if (notificationKey) {
+        state.activeNotificationKey = notificationKey;
+      }
+      markNotificationsSeen();
+      focusWorkflowAlerts();
+    }
+
     function focusWorkflowAlerts() {
+      closeNotificationPanel();
       openSection('overview');
-      document.getElementById('workflowAlertsCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      renderWorkflowAlerts();
+      const card = document.getElementById('workflowAlertsCard');
+      card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (card) {
+        card.classList.add('is-highlighted');
+        window.setTimeout(() => {
+          card.classList.remove('is-highlighted');
+        }, 1800);
+      }
     }
 
     function openOverviewMetric(metricKey) {
@@ -13200,10 +13432,36 @@
       });
     }
 
+    function renderNotificationAlertItems(items, limit = 8) {
+      if (!Array.isArray(items) || !items.length) {
+        return '<div class="empty">No notifications right now. Your workflow looks clear.</div>';
+      }
+      return items.slice(0, limit).map((item, index) => {
+        const notificationKey = getNotificationKey(item, index);
+        const isSelected = notificationKey === state.activeNotificationKey;
+        return `
+          <div
+            class="workflow-alert-item is-clickable ${isSelected ? 'is-selected' : ''}"
+            data-notification-key="${escapeHtml(notificationKey)}"
+            role="button"
+            tabindex="0"
+            onclick="openWorkflowNotificationFromElement(this)"
+            onkeydown="handleWorkflowNotificationKeydown(event, this)"
+          >
+            <strong>${escapeHtml(item.title || 'Notification')}</strong>
+            <div class="muted">${escapeHtml(item.message || '')}</div>
+            <small>${escapeHtml(formatDateTime(item.createdAt || item.updatedAt || new Date().toISOString()))}</small>
+          </div>
+        `;
+      }).join('');
+    }
+
     function renderWorkflowAlerts() {
       const alertsTarget = document.getElementById('workflowAlertsList');
+      const panelListTarget = document.getElementById('notificationPanelList');
       const matchesTarget = document.getElementById('workflowMatchesList');
-      const alertCount = Array.isArray(state.notifications) ? state.notifications.length : 0;
+      const notifications = getNotificationItems();
+      const alertCount = notifications.length;
       const aiMatches = Array.isArray(state.aiMatches) ? state.aiMatches : [];
       const matchCount = aiMatches.length;
       const countNode = document.getElementById('notificationCountBadge');
@@ -13216,17 +13474,14 @@
       if (workflowCountNode) workflowCountNode.textContent = String(alertCount);
       if (workflowMatchesNode) workflowMatchesNode.textContent = String(matchCount);
 
+      const notificationsMarkup = renderNotificationAlertItems(notifications, 8);
       if (alertsTarget) {
-        alertsTarget.innerHTML = alertCount
-          ? state.notifications.slice(0, 8).map(item => `
-              <div class="workflow-alert-item">
-                <strong>${escapeHtml(item.title || 'Alert')}</strong>
-                <div class="muted">${escapeHtml(item.message || '')}</div>
-                <small>${escapeHtml(formatDateTime(item.createdAt || item.updatedAt || new Date().toISOString()))}</small>
-              </div>
-            `).join('')
-          : '<div class="empty">No alerts right now. Your workflow looks clear.</div>';
+        alertsTarget.innerHTML = notificationsMarkup;
       }
+      if (panelListTarget) {
+        panelListTarget.innerHTML = notificationsMarkup;
+      }
+      syncNotificationIndicator();
 
       if (matchesTarget) {
         matchesTarget.innerHTML = matchCount
