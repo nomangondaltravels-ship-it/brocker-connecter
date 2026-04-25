@@ -2623,6 +2623,24 @@
       color: var(--muted);
     }
 
+    .workflow-alert-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .workflow-alert-meta-row small {
+      margin-top: 0;
+    }
+
+    .workflow-match-remove-btn {
+      flex-shrink: 0;
+      padding: 5px 10px !important;
+      min-height: auto !important;
+    }
+
     .insight-card.is-highlighted {
       box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.18), 0 18px 36px rgba(15, 23, 42, 0.08);
       transition: box-shadow 0.22s ease;
@@ -5940,16 +5958,6 @@
           </div>
         </div>
         <div class="grid-2 workflow-insights">
-          <div class="card insight-card" id="workflowAlertsCard">
-            <div class="insight-head">
-              <div>
-                <h3>Workflow Alerts</h3>
-                <p>Due today, overdue reminders, and important next actions.</p>
-              </div>
-              <span class="insight-count" id="workflowAlertsCount">0</span>
-            </div>
-            <div class="workflow-alert-list" id="workflowAlertsList"></div>
-          </div>
           <div class="card insight-card" id="workflowMatchesCard">
             <div class="insight-head">
               <div>
@@ -5959,6 +5967,16 @@
               <span class="insight-count" id="workflowMatchesCount">0</span>
             </div>
             <div class="workflow-alert-list" id="workflowMatchesList"></div>
+          </div>
+          <div class="card insight-card" id="workflowAlertsCard">
+            <div class="insight-head">
+              <div>
+                <h3>Workflow Alerts</h3>
+                <p>Due today, overdue reminders, and important next actions.</p>
+              </div>
+              <span class="insight-count" id="workflowAlertsCount">0</span>
+            </div>
+            <div class="workflow-alert-list" id="workflowAlertsList"></div>
           </div>
         </div>
         <div class="workspace-shell" id="overviewWorkspace">
@@ -6748,6 +6766,8 @@
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const DASHBOARD_NOTIFICATIONS_SEEN_KEY = 'broker_dashboard_notifications_seen';
     const DASHBOARD_MATCHES_SEEN_KEY = 'broker_dashboard_matches_seen';
+    const DASHBOARD_MATCHES_META_KEY = 'broker_dashboard_matches_meta';
+    const MATCH_OPPORTUNITY_LIFETIME_MS = 3 * 24 * 60 * 60 * 1000;
 
     function clearBrokerClientSessionStorage() {
       localStorage.removeItem('broker_session_token');
@@ -12328,6 +12348,16 @@
       return `${keyPrefix}:${brokerKey || 'default'}`;
     }
 
+    function getDashboardMatchMetaStorageKey() {
+      const brokerKey = String(
+        state.broker?.id
+        || state.broker?.brokerId
+        || state.broker?.email
+        || 'default'
+      ).trim().toLowerCase();
+      return `${DASHBOARD_MATCHES_META_KEY}:${brokerKey || 'default'}`;
+    }
+
     function getNotificationItems() {
       return Array.isArray(state.notifications) ? state.notifications : [];
     }
@@ -12357,6 +12387,95 @@
         String(item?.matchReason || '').trim(),
         String(index).trim()
       ].join('|');
+    }
+
+    function getMatchMetaStore() {
+      const raw = String(localStorage.getItem(getDashboardMatchMetaStorageKey()) || '').trim();
+      if (!raw) return {};
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function setMatchMetaStore(store = {}) {
+      const normalized = Object.entries(store || {}).reduce((accumulator, [key, value]) => {
+        const normalizedKey = String(key || '').trim();
+        if (!normalizedKey) return accumulator;
+        const firstSeenAt = Number(value?.firstSeenAt || 0);
+        const removedAt = Number(value?.removedAt || 0);
+        accumulator[normalizedKey] = {
+          firstSeenAt: firstSeenAt > 0 ? firstSeenAt : Date.now(),
+          removedAt: removedAt > 0 ? removedAt : 0
+        };
+        return accumulator;
+      }, {});
+      localStorage.setItem(getDashboardMatchMetaStorageKey(), JSON.stringify(normalized));
+      return normalized;
+    }
+
+    function syncMatchMetaStore(items = getMatchItems()) {
+      const store = { ...getMatchMetaStore() };
+      const now = Date.now();
+      let changed = false;
+      (Array.isArray(items) ? items : []).forEach((item, index) => {
+        const matchKey = getMatchKey(item, index);
+        if (!matchKey) return;
+        if (!store[matchKey]) {
+          store[matchKey] = {
+            firstSeenAt: now,
+            removedAt: 0
+          };
+          changed = true;
+          return;
+        }
+        const firstSeenAt = Number(store[matchKey]?.firstSeenAt || 0);
+        const removedAt = Number(store[matchKey]?.removedAt || 0);
+        if (firstSeenAt <= 0 || removedAt < 0) {
+          store[matchKey] = {
+            firstSeenAt: firstSeenAt > 0 ? firstSeenAt : now,
+            removedAt: removedAt > 0 ? removedAt : 0
+          };
+          changed = true;
+        }
+      });
+      return changed ? setMatchMetaStore(store) : store;
+    }
+
+    function getMatchLifecycleInfo(matchKey = '', store = getMatchMetaStore()) {
+      const key = String(matchKey || '').trim();
+      const record = key ? store[key] : null;
+      const firstSeenAt = Number(record?.firstSeenAt || 0);
+      const removedAt = Number(record?.removedAt || 0);
+      const expiresAt = firstSeenAt > 0 ? firstSeenAt + MATCH_OPPORTUNITY_LIFETIME_MS : 0;
+      const now = Date.now();
+      return {
+        firstSeenAt,
+        removedAt,
+        expiresAt,
+        isRemoved: removedAt > 0,
+        isExpired: expiresAt > 0 && now >= expiresAt,
+        remainingMs: expiresAt > now ? expiresAt - now : 0
+      };
+    }
+
+    function formatMatchExpiryLabel(matchKey = '', store = getMatchMetaStore()) {
+      const lifecycle = getMatchLifecycleInfo(matchKey, store);
+      if (!lifecycle.firstSeenAt) return 'Auto removes in 3 days.';
+      if (lifecycle.isRemoved || lifecycle.isExpired) return 'Auto removed after 3 days.';
+      const daysRemaining = Math.max(1, Math.ceil(lifecycle.remainingMs / 86400000));
+      return `Auto removes in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}.`;
+    }
+
+    function getVisibleMatchItems() {
+      const matches = Array.isArray(state.aiMatches) ? state.aiMatches : [];
+      const store = syncMatchMetaStore(matches);
+      return matches.filter((item, index) => {
+        const lifecycle = getMatchLifecycleInfo(getMatchKey(item, index), store);
+        return !lifecycle.isRemoved && !lifecycle.isExpired;
+      });
     }
 
     function getSeenKeys(kind = 'notifications') {
@@ -12393,7 +12512,7 @@
 
     function hasMatchWithKey(key) {
       if (!key) return false;
-      return getMatchItems().some((item, index) => getMatchKey(item, index) === key);
+      return getVisibleMatchItems().some((item, index) => getMatchKey(item, index) === key);
     }
 
     function isNotificationRead(key) {
@@ -12414,7 +12533,7 @@
     function syncNotificationIndicator() {
       const items = getNotificationItems();
       const workflowItems = getWorkflowNotificationItems();
-      const matches = getMatchItems();
+      const matches = getVisibleMatchItems();
       state.notificationSeenKeys = getSeenKeys('notifications');
       state.matchSeenKeys = getSeenKeys('matches');
       const unreadNotifications = getUnreadCount(items, getNotificationKey, state.notificationSeenKeys);
@@ -12469,6 +12588,37 @@
       if (!key) return;
       const nextKeys = [...new Set([...state.matchSeenKeys, key])];
       setSeenKeys('matches', nextKeys);
+    }
+
+    function removeMatchOpportunity(matchKey = '') {
+      const key = String(matchKey || '').trim();
+      if (!key) return;
+      const store = { ...syncMatchMetaStore() };
+      const existing = store[key] || {};
+      store[key] = {
+        firstSeenAt: Number(existing.firstSeenAt || 0) > 0 ? Number(existing.firstSeenAt) : Date.now(),
+        removedAt: Date.now()
+      };
+      setMatchMetaStore(store);
+      if (state.activeMatchKey === key) {
+        state.activeMatchKey = '';
+      }
+      renderWorkflowAlerts();
+    }
+
+    function removeWorkflowMatchFromElement(event, element) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      const key = String(element?.dataset?.matchKey || '').trim();
+      if (!key) return;
+      removeMatchOpportunity(key);
+    }
+
+    function removeWorkflowMatchFromModal(matchKey = '') {
+      const key = String(matchKey || '').trim();
+      if (!key) return;
+      removeMatchOpportunity(key);
+      closeWorkflowContextModal();
     }
 
     function closeNotificationPanel() {
@@ -12781,7 +12931,7 @@
     }
 
     function buildWorkflowMatchContext(matchKey = '') {
-      const matches = getMatchItems();
+      const matches = getVisibleMatchItems();
       const match = matches.find((entry, index) => getMatchKey(entry, index) === matchKey) || null;
       const lead = getWorkflowMatchInternalLead(match);
       const property = getWorkflowMatchInternalProperty(match);
@@ -12852,13 +13002,21 @@
         title: match.status === 'strong' ? 'Strong Match' : 'Partial Match',
         copy,
         sections,
-        actions: actions.filter(Boolean)
+        actions: actions.filter(Boolean),
+        matchKey
       };
     }
 
     function renderWorkflowContextModal(context) {
       const sections = Array.isArray(context?.sections) ? context.sections : [];
       const actions = Array.isArray(context?.actions) ? context.actions.filter(Boolean) : [];
+      const matchKey = String(context?.matchKey || '').trim();
+      const modalActions = matchKey
+        ? [
+            ...actions,
+            `<button class="btn btn-danger btn-tiny" type="button" onclick='removeWorkflowMatchFromModal(${JSON.stringify(matchKey)})'>Remove Match</button>`
+          ]
+        : actions;
       return `
         <div class="workflow-modal-shell">
           <div class="workflow-modal-head">
@@ -12878,7 +13036,7 @@
             `).join('')}
           </div>
           <div class="workflow-modal-actions">
-            ${actions.join('')}
+            ${modalActions.join('')}
           </div>
         </div>
       `;
@@ -14070,7 +14228,7 @@
       const matchesTarget = document.getElementById('workflowMatchesList');
       const notifications = getWorkflowNotificationItems();
       const allNotifications = getNotificationItems();
-      const aiMatches = getMatchItems();
+      const aiMatches = getVisibleMatchItems();
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         console.debug('matchCount value:', aiMatches.length);
       }
@@ -14120,7 +14278,18 @@
                       : `Your Listing #${match.internalId || match.propertyId} <-> ${counterpartLabel}`
                   )}</div>
                   <div class="muted">${escapeHtml(match.matchReason || '')}</div>
-                  <small>${escapeHtml(summaryBits)}</small>
+                  ${summaryBits ? `<small>${escapeHtml(summaryBits)}</small>` : ''}
+                  <div class="workflow-alert-meta-row">
+                    <small>${escapeHtml(formatMatchExpiryLabel(matchKey))}</small>
+                    <button
+                      class="btn btn-secondary btn-tiny workflow-match-remove-btn"
+                      type="button"
+                      data-match-key="${escapeHtml(matchKey)}"
+                      onclick="removeWorkflowMatchFromElement(event, this)"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               `;
             }).join('')
