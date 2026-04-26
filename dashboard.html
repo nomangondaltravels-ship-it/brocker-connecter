@@ -3831,6 +3831,95 @@
       gap: 14px !important;
     }
 
+    #leadForm,
+    #propertyForm {
+      gap: 14px !important;
+    }
+
+    #leadForm .form-section,
+    #propertyForm .form-section {
+      gap: 12px !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    #leadForm .form-section-kicker,
+    #propertyForm .form-section-kicker,
+    #leadForm .form-section-head p,
+    #propertyForm .form-section-head p,
+    #leadForm .form-subsection-head span,
+    #propertyForm .form-subsection-head span,
+    #leadForm .field-helper,
+    #propertyForm .field-helper,
+    #leadForm .form-action-note,
+    #propertyForm .form-action-note,
+    .workspace-summary-note {
+      display: none !important;
+    }
+
+    #leadForm .form-section-head,
+    #propertyForm .form-section-head,
+    #leadForm .form-subsection-head,
+    #propertyForm .form-subsection-head {
+      gap: 2px !important;
+      padding-bottom: 0 !important;
+    }
+
+    #leadForm .form-section-head h4,
+    #propertyForm .form-section-head h4 {
+      font-size: 1rem !important;
+      line-height: 1.3 !important;
+    }
+
+    #leadForm .form-subsection,
+    #propertyForm .form-subsection {
+      gap: 10px !important;
+      padding: 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+    }
+
+    #leadForm .form-subsection-head strong,
+    #propertyForm .form-subsection-head strong {
+      color: #8f6a12 !important;
+      font-size: 0.75rem !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.08em !important;
+      text-transform: uppercase !important;
+    }
+
+    #leadForm .privacy-note,
+    #propertyForm .privacy-note {
+      gap: 4px !important;
+      padding: 12px 14px !important;
+    }
+
+    #leadForm .privacy-note p,
+    #propertyForm .privacy-note p {
+      font-size: 0.78rem !important;
+      line-height: 1.45 !important;
+    }
+
+    #leadForm .lead-form-actions,
+    #propertyForm .lead-form-actions {
+      justify-content: flex-end !important;
+      padding: 10px 0 0 !important;
+      border: none !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      position: static !important;
+    }
+
+    #leadForm .lead-form-actions-main,
+    #propertyForm .lead-form-actions-main {
+      width: 100%;
+      justify-content: flex-end !important;
+    }
+
     .record-filter-grid {
       grid-template-columns: repeat(7, minmax(132px, 1fr)) !important;
       gap: 10px !important;
@@ -6132,7 +6221,7 @@
               <div class="form-section">
                 <div class="form-section-head">
                   <span class="form-section-kicker">Main Details</span>
-                  <h4>Requirement Setup</h4>
+                  <h4>Requirement</h4>
                   <p>Choose whether the client wants to rent or buy, then complete the matching requirement details in a simple broker workflow.</p>
                 </div>
                 <div class="field-block full">
@@ -6152,7 +6241,7 @@
                     </div>
                     <div class="form-grid">
                       <div class="field-block">
-                        <label class="small" for="leadLocation">Preferred Location</label>
+                        <label class="small" for="leadLocation">Location</label>
                         <div class="combo-field" id="leadLocationBox">
                           <input id="leadLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
                           <span class="combo-icon">&#9906;</span>
@@ -6162,7 +6251,7 @@
                         <div class="field-error" id="leadLocationError"></div>
                       </div>
                       <div class="field-block">
-                        <label class="small" for="leadBuildingProject">Preferred Building / Project</label>
+                        <label class="small" for="leadBuildingProject">Building / Project</label>
                         <div class="combo-field" id="leadBuildingBox">
                           <input id="leadBuildingProject" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
                           <span class="combo-icon">&#9906;</span>
@@ -6191,7 +6280,7 @@
                   </div>
                   <div class="form-subsection">
                     <div class="form-subsection-head">
-                      <strong>Price / Budget Details</strong>
+                      <strong>Budget</strong>
                       <span>Capture the client budget and payment preference in one compact step.</span>
                     </div>
                     <div class="form-grid form-grid-compact">
@@ -6242,7 +6331,7 @@
               <div class="form-section crm-hidden" id="leadNotesSection">
                 <div class="form-section-head">
                   <span class="form-section-kicker">Private Notes</span>
-                  <h4>Internal Notes</h4>
+                  <h4>Notes</h4>
                   <p>Add private notes for your own follow-up and internal CRM use.</p>
                 </div>
                 <div class="field-block full">
@@ -6308,7 +6397,7 @@
               <div class="form-section">
                 <div class="form-section-head">
                   <span class="form-section-kicker">Main Details</span>
-                  <h4>Listing Setup</h4>
+                  <h4>Listing</h4>
                   <p>Select rent or sale first, then complete the relevant property details in a clean broker workflow.</p>
                 </div>
                 <div class="field-block full">
@@ -6353,7 +6442,7 @@
                         <div class="field-error" id="propertyLocationError"></div>
                       </div>
                       <div class="field-block">
-                        <label class="small" for="propertyBuildingName">Building Name / Project</label>
+                        <label class="small" for="propertyBuildingName">Building / Project</label>
                         <div class="combo-field" id="propertyBuildingBox">
                           <input id="propertyBuildingName" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
                           <span class="combo-icon">&#9906;</span>
@@ -6366,7 +6455,7 @@
                   </div>
                   <div class="form-subsection">
                     <div class="form-subsection-head">
-                      <strong>Space Details</strong>
+                      <strong>Space</strong>
                       <span>Keep the built-up area and floor information clean and easy to scan.</span>
                     </div>
                     <div class="form-grid form-grid-compact">
@@ -6397,7 +6486,7 @@
               <div class="form-section crm-hidden" id="propertyPricingSection">
                 <div class="form-section-head">
                   <span class="form-section-kicker">Price / Budget Details</span>
-                  <h4>Pricing &amp; Terms</h4>
+                  <h4>Pricing</h4>
                   <p>Only the relevant pricing fields are shown based on whether the listing is for rent or sale.</p>
                 </div>
                 <div class="form-grid crm-hidden" id="propertyRentFields">
@@ -6433,7 +6522,7 @@
                 </div>
                 <div class="form-grid crm-hidden" id="propertySaleFields">
                   <div class="field-block">
-                    <label class="small" id="propertySalePriceLabel" for="propertySalePrice">Owner Asking Price</label>
+                    <label class="small" id="propertySalePriceLabel" for="propertySalePrice">Asking Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertySalePrice" type="text" inputmode="numeric" placeholder="Enter owner asking price" autocomplete="off">
@@ -6535,7 +6624,7 @@
               <div class="form-section crm-hidden" id="propertyNotesSection">
                 <div class="form-section-head">
                   <span class="form-section-kicker">BCP Sharing / Visibility</span>
-                  <h4>BCP Notes &amp; Visibility</h4>
+                  <h4>Sharing &amp; Notes</h4>
                   <p>Internal notes stay private. Public notes are the only text that can be shared later if you publish this listing on BCP.</p>
                 </div>
                 <div class="field-block full">
