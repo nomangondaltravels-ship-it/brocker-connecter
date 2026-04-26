@@ -3026,7 +3026,7 @@
 <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
 <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
 <script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
-<script src="assets/listing-media-ui.js?v=2026-04-27-listing-media-fix"></script>
+<script src="/assets/listing-media-ui.js?v=2026-04-27-media-hardfix"></script>
 <script>
       const state = {
         authMode: 'signin',
@@ -5441,8 +5441,11 @@
       const listing = findConnectorListing(sectionName, listingId);
       if (!listing) return;
       try {
+        if (!window.ListingMediaUi?.openGallery) {
+          throw new Error('Picture viewer is unavailable right now. Refresh and try again.');
+        }
         const mediaBundle = await fetchConnectorListingMediaBundle(listing);
-        window.ListingMediaUi?.openGallery({
+        window.ListingMediaUi.openGallery({
           title: `${getConnectorPublicPurposeLabel(listing)} ${getConnectorDisplayPropertyType(listing) ? `- ${getConnectorDisplayPropertyType(listing)}` : 'Listing Pictures'}`,
           images: mediaBundle.images
         });
@@ -5455,8 +5458,11 @@
       const listing = findConnectorListing(sectionName, listingId);
       if (!listing) return;
       try {
+        if (!window.ListingMediaUi?.downloadListingPdf) {
+          throw new Error('PDF tools are unavailable right now. Refresh and try again.');
+        }
         const mediaBundle = await fetchConnectorListingMediaBundle(listing);
-        await window.ListingMediaUi?.downloadListingPdf(buildConnectorListingPdfPayload(listing, mediaBundle));
+        await window.ListingMediaUi.downloadListingPdf(buildConnectorListingPdfPayload(listing, mediaBundle));
       } catch (error) {
         showActionToast('error', getUiErrorMessage(error, 'Could not download listing PDF.'));
       }

@@ -6999,7 +6999,7 @@
   <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
   <script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
-  <script src="assets/listing-media-ui.js?v=2026-04-27-listing-media-fix"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-04-27-media-hardfix"></script>
 <script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
       uaeLocations: [],
@@ -9085,8 +9085,11 @@
       if (!input) return;
       setPropertyImagesError('');
       try {
+        if (!window.ListingMediaUi?.appendFilesToImages) {
+          throw new Error('Picture tools are unavailable right now. Refresh and try again.');
+        }
         updatePropertyImageUploadUi({ loading: true, countHint: state.propertyImageDraft.length });
-        const images = await window.ListingMediaUi?.appendFilesToImages(state.propertyImageDraft, input.files);
+        const images = await window.ListingMediaUi.appendFilesToImages(state.propertyImageDraft, input.files);
         setPropertyImages(images || [], { loaded: true, dirty: true });
       } catch (error) {
         updatePropertyImageUploadUi();
@@ -9115,12 +9118,38 @@
       return images;
     }
 
+    async function savePropertyMedia(propertyId, images) {
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({
+          action: 'set-property-media',
+          id: propertyId,
+          listingImages: Array.isArray(images) ? images : []
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Pictures could not be uploaded.');
+      }
+      const safeImages = window.ListingMediaUi?.sanitizeImageList(result?.images) || [];
+      state.propertyMediaCache[String(propertyId || '')] = safeImages;
+      return {
+        images: safeImages,
+        count: Number(result?.count || safeImages.length || 0) || 0,
+        property: result?.property || null
+      };
+    }
+
     async function openPropertyPictures(id) {
       const property = (Array.isArray(state.properties) ? state.properties : []).find(item => item.id === Number(id));
       if (!property) return;
       try {
+        if (!window.ListingMediaUi?.openGallery) {
+          throw new Error('Picture viewer is unavailable right now. Refresh and try again.');
+        }
         const images = await fetchPropertyMedia(property.id);
-        window.ListingMediaUi?.openGallery({
+        window.ListingMediaUi.openGallery({
           title: `${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing Pictures'}`,
           images
         });
@@ -9171,8 +9200,11 @@
       const property = (Array.isArray(state.properties) ? state.properties : []).find(item => item.id === Number(id));
       if (!property) return;
       try {
+        if (!window.ListingMediaUi?.downloadListingPdf) {
+          throw new Error('PDF tools are unavailable right now. Refresh and try again.');
+        }
         const images = await fetchPropertyMedia(property.id);
-        await window.ListingMediaUi?.downloadListingPdf(buildPropertyPublicSafePdfPayload(property, images));
+        await window.ListingMediaUi.downloadListingPdf(buildPropertyPublicSafePdfPayload(property, images));
       } catch (error) {
         setStatus(error?.message || 'Could not download listing PDF.', 'error');
       }
@@ -14501,7 +14533,6 @@
           distressAskingPrice: formData.distressAskingPrice,
           distressGapPercent: formData.distressGapPercent,
           distressDiscountPercent: formData.distressDiscountPercent,
-          listingImages: formData.listingImages,
           mortgageStatus: formData.mortgageStatus,
           leasehold: formData.leasehold,
           isDistress: formData.distressDeal,
@@ -14524,8 +14555,12 @@
             button: submitButton,
             loadingText: formData.id ? 'Updating Listing...' : 'Saving Listing...'
           });
-          if (result?.property?.id && formData.listingImages !== undefined) {
-            state.propertyMediaCache[String(result.property.id)] = window.ListingMediaUi?.sanitizeImageList(formData.listingImages) || [];
+          let savedProperty = result?.property || null;
+          if (savedProperty?.id && formData.listingImages !== undefined && state.propertyImageDraftDirty) {
+            const mediaResult = await savePropertyMedia(savedProperty.id, formData.listingImages);
+            savedProperty = mediaResult.property || savedProperty;
+          } else if (savedProperty?.id && formData.listingImages !== undefined) {
+            state.propertyMediaCache[String(savedProperty.id)] = window.ListingMediaUi?.sanitizeImageList(formData.listingImages) || [];
           }
           resetPropertyForm();
           hideOverviewWorkspace();

@@ -1506,6 +1506,41 @@ export async function POST(request) {
       });
     }
 
+    if (action === 'set-property-media') {
+      const propertyId = Number(body?.id || body?.propertyId || body?.sourceId || body?.listingId || 0);
+      if (!propertyId) {
+        return json({ message: 'Property id is required.' }, 400);
+      }
+      const property = await fetchBrokerRow(context, 'broker_properties', propertyId);
+      if (!property) {
+        return json({ message: 'Listing not found.' }, 404);
+      }
+      const meta = getPropertyMeta({ listingImages: body?.listingImages }, property);
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        filters: { id: propertyId, broker_uuid: broker.id },
+        payload: {
+          description: serializePropertyMeta(meta),
+          updated_at: nowIso()
+        }
+      });
+      const item = Array.isArray(rows) ? rows[0] : null;
+      if (!item) {
+        return json({ message: 'Listing not found.' }, 404);
+      }
+      if (item.is_listed_public) {
+        await syncPublicListing(context, 'property', item, broker);
+      }
+      const nextMeta = parsePropertyMeta(item.description);
+      return json({
+        images: Array.isArray(nextMeta.listingImages) ? nextMeta.listingImages : [],
+        count: Array.isArray(nextMeta.listingImages) ? nextMeta.listingImages.length : 0,
+        property: sanitizeProperty(item)
+      });
+    }
+
     if (action === 'set-lead-followup') {
       const id = Number(body?.id || 0);
       const lead = await fetchBrokerRow(context, 'broker_leads', id);

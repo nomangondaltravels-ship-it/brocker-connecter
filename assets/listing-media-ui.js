@@ -1,7 +1,7 @@
 (function () {
   const MAX_IMAGES = 10;
   const MAX_FILE_BYTES = 8 * 1024 * 1024;
-  const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
+  const MAX_TOTAL_BYTES = 1536 * 1024;
   const ACCEPTED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
   const ACCEPTED_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'webp']);
   const PDF_LIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
@@ -83,7 +83,7 @@
   }
 
   function drawOptimizedImageToDataUrl(image) {
-    const maxDimension = 1400;
+    const maxDimension = 1200;
     let width = Number(image.width || 0) || 0;
     let height = Number(image.height || 0) || 0;
     if (!width || !height) {
@@ -104,10 +104,10 @@
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(image, 0, 0, width, height);
 
-    let quality = 0.85;
+    let quality = 0.8;
     let dataUrl = canvas.toDataURL('image/jpeg', quality);
-    while (estimateDataUrlBytes(dataUrl) > 450 * 1024 && quality > 0.46) {
-      quality -= 0.08;
+    while (estimateDataUrlBytes(dataUrl) > 220 * 1024 && quality > 0.38) {
+      quality -= 0.07;
       dataUrl = canvas.toDataURL('image/jpeg', quality);
     }
 
