@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Broker Connector Page | Broker Connector</title>
+  <title>NexBridge Marketplace | NexBridge</title>
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
@@ -2749,10 +2750,10 @@
   <header class="topbar">
     <div class="topbar-inner public-topbar">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="NexBridge logo">
         <div class="brand-copy">
-          <div class="brand-title">Broker <span>Connector</span></div>
-          <small>Broker Marketplace</small>
+          <div class="brand-title">Nex<span>Bridge</span></div>
+          <small>Connect • Match • Close</small>
         </div>
       </div>
       <div class="top-search-inline">
@@ -2777,7 +2778,7 @@
           </button>
         </div>
         <div class="broker-access-inline">
-          <div class="top-cta" id="registerCta">Broker Access</div>
+          <div class="top-cta" id="registerCta">NexBridge Access</div>
           <button class="btn btn-secondary" id="signInBtn" type="button" onclick="openAuthModal('signin')">Sign In</button>
           <button class="btn btn-secondary" id="registerBtn" type="button" onclick="openAuthModal('register')">Register</button>
         </div>
@@ -2791,7 +2792,7 @@
       <div class="sidebar-text">See shared broker requirements and public listings in one clean marketplace view.</div>
       <div class="menu">
         <button class="btn btn-secondary menu-btn active" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
-        <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings</button>
+          <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">NexBridge Listings</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
       </div>
       <div class="support-menu-group">
@@ -2805,12 +2806,12 @@
 
     <main class="content-panel">
       <section class="hero-box compact-public-hero">
-        <div class="hero-kicker">Live Broker Marketplace</div>
-        <h1>Broker Connector Page</h1>
+        <div class="hero-kicker">Live NexBridge Marketplace</div>
+        <h1>NexBridge Marketplace</h1>
         <p>Browse shared broker requirements, public listings, and distress opportunities in one data-first marketplace.</p>
         <div class="hero-tabs">
           <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements <span class="tab-count" id="tabCountRequirements">0</span></button>
-          <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">Broker Connector Listings <span class="tab-count" id="tabCountListings">0</span></button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">NexBridge Listings <span class="tab-count" id="tabCountListings">0</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals <span class="tab-count" id="tabCountDistress">0</span></button>
         </div>
       </section>
@@ -2852,7 +2853,7 @@
       </div>
       <section class="section" id="marketplace-section">
         <div class="page-head compact-head">
-          <h2>Broker Connector Listings</h2>
+        <h2>NexBridge Listings</h2>
           <p>Latest broker listings available for quick scanning and direct connection.</p>
         </div>
             <div class="connector-results-shell no-detail">
@@ -2930,7 +2931,7 @@
     <div class="auth-card" data-mode="signin">
       <button class="auth-close-btn btn btn-secondary" type="button" onclick="closeAuthModal()" aria-label="Close dialog">&times;</button>
       <div class="auth-head">
-        <h3 id="authTitle">Broker Access</h3>
+        <h3 id="authTitle">NexBridge Access</h3>
         <div class="auth-divider" aria-hidden="true"><span></span><i>&#10023;</i><span></span></div>
       </div>
       <div class="auth-tabs">
@@ -3876,7 +3877,7 @@
           <div class="complaint-head">
             <div>
               <h3 id="supportModalTitle">Contact Center</h3>
-              <p class="complaint-copy">Send a support request for admin review without leaving Broker Connector Page.</p>
+              <p class="complaint-copy">Send a support request for admin review without leaving NexBridge Marketplace.</p>
             </div>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="closeSupportModal()">Close</button>
           </div>
@@ -4617,7 +4618,7 @@
 
     function badgeText(listing) {
       if (listing.isDistress) return 'Hot Distress';
-      return listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing';
+      return listing.sourceType === 'lead' ? 'Broker Requirement' : 'NexBridge Listing';
     }
 
     function normalizeText(value) {
@@ -4634,7 +4635,7 @@
     }
 
     function buildConnectorWhatsappReference(listing) {
-      if (!listing) return 'Broker Connector post';
+      if (!listing) return 'NexBridge post';
       const parts = listing.sourceType === 'lead'
         ? [
             getConnectorPublicPurposeLabel(listing).toUpperCase(),
@@ -4649,7 +4650,7 @@
             listing.location
           ];
       const cleaned = parts.map(normalizeText).filter(Boolean);
-      return cleaned.length ? cleaned.join(' | ') : 'Broker Connector post';
+      return cleaned.length ? cleaned.join(' | ') : 'NexBridge post';
     }
 
     function getConnectorWhatsappIntro(listing) {
@@ -4796,7 +4797,7 @@
 
     function getPublicSearchText(listing) {
       return [
-        listing.sourceType === 'lead' ? 'broker requirement' : 'broker connector listing',
+        listing.sourceType === 'lead' ? 'broker requirement' : 'nexbridge listing',
         listing.purpose,
         getConnectorPublicPurposeLabel(listing),
         getConnectorDisplayPropertyType(listing),
@@ -5026,7 +5027,7 @@
           listing.purpose,
           listing.brokerName,
           listing.isDistress ? 'Distress Deals' : '',
-          listing.sourceType === 'lead' ? 'Broker Requirements' : 'Broker Connector Listings'
+        listing.sourceType === 'lead' ? 'Broker Requirements' : 'NexBridge Listings'
         ].filter(Boolean).forEach(term => {
           if (String(term).toLowerCase().includes(normalized)) terms.add(String(term));
         });
@@ -5122,7 +5123,7 @@
           <div class="listing-card ${listing.isDistress ? 'distress-card' : ''}" data-listing-id="${listing.id}">
           <div class="listing-top">
             <div class="listing-title">
-              <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'Broker Connector Listing'} &middot; ${getConnectorDisplayPropertyType(listing)}</h3>
+              <h3>${listing.sourceType === 'lead' ? 'Broker Requirement' : 'NexBridge Listing'} &middot; ${getConnectorDisplayPropertyType(listing)}</h3>
               <div class="muted">${listing.location} &middot; ${listing.priceLabel}</div>
             </div>
           </div>
@@ -5147,7 +5148,7 @@
         .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)))
         .slice(0, 4);
       if (!highlights.length) {
-        target.innerHTML = `<div class="empty">No public broker requirements or broker connector listings are live yet. Brokers can list private requirements or properties publicly from their dashboard.</div>`;
+        target.innerHTML = `<div class="empty">No public broker requirements or NexBridge listings are live yet. Brokers can list private requirements or properties publicly from their dashboard.</div>`;
         return;
       }
       target.innerHTML = highlights.map(item => renderListingCard(item, item.sourceType === 'lead' ? 'requirements' : item.isDistress ? 'distress-deals' : 'marketplace')).join('');
@@ -5856,7 +5857,7 @@
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.message || 'Broker Connector Page could not load.');
+        throw new Error(result?.message || 'NexBridge Marketplace could not load.');
       }
       state.listings = Array.isArray(result.listings) ? result.listings : [];
       try {
@@ -6010,14 +6011,14 @@
       document.getElementById('authTitle').textContent = contactRevealIntent
         ? 'Sign in to your account to reveal broker number'
         : mode === 'register'
-          ? 'Register Broker Account'
+          ? 'Register with NexBridge'
           : mode === 'forgot'
             ? 'Forgot Password'
-            : 'Sign In Broker Account';
+            : 'Sign In to NexBridge';
       document.getElementById('authCopy').textContent = contactRevealIntent
         ? 'Create an account to unlock broker contact details.'
         : mode === 'register'
-          ? 'Create your broker account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
+          ? 'Create your NexBridge account with email and password. If email confirmation is enabled, we will ask you to confirm your email before signing in.'
           : mode === 'forgot'
             ? 'Enter your email address and we will send you a secure password reset link.'
             : 'Sign in with your email address and password to open your separate private dashboard.';
@@ -6155,7 +6156,7 @@
       try {
         await loadPublicListings();
       } catch (error) {
-        console.error('Could not reload Broker Connector Page after auth.', error);
+        console.error('Could not reload NexBridge Marketplace after auth.', error);
       }
 
       if (intent.sectionName) {
@@ -6451,7 +6452,7 @@
 
       mountConnectorToolbar(state.activeSection || 'requirements');
 
-      const listingsLoaded = await runPublicInitStep('Broker Connector Page records', async () => {
+      const listingsLoaded = await runPublicInitStep('NexBridge Marketplace records', async () => {
         await loadPublicListings();
         return true;
       }, { silent: false });

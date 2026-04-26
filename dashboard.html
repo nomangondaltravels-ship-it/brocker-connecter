@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Broker Desk | Broker Connector</title>
+  <title>Broker Desk | NexBridge</title>
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
@@ -6030,10 +6031,10 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="Broker Connector logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="NexBridge logo">
         <div class="brand-copy">
-          <div class="brand-title">Broker <span>Connector</span></div>
-          <small>Private CRM Dashboard</small>
+          <div class="brand-title">Nex<span>Bridge</span></div>
+          <small>Connect • Match • Close</small>
         </div>
       </div>
       <div class="top-search-inline">
@@ -6064,7 +6065,7 @@
             <div class="workflow-alert-list notification-panel-list" id="notificationPanelList"></div>
           </div>
         </div>
-        <button class="btn btn-secondary page-switch-btn connector-page-btn" type="button" onclick="window.location.href='index.html?view=public'"><span class="activity-brokers-indicator" aria-hidden="true"></span><span>Broker Connector Page</span></button>
+        <button class="btn btn-secondary page-switch-btn connector-page-btn" type="button" onclick="window.location.href='index.html?view=public'"><span class="activity-brokers-indicator" aria-hidden="true"></span><span>NexBridge Marketplace</span></button>
         <div class="account-menu-wrap">
           <button class="btn btn-secondary page-switch-btn account-menu-trigger" id="brokerIdentityBtn" type="button" onclick="toggleAccountMenu()" aria-haspopup="menu" aria-expanded="false">
             <span class="account-menu-avatar" id="brokerIdentityAvatar">BC</span>
@@ -6205,7 +6206,7 @@
             <div class="workspace-head-main">
               <div class="workspace-kicker" id="workspaceKicker">Broker Desk Form</div>
               <h3 id="workspaceTitle">Add New Lead</h3>
-              <p id="workspaceCopy">Create a private client requirement. You can choose later whether to share only the non-private details on the Broker Connector Page.</p>
+      <p id="workspaceCopy">Create a private client requirement. You can choose later whether to share only the non-private details on NexBridge Marketplace.</p>
               <div class="workspace-chip-row">
                 <span class="workspace-chip" id="workspaceModePill">Draft flow</span>
                 <span class="workspace-chip" id="workspaceVisibilityPill">Private until shared</span>
@@ -6308,7 +6309,7 @@
                 <div class="form-section-head">
                   <span class="form-section-kicker">Private Client / Owner Details</span>
                   <h4>Private Client Details</h4>
-                  <p>These details stay private in the broker workspace and never appear on the Broker Connector Page.</p>
+      <p>These details stay private in the broker workspace and never appear on NexBridge Marketplace.</p>
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
@@ -6324,7 +6325,7 @@
                 </div>
                 <div class="privacy-note">
                   <strong>Private Section</strong>
-                  <p>This section is private. Even if you share this lead on the Broker Connector Page, the client name and phone number will never be shown publicly.</p>
+      <p>This section is private. Even if you share this lead on NexBridge Marketplace, the client name and phone number will never be shown publicly.</p>
                 </div>
               </div>
 
@@ -6637,7 +6638,7 @@
                 </div>
                 <div class="privacy-note">
                   <strong>Private Section</strong>
-                  <p>These owner details are private and will never be shown publicly, even if the property is published on the Broker Connector Page.</p>
+      <p>These owner details are private and will never be shown publicly, even if the property is published on NexBridge Marketplace.</p>
                 </div>
               </div>
 
@@ -6698,7 +6699,7 @@
               </div>
 
               <div class="lead-form-actions">
-                <div class="form-action-note">Keep the listing private while you build it, then decide later whether to publish the safe public version on Broker Connector.</div>
+      <div class="form-action-note">Keep the listing private while you build it, then decide later whether to publish the safe public version on NexBridge.</div>
                 <div class="lead-form-actions-main">
                   <button class="btn btn-secondary" type="button" onclick="cancelPropertyForm()">Cancel</button>
                   <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Listing</button>
@@ -6740,7 +6741,7 @@
               <ul>
                 <li>Finish the basics first, then add private contacts and notes.</li>
                 <li>Workflow fields help you set reminders without leaving the form.</li>
-                <li>Only safe public notes can ever appear on Broker Connector.</li>
+        <li>Only safe public notes can ever appear on NexBridge.</li>
               </ul>
             </div>
           </aside>
@@ -7226,7 +7227,7 @@
       intro: 'Complaint review and broker sharing work best when every report is factual, respectful, and tied to real platform conduct.',
       acceptanceText: 'I agree to platform rules and understand that violating them may result in warning, restriction, or account block.',
       promptTitle: 'Accept Platform Rules',
-      promptCopy: 'Before you submit complaints or publish records to Broker Connector, confirm that you understand the platform conduct rules.',
+      promptCopy: 'Before you submit complaints or publish records to NexBridge, confirm that you understand the platform conduct rules.',
       categories: []
     };
     const COMPLAINT_CENTER_RULES = Array.isArray(window.COMPLAINT_CENTER_RULES)
@@ -7916,7 +7917,7 @@
         state.broker?.fullName
         || state.broker?.name
         || state.broker?.email
-        || 'Broker Connector user'
+      || 'NexBridge user'
       );
     }
 
@@ -8276,7 +8277,7 @@
 
       if (mode === 'edit') {
         workspaceTitle.textContent = 'Edit Lead';
-        workspaceCopy.textContent = 'Update the private client requirement below. Only safe, non-private details can be shared later on the Broker Connector Page.';
+      workspaceCopy.textContent = 'Update the private client requirement below. Only safe, non-private details can be shared later on NexBridge Marketplace.';
         if (workspaceKicker) workspaceKicker.textContent = 'Requirement Editor';
         if (workspaceModePill) workspaceModePill.textContent = 'Edit flow';
         if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private client record';
@@ -8285,7 +8286,7 @@
       }
 
       workspaceTitle.textContent = 'Add New Lead';
-      workspaceCopy.textContent = 'Create a private client requirement. You can choose later whether to share only the non-private details on the Broker Connector Page.';
+      workspaceCopy.textContent = 'Create a private client requirement. You can choose later whether to share only the non-private details on NexBridge Marketplace.';
       if (workspaceKicker) workspaceKicker.textContent = 'Requirement Composer';
       if (workspaceModePill) workspaceModePill.textContent = 'Create flow';
       if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private until shared';
@@ -8741,7 +8742,7 @@
 
       if (mode === 'edit') {
         workspaceTitle.textContent = 'Edit Listing';
-        workspaceCopy.textContent = 'Update your private property inventory below. Only non-private details can be published later on the Broker Connector Page.';
+      workspaceCopy.textContent = 'Update your private property inventory below. Only non-private details can be published later on NexBridge Marketplace.';
         if (workspaceKicker) workspaceKicker.textContent = 'Listing Editor';
         if (workspaceModePill) workspaceModePill.textContent = 'Edit flow';
         if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private inventory record';
@@ -9267,7 +9268,7 @@
 
     function getComplaintSourceLabel(value) {
       const normalized = String(value || '').trim().toLowerCase();
-      if (normalized === 'connector') return 'Broker Connector';
+      if (normalized === 'connector') return 'NexBridge';
       if (normalized === 'profile') return 'Profile';
       if (normalized === 'distress') return 'Distress Deals';
       if (normalized === 'listing') return 'Listings';
@@ -10102,7 +10103,7 @@
         <div class="complaint-center-head">
           <div class="complaint-center-head-copy">
             <h3 id="dashboardRulesPromptTitle">${escapeHtml(PLATFORM_RULES.promptTitle || 'Accept Platform Rules')}</h3>
-            <p>${escapeHtml(PLATFORM_RULES.promptCopy || 'Before you publish records to Broker Connector, confirm that you understand the platform conduct rules.')}</p>
+      <p>${escapeHtml(PLATFORM_RULES.promptCopy || 'Before you publish records to NexBridge, confirm that you understand the platform conduct rules.')}</p>
           </div>
           <button class="btn btn-secondary btn-tiny" type="button" onclick="closeDashboardRulesPrompt()">Close</button>
         </div>
@@ -10701,7 +10702,7 @@
             <div class="toolkit-header-copy">
               <h3>Disclaimer</h3>
             </div>
-            <p>All links redirect to external platforms. Broker Connector is not affiliated with DLD, RERA, DEWA, Trakheesi, Ejari, utility providers, or any government authority unless explicitly stated. This toolkit is provided for convenience and guidance only. Brokers are responsible for using official sources and complying with applicable Dubai real estate regulations.</p>
+      <p>All links redirect to external platforms. NexBridge is not affiliated with DLD, RERA, DEWA, Trakheesi, Ejari, utility providers, or any government authority unless explicitly stated. This toolkit is provided for convenience and guidance only. Brokers are responsible for using official sources and complying with applicable Dubai real estate regulations.</p>
           </div>
         </div>
       `;
@@ -10928,7 +10929,7 @@
           item.rentPrice,
           item.ownerAskingPrice,
           item.priceLabel,
-          item.sourceType === 'lead' || item.leadType ? 'Broker Requirements' : 'Broker Connector Listings',
+        item.sourceType === 'lead' || item.leadType ? 'Broker Requirements' : 'NexBridge Listings',
           item.isDistress ? 'Distress Deals' : ''
         ].filter(Boolean).forEach(term => {
           if (String(term).toLowerCase().includes(normalized)) pool.add(String(term));
@@ -11122,7 +11123,7 @@
       if (!target) return;
       const sharedListings = getFilteredDashboardItems(state.sharedListings, 'shared');
       if (!sharedListings.length) {
-        target.innerHTML = `<div class="empty">No broker connector listings match your current search yet.</div>`;
+        target.innerHTML = `<div class="empty">No NexBridge listings match your current search yet.</div>`;
         return;
       }
 
@@ -13269,7 +13270,7 @@
               </div>
               <div class="workflow-modal-actions">
                 ${match.isExternalPublic
-                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'marketplace')}', '${escapeHtml(match.id)}')">Open Broker Connector Page</button>`
+                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'marketplace')}', '${escapeHtml(match.id)}')">Open NexBridge Marketplace</button>`
                   : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(match.id)}, '${targetSection}')">Open Listing</button>`}
               </div>
             </div>
@@ -13295,7 +13296,7 @@
               </div>
               <div class="workflow-modal-actions">
                 ${match.isExternalPublic
-                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'requirements')}', '${escapeHtml(match.id)}')">Open Broker Connector Page</button>`
+                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'requirements')}', '${escapeHtml(match.id)}')">Open NexBridge Marketplace</button>`
                   : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(match.id)})">Open Requirement</button>`}
               </div>
             </div>
@@ -13475,7 +13476,7 @@
       }
 
       if (!isInternalMatch && match.counterpartSection) {
-        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.counterpartSection)}', '${escapeHtml(match.counterpartRecordId || '')}')">Open Broker Connector Page</button>`);
+        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.counterpartSection)}', '${escapeHtml(match.counterpartRecordId || '')}')">Open NexBridge Marketplace</button>`);
       }
 
       return {

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Broker Connector Admin Portal</title>
+  <title>NexBridge Admin Portal</title>
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg" />
   <style>
     :root {
       --bg: #f6f8fc;
@@ -54,11 +55,25 @@
 
     .brand {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      align-items: center;
+      gap: 12px;
       font-weight: 700;
       font-size: 1.25rem;
       line-height: 1.05;
+    }
+
+    .brand-logo {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      object-fit: cover;
+      box-shadow: 0 12px 28px rgba(244, 197, 66, 0.18);
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .brand span { color: var(--gold); }
@@ -1536,7 +1551,13 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">Broker <span>Connector</span><small>Admin Portal &middot; Separate Review Page</small></div>
+      <div class="brand">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg" alt="NexBridge logo">
+        <div class="brand-copy">
+          <div>Nex<span>Bridge</span></div>
+          <small>Admin Portal • Connect • Match • Close</small>
+        </div>
+      </div>
       <div class="top-actions">
         <a class="btn btn-secondary" href="./index.html">Back To Website</a>
         <button class="btn btn-danger" id="logoutBtn" type="button" onclick="logoutAdmin()" style="display:none;">Logout</button>
@@ -1664,24 +1685,24 @@
               <div class="admin-section-card">
                 <div class="admin-section-head">
                   <div class="admin-section-copy">
-                    <h3>Broker Connector Listings Review</h3>
+                    <h3>NexBridge Listings Review</h3>
                     <p>Monitor public listings, distress inventory, and shared deal visibility.</p>
                   </div>
                   <div class="review-toolbar">
-                    <label class="sr-only" for="dealAgeDays">Delete broker connector listings older than</label>
-                    <select id="dealAgeDays" aria-label="Delete broker connector listings older than">
+                    <label class="sr-only" for="dealAgeDays">Delete NexBridge listings older than</label>
+                    <select id="dealAgeDays" aria-label="Delete NexBridge listings older than">
                       <option value="10">Older than 10 days</option>
                       <option value="30" selected>Older than 30 days</option>
                       <option value="60">Older than 60 days</option>
                       <option value="90">Older than 90 days</option>
                     </select>
                     <button class="btn btn-secondary tiny-btn" type="button" onclick="deleteOldDeals()">Delete Old Listings</button>
-                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All Broker Connector Listings</button>
+                    <button class="btn btn-danger tiny-btn" type="button" onclick="deleteAllDeals()">Delete All NexBridge Listings</button>
                   </div>
                 </div>
                 <p class="inline-note">Age-based cleanup works on deals that already have a valid saved post date.</p>
                 <div class="admin-table-wrap" id="dealReviewList">
-                  <div class="item"><p>No broker connector listings found.</p></div>
+                <div class="item"><p>No NexBridge listings found.</p></div>
                 </div>
               </div>
             </div>
@@ -1713,7 +1734,7 @@
               <div class="admin-section-head">
                 <div class="admin-section-copy">
                   <h3>Support Inbox</h3>
-                  <p>Review help desk requests from Broker Connector users and update resolution status safely.</p>
+      <p>Review help desk requests from NexBridge users and update resolution status safely.</p>
                 </div>
               </div>
               <div class="admin-table-wrap" id="supportInboxList">
@@ -1794,8 +1815,9 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+<script>
     const ADMIN_SESSION_KEY = 'admin_portal_session';
 
     const supabaseUrl = 'https://unggpaomyzvurmawnahj.supabase.co';
@@ -1915,6 +1937,31 @@
       }
       target.textContent = message;
       target.className = `status active ${tone}`.trim();
+    }
+
+    function resolveAdminActionButton() {
+      return window.ActionFeedbackUi?.resolveActionButton() || null;
+    }
+
+    function getAdminErrorMessage(error, fallback = 'Something went wrong. Please try again.') {
+      return normalizeAdminText(error?.message) || fallback;
+    }
+
+    function showAdminError(error, fallback = 'Something went wrong. Please try again.') {
+      setAdminStatus(getAdminErrorMessage(error, fallback), 'error');
+    }
+
+    async function runAdminActionFeedback(button, loadingText, successMessage, actionFn) {
+      if (window.ActionFeedbackUi) {
+        return await window.ActionFeedbackUi.withActionFeedback(
+          button,
+          loadingText,
+          successMessage,
+          actionFn,
+          { showErrorToast: true }
+        );
+      }
+      return await actionFn();
     }
 
     function getAdminToken() {
@@ -2245,24 +2292,30 @@
 
     async function loginAdmin(event) {
       event.preventDefault();
+      const submitButton = event?.submitter || document.querySelector('#loginView button[type="submit"]');
       const username = document.getElementById('adminUsername').value.trim();
       const password = document.getElementById('adminPassword').value;
 
       try {
-        const response = await fetch('/api/admin-login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ username, password })
-        });
-
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok || !result?.token) {
-          setLoginStatus(result?.message || 'Invalid admin username or password.', 'error');
-          return;
-        }
+        const result = await runAdminActionFeedback(
+          submitButton,
+          'Logging in...',
+          'Login successful.',
+          async () => {
+              const response = await fetch('/api/admin-login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+              });
+              const payload = await response.json().catch(() => ({}));
+              if (!response.ok || !payload?.token) {
+                throw new Error(payload?.message || 'Invalid admin username or password.');
+              }
+              return payload;
+          }
+        );
 
         sessionStorage.setItem(ADMIN_SESSION_KEY, result.token);
         setLoginStatus('');
@@ -2270,13 +2323,19 @@
         loadAdminData();
       } catch (error) {
         console.error(error);
-        setLoginStatus('Admin login is unavailable right now. Make sure the Vercel API functions are deployed and environment variables are set.', 'error');
+        setLoginStatus(error?.message || 'Admin login is unavailable right now. Make sure the Vercel API functions are deployed and environment variables are set.', 'error');
       }
     }
 
     function logoutAdmin() {
+      const button = resolveAdminActionButton();
+      window.ActionFeedbackUi?.setButtonLoading(button, 'Logging out...');
+      window.ActionFeedbackUi?.startProgress();
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
       showLogin();
+      window.ActionFeedbackUi?.showToast('success', 'Logout successful.');
+      window.ActionFeedbackUi?.resetButtonLoading(button);
+      window.ActionFeedbackUi?.stopProgress();
     }
 
     function restoreAdminSession() {
@@ -2640,14 +2699,20 @@
         setAdminStatus('Broker account not found.', 'error');
         return;
       }
+      const actionButton = resolveAdminActionButton();
 
       try {
-        await requestBrokerAdminAction({
-          action: account.approved ? 'unverify' : 'verify',
-          brokerId
-        });
+        await runAdminActionFeedback(
+          actionButton,
+          account.approved ? 'Removing Verification...' : 'Approving...',
+          'Broker verification status updated successfully.',
+          () => requestBrokerAdminAction({
+            action: account.approved ? 'unverify' : 'verify',
+            brokerId
+          })
+        );
       } catch (error) {
-        setAdminStatus(error?.message || 'Broker verification update failed.', 'error');
+        showAdminError(error, 'Broker verification update failed.');
         return;
       }
 
@@ -2677,7 +2742,7 @@
           brokerId
         });
       } catch (error) {
-        setAdminStatus(error?.message || 'Broker block update failed.', 'error');
+        showAdminError(error, 'Broker block update failed.');
         return;
       }
 
@@ -2705,26 +2770,32 @@
       const item = complaints[index];
       if (!item) return;
       if (adminUiState.complaintActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       const adminNote = requireComplaintAdminNote();
       if (!adminNote) return;
 
       adminUiState.complaintActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestComplaintAction({
-          action: 'update-status',
-          complaintId: item.id,
-          match: getComplaintMatch(item),
-          status,
-          adminNote
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          status === 'rejected' ? 'Rejecting...' : status === 'resolved' ? 'Resolving...' : 'Updating...',
+          `Complaint marked as ${status.replace('-', ' ')}.`,
+          () => requestComplaintAction({
+            action: 'update-status',
+            complaintId: item.id,
+            match: getComplaintMatch(item),
+            status,
+            adminNote
+          })
+        );
         if (Array.isArray(result?.complaints) && result.complaints.length) {
           complaints = result.complaints.map(parseComplaintRecord);
         }
       } catch (error) {
         adminUiState.complaintActionBusy = false;
         renderAdminWorkspace();
-        setAdminStatus(`Complaint update failed: ${error.message || error}`, 'error');
+        showAdminError(error, 'Complaint update failed.');
         return;
       }
 
@@ -2741,27 +2812,33 @@
       const item = complaints[index];
       if (!item) return;
       if (adminUiState.complaintActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       const adminNote = requireComplaintAdminNote();
       if (!adminNote) return;
 
       adminUiState.complaintActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestComplaintAction({
-          action: 'take-action',
-          complaintId: item.id,
-          match: getComplaintMatch(item),
-          actionTaken,
-          status: statusOverride || '',
-          adminNote
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          getComplaintActionLabel(actionTaken).replace(' saved', '') + '...',
+          `${getComplaintActionLabel(actionTaken)} saved successfully.`,
+          () => requestComplaintAction({
+            action: 'take-action',
+            complaintId: item.id,
+            match: getComplaintMatch(item),
+            actionTaken,
+            status: statusOverride || '',
+            adminNote
+          })
+        );
         if (Array.isArray(result?.complaints) && result.complaints.length) {
           complaints = result.complaints.map(parseComplaintRecord);
         }
       } catch (error) {
         adminUiState.complaintActionBusy = false;
         renderAdminWorkspace();
-        setAdminStatus(`Complaint action failed: ${error.message || error}`, 'error');
+        showAdminError(error, 'Complaint action failed.');
         return;
       }
 
@@ -2829,24 +2906,30 @@
     async function deleteRequirementAt(index) {
       const item = requirements[index];
       if (!item) return;
+      const actionButton = resolveAdminActionButton();
 
       const confirmed = window.confirm(`Delete this requirement from ${item.broker}?`);
       if (!confirmed) return;
 
       try {
-        await requestAdminDelete({
-          table: 'requirements',
-          scope: 'single',
-          match: {
-            broker_name: item.broker,
-            phone: item.phone,
-            purpose: item.purpose,
-            category: item.category,
-            location: item.location,
-            budget: item.budget,
-            notes: item.notes
-          }
-        });
+        await runAdminActionFeedback(
+          actionButton,
+          'Deleting Requirement...',
+          'Requirement deleted successfully.',
+          () => requestAdminDelete({
+            table: 'requirements',
+            scope: 'single',
+            match: {
+              broker_name: item.broker,
+              phone: item.phone,
+              purpose: item.purpose,
+              category: item.category,
+              location: item.location,
+              budget: item.budget,
+              notes: item.notes
+            }
+          })
+        );
       } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'the requirement'), 'error');
         return;
@@ -2859,24 +2942,30 @@
     async function deleteDealAt(index) {
       const item = deals[index];
       if (!item) return;
+      const actionButton = resolveAdminActionButton();
 
       const confirmed = window.confirm(`Delete this broker connector listing from ${item.broker}?`);
       if (!confirmed) return;
 
       try {
-        await requestAdminDelete({
-          table: 'deals',
-          scope: 'single',
-          match: {
-            broker_name: item.broker,
-            phone: item.phone,
-            type: item.purpose,
-            category: item.category,
-            location: item.location,
-            price: item.budget,
-            notes: item.notes
-          }
-        });
+        await runAdminActionFeedback(
+          actionButton,
+          'Deleting Listing...',
+          'Broker Connector listing deleted successfully.',
+          () => requestAdminDelete({
+            table: 'deals',
+            scope: 'single',
+            match: {
+              broker_name: item.broker,
+              phone: item.phone,
+              type: item.purpose,
+              category: item.category,
+              location: item.location,
+              price: item.budget,
+              notes: item.notes
+            }
+          })
+        );
       } catch (error) {
         setAdminStatus(getDeleteErrorMessage(error, 'the property / deal'), 'error');
         return;
@@ -4177,20 +4266,26 @@
 
     async function updateSupportRequestStatus(requestId, status) {
       if (!requestId || adminUiState.supportActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       adminUiState.supportActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestSupportAction({
-          action: 'update-status',
-          requestId,
-          status
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          status === 'resolved' ? 'Resolving...' : 'Updating...',
+          `Support request marked as ${getSupportStatusMeta(status).label}.`,
+          () => requestSupportAction({
+            action: 'update-status',
+            requestId,
+            status
+          })
+        );
         if (Array.isArray(result?.supportRequests) && result.supportRequests.length) {
           supportRequests = result.supportRequests;
         }
         setAdminStatus(`Support request marked as ${getSupportStatusMeta(status).label}.`, 'success');
       } catch (error) {
-        setAdminStatus(error?.message || 'Support request update failed.', 'error');
+        showAdminError(error, 'Support request update failed.');
       }
       adminUiState.supportActionBusy = false;
       renderAdminWorkspace();
@@ -4287,13 +4382,19 @@
 
     async function handleCompanySuggestionAction(pendingId, action) {
       if (!pendingId || adminUiState.companyActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       adminUiState.companyActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestCompanySuggestionAction({
-          action,
-          pendingId
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          action === 'approve' ? 'Approving...' : 'Rejecting...',
+          action === 'approve' ? 'Company suggestion approved successfully.' : 'Company suggestion rejected successfully.',
+          () => requestCompanySuggestionAction({
+            action,
+            pendingId
+          })
+        );
         approvedCompanySuggestions = Array.isArray(result?.approvedCompanies) ? result.approvedCompanies : approvedCompanySuggestions;
         pendingCompanySuggestions = Array.isArray(result?.pendingCompanies) ? result.pendingCompanies : pendingCompanySuggestions;
         setAdminStatus(
@@ -4301,7 +4402,7 @@
           'success'
         );
       } catch (error) {
-        setAdminStatus(error?.message || 'Company suggestion update failed.', 'error');
+        showAdminError(error, 'Company suggestion update failed.');
       }
       adminUiState.companyActionBusy = false;
       renderAdminWorkspace();
@@ -4382,6 +4483,7 @@
 
     async function createToolkitTool() {
       if (adminUiState.toolkitActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       const title = document.getElementById('toolkitCreateTitle')?.value || '';
       const description = document.getElementById('toolkitCreateDescription')?.value || '';
       const category = document.getElementById('toolkitCreateCategory')?.value || '';
@@ -4395,24 +4497,29 @@
       adminUiState.toolkitActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestToolkitAction('POST', {
-          action: 'create-tool',
-          title,
-          description,
-          category,
-          url,
-          logoUrl,
-          iconName,
-          sortOrder,
-          isActive,
-          isFeatured
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          'Saving Tool...',
+          'Toolkit tool created successfully.',
+          () => requestToolkitAction('POST', {
+            action: 'create-tool',
+            title,
+            description,
+            category,
+            url,
+            logoUrl,
+            iconName,
+            sortOrder,
+            isActive,
+            isFeatured
+          })
+        );
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
         setAdminStatus('Toolkit tool created successfully.', 'success');
       } catch (error) {
-        setAdminStatus(error?.message || 'Toolkit tool creation failed.', 'error');
+        showAdminError(error, 'Toolkit tool creation failed.');
       }
       adminUiState.toolkitActionBusy = false;
       renderAdminWorkspace();
@@ -4420,28 +4527,34 @@
 
     async function saveToolkitTool(toolId) {
       if (!toolId || adminUiState.toolkitActionBusy) return;
+      const actionButton = resolveAdminActionButton();
       adminUiState.toolkitActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestToolkitAction('PATCH', {
-          toolId,
-          title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
-          description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
-          category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
-          url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
-          logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
-          iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
-          sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0',
-          isActive: Boolean(document.getElementById(`toolkit-active-${toolId}`)?.checked),
-          isFeatured: Boolean(document.getElementById(`toolkit-featured-${toolId}`)?.checked)
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          'Saving Tool...',
+          'Toolkit tool updated successfully.',
+          () => requestToolkitAction('PATCH', {
+            toolId,
+            title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
+            description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
+            category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
+            url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
+            logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
+            iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
+            sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0',
+            isActive: Boolean(document.getElementById(`toolkit-active-${toolId}`)?.checked),
+            isFeatured: Boolean(document.getElementById(`toolkit-featured-${toolId}`)?.checked)
+          })
+        );
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
         adminUiState.toolkitUsingFallback = false;
         setAdminStatus('Toolkit tool updated successfully.', 'success');
       } catch (error) {
-        setAdminStatus(error?.message || 'Toolkit tool update failed.', 'error');
+        showAdminError(error, 'Toolkit tool update failed.');
       }
       adminUiState.toolkitActionBusy = false;
       renderAdminWorkspace();
@@ -4450,27 +4563,33 @@
     async function deleteToolkitTool(toolId) {
       if (!toolId || adminUiState.toolkitActionBusy) return;
       if (!window.confirm('Delete this toolkit tool?')) return;
+      const actionButton = resolveAdminActionButton();
       adminUiState.toolkitActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestToolkitAction('POST', {
-          action: 'delete-tool',
-          toolId,
-          title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
-          description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
-          category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
-          url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
-          logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
-          iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
-          sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0'
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          'Deleting Tool...',
+          'Toolkit tool deleted successfully.',
+          () => requestToolkitAction('POST', {
+            action: 'delete-tool',
+            toolId,
+            title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
+            description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
+            category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
+            url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
+            logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
+            iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
+            sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0'
+          })
+        );
         toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
         toolkitAnalytics = result?.analytics || toolkitAnalytics;
         adminUiState.toolkitLoaded = true;
         adminUiState.toolkitUsingFallback = false;
         setAdminStatus('Toolkit tool deleted successfully.', 'success');
       } catch (error) {
-        setAdminStatus(error?.message || 'Toolkit tool delete failed.', 'error');
+        showAdminError(error, 'Toolkit tool delete failed.');
       }
       adminUiState.toolkitActionBusy = false;
       renderAdminWorkspace();
@@ -4479,12 +4598,18 @@
     async function deleteAllToolkitTools() {
       if (adminUiState.toolkitActionBusy) return;
       if (!window.confirm('Delete all toolkit tools? This will clear the toolkit so you can add your own tools from scratch.')) return;
+      const actionButton = resolveAdminActionButton();
       adminUiState.toolkitActionBusy = true;
       renderAdminWorkspace();
       try {
-        const result = await requestToolkitAction('POST', {
-          action: 'delete-all-tools'
-        });
+        const result = await runAdminActionFeedback(
+          actionButton,
+          'Deleting All Tools...',
+          'All toolkit tools deleted successfully.',
+          () => requestToolkitAction('POST', {
+            action: 'delete-all-tools'
+          })
+        );
         toolkitTools = Array.isArray(result?.tools) ? result.tools : [];
         toolkitAnalytics = result?.analytics || {
           totalTools: 0,
@@ -4496,7 +4621,7 @@
         adminUiState.toolkitUsingFallback = false;
         setAdminStatus('All toolkit tools deleted successfully.', 'success');
       } catch (error) {
-        setAdminStatus(error?.message || 'Bulk toolkit delete failed.', 'error');
+        showAdminError(error, 'Bulk toolkit delete failed.');
       }
       adminUiState.toolkitActionBusy = false;
       renderAdminWorkspace();
