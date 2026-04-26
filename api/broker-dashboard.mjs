@@ -249,6 +249,7 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
     marketPrice,
     distressAskingPrice,
     distressDiscountPercent,
+    listingImages: body?.listingImages !== undefined ? parsePropertyMeta(serializePropertyMeta({ listingImages: body?.listingImages })).listingImages : existingMeta.listingImages,
     legacyDescription: body?.legacyDescription !== undefined ? normalizeText(body?.legacyDescription) : existingMeta.legacyDescription,
     nextFollowUpDate: normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate),
     nextFollowUpTime: normalizeTimeValue(body?.nextFollowUpTime, existingMeta.nextFollowUpTime),
@@ -1487,6 +1488,22 @@ export async function POST(request) {
         }
       });
       return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'get-property-media') {
+      const propertyId = Number(body?.id || body?.propertyId || body?.sourceId || body?.listingId || 0);
+      if (!propertyId) {
+        return json({ message: 'Property id is required.' }, 400);
+      }
+      const property = await fetchBrokerRow(context, 'broker_properties', propertyId);
+      if (!property) {
+        return json({ message: 'Listing not found.' }, 404);
+      }
+      const meta = parsePropertyMeta(property.description);
+      return json({
+        images: Array.isArray(meta.listingImages) ? meta.listingImages : [],
+        count: Array.isArray(meta.listingImages) ? meta.listingImages.length : 0
+      });
     }
 
     if (action === 'set-lead-followup') {

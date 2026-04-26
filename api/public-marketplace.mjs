@@ -171,7 +171,8 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
         broker_last_activity: brokerLastActivity,
         broker_avatar_url: brokerAvatarUrl,
         building_label: normalizeText(meta.buildingName),
-        size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit)
+        size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit),
+        listing_image_count: Array.isArray(meta.listingImages) ? meta.listingImages.length : 0
       }];
     }
     return [];
@@ -201,7 +202,53 @@ export async function GET(request) {
       exposeBrokerContact = Boolean(broker?.id && !broker?.is_blocked);
     }
 
-    const section = new URL(request.url).searchParams.get('section') || 'all';
+    const url = new URL(request.url);
+    const mediaFor = normalizeText(url.searchParams.get('mediaFor'));
+    if (mediaFor) {
+      const listingRows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'public_listings',
+        select: 'id,source_type,source_id,broker_uuid,broker_id_number,public_listing_status',
+        filters: { id: mediaFor }
+      }).catch(() => []);
+      const listing = Array.isArray(listingRows) ? listingRows[0] : null;
+      if (!listing || listing.source_type !== 'property') {
+        return json({ images: [], count: 0 });
+      }
+      const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows: [listing] });
+      if (!Array.isArray(validRows) || !validRows.length) {
+        return json({ images: [], count: 0 });
+      }
+      const propertyRows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_properties',
+        select: 'id,description',
+        filters: { id: listing.source_id }
+      }).catch(() => []);
+      const property = Array.isArray(propertyRows) ? propertyRows[0] : null;
+      const meta = parsePropertyMeta(property?.description);
+      const images = Array.isArray(meta.listingImages) ? meta.listingImages : [];
+      return json({
+        images,
+        count: images.length,
+        details: {
+          furnishing: meta.furnishing || '',
+          cheques: meta.cheques || '',
+          chiller: meta.chiller || '',
+          mortgageStatus: meta.mortgageStatus || '',
+          leasehold: Boolean(meta.leasehold),
+          salePropertyStatus: meta.salePropertyStatus || '',
+          handoverQuarter: meta.handoverQuarter || '',
+          handoverYear: meta.handoverYear || '',
+          marketPrice: meta.marketPrice || '',
+          distressGapPercent: meta.distressDiscountPercent || ''
+        }
+      });
+    }
+
+    const section = url.searchParams.get('section') || 'all';
     const rows = await supabaseSelect({
       supabaseUrl,
       serviceRoleKey,

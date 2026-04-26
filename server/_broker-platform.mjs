@@ -576,6 +576,7 @@ export function deriveBrokerActivity(lastActivity, now = Date.now()) {
 
 const LEAD_META_PREFIX = '__BC_LEAD_META__:';
 const PROPERTY_META_PREFIX = '__BC_PROPERTY_META__:';
+const MAX_PROPERTY_IMAGES = 10;
 
 function normalizeActivityLog(entries) {
   if (!Array.isArray(entries)) return [];
@@ -708,6 +709,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      listingImages: [],
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
     };
@@ -729,6 +731,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      listingImages: [],
       legacyDescription: rawText,
       ...normalizePropertyWorkflow({})
     };
@@ -751,6 +754,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: normalizeText(parsed?.marketPrice),
       distressAskingPrice: normalizeText(parsed?.distressAskingPrice),
       distressDiscountPercent: normalizeText(parsed?.distressDiscountPercent),
+      listingImages: sanitizePropertyImageList(parsed?.listingImages),
       legacyDescription: normalizeText(parsed?.legacyDescription),
       ...normalizePropertyWorkflow(parsed?.workflow || parsed)
     };
@@ -770,10 +774,32 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      listingImages: [],
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
     };
   }
+}
+
+function sanitizePropertyImageList(images) {
+  return (Array.isArray(images) ? images : [])
+    .map((image, index) => {
+      const dataUrl = normalizeText(image?.dataUrl || image?.src || image?.url);
+      if (!dataUrl.startsWith('data:image/')) {
+        return null;
+      }
+      return {
+        id: normalizeText(image?.id) || `img-${index + 1}`,
+        name: normalizeText(image?.name) || `Listing Image ${index + 1}`,
+        mimeType: normalizeText(image?.mimeType || dataUrl.slice(5, dataUrl.indexOf(';'))) || 'image/jpeg',
+        dataUrl,
+        width: Number(image?.width || 0) || 0,
+        height: Number(image?.height || 0) || 0,
+        size: Number(image?.size || 0) || 0
+      };
+    })
+    .filter(Boolean)
+    .slice(0, MAX_PROPERTY_IMAGES);
 }
 
 export function serializePropertyMeta(meta) {
@@ -793,6 +819,7 @@ export function serializePropertyMeta(meta) {
     marketPrice: normalizeText(meta?.marketPrice),
     distressAskingPrice: normalizeText(meta?.distressAskingPrice),
     distressDiscountPercent: normalizeText(meta?.distressDiscountPercent),
+    listingImages: sanitizePropertyImageList(meta?.listingImages),
     legacyDescription: normalizeText(meta?.legacyDescription),
     workflow
   };
@@ -812,6 +839,7 @@ export function serializePropertyMeta(meta) {
     !payload.marketPrice &&
     !payload.distressAskingPrice &&
     !payload.distressDiscountPercent &&
+    !payload.listingImages.length &&
     !payload.legacyDescription
   ) {
     const hasWorkflowValues =
@@ -1518,6 +1546,9 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const marketPrice = !isLead
     ? normalizeText(item?.marketPrice || item?.market_price || propertyMeta?.marketPrice)
     : '';
+  const listingImages = !isLead
+    ? sanitizePropertyImageList(item?.listingImages || item?.listing_images || propertyMeta?.listingImages)
+    : [];
   const distressGapPercent = !isLead
     ? normalizeText(item?.distressGapPercent || item?.distress_gap_percent || item?.distressDiscountPercent || propertyMeta?.distressDiscountPercent)
     : '';
@@ -1651,6 +1682,7 @@ export function sanitizeProperty(row) {
   const handoverQuarter = normalizeHandoverQuarterValue(row.handover_quarter || meta.handoverQuarter);
   const handoverYear = normalizeHandoverYearValue(row.handover_year || meta.handoverYear);
   const handoverLabel = formatPropertyHandoverLabel({ handoverQuarter, handoverYear });
+  const listingImages = sanitizePropertyImageList(row.listing_images || meta.listingImages);
   return {
     id: row.id,
     purpose: normalizeListingPurposeValue(row.purpose) || row.purpose,
@@ -1686,6 +1718,7 @@ export function sanitizeProperty(row) {
     distressAskingPrice: meta.distressAskingPrice || '',
     distressDiscountPercent: distressGapPercent,
     distressGapPercent,
+    listingImageCount: Number(row.listing_image_count || listingImages.length || 0) || 0,
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
     nextFollowUpDate: meta.nextFollowUpDate || '',
@@ -1793,6 +1826,7 @@ export function sanitizePublicListing(row, options = {}) {
   const handoverQuarter = !isLead ? normalizeHandoverQuarterValue(row.handover_quarter) : '';
   const handoverYear = !isLead ? normalizeHandoverYearValue(row.handover_year) : '';
   const handoverLabel = !isLead ? formatPropertyHandoverLabel({ handoverQuarter, handoverYear }) : '';
+  const listingImages = !isLead ? sanitizePropertyImageList(row.listing_images) : [];
   return {
     id: row.id,
     brokerUuid: exposeBrokerContact ? normalizeText(row.broker_uuid) : '',
@@ -1819,6 +1853,7 @@ export function sanitizePublicListing(row, options = {}) {
     marketPrice: !isLead ? normalizeText(row.market_price) : '',
     distressDiscountPercent: distressGapPercent,
     distressGapPercent,
+    listingImageCount: !isLead ? Number(row.listing_image_count || listingImages.length || 0) || 0 : 0,
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
     sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,

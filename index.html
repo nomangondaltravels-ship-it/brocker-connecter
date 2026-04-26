@@ -3025,6 +3025,7 @@
 <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
 <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
 <script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+<script src="assets/listing-media-ui.js?v=2026-04-27-listing-media-fix"></script>
 <script>
       const state = {
         authMode: 'signin',
@@ -3039,6 +3040,7 @@
       authCompanyMenuOpen: false,
       authCompanyActiveIndex: -1,
       listings: [],
+      listingMediaCache: {},
       activeSection: 'requirements',
       publicSearchQuery: '',
       publicFilters: {
@@ -3176,9 +3178,7 @@
       };
       try {
         localStorage.setItem(getPlatformRulesStorageKey(), JSON.stringify(record));
-      } catch (error) {
-        console.debug('Could not store platform rules acceptance', error?.message || error);
-      }
+      } catch (error) {}
       return record;
     }
 
@@ -3567,6 +3567,19 @@
       }
       el.className = `system-banner active ${tone}`;
       el.textContent = message;
+    }
+
+    function getUiErrorMessage(error, fallback = 'Something went wrong. Please try again.') {
+      const message = normalizeText(error?.message);
+      return message || fallback;
+    }
+
+    function showSystemError(error, fallback = 'Something went wrong. Please try again.') {
+      setSystemBanner(getUiErrorMessage(error, fallback), 'error');
+    }
+
+    function showActionToast(type, message) {
+      window.ActionFeedbackUi?.showToast(type, message);
     }
 
     function toggleMenuDrawer() {
@@ -3990,7 +4003,7 @@
       } catch (error) {
         state.supportModalSubmitting = false;
         renderSupportModal();
-        setSystemBanner(error?.message || 'Support request failed.', 'error');
+        showSystemError(error, 'Support request failed.');
       }
     }
 
@@ -4277,7 +4290,7 @@
           closePublicComplaintModal();
           openAuthModal('signin');
         }
-        setSystemBanner(error?.message || 'Complaint submission failed.', 'error');
+        showSystemError(error, 'Complaint submission failed.');
       }
     }
 
@@ -4534,13 +4547,6 @@
 
     async function requestPasswordResetEmail(emailValue) {
       const redirectTo = new URL('reset-password.html', window.location.origin).toString();
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.debug('[broker-auth-ui] forgot-password direct supabase', {
-          email: emailValue,
-          redirectTo,
-          supabaseUrl: authSupabaseUrl
-        });
-      }
       const response = await fetch(`${authSupabaseUrl}/auth/v1/recover`, {
         method: 'POST',
         headers: {
@@ -5134,29 +5140,6 @@
         `;
     }
 
-    function renderSectionGrid(targetId, sectionName, items) {
-      const target = document.getElementById(targetId);
-      if (!target) return;
-      if (!items.length) {
-        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
-        return;
-      }
-      target.innerHTML = items.map(item => renderPublicCard(item, sectionName)).join('');
-    }
-
-    function updateStats() {
-      const filtered = getFilteredPublicListings();
-      const requirements = filtered.filter(item => item.sourceType === 'lead');
-      const listings = filtered.filter(item => item.sourceType === 'property');
-      const distress = listings.filter(item => item.isDistress);
-      const requirementCount = document.getElementById('tabCountRequirements');
-      const listingCount = document.getElementById('tabCountListings');
-      const distressCount = document.getElementById('tabCountDistress');
-      if (requirementCount) requirementCount.textContent = requirements.length;
-      if (listingCount) listingCount.textContent = listings.length;
-      if (distressCount) distressCount.textContent = distress.length;
-    }
-
     function renderHomeHighlights() {
       const target = document.getElementById('homeHighlights');
       if (!target) return;
@@ -5168,21 +5151,6 @@
         return;
       }
       target.innerHTML = highlights.map(item => renderListingCard(item, item.sourceType === 'lead' ? 'requirements' : item.isDistress ? 'distress-deals' : 'marketplace')).join('');
-    }
-
-    function renderPublicViews() {
-      const filtered = getFilteredPublicListings();
-      const requirements = filtered.filter(item => item.sourceType === 'lead');
-      const marketplace = filtered
-        .filter(item => item.sourceType === 'property')
-        .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)));
-      const distress = marketplace.filter(item => item.isDistress);
-
-      updateStats();
-      renderHomeHighlights();
-      renderSectionGrid('marketplaceGrid', 'marketplace', marketplace);
-      renderSectionGrid('requirementsGrid', 'requirements', requirements);
-      renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
     }
 
     function formatCompactRelativeTime(value) {
@@ -5280,6 +5248,22 @@
               <path d="M5 5h9l1.5 3H19l-1.5 4H5"></path>
             </svg>
           `;
+        case 'image':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <circle cx="9" cy="10" r="1.5"></circle>
+              <path d="m21 16-5.5-5.5L7 19"></path>
+            </svg>
+          `;
+        case 'download':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4v10"></path>
+              <path d="m8 10 4 4 4-4"></path>
+              <path d="M5 20h14"></path>
+            </svg>
+          `;
       }
       return '';
     }
@@ -5321,6 +5305,22 @@
         selfDisabledText: 'You cannot report your own shared record.'
       });
       const sectionName = listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace';
+      const mediaActions = listing.sourceType === 'property'
+        ? `
+            ${renderConnectorActionButton({
+              label: 'View Pictures',
+              icon: 'image',
+              tone: 'secondary',
+              onclick: `openConnectorListingPictures('${sectionName}', '${listing.id}')`
+            })}
+            ${renderConnectorActionButton({
+              label: 'Download PDF',
+              icon: 'download',
+              tone: 'ghost',
+              onclick: `downloadConnectorListingPdf('${sectionName}', '${listing.id}')`
+            })}
+          `
+        : '';
       const protectedActions = canAccessBrokerContact(listing)
         ? `
             ${renderConnectorActionButton({
@@ -5354,6 +5354,7 @@
       return `
           <div class="connector-action-bar">
             ${protectedActions}
+            ${mediaActions}
             ${renderConnectorActionButton({
               label: 'Share',
               icon: 'share',
@@ -5369,6 +5370,95 @@
           ${reportRecordButton}
         </div>
       `;
+    }
+
+    function findConnectorListing(sectionName, listingId) {
+      const items = getListingsForActiveConnectorSection(sectionName);
+      return items.find(item => String(item.id) === String(listingId)) || null;
+    }
+
+    async function fetchConnectorListingMediaBundle(listing) {
+      const cacheKey = String(listing?.id || '');
+      if (!cacheKey) {
+        return { images: [], count: 0, details: {} };
+      }
+      if (state.listingMediaCache[cacheKey]) {
+        return state.listingMediaCache[cacheKey];
+      }
+      const response = await fetch(`/api/public-marketplace?mediaFor=${encodeURIComponent(cacheKey)}`, { method: 'GET' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Could not load listing pictures.');
+      }
+      const mediaBundle = {
+        images: window.ListingMediaUi?.sanitizeImageList(result?.images) || [],
+        count: Number(result?.count || 0) || 0,
+        details: result?.details && typeof result.details === 'object' ? result.details : {}
+      };
+      state.listingMediaCache[cacheKey] = mediaBundle;
+      return mediaBundle;
+    }
+
+    function buildConnectorListingPdfPayload(listing, mediaBundle = {}) {
+      const details = mediaBundle?.details && typeof mediaBundle.details === 'object' ? mediaBundle.details : {};
+      const fields = [
+        { label: 'Purpose', value: getConnectorPublicPurposeLabel(listing) },
+        { label: 'Property Category', value: getConnectorDisplayPropertyCategory(listing) || '--' },
+        { label: 'Type', value: getConnectorDisplayUnitLayout(listing) || getConnectorDisplayPropertyType(listing) || '--' },
+        { label: 'Location', value: listing.location || '--' },
+        { label: 'Building / Project', value: listing.buildingLabel || '--' },
+        { label: 'Price', value: listing.priceLabel || '--' },
+        { label: 'Size', value: listing.sizeLabel || '--' }
+      ];
+      if (details.furnishing) fields.push({ label: 'Furnishing', value: details.furnishing });
+      const paymentTerms = [details.cheques, details.chiller].filter(Boolean).join(' - ');
+      if (paymentTerms) fields.push({ label: 'Payment Details', value: paymentTerms });
+      if (getConnectorPublicPurposeValue(listing) === 'sale') {
+        fields.push({ label: 'Sale Status', value: getConnectorSalePropertyStatus(listing) || details.salePropertyStatus || 'Ready Property' });
+        const handoverLabel = getConnectorHandoverLabel(listing)
+          || [details.handoverQuarter, details.handoverYear].filter(Boolean).join(' ');
+        if (handoverLabel) fields.push({ label: 'Expected Handover', value: handoverLabel });
+        if (details.mortgageStatus) fields.push({ label: 'Mortgage Status', value: details.mortgageStatus });
+        if (details.leasehold) fields.push({ label: 'Ownership', value: 'Leasehold' });
+      }
+      if (listing.isDistress) {
+        fields.push({ label: 'Distress Gap', value: getConnectorDistressGapLabel(listing) || details.distressGapPercent || 'Add both market and asking prices to calculate distress gap.' });
+        if (listing.marketPrice || details.marketPrice) {
+          fields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(listing.marketPrice || details.marketPrice)}` });
+        }
+      }
+      return {
+        title: `${getConnectorPublicPurposeLabel(listing)} ${getConnectorDisplayPropertyType(listing) ? `- ${getConnectorDisplayPropertyType(listing)}` : 'Listing'}`,
+        fileName: `${getConnectorPublicPurposeLabel(listing)}-${getConnectorDisplayPropertyType(listing) || 'listing'}`,
+        fields,
+        notes: listing.publicNotes || '',
+        images: mediaBundle.images || []
+      };
+    }
+
+    async function openConnectorListingPictures(sectionName, listingId) {
+      const listing = findConnectorListing(sectionName, listingId);
+      if (!listing) return;
+      try {
+        const mediaBundle = await fetchConnectorListingMediaBundle(listing);
+        window.ListingMediaUi?.openGallery({
+          title: `${getConnectorPublicPurposeLabel(listing)} ${getConnectorDisplayPropertyType(listing) ? `- ${getConnectorDisplayPropertyType(listing)}` : 'Listing Pictures'}`,
+          images: mediaBundle.images
+        });
+      } catch (error) {
+        showActionToast('error', getUiErrorMessage(error, 'Could not load listing pictures.'));
+      }
+    }
+
+    async function downloadConnectorListingPdf(sectionName, listingId) {
+      const listing = findConnectorListing(sectionName, listingId);
+      if (!listing) return;
+      try {
+        const mediaBundle = await fetchConnectorListingMediaBundle(listing);
+        await window.ListingMediaUi?.downloadListingPdf(buildConnectorListingPdfPayload(listing, mediaBundle));
+      } catch (error) {
+        showActionToast('error', getUiErrorMessage(error, 'Could not download listing PDF.'));
+      }
     }
 
     function buildPublicActionButtons(listing, sectionName) {
@@ -5789,7 +5879,7 @@
       } catch (error) {
         console.error(`BCP init step failed: ${label}`, error);
         if (!silent) {
-          setSystemBanner(error?.message || `Could not complete ${label}.`, 'error');
+          showSystemError(error, `Could not complete ${label}.`);
         }
         return null;
       }
@@ -6233,13 +6323,6 @@
               password: passwordValue
             };
 
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          console.debug('[broker-auth-ui] submit', {
-            mode: modeAtSubmit,
-            hasEmail: Boolean(emailValue)
-          });
-        }
-
         let response = null;
         let result = null;
         if (modeAtSubmit === 'forgot') {
@@ -6255,15 +6338,6 @@
           result = await response.json().catch(() => ({}));
         }
 
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          console.debug('[broker-auth-ui] response', {
-            status: response?.status || 200,
-            ok: response ? response.ok : true,
-            hasBroker: Boolean(result?.broker),
-            hasToken: Boolean(result?.token || result?.access_token || result?.session?.access_token)
-          });
-        }
-
         if (response && !response.ok) {
           throw new Error(getAuthFailureMessage(result, modeAtSubmit));
         }
@@ -6273,7 +6347,7 @@
         }
 
         if (modeAtSubmit === 'forgot') {
-          window.ActionFeedbackUi?.showToast('success', result?.message || 'Request submitted successfully.');
+          showActionToast('success', result?.message || 'Request submitted successfully.');
           setAuthStatus(result?.message || 'If an account exists for this email, a reset link has been sent.', 'success');
           return;
         }
@@ -6283,7 +6357,7 @@
           document.getElementById('authConfirmPassword').value = '';
           setAuthMode('signin');
           document.getElementById('authEmail').value = emailValue;
-          window.ActionFeedbackUi?.showToast('success', 'Registration successful.');
+          showActionToast('success', 'Registration successful.');
           setAuthStatus(result?.message || 'Check your email to confirm your account.', 'success');
           return;
         }
@@ -6301,13 +6375,13 @@
         if (await completeMarketplaceContactRevealAuth()) {
           return;
         }
-        window.ActionFeedbackUi?.showToast('success', modeAtSubmit === 'register' ? 'Registration successful.' : 'Login successful.');
+        showActionToast('success', modeAtSubmit === 'register' ? 'Registration successful.' : 'Login successful.');
         window.location.href = 'dashboard.html';
       } catch (error) {
         if (state.authRequestId === requestId) {
           const fallbackMessage = getAuthModeFallbackMessage(modeAtSubmit);
-          const failureMessage = getAuthFailureMessage({ message: error?.message }, modeAtSubmit, fallbackMessage);
-          window.ActionFeedbackUi?.showToast('error', failureMessage);
+          const failureMessage = getAuthFailureMessage({ message: getUiErrorMessage(error, fallbackMessage) }, modeAtSubmit, fallbackMessage);
+          showActionToast('error', failureMessage);
           setAuthStatus(failureMessage);
         }
       } finally {
