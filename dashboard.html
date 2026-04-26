@@ -16097,15 +16097,8 @@
       const target = document.getElementById('leadsList');
       if (!target) return;
       const requirements = getFilteredDashboardItems(state.leads, 'lead');
-      const actionBar = renderWorkspaceActionBar(
-        'All active broker requirements appear here.',
-        'Add a new requirement or keep filtering this view without changing how Broker Desk stores client demand.',
-        'Add Requirement',
-        'openLeadComposer()'
-      );
       if (!requirements.length) {
         target.innerHTML = `
-          ${actionBar}
           ${renderEmptyState(
             'No broker requirements yet',
             'Adjust your filters or add your first lead from Broker Desk to start tracking client demand.',
@@ -16121,7 +16114,6 @@
       const leadColumns = WORKSPACE_TABLE_COLUMNS.leads;
 
       target.innerHTML = `
-        ${actionBar}
         <div class="workspace-split ${selectedLead ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
@@ -16210,15 +16202,8 @@
       const target = document.getElementById('propertiesList');
       if (!target) return;
       const properties = getFilteredDashboardItems(state.properties, 'property');
-      const actionBar = renderWorkspaceActionBar(
-        'All active broker listings appear here.',
-        'Add a new listing or keep filtering this view without changing how Broker Desk manages inventory records.',
-        'Add Listing',
-        'openPropertyComposer()'
-      );
       if (!properties.length) {
         target.innerHTML = `
-          ${actionBar}
           ${renderEmptyState(
             'No listings yet',
             'Adjust your filters or add your first listing from Broker Desk to start managing inventory.',
@@ -16234,7 +16219,6 @@
       const listingColumns = WORKSPACE_TABLE_COLUMNS.listings;
 
       target.innerHTML = `
-        ${actionBar}
         <div class="workspace-split ${selectedProperty ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
