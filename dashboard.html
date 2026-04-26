@@ -6590,12 +6590,32 @@
                     <div class="field-error" id="propertyMarketPriceError"></div>
                   </div>
                 </div>
-                <div class="distress-metric" id="propertyDistressMetric">
-                  <div class="distress-metric-copy">
-                    <strong>Distress Gap</strong>
-                    <p id="propertyDistressMetricText">Add both market and asking prices to calculate distress gap.</p>
+              <div class="distress-metric" id="propertyDistressMetric">
+                <div class="distress-metric-copy">
+                  <strong>Distress Gap</strong>
+                  <p id="propertyDistressMetricText">Add both market and asking prices to calculate distress gap.</p>
+                </div>
+                <span class="badge badge-red" id="propertyDistressMetricBadge">--</span>
+              </div>
+            </div>
+
+              <div class="form-section crm-hidden" id="propertyMediaSection">
+                <div class="form-section-head">
+                  <span class="form-section-kicker">Pictures</span>
+                  <h4>Listing Pictures</h4>
+                </div>
+                <div class="field-block full">
+                  <label class="small" for="propertyImagesInput">Pictures (Optional)</label>
+                  <div class="listing-upload-stack">
+                    <div class="listing-upload-actions">
+                      <input class="listing-upload-input" id="propertyImagesInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple>
+                      <button class="btn btn-secondary btn-tiny" type="button" onclick="triggerPropertyImagesUpload()">Upload Pictures</button>
+                      <button class="btn btn-secondary btn-tiny" type="button" id="propertyImagesClearBtn" onclick="clearPropertyImages()">Clear Pictures</button>
+                    </div>
+                    <div class="listing-upload-summary" id="propertyImagesSummary">No pictures uploaded</div>
+                    <div class="listing-upload-chip-row" id="propertyImagesChipRow"></div>
                   </div>
-                  <span class="badge badge-red" id="propertyDistressMetricBadge">--</span>
+                  <div class="field-error" id="propertyListingImagesError"></div>
                 </div>
               </div>
 
@@ -6974,10 +6994,11 @@
     </div>
   </div>
 
-<script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
-<script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
-<script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
-<script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-04-23-complaint-rules-fix"></script>
+  <script src="assets/platform-rules-config.js?v=2026-04-23-complaint-rules-fix"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-04-23-complaint-rules-fix"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-04-25-global-action-feedback"></script>
+  <script src="assets/listing-media-ui.js?v=2026-04-26-listing-media"></script>
 <script>
     const LEAD_CONFIG = window.BROKER_DASHBOARD_LEAD_CONFIG || {
       uaeLocations: [],
@@ -7119,6 +7140,10 @@
       },
       leadEditorOriginal: null,
       propertyEditorOriginal: null,
+      propertyImageDraft: [],
+      propertyImageDraftLoaded: true,
+      propertyImageDraftDirty: false,
+      propertyMediaCache: {},
       profileExtras: null,
       profileDraft: null,
       profileStorageKey: '',
@@ -8644,7 +8669,8 @@
         'propertySaleStatusError',
         'propertyHandoverQuarterError',
         'propertyHandoverYearError',
-        'propertyMarketPriceError'
+        'propertyMarketPriceError',
+        'propertyListingImagesError'
       ].forEach(id => {
         const node = document.getElementById(id);
         if (node) node.textContent = '';
@@ -8736,6 +8762,7 @@
       const hiddenInput = document.getElementById('propertyPurposeValue');
       const baseFields = document.getElementById('propertyBaseFields');
       const pricingSection = document.getElementById('propertyPricingSection');
+      const mediaSection = document.getElementById('propertyMediaSection');
       const contactsSection = document.getElementById('propertyContactsSection');
       const notesSection = document.getElementById('propertyNotesSection');
       const workflowSection = document.getElementById('propertyWorkflowSection');
@@ -8756,6 +8783,7 @@
       const showSections = Boolean(normalizedPurpose);
       baseFields?.classList.toggle('crm-hidden', !showSections);
       pricingSection?.classList.toggle('crm-hidden', !showSections);
+      mediaSection?.classList.toggle('crm-hidden', !showSections);
       contactsSection?.classList.toggle('crm-hidden', !showSections);
       notesSection?.classList.toggle('crm-hidden', !showSections);
       // Keep workflow fields in the DOM for compatibility, but hide the form section
@@ -8979,6 +9007,174 @@
         event.target.value = normalizeDashboardLocationValue(event.target.value);
         syncWorkspaceFormSummary('property');
       });
+
+      const propertyImagesInput = document.getElementById('propertyImagesInput');
+      if (propertyImagesInput && propertyImagesInput.dataset.bound !== 'true') {
+        propertyImagesInput.addEventListener('change', handlePropertyImagesSelected);
+        propertyImagesInput.dataset.bound = 'true';
+      }
+      updatePropertyImageUploadUi();
+    }
+
+    function setPropertyImagesError(message = '') {
+      const node = document.getElementById('propertyListingImagesError');
+      if (node) node.textContent = message;
+    }
+
+    function updatePropertyImageUploadUi(options = {}) {
+      const summary = document.getElementById('propertyImagesSummary');
+      const chipRow = document.getElementById('propertyImagesChipRow');
+      const clearButton = document.getElementById('propertyImagesClearBtn');
+      const images = Array.isArray(state.propertyImageDraft) ? state.propertyImageDraft : [];
+      const isLoading = Boolean(options.loading);
+      const countHint = Number(options.countHint || 0) || 0;
+
+      if (summary) {
+        if (isLoading) {
+          summary.textContent = countHint > 0
+            ? `Loading ${countHint} uploaded picture${countHint === 1 ? '' : 's'}...`
+            : 'Loading uploaded pictures...';
+        } else if (!images.length) {
+          summary.textContent = 'No pictures uploaded';
+        } else {
+          summary.textContent = `${images.length} picture${images.length === 1 ? '' : 's'} ready`;
+        }
+      }
+
+      if (chipRow) {
+        if (isLoading) {
+          chipRow.innerHTML = '';
+        } else {
+          chipRow.innerHTML = images.map((image, index) => `
+            <span class="listing-upload-chip" title="${escapeHtml(image.name || `Picture ${index + 1}`)}">
+              <strong>${index + 1}</strong>
+              <span>${escapeHtml(image.name || `Picture ${index + 1}`)}</span>
+            </span>
+          `).join('');
+        }
+      }
+
+      if (clearButton) {
+        clearButton.disabled = isLoading || !images.length;
+      }
+    }
+
+    function setPropertyImages(images, options = {}) {
+      state.propertyImageDraft = window.ListingMediaUi?.sanitizeImageList(images) || [];
+      state.propertyImageDraftLoaded = options.loaded !== undefined ? Boolean(options.loaded) : true;
+      state.propertyImageDraftDirty = options.dirty !== undefined ? Boolean(options.dirty) : state.propertyImageDraftDirty;
+      if (options.cacheKey) {
+        state.propertyMediaCache[String(options.cacheKey)] = [...state.propertyImageDraft];
+      }
+      updatePropertyImageUploadUi(options);
+    }
+
+    function triggerPropertyImagesUpload() {
+      document.getElementById('propertyImagesInput')?.click();
+    }
+
+    function clearPropertyImages() {
+      document.getElementById('propertyImagesInput').value = '';
+      setPropertyImagesError('');
+      setPropertyImages([], { loaded: true, dirty: true });
+    }
+
+    async function handlePropertyImagesSelected(event) {
+      const input = event?.target;
+      if (!input) return;
+      setPropertyImagesError('');
+      try {
+        updatePropertyImageUploadUi({ loading: true, countHint: state.propertyImageDraft.length });
+        const images = await window.ListingMediaUi?.appendFilesToImages(state.propertyImageDraft, input.files);
+        setPropertyImages(images || [], { loaded: true, dirty: true });
+      } catch (error) {
+        updatePropertyImageUploadUi();
+        setPropertyImagesError(error?.message || 'Could not add pictures.');
+      } finally {
+        input.value = '';
+      }
+    }
+
+    async function fetchPropertyMedia(propertyId) {
+      const cacheKey = String(propertyId || '');
+      if (state.propertyMediaCache[cacheKey]) {
+        return state.propertyMediaCache[cacheKey];
+      }
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify({ action: 'get-property-media', id: propertyId })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Could not load listing pictures.');
+      }
+      const images = window.ListingMediaUi?.sanitizeImageList(result?.images) || [];
+      state.propertyMediaCache[cacheKey] = images;
+      return images;
+    }
+
+    async function openPropertyPictures(id) {
+      const property = (Array.isArray(state.properties) ? state.properties : []).find(item => item.id === Number(id));
+      if (!property) return;
+      try {
+        const images = await fetchPropertyMedia(property.id);
+        window.ListingMediaUi?.openGallery({
+          title: `${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing Pictures'}`,
+          images
+        });
+      } catch (error) {
+        setStatus(error?.message || 'Could not load listing pictures.', 'error');
+      }
+    }
+
+    function buildPropertyPublicSafePdfPayload(property, images = []) {
+      const fields = [
+        { label: 'Purpose', value: getPropertyPurposeLabel(property.purpose) },
+        { label: 'Property Category', value: getDashboardDisplayPropertyCategory(property) || '--' },
+        { label: 'Type', value: getDashboardDisplayUnitLayout(property) || property.propertyType || '--' },
+        { label: 'Location', value: property.location || '--' },
+        { label: 'Building / Project', value: property.buildingName || '--' },
+        { label: 'Price', value: getPropertyDisplayPrice(property) },
+        { label: 'Size', value: formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit) || '--' }
+      ];
+
+      if (property.furnishing) fields.push({ label: 'Furnishing', value: property.furnishing });
+      if (property.cheques) fields.push({ label: 'Cheques', value: property.cheques });
+      if (property.chiller) fields.push({ label: 'Chiller', value: property.chiller });
+      if (getPropertyPurpose(property.purpose) === 'sale') {
+        fields.push({ label: 'Sale Status', value: getPropertySaleStatusLabel(property) || 'Ready Property' });
+        if (getPropertyHandoverLabel(property)) {
+          fields.push({ label: 'Expected Handover', value: getPropertyHandoverLabel(property) });
+        }
+        if (property.mortgageStatus) fields.push({ label: 'Mortgage Status', value: property.mortgageStatus });
+        if (property.leasehold) fields.push({ label: 'Ownership', value: 'Leasehold' });
+      }
+      if (property.isDistress) {
+        fields.push({ label: 'Distress Gap', value: getPropertyDistressLabel(property) || 'Add both market and asking prices to calculate distress gap.' });
+        if (property.marketPrice) {
+          fields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(property.marketPrice)}` });
+        }
+      }
+
+      return {
+        title: `${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing'}`,
+        fileName: `${getPropertyPurposeLabel(property.purpose)}-${property.propertyType || 'listing'}`,
+        fields,
+        notes: property.publicNotes || '',
+        images
+      };
+    }
+
+    async function downloadPropertyPdf(id) {
+      const property = (Array.isArray(state.properties) ? state.properties : []).find(item => item.id === Number(id));
+      if (!property) return;
+      try {
+        const images = await fetchPropertyMedia(property.id);
+        await window.ListingMediaUi?.downloadListingPdf(buildPropertyPublicSafePdfPayload(property, images));
+      } catch (error) {
+        setStatus(error?.message || 'Could not download listing PDF.', 'error');
+      }
     }
 
     function getPropertyPreservedState() {
@@ -14048,6 +14244,7 @@
         distressAskingPrice: distressDeal ? activePrice : '',
         distressDiscountPercent,
         distressGapPercent: distressDiscountPercent,
+        listingImages: state.propertyImageDraftLoaded ? state.propertyImageDraft : undefined,
         ownerName: document.getElementById('propertyOwnerName').value.trim(),
         ownerPhone: normalizeLeadPhoneInput(document.getElementById('propertyOwnerPhone').value.trim()),
         internalNotes: document.getElementById('propertyInternalNotes').value.trim(),
@@ -14113,14 +14310,21 @@
       document.getElementById('propertyFollowUpNote').value = '';
       document.getElementById('propertyUrgentFollowUp').checked = false;
       document.getElementById('propertySubmitBtn').textContent = 'Save Listing';
+      state.propertyImageDraft = [];
+      state.propertyImageDraftLoaded = true;
+      state.propertyImageDraftDirty = false;
+      setPropertyImagesError('');
+      const propertyImagesInput = document.getElementById('propertyImagesInput');
+      if (propertyImagesInput) propertyImagesInput.value = '';
       syncPropertyDimensionControls();
       propertyAutocompleteControllers.location?.close();
       propertyAutocompleteControllers.building?.close();
       refreshPropertyDistressUI();
+      updatePropertyImageUploadUi();
       syncWorkspaceFormSummary('property');
     }
 
-    function editProperty(id) {
+    async function editProperty(id) {
       const property = state.properties.find(item => item.id === id);
       if (!property) return;
       state.propertyEditorOriginal = property;
@@ -14157,6 +14361,31 @@
       document.getElementById('propertyFollowUpNote').value = property.followUpNote || '';
       document.getElementById('propertyUrgentFollowUp').checked = Boolean(property.isUrgentFollowUp);
       document.getElementById('propertySubmitBtn').textContent = 'Update Listing';
+      setPropertyImagesError('');
+      const propertyImagesInput = document.getElementById('propertyImagesInput');
+      if (propertyImagesInput) propertyImagesInput.value = '';
+      const cacheKey = String(property.id);
+      if (state.propertyMediaCache[cacheKey]) {
+        setPropertyImages(state.propertyMediaCache[cacheKey], { loaded: true, dirty: false });
+      } else if (Number(property.listingImageCount || 0) > 0) {
+        state.propertyImageDraft = [];
+        state.propertyImageDraftLoaded = false;
+        state.propertyImageDraftDirty = false;
+        updatePropertyImageUploadUi({ loading: true, countHint: property.listingImageCount });
+        try {
+          const images = await fetchPropertyMedia(property.id);
+          if (String(document.getElementById('propertyId')?.value || '') === cacheKey) {
+            setPropertyImages(images, { loaded: true, dirty: false, cacheKey });
+          }
+        } catch (error) {
+          if (String(document.getElementById('propertyId')?.value || '') === cacheKey) {
+            updatePropertyImageUploadUi({ loading: false, countHint: 0 });
+            setPropertyImagesError(error?.message || 'Could not load existing pictures.');
+          }
+        }
+      } else {
+        setPropertyImages([], { loaded: true, dirty: false });
+      }
       refreshPropertySaleStatusUI();
       refreshPropertyDistressUI();
       syncWorkspaceFormSummary('property');
@@ -14271,6 +14500,7 @@
           distressAskingPrice: formData.distressAskingPrice,
           distressGapPercent: formData.distressGapPercent,
           distressDiscountPercent: formData.distressDiscountPercent,
+          listingImages: formData.listingImages,
           mortgageStatus: formData.mortgageStatus,
           leasehold: formData.leasehold,
           isDistress: formData.distressDeal,
@@ -14289,10 +14519,13 @@
         };
 
         try {
-          await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing saved successfully.', {
+          const result = await dashboardAction(payload, formData.id ? 'Listing updated successfully.' : 'Listing saved successfully.', {
             button: submitButton,
             loadingText: formData.id ? 'Updating Listing...' : 'Saving Listing...'
           });
+          if (result?.property?.id && formData.listingImages !== undefined) {
+            state.propertyMediaCache[String(result.property.id)] = window.ListingMediaUi?.sanitizeImageList(formData.listingImages) || [];
+          }
           resetPropertyForm();
           hideOverviewWorkspace();
         } catch (error) {
@@ -15841,6 +16074,22 @@
               <path d="M5 5h9l1.5 3H19l-1.5 4H5"></path>
             </svg>
           `;
+        case 'image':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+              <circle cx="9" cy="10" r="1.5"></circle>
+              <path d="m21 16-5.5-5.5L7 19"></path>
+            </svg>
+          `;
+        case 'download':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4v10"></path>
+              <path d="m8 10 4 4 4-4"></path>
+              <path d="M5 20h14"></path>
+            </svg>
+          `;
         default:
           return '';
       }
@@ -15980,6 +16229,18 @@
             icon: 'delete',
             tone: 'danger',
             onclick: `deleteProperty(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'View Pictures',
+            icon: 'image',
+            tone: 'secondary',
+            onclick: `openPropertyPictures(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'Download PDF',
+            icon: 'download',
+            tone: 'secondary',
+            onclick: `downloadPropertyPdf(${property.id})`
           })}
           ${reportButton}
         </div>
@@ -16403,6 +16664,20 @@
                             onclick: `event.stopPropagation();editProperty(${property.id})`,
                             extraClass: 'record-quick-btn'
                           })}
+                          ${renderRecordActionButton({
+                            label: 'Pictures',
+                            icon: 'image',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();openPropertyPictures(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
+                            label: 'PDF',
+                            icon: 'download',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();downloadPropertyPdf(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
                         </div>
                       </div>
                     `;
@@ -16507,6 +16782,20 @@
                             icon: 'edit',
                             tone: 'secondary',
                             onclick: `event.stopPropagation();editProperty(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
+                            label: 'Pictures',
+                            icon: 'image',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();openPropertyPictures(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
+                            label: 'PDF',
+                            icon: 'download',
+                            tone: 'secondary',
+                            onclick: `event.stopPropagation();downloadPropertyPdf(${property.id})`,
                             extraClass: 'record-quick-btn'
                           })}
                         </div>
