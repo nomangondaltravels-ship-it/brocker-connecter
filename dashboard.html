@@ -9176,8 +9176,7 @@
       const saleStatus = getPropertySaleStatusLabel(property);
       const isOffPlan = normalizeText(saleStatus).toLowerCase() === 'off plan property';
       const distressLabel = getPropertyDistressLabel(property);
-      const hasBrokerDetails = Boolean(requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl);
-      const hasCompanyDetails = Boolean(requester?.companyName || requester?.email || requester?.officeLocation);
+      const hasCompanyDetails = Boolean(requester?.companyName || requester?.officeLocation);
       return [
         {
           key: 'paymentDetails',
@@ -9196,16 +9195,9 @@
         {
           key: 'companyDetails',
           label: 'Company details',
-          description: 'Show your company name and company contact details.',
+          description: 'Show your company name and office location.',
           checked: false,
           hidden: !hasCompanyDetails
-        },
-        {
-          key: 'userBrokerDetails',
-          label: 'User/Broker details',
-          description: 'Show the currently signed-in broker details and profile image.',
-          checked: false,
-          hidden: !hasBrokerDetails
         },
         {
           key: 'images',
@@ -9271,27 +9263,12 @@
           fields: [{ label: 'Cheques', value: property.cheques }]
         });
       }
-      if (selections.companyDetails && (requester?.companyName || requester?.email || requester?.officeLocation)) {
+      if (selections.companyDetails && (requester?.companyName || requester?.officeLocation)) {
         const companyFields = [];
         if (requester.companyName) companyFields.push({ label: 'Company Name', value: requester.companyName });
-        if (requester.email) companyFields.push({ label: 'Company Email', value: requester.email });
         if (requester.officeLocation) companyFields.push({ label: 'Office Location', value: requester.officeLocation });
         if (companyFields.length) {
           sections.push({ title: 'Company Details', fields: companyFields });
-        }
-      }
-      if (selections.userBrokerDetails && (requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl)) {
-        const brokerFields = [];
-        if (requester.fullName) brokerFields.push({ label: 'Broker Name', value: requester.fullName });
-        if (requester.mobileNumber) brokerFields.push({ label: 'Broker Number', value: requester.mobileNumber });
-        if (requester.email) brokerFields.push({ label: 'Broker Email', value: requester.email });
-        if (requester.companyName) brokerFields.push({ label: 'Real Estate Company', value: requester.companyName });
-        if (brokerFields.length || requester.avatarDataUrl) {
-          sections.push({
-            title: 'Broker Details',
-            fields: brokerFields,
-            avatarDataUrl: requester.avatarDataUrl || ''
-          });
         }
       }
       if (selections.publicNotes && normalizeText(property.publicNotes)) {
@@ -9318,8 +9295,6 @@
       }
 
       return {
-        brandName: 'NexBridge',
-        tagline: 'Connect \u2022 Match \u2022 Close',
         title: `${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing'}`,
         fileName: `${getPropertyPurposeLabel(property.purpose)}-${property.propertyType || 'listing'}`,
         fields,

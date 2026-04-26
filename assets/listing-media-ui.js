@@ -185,16 +185,19 @@
       .listing-media-empty { min-height:220px; display:grid; place-items:center; border:1px dashed rgba(15, 23, 42, 0.12); border-radius:20px; color:#667085; background:#fbfcff; text-align:center; padding:24px; }
       .listing-pdf-options-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(10,17,35,.58); z-index:1650; }
       .listing-pdf-options-overlay.hidden { display:none; }
-      .listing-pdf-options-card { width:min(560px, 100%); border-radius:24px; background:#fffdfa; border:1px solid rgba(212, 186, 116, 0.34); box-shadow:0 28px 70px rgba(11, 20, 44, 0.22); overflow:hidden; }
-      .listing-pdf-options-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:20px 22px 14px; border-bottom:1px solid rgba(15, 23, 42, 0.08); }
-      .listing-pdf-options-head h3 { margin:0; font-size:26px; line-height:1.15; color:#1f2a44; }
-      .listing-pdf-options-head p { margin:4px 0 0; color:#667085; font-size:14px; }
-      .listing-pdf-options-body { display:grid; gap:12px; padding:18px 22px 10px; }
-      .listing-pdf-option { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid rgba(15,23,42,0.08); border-radius:18px; background:#ffffff; }
-      .listing-pdf-option input { margin-top:3px; accent-color:#c49c1f; }
-      .listing-pdf-option strong { display:block; color:#1f2a44; font-size:14px; line-height:1.35; }
-      .listing-pdf-option span { display:block; color:#667085; font-size:12px; line-height:1.45; }
-      .listing-pdf-options-actions { display:flex; justify-content:flex-end; gap:10px; padding:14px 22px 22px; }
+      .listing-pdf-options-card { width:min(480px, 100%); max-height:min(82vh, 700px); display:grid; grid-template-rows:auto 1fr auto; border-radius:24px; background:#fffdfa; border:1px solid rgba(212, 186, 116, 0.34); box-shadow:0 28px 70px rgba(11, 20, 44, 0.22); overflow:hidden; }
+      .listing-pdf-options-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; padding:18px 20px 12px; border-bottom:1px solid rgba(15, 23, 42, 0.08); }
+      .listing-pdf-options-head h3 { margin:0; font-size:22px; line-height:1.15; color:#1f2a44; }
+      .listing-pdf-options-head p { margin:4px 0 0; color:#667085; font-size:13px; line-height:1.5; }
+      .listing-pdf-options-body { display:grid; gap:8px; padding:14px 20px 8px; overflow:auto; align-content:start; }
+      .listing-pdf-option { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; padding:10px 12px; border:1px solid rgba(15,23,42,0.08); border-radius:14px; background:#ffffff; transition:background-color .16s ease, border-color .16s ease, box-shadow .16s ease; cursor:pointer; }
+      .listing-pdf-option:hover { border-color:rgba(196,156,31,.28); }
+      .listing-pdf-option.is-selected { background:#fff6de; border-color:rgba(196,156,31,.38); box-shadow:inset 0 0 0 1px rgba(196,156,31,.08); }
+      .listing-pdf-option input { width:18px; height:18px; margin:0; accent-color:#c49c1f; }
+      .listing-pdf-option-copy { display:grid; gap:2px; min-width:0; }
+      .listing-pdf-option-title { color:#1f2a44; font-size:14px; line-height:1.35; font-weight:700; }
+      .listing-pdf-option-desc { color:#667085; font-size:12px; line-height:1.4; }
+      .listing-pdf-options-actions { display:flex; justify-content:flex-end; gap:10px; padding:12px 20px 18px; border-top:1px solid rgba(15,23,42,0.08); }
       @media (max-width: 720px) {
         .listing-media-overlay { padding:16px; }
         .listing-media-card { border-radius:20px; }
@@ -203,10 +206,10 @@
         .listing-media-body { padding:18px; }
         .listing-pdf-options-overlay { padding:16px; }
         .listing-pdf-options-card { border-radius:20px; }
-        .listing-pdf-options-head { padding:18px 18px 12px; }
-        .listing-pdf-options-head h3 { font-size:22px; }
-        .listing-pdf-options-body { padding:16px 18px 8px; }
-        .listing-pdf-options-actions { padding:12px 18px 18px; flex-wrap:wrap; }
+        .listing-pdf-options-head { padding:16px 16px 10px; }
+        .listing-pdf-options-head h3 { font-size:20px; }
+        .listing-pdf-options-body { padding:12px 16px 8px; }
+        .listing-pdf-options-actions { padding:12px 16px 16px; flex-wrap:wrap; }
       }
     `;
     document.head.appendChild(style);
@@ -339,14 +342,19 @@
     if (metaNode) metaNode.textContent = normalizeText(config.description) || 'Choose which optional sections should appear in the PDF.';
     if (bodyNode) {
       bodyNode.innerHTML = sections.map((section) => `
-        <label class="listing-pdf-option">
+        <label class="listing-pdf-option${section.checked ? ' is-selected' : ''}">
           <input type="checkbox" name="${escapeHtmlAttr(section.key)}" ${section.checked ? 'checked' : ''}>
-          <span>
-            <strong>${escapeHtml(section.label || section.key)}</strong>
-            ${section.description ? `<span>${escapeHtml(section.description)}</span>` : ''}
+          <span class="listing-pdf-option-copy">
+            <span class="listing-pdf-option-title">${escapeHtml(section.label || section.key)}</span>
+            ${section.description ? `<span class="listing-pdf-option-desc">${escapeHtml(section.description)}</span>` : ''}
           </span>
         </label>
       `).join('');
+      bodyNode.querySelectorAll('.listing-pdf-option input').forEach((input) => {
+        input.addEventListener('change', () => {
+          input.closest('.listing-pdf-option')?.classList.toggle('is-selected', Boolean(input.checked));
+        });
+      });
     }
     if (formNode) {
       formNode.onsubmit = (event) => {
@@ -544,9 +552,6 @@
       });
     }
 
-    const brandName = normalizeText(payload.brandName) || 'NexBridge';
-    const tagline = normalizeText(payload.tagline) || 'Connect \u2022 Match \u2022 Close';
-    const title = normalizeText(payload.title) || 'Listing Summary';
     const fields = normalizePdfFields(payload.fields);
     const sections = normalizePdfSections(payload.sections);
     const images = sanitizeImageList(payload.images);
@@ -616,12 +621,12 @@
       y -= boxHeight + 14;
     }
 
-    ensureSpace(96);
+    ensureSpace(88);
     page.drawRectangle({
       x: margin,
-      y: y - 78,
+      y: y - 70,
       width: contentWidth,
-      height: 78,
+      height: 70,
       color: rgb(1, 1, 1),
       borderColor: border,
       borderWidth: 1.2
@@ -630,17 +635,14 @@
       const embeddedLogo = await embedMaybeImage(logoDataUrl);
       if (embeddedLogo) {
         page.drawImage(embeddedLogo, {
-          x: margin + 16,
-          y: y - 62,
-          width: 46,
-          height: 46
+          x: margin + 18,
+          y: y - 54,
+          width: 38,
+          height: 38
         });
       }
     }
-    drawText(brandName, margin + 74, y - 22, { size: 22, bold: true, color: ink });
-    drawText(tagline, margin + 74, y - 40, { size: 11, color: muted });
-    drawText(title, pageSize.width - margin - 210, y - 28, { size: 16, bold: true, color: ink });
-    y -= 96;
+    y -= 86;
 
     await drawSection({
       title: 'Listing Details',
@@ -690,10 +692,6 @@
         }
       }
     }
-
-    ensureSpace(24);
-    drawText(`Generated via ${brandName}`, margin, y, { size: 9, color: muted });
-
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
