@@ -3671,6 +3671,84 @@
       color: #64748b !important;
     }
 
+    .workspace-shell {
+      padding: 20px !important;
+    }
+
+    .workspace-card {
+      padding: 18px !important;
+      border-radius: 22px !important;
+      border: 1px solid rgba(148, 163, 184, 0.16) !important;
+      background: #ffffff !important;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .form-section {
+      gap: 18px !important;
+      padding: 18px !important;
+      border-radius: 18px !important;
+    }
+
+    .form-section-head {
+      gap: 8px !important;
+      padding-bottom: 2px;
+    }
+
+    .form-section-kicker {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      min-height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(181, 138, 29, 0.1);
+      color: #8f6a12;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .form-section-private .form-section-kicker {
+      background: rgba(148, 163, 184, 0.12);
+      color: #475569;
+    }
+
+    .form-section-workflow .form-section-kicker {
+      background: rgba(181, 138, 29, 0.14);
+      color: #8f6a12;
+    }
+
+    .form-subsection {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .form-subsection-head {
+      display: grid;
+      gap: 3px;
+    }
+
+    .form-subsection-head strong {
+      color: #18212f;
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .form-subsection-head span {
+      color: #64748b;
+      font-size: 0.79rem;
+      line-height: 1.45;
+    }
+
+    .form-grid-compact {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
     .lead-form-actions {
       justify-content: space-between !important;
       align-items: center !important;
@@ -3702,14 +3780,55 @@
 
     input,
     select {
-      min-height: 38px !important;
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
+      min-height: 44px !important;
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+      border-radius: 14px !important;
     }
 
     textarea {
       font-size: 0.83rem !important;
       line-height: 1.5 !important;
+      border-radius: 14px !important;
+      min-height: 112px !important;
+    }
+
+    .segmented-control {
+      width: min(360px, 100%) !important;
+      padding: 5px !important;
+      border-radius: 18px !important;
+      background: #f7f9fc !important;
+    }
+
+    .segment-btn {
+      min-height: 44px !important;
+      border-radius: 13px !important;
+      font-size: 0.88rem !important;
+      font-weight: 800 !important;
+    }
+
+    .segment-btn.active {
+      box-shadow: 0 10px 20px rgba(181, 138, 29, 0.16) !important;
+    }
+
+    .combo-field input,
+    .currency-field input {
+      min-height: 44px !important;
+    }
+
+    .currency-prefix {
+      min-height: 44px;
+    }
+
+    .toggle-card,
+    .privacy-note,
+    .distress-metric {
+      border-radius: 16px !important;
+      padding: 16px 18px !important;
+    }
+
+    .lead-dynamic-layout {
+      gap: 14px !important;
     }
 
     .record-filter-grid {
@@ -5163,6 +5282,19 @@
         align-items: stretch !important;
       }
 
+      .form-grid,
+      .form-grid-compact {
+        grid-template-columns: 1fr !important;
+      }
+
+      .form-subsection {
+        padding: 14px !important;
+      }
+
+      .segmented-control {
+        width: 100% !important;
+      }
+
       .lead-form-actions,
       .lead-form-actions-main {
         flex-direction: column;
@@ -5999,8 +6131,9 @@
               <input type="hidden" id="leadId">
               <div class="form-section">
                 <div class="form-section-head">
-                  <h4>Requirement Details</h4>
-                  <p>Select whether the client wants to rent or buy, then complete only the relevant requirement details.</p>
+                  <span class="form-section-kicker">Main Details</span>
+                  <h4>Requirement Setup</h4>
+                  <p>Choose whether the client wants to rent or buy, then complete the matching requirement details in a simple broker workflow.</p>
                 </div>
                 <div class="field-block full">
                   <div class="small" id="leadClientPurposeLabel">Client Purpose</div>
@@ -6012,57 +6145,71 @@
                   <div class="field-error" id="leadClientPurposeError"></div>
                 </div>
                 <div class="lead-dynamic-layout crm-hidden" id="leadRequirementFields">
-                  <div class="form-grid">
-                    <div class="field-block">
-                      <label class="small" for="leadLocation">Preferred Location</label>
-                      <div class="combo-field" id="leadLocationBox">
-                        <input id="leadLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
-                        <span class="combo-icon">&#9906;</span>
-                        <div class="combo-menu hidden" id="leadLocationMenu"></div>
+                  <div class="form-subsection">
+                    <div class="form-subsection-head">
+                      <strong>Property Details</strong>
+                      <span>Set the location, project, category, and type the client is looking for.</span>
+                    </div>
+                    <div class="form-grid">
+                      <div class="field-block">
+                        <label class="small" for="leadLocation">Preferred Location</label>
+                        <div class="combo-field" id="leadLocationBox">
+                          <input id="leadLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                          <span class="combo-icon">&#9906;</span>
+                          <div class="combo-menu hidden" id="leadLocationMenu"></div>
+                        </div>
+                        <div class="field-helper">Search UAE area suggestions or type a custom location.</div>
+                        <div class="field-error" id="leadLocationError"></div>
                       </div>
-                      <div class="field-helper">Search UAE area suggestions or type a custom location.</div>
-                      <div class="field-error" id="leadLocationError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="leadBuildingProject">Preferred Building / Project</label>
-                      <div class="combo-field" id="leadBuildingBox">
-                        <input id="leadBuildingProject" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
-                        <span class="combo-icon">&#9906;</span>
-                        <div class="combo-menu hidden" id="leadBuildingMenu"></div>
+                      <div class="field-block">
+                        <label class="small" for="leadBuildingProject">Preferred Building / Project</label>
+                        <div class="combo-field" id="leadBuildingBox">
+                          <input id="leadBuildingProject" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                          <span class="combo-icon">&#9906;</span>
+                          <div class="combo-menu hidden" id="leadBuildingMenu"></div>
+                        </div>
+                        <div class="field-helper">Optional. Select a suggestion or enter a custom building/project.</div>
+                        <div class="field-error" id="leadBuildingProjectError"></div>
                       </div>
-                      <div class="field-helper">Optional. Select a suggestion or enter a custom building/project.</div>
-                      <div class="field-error" id="leadBuildingProjectError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="leadPropertyCategory">Property Category</label>
-                      <select id="leadPropertyCategory">
-                        <option value="">Select property category</option>
-                      </select>
-                      <input id="leadPropertyType" type="hidden" value="">
-                      <div class="field-error" id="leadPropertyCategoryError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="leadUnitLayout">Unit Layout</label>
-                      <select id="leadUnitLayout">
-                        <option value="">Select unit layout</option>
-                      </select>
-                      <div class="field-helper" id="leadUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse requirements.</div>
-                      <div class="field-error" id="leadUnitLayoutError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="leadBudget">Budget</label>
-                      <div class="currency-field" id="leadBudgetField">
-                        <span class="currency-prefix">AED</span>
-                        <input id="leadBudget" type="text" inputmode="numeric" placeholder="Enter budget in AED" autocomplete="off">
+                      <div class="field-block">
+                        <label class="small" for="leadPropertyCategory">Property Category</label>
+                        <select id="leadPropertyCategory">
+                          <option value="">Select property category</option>
+                        </select>
+                        <input id="leadPropertyType" type="hidden" value="">
+                        <div class="field-error" id="leadPropertyCategoryError"></div>
                       </div>
-                      <div class="field-error" id="leadBudgetError"></div>
+                      <div class="field-block">
+                        <label class="small" for="leadUnitLayout">Unit Layout</label>
+                        <select id="leadUnitLayout">
+                          <option value="">Select unit layout</option>
+                        </select>
+                        <div class="field-helper" id="leadUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse requirements.</div>
+                        <div class="field-error" id="leadUnitLayoutError"></div>
+                      </div>
                     </div>
-                    <div class="field-block crm-hidden" id="leadPaymentMethodWrap">
-                      <label class="small" for="leadPaymentMethod">Payment Method</label>
-                      <select id="leadPaymentMethod">
-                        <option value="">Select payment method</option>
-                      </select>
-                      <div class="field-error" id="leadPaymentMethodError"></div>
+                  </div>
+                  <div class="form-subsection">
+                    <div class="form-subsection-head">
+                      <strong>Price / Budget Details</strong>
+                      <span>Capture the client budget and payment preference in one compact step.</span>
+                    </div>
+                    <div class="form-grid form-grid-compact">
+                      <div class="field-block">
+                        <label class="small" for="leadBudget">Budget</label>
+                        <div class="currency-field" id="leadBudgetField">
+                          <span class="currency-prefix">AED</span>
+                          <input id="leadBudget" type="text" inputmode="numeric" placeholder="Enter budget in AED" autocomplete="off">
+                        </div>
+                        <div class="field-error" id="leadBudgetError"></div>
+                      </div>
+                      <div class="field-block crm-hidden" id="leadPaymentMethodWrap">
+                        <label class="small" for="leadPaymentMethod">Payment Method</label>
+                        <select id="leadPaymentMethod">
+                          <option value="">Select payment method</option>
+                        </select>
+                        <div class="field-error" id="leadPaymentMethodError"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -6070,7 +6217,8 @@
 
               <div class="form-section form-section-private crm-hidden" id="leadClientSection">
                 <div class="form-section-head">
-                  <h4>Client Private Details</h4>
+                  <span class="form-section-kicker">Private Client / Owner Details</span>
+                  <h4>Private Client Details</h4>
                   <p>These details stay private in the broker workspace and never appear on the Broker Connector Page.</p>
                 </div>
                 <div class="form-grid">
@@ -6093,6 +6241,7 @@
 
               <div class="form-section crm-hidden" id="leadNotesSection">
                 <div class="form-section-head">
+                  <span class="form-section-kicker">Private Notes</span>
                   <h4>Internal Notes</h4>
                   <p>Add private notes for your own follow-up and internal CRM use.</p>
                 </div>
@@ -6105,8 +6254,9 @@
 
               <div class="form-section form-section-workflow crm-hidden" id="leadWorkflowSection">
                 <div class="form-section-head">
+                  <span class="form-section-kicker">BCP Sharing / Visibility</span>
                   <h4>Workflow &amp; Follow-up</h4>
-                  <p>Track pipeline status and set your next reminder without leaving the lead form.</p>
+                  <p>This requirement stays private by default. Track status and reminders here, then share only safe details later on BCP if needed.</p>
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
@@ -6157,7 +6307,8 @@
               <input type="hidden" id="propertyId">
               <div class="form-section">
                 <div class="form-section-head">
-                  <h4>Listing Details</h4>
+                  <span class="form-section-kicker">Main Details</span>
+                  <h4>Listing Setup</h4>
                   <p>Select rent or sale first, then complete the relevant property details in a clean broker workflow.</p>
                 </div>
                 <div class="field-block full">
@@ -6170,60 +6321,74 @@
                   <div class="field-error" id="propertyPurposeError"></div>
                 </div>
                 <div class="lead-dynamic-layout crm-hidden" id="propertyBaseFields">
-                  <div class="form-grid">
-                    <div class="field-block">
-                      <label class="small" for="propertyCategory">Property Category</label>
-                      <select id="propertyCategory">
-                        <option value="">Select property category</option>
-                      </select>
-                      <input id="propertyType" type="hidden" value="">
-                      <div class="field-error" id="propertyCategoryError"></div>
+                  <div class="form-subsection">
+                    <div class="form-subsection-head">
+                      <strong>Property Details</strong>
+                      <span>Set the category, type, location, and building details clearly before pricing the listing.</span>
                     </div>
-                    <div class="field-block">
-                      <label class="small" for="propertyUnitLayout">Unit Layout</label>
-                      <select id="propertyUnitLayout">
-                        <option value="">Select unit layout</option>
-                      </select>
-                      <div class="field-helper" id="propertyUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse listings.</div>
-                      <div class="field-error" id="propertyUnitLayoutError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="propertyLocation">Location</label>
-                      <div class="combo-field" id="propertyLocationBox">
-                        <input id="propertyLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
-                        <span class="combo-icon">&#9906;</span>
-                        <div class="combo-menu hidden" id="propertyLocationMenu"></div>
-                      </div>
-                      <div class="field-error" id="propertyLocationError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="propertyBuildingName">Building Name / Project</label>
-                      <div class="combo-field" id="propertyBuildingBox">
-                        <input id="propertyBuildingName" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
-                        <span class="combo-icon">&#9906;</span>
-                        <div class="combo-menu hidden" id="propertyBuildingMenu"></div>
-                      </div>
-                      <div class="field-helper">Optional. Use a suggestion or enter any project/building manually.</div>
-                      <div class="field-error" id="propertyBuildingNameError"></div>
-                    </div>
-                    <div class="field-block">
-                      <label class="small" for="propertySizeSqft">Size</label>
-                      <div style="display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;">
-                        <input id="propertySizeSqft" type="text" inputmode="decimal" placeholder="Enter size" autocomplete="off">
-                        <select id="propertySizeUnit" aria-label="Property size unit">
-                          <option value="sqft">sqft</option>
-                          <option value="sqm">sqm</option>
+                    <div class="form-grid">
+                      <div class="field-block">
+                        <label class="small" for="propertyCategory">Property Category</label>
+                        <select id="propertyCategory">
+                          <option value="">Select property category</option>
                         </select>
+                        <input id="propertyType" type="hidden" value="">
+                        <div class="field-error" id="propertyCategoryError"></div>
                       </div>
-                      <div class="field-helper">Supports whole numbers and decimals, for example 484.67.</div>
-                      <div class="field-error" id="propertySizeSqftError"></div>
+                      <div class="field-block">
+                        <label class="small" for="propertyUnitLayout">Unit Layout</label>
+                        <select id="propertyUnitLayout">
+                          <option value="">Select unit layout</option>
+                        </select>
+                        <div class="field-helper" id="propertyUnitLayoutHelper">Choose the layout for apartment, villa, or townhouse listings.</div>
+                        <div class="field-error" id="propertyUnitLayoutError"></div>
+                      </div>
+                      <div class="field-block">
+                        <label class="small" for="propertyLocation">Location</label>
+                        <div class="combo-field" id="propertyLocationBox">
+                          <input id="propertyLocation" type="text" autocomplete="off" placeholder="Search area or community" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                          <span class="combo-icon">&#9906;</span>
+                          <div class="combo-menu hidden" id="propertyLocationMenu"></div>
+                        </div>
+                        <div class="field-error" id="propertyLocationError"></div>
+                      </div>
+                      <div class="field-block">
+                        <label class="small" for="propertyBuildingName">Building Name / Project</label>
+                        <div class="combo-field" id="propertyBuildingBox">
+                          <input id="propertyBuildingName" type="text" autocomplete="off" placeholder="Search or enter building/project" aria-autocomplete="list" role="combobox" aria-expanded="false">
+                          <span class="combo-icon">&#9906;</span>
+                          <div class="combo-menu hidden" id="propertyBuildingMenu"></div>
+                        </div>
+                        <div class="field-helper">Optional. Use a suggestion or enter any project/building manually.</div>
+                        <div class="field-error" id="propertyBuildingNameError"></div>
+                      </div>
                     </div>
-                    <div class="field-block">
-                      <label class="small" for="propertyFloorLevel">Floor Level</label>
-                      <select id="propertyFloorLevel">
-                        <option value="">Select floor level</option>
-                      </select>
-                      <div class="field-error" id="propertyFloorLevelError"></div>
+                  </div>
+                  <div class="form-subsection">
+                    <div class="form-subsection-head">
+                      <strong>Space Details</strong>
+                      <span>Keep the built-up area and floor information clean and easy to scan.</span>
+                    </div>
+                    <div class="form-grid form-grid-compact">
+                      <div class="field-block">
+                        <label class="small" for="propertySizeSqft">Size</label>
+                        <div style="display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;">
+                          <input id="propertySizeSqft" type="text" inputmode="decimal" placeholder="Enter size" autocomplete="off">
+                          <select id="propertySizeUnit" aria-label="Property size unit">
+                            <option value="sqft">sqft</option>
+                            <option value="sqm">sqm</option>
+                          </select>
+                        </div>
+                        <div class="field-helper">Supports whole numbers and decimals, for example 484.67.</div>
+                        <div class="field-error" id="propertySizeSqftError"></div>
+                      </div>
+                      <div class="field-block">
+                        <label class="small" for="propertyFloorLevel">Floor Level</label>
+                        <select id="propertyFloorLevel">
+                          <option value="">Select floor level</option>
+                        </select>
+                        <div class="field-error" id="propertyFloorLevelError"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -6231,6 +6396,7 @@
 
               <div class="form-section crm-hidden" id="propertyPricingSection">
                 <div class="form-section-head">
+                  <span class="form-section-kicker">Price / Budget Details</span>
                   <h4>Pricing &amp; Terms</h4>
                   <p>Only the relevant pricing fields are shown based on whether the listing is for rent or sale.</p>
                 </div>
@@ -6346,7 +6512,8 @@
 
               <div class="form-section form-section-private crm-hidden" id="propertyContactsSection">
                 <div class="form-section-head">
-                  <h4>Private Contacts</h4>
+                  <span class="form-section-kicker">Private Client / Owner Details</span>
+                  <h4>Private Owner Details</h4>
                   <p>Keep owner details private inside your broker workspace.</p>
                 </div>
                 <div class="form-grid">
@@ -6367,8 +6534,9 @@
 
               <div class="form-section crm-hidden" id="propertyNotesSection">
                 <div class="form-section-head">
-                  <h4>Internal Notes</h4>
-                  <p>Add only the private notes you need for your internal broker workflow.</p>
+                  <span class="form-section-kicker">BCP Sharing / Visibility</span>
+                  <h4>BCP Notes &amp; Visibility</h4>
+                  <p>Internal notes stay private. Public notes are the only text that can be shared later if you publish this listing on BCP.</p>
                 </div>
                 <div class="field-block full">
                   <label class="small" for="propertyInternalNotes">Internal Notes</label>
@@ -6383,6 +6551,7 @@
 
               <div class="form-section form-section-workflow crm-hidden" id="propertyWorkflowSection">
                 <div class="form-section-head">
+                  <span class="form-section-kicker">Workflow</span>
                   <h4>Workflow &amp; Follow-up</h4>
                   <p>Keep the listing pipeline current and set reminders for owners, viewings, or negotiation steps.</p>
                 </div>
