@@ -16093,17 +16093,40 @@
       `;
     }
 
+    function renderWorkspaceActionBar(title, description, buttonLabel, buttonAction) {
+      return `
+        <div class="record-toolbar distress-toolbar">
+          <div class="workspace-toolbar-copy">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(description)}</span>
+          </div>
+          <div class="profile-section-actions">
+            <button class="btn btn-primary btn-tiny" type="button" onclick="${escapeHtml(buttonAction)}">${escapeHtml(buttonLabel)}</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderLeads() {
       const target = document.getElementById('leadsList');
       if (!target) return;
       const requirements = getFilteredDashboardItems(state.leads, 'lead');
+      const actionBar = renderWorkspaceActionBar(
+        'All active broker requirements appear here.',
+        'Add a new requirement or keep filtering this view without changing how Broker Desk stores client demand.',
+        'Add Requirement',
+        'openLeadComposer()'
+      );
       if (!requirements.length) {
-        target.innerHTML = renderEmptyState(
-          'No broker requirements yet',
-          'Adjust your filters or add your first lead from Broker Desk to start tracking client demand.',
-          'Add New Lead',
-          'openLeadComposer()'
-        );
+        target.innerHTML = `
+          ${actionBar}
+          ${renderEmptyState(
+            'No broker requirements yet',
+            'Adjust your filters or add your first lead from Broker Desk to start tracking client demand.',
+            'Add New Lead',
+            'openLeadComposer()'
+          )}
+        `;
         return;
       }
 
@@ -16112,6 +16135,7 @@
       const leadColumns = WORKSPACE_TABLE_COLUMNS.leads;
 
       target.innerHTML = `
+        ${actionBar}
         <div class="workspace-split ${selectedLead ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
@@ -16200,13 +16224,22 @@
       const target = document.getElementById('propertiesList');
       if (!target) return;
       const properties = getFilteredDashboardItems(state.properties, 'property');
+      const actionBar = renderWorkspaceActionBar(
+        'All active broker listings appear here.',
+        'Add a new listing or keep filtering this view without changing how Broker Desk manages inventory records.',
+        'Add Listing',
+        'openPropertyComposer()'
+      );
       if (!properties.length) {
-        target.innerHTML = renderEmptyState(
-          'No listings yet',
-          'Adjust your filters or add your first listing from Broker Desk to start managing inventory.',
-          'Add New Listing',
-          'openPropertyComposer()'
-        );
+        target.innerHTML = `
+          ${actionBar}
+          ${renderEmptyState(
+            'No listings yet',
+            'Adjust your filters or add your first listing from Broker Desk to start managing inventory.',
+            'Add New Listing',
+            'openPropertyComposer()'
+          )}
+        `;
         return;
       }
 
@@ -16215,6 +16248,7 @@
       const listingColumns = WORKSPACE_TABLE_COLUMNS.listings;
 
       target.innerHTML = `
+        ${actionBar}
         <div class="workspace-split ${selectedProperty ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
             <div class="workspace-table-scroll">
