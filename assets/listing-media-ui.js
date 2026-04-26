@@ -7,8 +7,11 @@
   const PDF_LIB_URL = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
   const GALLERY_OVERLAY_ID = 'listingMediaGalleryOverlay';
   const GALLERY_CONTENT_ID = 'listingMediaGalleryContent';
+  const PDF_OPTIONS_OVERLAY_ID = 'listingPdfOptionsOverlay';
   const STYLE_ID = 'listingMediaUiStyles';
   let pdfLibPromise = null;
+  let brandLogoPromise = null;
+  let pdfOptionsResolver = null;
 
   function normalizeText(value) {
     return String(value || '').trim();
@@ -180,12 +183,30 @@
       .listing-media-tile img { width:100%; height:220px; object-fit:cover; border-radius:14px; background:#f7f8fb; }
       .listing-media-tile span { font-size:13px; color:#667085; word-break:break-word; }
       .listing-media-empty { min-height:220px; display:grid; place-items:center; border:1px dashed rgba(15, 23, 42, 0.12); border-radius:20px; color:#667085; background:#fbfcff; text-align:center; padding:24px; }
+      .listing-pdf-options-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(10,17,35,.58); z-index:1650; }
+      .listing-pdf-options-overlay.hidden { display:none; }
+      .listing-pdf-options-card { width:min(560px, 100%); border-radius:24px; background:#fffdfa; border:1px solid rgba(212, 186, 116, 0.34); box-shadow:0 28px 70px rgba(11, 20, 44, 0.22); overflow:hidden; }
+      .listing-pdf-options-head { display:flex; justify-content:space-between; gap:16px; align-items:center; padding:20px 22px 14px; border-bottom:1px solid rgba(15, 23, 42, 0.08); }
+      .listing-pdf-options-head h3 { margin:0; font-size:26px; line-height:1.15; color:#1f2a44; }
+      .listing-pdf-options-head p { margin:4px 0 0; color:#667085; font-size:14px; }
+      .listing-pdf-options-body { display:grid; gap:12px; padding:18px 22px 10px; }
+      .listing-pdf-option { display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border:1px solid rgba(15,23,42,0.08); border-radius:18px; background:#ffffff; }
+      .listing-pdf-option input { margin-top:3px; accent-color:#c49c1f; }
+      .listing-pdf-option strong { display:block; color:#1f2a44; font-size:14px; line-height:1.35; }
+      .listing-pdf-option span { display:block; color:#667085; font-size:12px; line-height:1.45; }
+      .listing-pdf-options-actions { display:flex; justify-content:flex-end; gap:10px; padding:14px 22px 22px; }
       @media (max-width: 720px) {
         .listing-media-overlay { padding:16px; }
         .listing-media-card { border-radius:20px; }
         .listing-media-head { padding:18px 18px 14px; }
         .listing-media-head h3 { font-size:24px; }
         .listing-media-body { padding:18px; }
+        .listing-pdf-options-overlay { padding:16px; }
+        .listing-pdf-options-card { border-radius:20px; }
+        .listing-pdf-options-head { padding:18px 18px 12px; }
+        .listing-pdf-options-head h3 { font-size:22px; }
+        .listing-pdf-options-body { padding:16px 18px 8px; }
+        .listing-pdf-options-actions { padding:12px 18px 18px; flex-wrap:wrap; }
       }
     `;
     document.head.appendChild(style);
@@ -251,6 +272,98 @@
     overlay.classList.remove('hidden');
   }
 
+  function ensurePdfOptionsShell() {
+    ensureStyles();
+    let overlay = document.getElementById(PDF_OPTIONS_OVERLAY_ID);
+    if (overlay) return overlay;
+    overlay = document.createElement('div');
+    overlay.id = PDF_OPTIONS_OVERLAY_ID;
+    overlay.className = 'listing-pdf-options-overlay hidden';
+    overlay.innerHTML = `
+      <div class="listing-pdf-options-card" role="dialog" aria-modal="true" aria-labelledby="listingPdfOptionsTitle">
+        <div class="listing-pdf-options-head">
+          <div>
+            <h3 id="listingPdfOptionsTitle">Customize PDF Details</h3>
+            <p id="listingPdfOptionsMeta">Choose which optional sections should appear in the PDF.</p>
+          </div>
+          <button class="btn btn-secondary" type="button" id="listingPdfOptionsClose">Close</button>
+        </div>
+        <form id="listingPdfOptionsForm">
+          <div class="listing-pdf-options-body" id="listingPdfOptionsBody"></div>
+          <div class="listing-pdf-options-actions">
+            <button class="btn btn-secondary" type="button" id="listingPdfOptionsCancel">Cancel</button>
+            <button class="btn btn-primary" type="submit">Download PDF</button>
+          </div>
+        </form>
+      </div>
+    `;
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) {
+        closePdfOptionsModal();
+      }
+    });
+    overlay.querySelector('#listingPdfOptionsClose')?.addEventListener('click', () => closePdfOptionsModal());
+    overlay.querySelector('#listingPdfOptionsCancel')?.addEventListener('click', () => closePdfOptionsModal());
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !overlay.classList.contains('hidden')) {
+        closePdfOptionsModal();
+      }
+    });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function finishPdfOptionsModal(result) {
+    const overlay = document.getElementById(PDF_OPTIONS_OVERLAY_ID);
+    if (overlay) overlay.classList.add('hidden');
+    const resolver = pdfOptionsResolver;
+    pdfOptionsResolver = null;
+    if (resolver) resolver(result);
+  }
+
+  function closePdfOptionsModal() {
+    finishPdfOptionsModal(null);
+  }
+
+  function openPdfOptionsModal(config = {}) {
+    const sections = (Array.isArray(config.sections) ? config.sections : []).filter((section) => section && !section.hidden);
+    if (!sections.length) {
+      return Promise.resolve({});
+    }
+    const overlay = ensurePdfOptionsShell();
+    const titleNode = overlay.querySelector('#listingPdfOptionsTitle');
+    const metaNode = overlay.querySelector('#listingPdfOptionsMeta');
+    const bodyNode = overlay.querySelector('#listingPdfOptionsBody');
+    const formNode = overlay.querySelector('#listingPdfOptionsForm');
+    if (titleNode) titleNode.textContent = normalizeText(config.title) || 'Customize PDF Details';
+    if (metaNode) metaNode.textContent = normalizeText(config.description) || 'Choose which optional sections should appear in the PDF.';
+    if (bodyNode) {
+      bodyNode.innerHTML = sections.map((section) => `
+        <label class="listing-pdf-option">
+          <input type="checkbox" name="${escapeHtmlAttr(section.key)}" ${section.checked ? 'checked' : ''}>
+          <span>
+            <strong>${escapeHtml(section.label || section.key)}</strong>
+            ${section.description ? `<span>${escapeHtml(section.description)}</span>` : ''}
+          </span>
+        </label>
+      `).join('');
+    }
+    if (formNode) {
+      formNode.onsubmit = (event) => {
+        event.preventDefault();
+        const result = {};
+        sections.forEach((section) => {
+          result[section.key] = Boolean(formNode.querySelector(`[name="${section.key}"]`)?.checked);
+        });
+        finishPdfOptionsModal(result);
+      };
+    }
+    overlay.classList.remove('hidden');
+    return new Promise((resolve) => {
+      pdfOptionsResolver = resolve;
+    });
+  }
+
   function escapeHtml(text) {
     return String(text || '')
       .replace(/&/g, '&amp;')
@@ -295,6 +408,44 @@
     return pdfLibPromise;
   }
 
+  async function getBrandLogoDataUrl() {
+    if (brandLogoPromise) {
+      return brandLogoPromise;
+    }
+    brandLogoPromise = (async () => {
+      try {
+        const response = await fetch('/assets/broker-connector-logo.svg', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error('Logo not available');
+        }
+        const svgText = await response.text();
+        const blob = new Blob([svgText], { type: 'image/svg+xml' });
+        const blobUrl = URL.createObjectURL(blob);
+        try {
+          const image = await new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Logo image failed to load.'));
+            img.src = blobUrl;
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = 144;
+          canvas.height = 144;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return '';
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          return canvas.toDataURL('image/png');
+        } finally {
+          URL.revokeObjectURL(blobUrl);
+        }
+      } catch (error) {
+        return '';
+      }
+    })();
+    return brandLogoPromise;
+  }
+
   function splitText(text, maxChars = 90) {
     const input = normalizeText(text);
     if (!input) return [];
@@ -319,6 +470,26 @@
     return `${normalized || 'listing'}-summary.pdf`;
   }
 
+  function normalizePdfFields(fields) {
+    return (Array.isArray(fields) ? fields : [])
+      .map((field) => ({
+        label: normalizeText(field?.label),
+        value: normalizeText(field?.value)
+      }))
+      .filter((field) => field.label && field.value);
+  }
+
+  function normalizePdfSections(sections) {
+    return (Array.isArray(sections) ? sections : [])
+      .map((section) => ({
+        title: normalizeText(section?.title),
+        fields: normalizePdfFields(section?.fields),
+        notes: normalizeText(section?.notes),
+        avatarDataUrl: normalizeText(section?.avatarDataUrl)
+      }))
+      .filter((section) => section.title && (section.fields.length || section.notes || section.avatarDataUrl));
+  }
+
   async function downloadListingPdf(payload = {}) {
     const PDFLib = await ensurePdfLib();
     const { PDFDocument, StandardFonts, rgb } = PDFLib;
@@ -327,13 +498,35 @@
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const pageSize = { width: 595, height: 842 };
     const margin = 42;
+    const contentWidth = pageSize.width - (margin * 2);
+    const gold = rgb(0.768, 0.612, 0.122);
+    const goldSoft = rgb(0.976, 0.953, 0.898);
+    const paper = rgb(0.996, 0.988, 0.965);
+    const ink = rgb(0.12, 0.16, 0.26);
+    const muted = rgb(0.40, 0.45, 0.54);
+    const border = rgb(0.874, 0.784, 0.537);
     let page = pdfDoc.addPage([pageSize.width, pageSize.height]);
     let y = pageSize.height - margin;
 
     function addPage() {
       page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: pageSize.width,
+        height: pageSize.height,
+        color: paper
+      });
       y = pageSize.height - margin;
     }
+
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: pageSize.width,
+      height: pageSize.height,
+      color: paper
+    });
 
     function ensureSpace(height) {
       if (y - height < margin) {
@@ -347,72 +540,159 @@
         y: nextY,
         size: options.size || 11,
         font: options.bold ? fontBold : fontRegular,
-        color: options.color || rgb(0.14, 0.18, 0.28)
+        color: options.color || ink
       });
     }
 
-    ensureSpace(80);
-    drawText(normalizeText(payload.title) || 'Listing Summary', margin, y, { size: 22, bold: true });
-    y -= 24;
-    drawText('Public-safe listing summary', margin, y, { size: 11, color: rgb(0.41, 0.46, 0.56) });
-    y -= 28;
-
-    const fields = Array.isArray(payload.fields) ? payload.fields.filter((field) => normalizeText(field?.value)) : [];
-    fields.forEach((field) => {
-      const valueLines = splitText(field.value, 70);
-      ensureSpace(24 + Math.max(1, valueLines.length) * 14);
-      drawText(normalizeText(field.label) || 'Field', margin, y, { size: 10, bold: true, color: rgb(0.48, 0.43, 0.27) });
-      y -= 14;
-      valueLines.forEach((line) => {
-        drawText(line, margin, y, { size: 11 });
-        y -= 14;
-      });
-      y -= 10;
-    });
-
-    const notes = normalizeText(payload.notes);
-    if (notes) {
-      const noteLines = splitText(notes, 78);
-      ensureSpace(30 + noteLines.length * 14);
-      drawText('Notes', margin, y, { size: 10, bold: true, color: rgb(0.48, 0.43, 0.27) });
-      y -= 14;
-      noteLines.forEach((line) => {
-        drawText(line, margin, y, { size: 11 });
-        y -= 14;
-      });
-      y -= 8;
-    }
-
+    const brandName = normalizeText(payload.brandName) || 'NexBridge';
+    const tagline = normalizeText(payload.tagline) || 'Connect \u2022 Match \u2022 Close';
+    const title = normalizeText(payload.title) || 'Listing Summary';
+    const fields = normalizePdfFields(payload.fields);
+    const sections = normalizePdfSections(payload.sections);
     const images = sanitizeImageList(payload.images);
-    if (images.length) {
-      ensureSpace(28);
-      drawText('Pictures', margin, y, { size: 10, bold: true, color: rgb(0.48, 0.43, 0.27) });
-      y -= 18;
-      for (let index = 0; index < images.length; index += 1) {
-        const image = images[index];
-        const targetWidth = 240;
-        const targetHeight = 180;
-        ensureSpace(targetHeight + 28);
-        let embeddedImage;
-        if (String(image.mimeType || '').toLowerCase() === 'image/png') {
-          embeddedImage = await pdfDoc.embedPng(image.dataUrl);
-        } else {
-          embeddedImage = await pdfDoc.embedJpg(image.dataUrl);
+    const logoDataUrl = await getBrandLogoDataUrl();
+
+    async function embedMaybeImage(dataUrl) {
+      const safe = normalizeText(dataUrl);
+      if (!safe.startsWith('data:image/')) return null;
+      if (safe.includes('image/png')) {
+        return pdfDoc.embedPng(safe);
+      }
+      return pdfDoc.embedJpg(safe);
+    }
+
+    function sectionLineCount(section) {
+      const fieldLines = section.fields.reduce((sum, field) => sum + Math.max(1, splitText(`${field.label}: ${field.value}`, 70).length), 0);
+      const noteLines = section.notes ? splitText(section.notes, 74).length : 0;
+      return fieldLines + noteLines;
+    }
+
+    async function drawSection(section) {
+      const hasAvatar = Boolean(section.avatarDataUrl);
+      const avatarSize = hasAvatar ? 62 : 0;
+      const noteLines = section.notes ? splitText(section.notes, 74) : [];
+      const lineCount = sectionLineCount(section);
+      const minHeight = hasAvatar ? 118 : 84;
+      const boxHeight = Math.max(minHeight, 42 + (lineCount * 16));
+      ensureSpace(boxHeight + 14);
+      page.drawRectangle({
+        x: margin,
+        y: y - boxHeight,
+        width: contentWidth,
+        height: boxHeight,
+        color: rgb(1, 1, 1),
+        borderColor: border,
+        borderWidth: 1
+      });
+      drawText(section.title, margin + 16, y - 18, { size: 10, bold: true, color: gold });
+      let contentX = margin + 16;
+      let rowY = y - 40;
+      if (hasAvatar) {
+        const embeddedAvatar = await embedMaybeImage(section.avatarDataUrl);
+        if (embeddedAvatar) {
+          page.drawImage(embeddedAvatar, {
+            x: margin + 16,
+            y: y - 96,
+            width: avatarSize,
+            height: avatarSize
+          });
+          contentX += avatarSize + 16;
         }
-        const dimensions = embeddedImage.scale(1);
-        const ratio = Math.min(targetWidth / dimensions.width, targetHeight / dimensions.height);
-        const width = Math.max(60, Math.round(dimensions.width * ratio));
-        const height = Math.max(60, Math.round(dimensions.height * ratio));
-        page.drawImage(embeddedImage, {
-          x: margin,
-          y: y - height,
-          width,
-          height
+      }
+      section.fields.forEach((field) => {
+        const lines = splitText(`${field.label}: ${field.value}`, hasAvatar ? 54 : 72);
+        lines.forEach((line, index) => {
+          drawText(line, contentX, rowY, { size: 11, bold: index === 0 && line.startsWith(`${field.label}:`) });
+          rowY -= 14;
         });
-        drawText(image.name || `Picture ${index + 1}`, margin + width + 16, y - 12, { size: 10, bold: true });
-        y -= Math.max(height, 76) + 16;
+        rowY -= 4;
+      });
+      if (noteLines.length) {
+        noteLines.forEach((line) => {
+          drawText(line, contentX, rowY, { size: 11, color: muted });
+          rowY -= 14;
+        });
+      }
+      y -= boxHeight + 14;
+    }
+
+    ensureSpace(96);
+    page.drawRectangle({
+      x: margin,
+      y: y - 78,
+      width: contentWidth,
+      height: 78,
+      color: rgb(1, 1, 1),
+      borderColor: border,
+      borderWidth: 1.2
+    });
+    if (logoDataUrl) {
+      const embeddedLogo = await embedMaybeImage(logoDataUrl);
+      if (embeddedLogo) {
+        page.drawImage(embeddedLogo, {
+          x: margin + 16,
+          y: y - 62,
+          width: 46,
+          height: 46
+        });
       }
     }
+    drawText(brandName, margin + 74, y - 22, { size: 22, bold: true, color: ink });
+    drawText(tagline, margin + 74, y - 40, { size: 11, color: muted });
+    drawText(title, pageSize.width - margin - 210, y - 28, { size: 16, bold: true, color: ink });
+    y -= 96;
+
+    await drawSection({
+      title: 'Listing Details',
+      fields
+    });
+
+    for (const section of sections) {
+      await drawSection(section);
+    }
+
+    if (payload.images !== undefined) {
+      const imageSection = {
+        title: 'Pictures',
+        fields: [],
+        notes: images.length ? '' : 'No pictures uploaded'
+      };
+      await drawSection(imageSection);
+      if (images.length) {
+        for (let index = 0; index < images.length; index += 1) {
+          const image = images[index];
+          const targetWidth = 240;
+          const targetHeight = 180;
+          ensureSpace(targetHeight + 30);
+          const embeddedImage = await embedMaybeImage(image.dataUrl);
+          if (!embeddedImage) continue;
+          const dimensions = embeddedImage.scale(1);
+          const ratio = Math.min(targetWidth / dimensions.width, targetHeight / dimensions.height);
+          const width = Math.max(60, Math.round(dimensions.width * ratio));
+          const height = Math.max(60, Math.round(dimensions.height * ratio));
+          page.drawRectangle({
+            x: margin,
+            y: y - height - 16,
+            width: contentWidth,
+            height: height + 16,
+            color: rgb(1, 1, 1),
+            borderColor: border,
+            borderWidth: 1
+          });
+          page.drawImage(embeddedImage, {
+            x: margin + 12,
+            y: y - height - 4,
+            width,
+            height
+          });
+          drawText(image.name || `Picture ${index + 1}`, margin + width + 28, y - 24, { size: 10, bold: true, color: gold });
+          y -= height + 28;
+        }
+      }
+    }
+
+    ensureSpace(24);
+    drawText(`Generated via ${brandName}`, margin, y, { size: 9, color: muted });
 
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -433,6 +713,7 @@
     appendFilesToImages,
     openGallery,
     closeGallery,
+    openPdfOptionsModal,
     downloadListingPdf
   };
 })();

@@ -3545,6 +3545,47 @@
 
     state.brokerProfile = safeJsonRead('broker_session_profile', null);
 
+    function createMarketplaceProfileExtras() {
+      return {
+        avatarDataUrl: '',
+        whatsappNumber: '',
+        officeLocation: ''
+      };
+    }
+
+    function sanitizeMarketplaceProfileExtras(raw) {
+      return {
+        avatarDataUrl: normalizeText(raw?.avatarDataUrl),
+        whatsappNumber: normalizeText(raw?.whatsappNumber),
+        officeLocation: normalizeText(raw?.officeLocation)
+      };
+    }
+
+    function getMarketplaceProfileStorageKey() {
+      const broker = state.brokerProfile || {};
+      const keyPart = String(broker.id || broker.brokerIdNumber || broker.email || 'default').trim() || 'default';
+      return `broker_profile_extras_${keyPart}`;
+    }
+
+    function getMarketplaceProfileExtras() {
+      return sanitizeMarketplaceProfileExtras(
+        safeJsonRead(getMarketplaceProfileStorageKey(), createMarketplaceProfileExtras())
+      );
+    }
+
+    function getMarketplaceCurrentBrokerProfile() {
+      const broker = state.brokerProfile || {};
+      const extras = getMarketplaceProfileExtras();
+      return {
+        fullName: normalizeText(broker.fullName || broker.name),
+        mobileNumber: normalizeText(extras.whatsappNumber || broker.mobileNumber || broker.phone || ''),
+        email: normalizeText(broker.email),
+        companyName: normalizeText(broker.companyName || broker.company),
+        officeLocation: normalizeText(extras.officeLocation),
+        avatarDataUrl: normalizeText(extras.avatarDataUrl)
+      };
+    }
+
     function normalizePhoneNumber(phone) {
       const digits = String(phone || '').replace(/[^\d]/g, '');
       if (!digits) return '';
@@ -5314,12 +5355,12 @@
               tone: 'secondary',
               onclick: `openConnectorListingPictures('${sectionName}', '${listing.id}')`
             })}
-            ${renderConnectorActionButton({
+            ${isMarketplaceBrokerAuthenticated() ? renderConnectorActionButton({
               label: 'Download PDF',
               icon: 'download',
               tone: 'ghost',
               onclick: `downloadConnectorListingPdf('${sectionName}', '${listing.id}')`
-            })}
+            }) : ''}
           `
         : '';
       const protectedActions = canAccessBrokerContact(listing)
@@ -5400,7 +5441,76 @@
       return mediaBundle;
     }
 
-    function buildConnectorListingPdfPayload(listing, mediaBundle = {}) {
+    function buildConnectorListingPdfOptionSections(listing, mediaBundle = {}, requester = {}) {
+      const details = mediaBundle?.details && typeof mediaBundle.details === 'object' ? mediaBundle.details : {};
+      const purpose = getConnectorPublicPurposeValue(listing);
+      const saleStatus = getConnectorSalePropertyStatus(listing) || details.salePropertyStatus || '';
+      const handoverLabel = getConnectorHandoverLabel(listing)
+        || [details.handoverQuarter, details.handoverYear].filter(Boolean).join(' ');
+      const isOffPlan = normalizeText(saleStatus).toLowerCase() === 'off plan property';
+      const distressLabel = getConnectorDistressGapLabel(listing) || details.distressGapPercent || '';
+      const hasBrokerDetails = Boolean(requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl);
+      const hasCompanyDetails = Boolean(requester?.companyName || requester?.email || requester?.officeLocation);
+      return [
+        {
+          key: 'paymentDetails',
+          label: 'Payment details',
+          description: 'Include chiller, mortgage, and ownership details where available.',
+          checked: false,
+          hidden: !(details.chiller || details.mortgageStatus || details.leasehold)
+        },
+        {
+          key: 'chequesDetails',
+          label: 'Cheques details',
+          description: 'Include cheque count for rent listings.',
+          checked: false,
+          hidden: purpose !== 'rent'
+        },
+        {
+          key: 'companyDetails',
+          label: 'Company details',
+          description: 'Show your company name and company contact details.',
+          checked: false,
+          hidden: !hasCompanyDetails
+        },
+        {
+          key: 'userBrokerDetails',
+          label: 'User/Broker details',
+          description: 'Show the currently signed-in broker details and profile image.',
+          checked: false,
+          hidden: !hasBrokerDetails
+        },
+        {
+          key: 'images',
+          label: 'Images',
+          description: 'Include uploaded listing pictures in the PDF.',
+          checked: true
+        },
+        {
+          key: 'publicNotes',
+          label: 'Public notes/description',
+          description: 'Include the public-safe listing note.',
+          checked: false,
+          hidden: !normalizeText(listing?.publicNotes)
+        },
+        {
+          key: 'distressDetails',
+          label: 'Distress details if available',
+          description: 'Include distress gap and market price details.',
+          checked: false,
+          hidden: !(listing?.isDistress || distressLabel || listing?.marketPrice || details.marketPrice)
+        },
+        {
+          key: 'offPlanDetails',
+          label: 'Off-plan handover details if available',
+          description: 'Include sale status and handover timing.',
+          checked: false,
+          hidden: !(isOffPlan || handoverLabel)
+        }
+      ];
+    }
+
+    function buildConnectorListingPdfPayload(listing, requester = {}, selections = {}, mediaBundle = {}) {
       const details = mediaBundle?.details && typeof mediaBundle.details === 'object' ? mediaBundle.details : {};
       const fields = [
         { label: 'Purpose', value: getConnectorPublicPurposeLabel(listing) },
@@ -5412,28 +5522,79 @@
         { label: 'Size', value: listing.sizeLabel || '--' }
       ];
       if (details.furnishing) fields.push({ label: 'Furnishing', value: details.furnishing });
-      const paymentTerms = [details.cheques, details.chiller].filter(Boolean).join(' - ');
-      if (paymentTerms) fields.push({ label: 'Payment Details', value: paymentTerms });
-      if (getConnectorPublicPurposeValue(listing) === 'sale') {
-        fields.push({ label: 'Sale Status', value: getConnectorSalePropertyStatus(listing) || details.salePropertyStatus || 'Ready Property' });
+      const sections = [];
+      if (selections.paymentDetails) {
+        const paymentFields = [];
+        if (details.chiller) paymentFields.push({ label: 'Chiller', value: details.chiller });
+        if (details.mortgageStatus) paymentFields.push({ label: 'Mortgage Status', value: details.mortgageStatus });
+        if (details.leasehold) paymentFields.push({ label: 'Ownership', value: 'Leasehold' });
+        if (paymentFields.length) {
+          sections.push({ title: 'Payment Details', fields: paymentFields });
+        }
+      }
+      if (selections.chequesDetails && getConnectorPublicPurposeValue(listing) === 'rent' && details.cheques) {
+        sections.push({
+          title: 'Cheques Details',
+          fields: [{ label: 'Cheques', value: details.cheques }]
+        });
+      }
+      if (selections.companyDetails && (requester?.companyName || requester?.email || requester?.officeLocation)) {
+        const companyFields = [];
+        if (requester.companyName) companyFields.push({ label: 'Company Name', value: requester.companyName });
+        if (requester.email) companyFields.push({ label: 'Company Email', value: requester.email });
+        if (requester.officeLocation) companyFields.push({ label: 'Office Location', value: requester.officeLocation });
+        if (companyFields.length) {
+          sections.push({ title: 'Company Details', fields: companyFields });
+        }
+      }
+      if (selections.userBrokerDetails && (requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl)) {
+        const brokerFields = [];
+        if (requester.fullName) brokerFields.push({ label: 'Broker Name', value: requester.fullName });
+        if (requester.mobileNumber) brokerFields.push({ label: 'Broker Number', value: requester.mobileNumber });
+        if (requester.email) brokerFields.push({ label: 'Broker Email', value: requester.email });
+        if (requester.companyName) brokerFields.push({ label: 'Real Estate Company', value: requester.companyName });
+        if (brokerFields.length || requester.avatarDataUrl) {
+          sections.push({
+            title: 'Broker Details',
+            fields: brokerFields,
+            avatarDataUrl: requester.avatarDataUrl || ''
+          });
+        }
+      }
+      if (selections.publicNotes && normalizeText(listing.publicNotes)) {
+        sections.push({
+          title: 'Public Notes',
+          notes: normalizeText(listing.publicNotes)
+        });
+      }
+      if (selections.distressDetails && (listing.isDistress || listing.marketPrice || details.marketPrice || details.distressGapPercent)) {
+        const distressFields = [
+          { label: 'Distress Gap', value: getConnectorDistressGapLabel(listing) || details.distressGapPercent || 'Add both market and asking prices to calculate distress gap.' }
+        ];
+        if (listing.marketPrice || details.marketPrice) {
+          distressFields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(listing.marketPrice || details.marketPrice)}` });
+        }
+        sections.push({ title: 'Distress Details', fields: distressFields });
+      }
+      if (selections.offPlanDetails) {
+        const saleStatus = getConnectorSalePropertyStatus(listing) || details.salePropertyStatus || 'Ready Property';
         const handoverLabel = getConnectorHandoverLabel(listing)
           || [details.handoverQuarter, details.handoverYear].filter(Boolean).join(' ');
-        if (handoverLabel) fields.push({ label: 'Expected Handover', value: handoverLabel });
-        if (details.mortgageStatus) fields.push({ label: 'Mortgage Status', value: details.mortgageStatus });
-        if (details.leasehold) fields.push({ label: 'Ownership', value: 'Leasehold' });
-      }
-      if (listing.isDistress) {
-        fields.push({ label: 'Distress Gap', value: getConnectorDistressGapLabel(listing) || details.distressGapPercent || 'Add both market and asking prices to calculate distress gap.' });
-        if (listing.marketPrice || details.marketPrice) {
-          fields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(listing.marketPrice || details.marketPrice)}` });
+        const offPlanFields = [];
+        if (saleStatus) offPlanFields.push({ label: 'Sale Status', value: saleStatus });
+        if (handoverLabel) offPlanFields.push({ label: 'Expected Handover', value: handoverLabel });
+        if (offPlanFields.length) {
+          sections.push({ title: 'Off-plan Handover Details', fields: offPlanFields });
         }
       }
       return {
+        brandName: 'NexBridge',
+        tagline: 'Connect \u2022 Match \u2022 Close',
         title: `${getConnectorPublicPurposeLabel(listing)} ${getConnectorDisplayPropertyType(listing) ? `- ${getConnectorDisplayPropertyType(listing)}` : 'Listing'}`,
         fileName: `${getConnectorPublicPurposeLabel(listing)}-${getConnectorDisplayPropertyType(listing) || 'listing'}`,
         fields,
-        notes: listing.publicNotes || '',
-        images: mediaBundle.images || []
+        sections,
+        images: selections.images ? (mediaBundle.images || []) : undefined
       };
     }
 
@@ -5458,11 +5619,22 @@
       const listing = findConnectorListing(sectionName, listingId);
       if (!listing) return;
       try {
-        if (!window.ListingMediaUi?.downloadListingPdf) {
+        if (!isMarketplaceBrokerAuthenticated()) {
+          openAuthRequiredModal(sectionName, listing?.id, listing, 'signin');
+          return;
+        }
+        if (!window.ListingMediaUi?.downloadListingPdf || !window.ListingMediaUi?.openPdfOptionsModal) {
           throw new Error('PDF tools are unavailable right now. Refresh and try again.');
         }
         const mediaBundle = await fetchConnectorListingMediaBundle(listing);
-        await window.ListingMediaUi.downloadListingPdf(buildConnectorListingPdfPayload(listing, mediaBundle));
+        const requester = getMarketplaceCurrentBrokerProfile();
+        const selections = await window.ListingMediaUi.openPdfOptionsModal({
+          title: 'Customize PDF Details',
+          description: 'Select which optional public-safe sections should appear in the PDF.',
+          sections: buildConnectorListingPdfOptionSections(listing, mediaBundle, requester)
+        });
+        if (!selections) return;
+        await window.ListingMediaUi.downloadListingPdf(buildConnectorListingPdfPayload(listing, requester, selections, mediaBundle));
       } catch (error) {
         showActionToast('error', getUiErrorMessage(error, 'Could not download listing PDF.'));
       }

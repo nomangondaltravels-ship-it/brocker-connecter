@@ -9158,41 +9158,173 @@
       }
     }
 
-    function buildPropertyPublicSafePdfPayload(property, images = []) {
+    function getPropertyPdfRequesterProfile() {
+      const profile = getActiveBrokerProfile() || {};
+      return {
+        fullName: normalizeText(profile.fullName),
+        mobileNumber: normalizeLeadPhoneInput(profile.whatsappNumber || profile.mobileNumber || ''),
+        email: normalizeText(profile.email),
+        companyName: normalizeText(profile.companyName),
+        officeLocation: normalizeText(profile.officeLocation),
+        avatarDataUrl: normalizeText(profile.avatarDataUrl)
+      };
+    }
+
+    function buildPropertyPdfOptionSections(property, requester) {
+      const purpose = getPropertyPurpose(property?.purpose);
+      const handoverLabel = getPropertyHandoverLabel(property);
+      const saleStatus = getPropertySaleStatusLabel(property);
+      const isOffPlan = normalizeText(saleStatus).toLowerCase() === 'off plan property';
+      const distressLabel = getPropertyDistressLabel(property);
+      const hasBrokerDetails = Boolean(requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl);
+      const hasCompanyDetails = Boolean(requester?.companyName || requester?.email || requester?.officeLocation);
+      return [
+        {
+          key: 'paymentDetails',
+          label: 'Payment details',
+          description: 'Include chiller, mortgage, and ownership details where available.',
+          checked: false,
+          hidden: !(property?.chiller || property?.mortgageStatus || property?.leasehold)
+        },
+        {
+          key: 'chequesDetails',
+          label: 'Cheques details',
+          description: 'Include cheque count for rent listings.',
+          checked: false,
+          hidden: purpose !== 'rent'
+        },
+        {
+          key: 'companyDetails',
+          label: 'Company details',
+          description: 'Show your company name and company contact details.',
+          checked: false,
+          hidden: !hasCompanyDetails
+        },
+        {
+          key: 'userBrokerDetails',
+          label: 'User/Broker details',
+          description: 'Show the currently signed-in broker details and profile image.',
+          checked: false,
+          hidden: !hasBrokerDetails
+        },
+        {
+          key: 'images',
+          label: 'Images',
+          description: 'Include uploaded listing pictures in the PDF.',
+          checked: true
+        },
+        {
+          key: 'publicNotes',
+          label: 'Public notes/description',
+          description: 'Include the public-safe listing note.',
+          checked: false,
+          hidden: !normalizeText(property?.publicNotes)
+        },
+        {
+          key: 'distressDetails',
+          label: 'Distress details if available',
+          description: 'Include distress gap and market price details.',
+          checked: false,
+          hidden: !(property?.isDistress || distressLabel || property?.marketPrice)
+        },
+        {
+          key: 'offPlanDetails',
+          label: 'Off-plan handover details if available',
+          description: 'Include sale status and handover timing.',
+          checked: false,
+          hidden: !(isOffPlan || handoverLabel)
+        }
+      ];
+    }
+
+    function buildPropertyPublicSafePdfPayload(property, requester, selections = {}, images = []) {
+      const purpose = getPropertyPurpose(property?.purpose);
+      const handoverLabel = getPropertyHandoverLabel(property);
+      const saleStatus = getPropertySaleStatusLabel(property) || 'Ready Property';
+      const distressLabel = getPropertyDistressLabel(property) || 'Add both market and asking prices to calculate distress gap.';
       const fields = [
         { label: 'Purpose', value: getPropertyPurposeLabel(property.purpose) },
         { label: 'Property Category', value: getDashboardDisplayPropertyCategory(property) || '--' },
-        { label: 'Type', value: getDashboardDisplayUnitLayout(property) || property.propertyType || '--' },
+        { label: 'Unit Layout', value: getDashboardDisplayUnitLayout(property) || property.propertyType || '--' },
         { label: 'Location', value: property.location || '--' },
         { label: 'Building / Project', value: property.buildingName || '--' },
         { label: 'Price', value: getPropertyDisplayPrice(property) },
         { label: 'Size', value: formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit) || '--' }
       ];
-
-      if (property.furnishing) fields.push({ label: 'Furnishing', value: property.furnishing });
-      if (property.cheques) fields.push({ label: 'Cheques', value: property.cheques });
-      if (property.chiller) fields.push({ label: 'Chiller', value: property.chiller });
-      if (getPropertyPurpose(property.purpose) === 'sale') {
-        fields.push({ label: 'Sale Status', value: getPropertySaleStatusLabel(property) || 'Ready Property' });
-        if (getPropertyHandoverLabel(property)) {
-          fields.push({ label: 'Expected Handover', value: getPropertyHandoverLabel(property) });
-        }
-        if (property.mortgageStatus) fields.push({ label: 'Mortgage Status', value: property.mortgageStatus });
-        if (property.leasehold) fields.push({ label: 'Ownership', value: 'Leasehold' });
+      if (property.furnishing) {
+        fields.push({ label: 'Furnishing', value: property.furnishing });
       }
-      if (property.isDistress) {
-        fields.push({ label: 'Distress Gap', value: getPropertyDistressLabel(property) || 'Add both market and asking prices to calculate distress gap.' });
-        if (property.marketPrice) {
-          fields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(property.marketPrice)}` });
+
+      const sections = [];
+      if (selections.paymentDetails) {
+        const paymentFields = [];
+        if (property.chiller) paymentFields.push({ label: 'Chiller', value: property.chiller });
+        if (property.mortgageStatus) paymentFields.push({ label: 'Mortgage Status', value: property.mortgageStatus });
+        if (property.leasehold) paymentFields.push({ label: 'Ownership', value: 'Leasehold' });
+        if (paymentFields.length) {
+          sections.push({ title: 'Payment Details', fields: paymentFields });
         }
+      }
+      if (selections.chequesDetails && purpose === 'rent' && property.cheques) {
+        sections.push({
+          title: 'Cheques Details',
+          fields: [{ label: 'Cheques', value: property.cheques }]
+        });
+      }
+      if (selections.companyDetails && (requester?.companyName || requester?.email || requester?.officeLocation)) {
+        const companyFields = [];
+        if (requester.companyName) companyFields.push({ label: 'Company Name', value: requester.companyName });
+        if (requester.email) companyFields.push({ label: 'Company Email', value: requester.email });
+        if (requester.officeLocation) companyFields.push({ label: 'Office Location', value: requester.officeLocation });
+        if (companyFields.length) {
+          sections.push({ title: 'Company Details', fields: companyFields });
+        }
+      }
+      if (selections.userBrokerDetails && (requester?.fullName || requester?.mobileNumber || requester?.email || requester?.avatarDataUrl)) {
+        const brokerFields = [];
+        if (requester.fullName) brokerFields.push({ label: 'Broker Name', value: requester.fullName });
+        if (requester.mobileNumber) brokerFields.push({ label: 'Broker Number', value: requester.mobileNumber });
+        if (requester.email) brokerFields.push({ label: 'Broker Email', value: requester.email });
+        if (requester.companyName) brokerFields.push({ label: 'Real Estate Company', value: requester.companyName });
+        if (brokerFields.length || requester.avatarDataUrl) {
+          sections.push({
+            title: 'Broker Details',
+            fields: brokerFields,
+            avatarDataUrl: requester.avatarDataUrl || ''
+          });
+        }
+      }
+      if (selections.publicNotes && normalizeText(property.publicNotes)) {
+        sections.push({
+          title: 'Public Notes',
+          notes: normalizeText(property.publicNotes)
+        });
+      }
+      if (selections.distressDetails && (property.isDistress || normalizeText(property.marketPrice) || distressLabel)) {
+        const distressFields = [
+          { label: 'Distress Gap', value: distressLabel }
+        ];
+        if (property.marketPrice) {
+          distressFields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(property.marketPrice)}` });
+        }
+        sections.push({ title: 'Distress Details', fields: distressFields });
+      }
+      if (selections.offPlanDetails && (saleStatus || handoverLabel)) {
+        const offPlanFields = [{ label: 'Sale Status', value: saleStatus }];
+        if (handoverLabel) {
+          offPlanFields.push({ label: 'Expected Handover', value: handoverLabel });
+        }
+        sections.push({ title: 'Off-plan Handover Details', fields: offPlanFields });
       }
 
       return {
+        brandName: 'NexBridge',
+        tagline: 'Connect \u2022 Match \u2022 Close',
         title: `${getPropertyPurposeLabel(property.purpose)} ${property.propertyType ? `- ${property.propertyType}` : 'Listing'}`,
         fileName: `${getPropertyPurposeLabel(property.purpose)}-${property.propertyType || 'listing'}`,
         fields,
-        notes: property.publicNotes || '',
-        images
+        sections,
+        images: selections.images ? images : undefined
       };
     }
 
@@ -9200,11 +9332,18 @@
       const property = (Array.isArray(state.properties) ? state.properties : []).find(item => item.id === Number(id));
       if (!property) return;
       try {
-        if (!window.ListingMediaUi?.downloadListingPdf) {
+        if (!window.ListingMediaUi?.downloadListingPdf || !window.ListingMediaUi?.openPdfOptionsModal) {
           throw new Error('PDF tools are unavailable right now. Refresh and try again.');
         }
-        const images = await fetchPropertyMedia(property.id);
-        await window.ListingMediaUi.downloadListingPdf(buildPropertyPublicSafePdfPayload(property, images));
+        const requester = getPropertyPdfRequesterProfile();
+        const selections = await window.ListingMediaUi.openPdfOptionsModal({
+          title: 'Customize PDF Details',
+          description: 'Select which optional public-safe sections should appear in the PDF.',
+          sections: buildPropertyPdfOptionSections(property, requester)
+        });
+        if (!selections) return;
+        const images = selections.images ? await fetchPropertyMedia(property.id) : [];
+        await window.ListingMediaUi.downloadListingPdf(buildPropertyPublicSafePdfPayload(property, requester, selections, images));
       } catch (error) {
         setStatus(error?.message || 'Could not download listing PDF.', 'error');
       }
