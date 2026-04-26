@@ -8223,7 +8223,9 @@
       details?.classList.toggle('crm-hidden', !showDetails);
       clientSection?.classList.toggle('crm-hidden', !showDetails);
       notesSection?.classList.toggle('crm-hidden', !showDetails);
-      workflowSection?.classList.toggle('crm-hidden', !showDetails);
+      // Keep workflow fields in the DOM for compatibility, but hide the form section
+      // so add/edit flows stay cleaner.
+      workflowSection?.classList.add('crm-hidden');
       paymentWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'buy');
 
       syncLeadPropertyDimensionControls(options.preserveValues ? {
@@ -8649,7 +8651,9 @@
       pricingSection?.classList.toggle('crm-hidden', !showSections);
       contactsSection?.classList.toggle('crm-hidden', !showSections);
       notesSection?.classList.toggle('crm-hidden', !showSections);
-      workflowSection?.classList.toggle('crm-hidden', !showSections);
+      // Keep workflow fields in the DOM for compatibility, but hide the form section
+      // so add/edit flows stay cleaner.
+      workflowSection?.classList.add('crm-hidden');
       rentFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'rent');
       saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
