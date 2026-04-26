@@ -10493,7 +10493,7 @@
       document.querySelector(`.menu button[data-section="${name}"]`)?.classList.add('active');
       if (name !== 'overview') {
         hideOverviewWorkspace();
-        activeSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        scrollPanelTopIntoView(activeSection);
       }
       if (name === 'toolkit') {
         renderToolkit();
@@ -10698,7 +10698,7 @@
 
     function openOverviewCardSection(sectionName) {
       openSection(sectionName);
-      document.getElementById(`${sectionName}-section`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      scrollPanelTopIntoView(document.getElementById(`${sectionName}-section`));
     }
 
     function handleOverviewCardKeydown(event, sectionName) {
