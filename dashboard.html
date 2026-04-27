@@ -16397,6 +16397,23 @@
       `;
     }
 
+    function normalizeWorkspacePropertyRowActions(target, section = 'properties') {
+      if (!target) return;
+      const onclickBuilder = (id) => `event.stopPropagation();editProperty(${Number(id)})`;
+      target.querySelectorAll('.workspace-table-row[data-workspace-row-id]').forEach(row => {
+        const rowId = row.getAttribute('data-workspace-row-id');
+        const actions = row.querySelector('.workspace-actions');
+        if (!rowId || !actions) return;
+        actions.innerHTML = renderRecordActionButton({
+          label: 'Edit',
+          icon: 'edit',
+          tone: 'secondary',
+          onclick: onclickBuilder(rowId),
+          extraClass: 'record-quick-btn'
+        });
+      });
+    }
+
     const WORKSPACE_TABLE_COLUMNS = {
       leads: '56px 180px 110px 120px 160px 120px 110px 96px 90px',
       listings: '56px 180px 120px 160px 110px 120px 110px 110px 90px',
@@ -16827,6 +16844,7 @@
           </aside>
         </div>
       `;
+      normalizeWorkspacePropertyRowActions(target, 'properties');
       flushWorkspaceSplitScroll('properties');
     }
 
@@ -16933,6 +16951,7 @@
           </aside>
         </div>
       `;
+      normalizeWorkspacePropertyRowActions(target, 'distress');
       flushWorkspaceSplitScroll('distress');
     }
 
