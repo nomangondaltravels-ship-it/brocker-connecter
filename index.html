@@ -2744,6 +2744,236 @@
         grid-template-columns: 1fr;
       }
     }
+
+    @media (max-width: 768px) {
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      body {
+        font-size: 15px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 120;
+      }
+
+      .topbar-inner.public-topbar {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+        align-items: stretch !important;
+        padding: 12px 14px !important;
+      }
+
+      .brand,
+      .top-search-inline,
+      .top-actions-wrap,
+      .top-actions,
+      .broker-access-inline {
+        width: 100%;
+      }
+
+      .search-hub.compact-top-search {
+        margin: 0 !important;
+        width: 100%;
+      }
+
+      .search-hub.compact-top-search .search-bar {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+      }
+
+      .search-hub.compact-top-search .btn,
+      .top-actions .btn,
+      .broker-access-inline .btn {
+        min-height: 46px;
+      }
+
+      .top-actions,
+      .broker-access-inline {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .top-cta {
+        grid-column: 1 / -1;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+      }
+
+      .layout {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+        width: min(100%, 100vw);
+        padding: 14px;
+        overflow-x: hidden;
+      }
+
+      .sidebar {
+        top: 76px !important;
+        right: 12px !important;
+        width: calc(100vw - 24px) !important;
+        max-height: calc(100vh - 92px) !important;
+      }
+
+      .content-panel {
+        min-width: 0;
+        overflow-x: hidden;
+      }
+
+      .hero-box {
+        padding: 18px 16px;
+      }
+
+      .hero-tabs {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .hero-tabs .btn {
+        width: 100%;
+        min-height: 46px;
+        justify-content: space-between;
+      }
+
+      .connector-toolbar {
+        margin: 0 !important;
+        padding: 14px;
+      }
+
+      .connector-toolbar-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+      }
+
+      .connector-toolbar-grid > .btn {
+        width: 100%;
+        min-height: 46px;
+      }
+
+      .connector-results-shell,
+      .connector-results-shell.no-detail {
+        grid-template-columns: 1fr !important;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .connector-detail-panel {
+        position: static !important;
+        top: auto !important;
+        order: -1;
+        padding: 16px;
+      }
+
+      .connector-list-panel {
+        overflow: visible !important;
+      }
+
+      .public-sheet {
+        display: grid;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .public-sheet-head {
+        display: none !important;
+      }
+
+      .public-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+      }
+
+      .sheet-col,
+      .sheet-col-right,
+      .sheet-col-center {
+        align-items: flex-start !important;
+        justify-items: flex-start !important;
+        text-align: left !important;
+      }
+
+      .sheet-label {
+        display: block !important;
+        margin-bottom: 4px;
+      }
+
+      .row-open-action {
+        justify-content: flex-start !important;
+        width: 100%;
+      }
+
+      .row-open-action .btn {
+        min-height: 44px;
+      }
+
+      .connector-detail-grid,
+      .detail-grid,
+      .listing-grid,
+      .support-form-grid,
+      .complaint-form-grid,
+      .complaint-context-grid,
+      #authModal .auth-form-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .auth-modal {
+        width: min(100%, calc(100vw - 24px)) !important;
+        max-width: none !important;
+        padding: 22px 18px !important;
+        max-height: calc(100vh - 24px);
+        overflow: auto;
+      }
+
+      #authModal .auth-field-block {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .search-hub.compact-top-search .search-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .search-hub.compact-top-search .btn,
+      .top-actions .btn,
+      .broker-access-inline .btn {
+        width: 100%;
+      }
+
+      .top-actions,
+      .broker-access-inline {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (hover: none) {
+      .public-row:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>

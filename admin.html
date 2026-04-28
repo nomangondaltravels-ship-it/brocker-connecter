@@ -1535,6 +1535,125 @@
       }
     }
 
+    @media (max-width: 768px) {
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      body {
+        font-size: 15px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 120;
+      }
+
+      .topbar-inner {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+        align-items: stretch !important;
+        padding: 12px 14px !important;
+      }
+
+      .brand,
+      .top-actions {
+        width: 100%;
+      }
+
+      .top-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-start !important;
+      }
+
+      .top-actions .btn {
+        min-height: 46px;
+      }
+
+      .shell {
+        width: min(100%, 100vw);
+        margin: 12px auto 18px;
+        padding: 0 12px;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .admin-toolbar-layout {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+      }
+
+      .admin-toolbar-controls {
+        grid-template-columns: 1fr !important;
+      }
+
+      .admin-toolbar-controls .btn,
+      .admin-toolbar-controls select,
+      .admin-toolbar-controls input {
+        min-height: 46px;
+        width: 100%;
+      }
+
+      .admin-main-grid,
+      .admin-main-grid.no-detail {
+        grid-template-columns: 1fr !important;
+      }
+
+      .admin-detail-card {
+        position: static !important;
+        top: auto !important;
+      }
+
+      .admin-table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .admin-table-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .admin-table-actions .btn {
+        min-height: 42px;
+      }
+
+      .admin-modal-dialog,
+      .admin-modal-dialog--review {
+        width: min(100%, calc(100vw - 24px));
+        max-width: none;
+        max-height: calc(100vh - 24px);
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      input,
+      select,
+      textarea,
+      .btn {
+        font-size: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -1600,7 +1719,7 @@
               <div class="admin-toolbar-controls">
                 <div class="admin-search-wrap">
                   <label class="sr-only" for="adminSearchInput">Search admin workspace</label>
-                  <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support, toolkit" oninput="applyAdminFilters()">
+                  <input type="search" id="adminSearchInput" placeholder="Search brokers, listings, requirements, complaints, support" oninput="applyAdminFilters()">
                 </div>
               <label class="sr-only" for="adminVerificationFilter">Verification filter</label>
               <select id="adminVerificationFilter" onchange="applyAdminFilters()" aria-label="Filter verification status">
@@ -1630,7 +1749,6 @@
               <button class="btn btn-secondary" type="button" onclick="jumpToComplaintReview()">Complaint Review</button>
               <button class="btn btn-secondary" type="button" onclick="jumpToSupportInbox()">Help Desk</button>
               <button class="btn btn-secondary" type="button" onclick="jumpToCompanySuggestions()">Pending Companies</button>
-              <button class="btn btn-secondary" type="button" onclick="jumpToToolkitManager()">Toolkit Manager</button>
               <button class="btn btn-secondary" type="button" onclick="clearAdminFilters()">Clear Filters</button>
             </div>
           </div>
@@ -1754,17 +1872,6 @@
               </div>
             </div>
 
-            <div class="admin-section-card" id="toolkitManagerSection">
-              <div class="admin-section-head">
-                <div class="admin-section-copy">
-                  <h3>Toolkit Manager</h3>
-                  <p>Add, edit, deactivate, feature, and review Broker Toolkit links without changing the broker dashboard layout.</p>
-                </div>
-              </div>
-              <div class="admin-table-wrap" id="toolkitManagerList">
-                <div class="item"><p>Open Toolkit Manager to load toolkit tools.</p></div>
-              </div>
-            </div>
           </div>
 
           <div class="admin-detail-stack" id="adminDetailStack">
@@ -1830,13 +1937,6 @@
     let supportRequests = [];
     let approvedCompanySuggestions = [];
     let pendingCompanySuggestions = [];
-    let toolkitTools = [];
-    let toolkitAnalytics = {
-      totalTools: 0,
-      activeTools: 0,
-      totalClicks: 0,
-      mostUsedTools: []
-    };
     let complaintsReadable = true;
     let adminBrokerAccounts = [];
     let brokerApprovals = {};
@@ -1858,11 +1958,6 @@
       companiesLoaded: false,
       companyActionBusy: false,
       companiesRequested: false,
-      toolkitLoading: false,
-      toolkitLoaded: false,
-      toolkitActionBusy: false,
-      toolkitRequested: false,
-      toolkitUsingFallback: false,
       selectedType: 'broker',
       selectedKey: '',
       selectedRowMemory: {
@@ -1873,20 +1968,6 @@
       },
       pendingDetailScroll: null
     };
-
-    const TOOLKIT_CATEGORY_OPTIONS = [
-      'Government & Compliance',
-      'DLD / RERA',
-      'Trakheesi',
-      'Ejari',
-      'Utilities',
-      'Property Portals',
-      'Forms & Agreements',
-      'Calculators',
-      'Company / Broker Tools'
-    ];
-
-    const TOOLKIT_MANAGER_FALLBACK_TOOLS = [];
 
     async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
       const controller = new AbortController();
@@ -2143,84 +2224,6 @@
           handleAdminSessionFailure('Admin session expired. Please sign in again.');
         }
         throw new Error(result?.message || 'Company suggestion update failed.');
-      }
-
-      return result;
-    }
-
-    async function fetchAdminToolkitData() {
-      const token = getAdminToken();
-      if (!token) {
-        throw new Error('Admin login required.');
-      }
-
-      let response;
-      try {
-        response = await fetchJsonWithTimeout('/api/toolkit?scope=admin', {
-          method: 'GET',
-          cache: 'no-store',
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }, 6500);
-      } catch (error) {
-        if (error?.name === 'AbortError') {
-          return {
-            tools: TOOLKIT_MANAGER_FALLBACK_TOOLS,
-            analytics: {
-              totalTools: TOOLKIT_MANAGER_FALLBACK_TOOLS.length,
-              activeTools: TOOLKIT_MANAGER_FALLBACK_TOOLS.filter(item => item.isActive).length,
-              totalClicks: 0,
-              mostUsedTools: []
-            },
-            fallback: false
-          };
-        }
-        throw error;
-      }
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        if (response.status === 401) {
-          handleAdminSessionFailure('Admin session expired. Please sign in again.');
-        }
-        throw new Error(result?.message || 'Toolkit manager request failed.');
-      }
-
-      return {
-        tools: Array.isArray(result?.tools) ? result.tools : [],
-        analytics: result?.analytics || {
-          totalTools: 0,
-          activeTools: 0,
-          totalClicks: 0,
-          mostUsedTools: []
-        },
-        fallback: false
-      };
-    }
-
-    async function requestToolkitAction(method, payload = {}) {
-      const token = getAdminToken();
-      if (!token) {
-        throw new Error('Admin login required.');
-      }
-
-      const response = await fetch('/api/toolkit', {
-        method,
-        cache: 'no-store',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        if (response.status === 401) {
-          handleAdminSessionFailure('Admin session expired. Please sign in again.');
-        }
-        throw new Error(result?.message || 'Toolkit manager update failed.');
       }
 
       return result;
@@ -2586,10 +2589,6 @@
       adminUiState.companiesLoaded = false;
       adminUiState.companyActionBusy = false;
       adminUiState.companiesRequested = false;
-      adminUiState.toolkitLoading = false;
-      adminUiState.toolkitLoaded = false;
-      adminUiState.toolkitActionBusy = false;
-      adminUiState.toolkitRequested = false;
       renderAdminWorkspace();
       loadLocalAdminState();
       let accounts = [];
@@ -2670,13 +2669,6 @@
       supportRequests = [];
       approvedCompanySuggestions = [];
       pendingCompanySuggestions = [];
-      toolkitTools = [];
-      toolkitAnalytics = {
-        totalTools: 0,
-        activeTools: 0,
-        totalClicks: 0,
-        mostUsedTools: []
-      };
 
       adminUiState.complaintsLoading = false;
       renderAdminWorkspace();
@@ -3274,13 +3266,6 @@
       ensureCompanySuggestionsLoaded();
     }
 
-    function jumpToToolkitManager() {
-      const target = document.getElementById('toolkitManagerSection');
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      adminUiState.toolkitRequested = true;
-      ensureToolkitManagerLoaded();
-    }
-
     async function ensureSupportRequestsLoaded(force = false) {
       if ((adminUiState.supportLoaded && !force) || adminUiState.supportLoading) return;
       adminUiState.supportLoading = true;
@@ -3318,36 +3303,6 @@
         setAdminStatus(error?.message || 'Company suggestions could not load.', 'error');
       }
       adminUiState.companyLoading = false;
-      renderAdminWorkspace();
-    }
-
-    async function ensureToolkitManagerLoaded(force = false) {
-      if ((adminUiState.toolkitLoaded && !force) || adminUiState.toolkitLoading) return;
-      adminUiState.toolkitLoading = true;
-      renderAdminWorkspace();
-      try {
-        const toolkitResult = await fetchAdminToolkitData();
-        toolkitTools = toolkitResult.tools || [];
-        toolkitAnalytics = toolkitResult.analytics || toolkitAnalytics;
-        adminUiState.toolkitLoaded = true;
-        adminUiState.toolkitUsingFallback = Boolean(toolkitResult?.fallback);
-        if (toolkitResult?.fallback) {
-          setAdminStatus('Toolkit manager is showing fallback tools while live data is unavailable.', 'success');
-        }
-      } catch (error) {
-        console.error(error);
-        toolkitTools = [];
-        toolkitAnalytics = {
-          totalTools: 0,
-          activeTools: 0,
-          totalClicks: 0,
-          mostUsedTools: []
-        };
-        adminUiState.toolkitLoaded = true;
-        adminUiState.toolkitUsingFallback = false;
-        setAdminStatus(error?.message || 'Toolkit manager could not load.', 'error');
-      }
-      adminUiState.toolkitLoading = false;
       renderAdminWorkspace();
     }
 
@@ -3974,7 +3929,6 @@
       renderComplaints(collections.complaints);
       renderSupportRequests();
       renderCompanySuggestions();
-      renderToolkitManager();
       renderAdminDetailPanel(collections);
       renderBrokerAccountModal(selected && selected.type === 'broker' ? selected : null);
       renderComplaintReviewModal(selected && selected.type === 'complaint' ? selected : null);
@@ -4467,278 +4421,6 @@
       `;
     }
 
-    function getFilteredToolkitTools() {
-      const search = normalizeAdminText(adminUiState.search);
-      if (!search) return toolkitTools;
-      return (Array.isArray(toolkitTools) ? toolkitTools : []).filter(item => {
-        const haystack = [
-          item?.title,
-          item?.description,
-          item?.category,
-          item?.url
-        ].map(normalizeAdminText).join(' ');
-        return haystack.includes(search);
-      });
-    }
-
-    async function createToolkitTool() {
-      if (adminUiState.toolkitActionBusy) return;
-      const actionButton = resolveAdminActionButton();
-      const title = document.getElementById('toolkitCreateTitle')?.value || '';
-      const description = document.getElementById('toolkitCreateDescription')?.value || '';
-      const category = document.getElementById('toolkitCreateCategory')?.value || '';
-      const url = document.getElementById('toolkitCreateUrl')?.value || '';
-      const logoUrl = document.getElementById('toolkitCreateLogoUrl')?.value || '';
-      const iconName = document.getElementById('toolkitCreateIconName')?.value || '';
-      const sortOrder = document.getElementById('toolkitCreateSortOrder')?.value || '0';
-      const isActive = Boolean(document.getElementById('toolkitCreateIsActive')?.checked);
-      const isFeatured = Boolean(document.getElementById('toolkitCreateIsFeatured')?.checked);
-
-      adminUiState.toolkitActionBusy = true;
-      renderAdminWorkspace();
-      try {
-        const result = await runAdminActionFeedback(
-          actionButton,
-          'Saving Tool...',
-          'Toolkit tool created successfully.',
-          () => requestToolkitAction('POST', {
-            action: 'create-tool',
-            title,
-            description,
-            category,
-            url,
-            logoUrl,
-            iconName,
-            sortOrder,
-            isActive,
-            isFeatured
-          })
-        );
-        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
-        toolkitAnalytics = result?.analytics || toolkitAnalytics;
-        adminUiState.toolkitLoaded = true;
-        setAdminStatus('Toolkit tool created successfully.', 'success');
-      } catch (error) {
-        showAdminError(error, 'Toolkit tool creation failed.');
-      }
-      adminUiState.toolkitActionBusy = false;
-      renderAdminWorkspace();
-    }
-
-    async function saveToolkitTool(toolId) {
-      if (!toolId || adminUiState.toolkitActionBusy) return;
-      const actionButton = resolveAdminActionButton();
-      adminUiState.toolkitActionBusy = true;
-      renderAdminWorkspace();
-      try {
-        const result = await runAdminActionFeedback(
-          actionButton,
-          'Saving Tool...',
-          'Toolkit tool updated successfully.',
-          () => requestToolkitAction('PATCH', {
-            toolId,
-            title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
-            description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
-            category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
-            url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
-            logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
-            iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
-            sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0',
-            isActive: Boolean(document.getElementById(`toolkit-active-${toolId}`)?.checked),
-            isFeatured: Boolean(document.getElementById(`toolkit-featured-${toolId}`)?.checked)
-          })
-        );
-        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
-        toolkitAnalytics = result?.analytics || toolkitAnalytics;
-        adminUiState.toolkitLoaded = true;
-        adminUiState.toolkitUsingFallback = false;
-        setAdminStatus('Toolkit tool updated successfully.', 'success');
-      } catch (error) {
-        showAdminError(error, 'Toolkit tool update failed.');
-      }
-      adminUiState.toolkitActionBusy = false;
-      renderAdminWorkspace();
-    }
-
-    async function deleteToolkitTool(toolId) {
-      if (!toolId || adminUiState.toolkitActionBusy) return;
-      if (!window.confirm('Delete this toolkit tool?')) return;
-      const actionButton = resolveAdminActionButton();
-      adminUiState.toolkitActionBusy = true;
-      renderAdminWorkspace();
-      try {
-        const result = await runAdminActionFeedback(
-          actionButton,
-          'Deleting Tool...',
-          'Toolkit tool deleted successfully.',
-          () => requestToolkitAction('POST', {
-            action: 'delete-tool',
-            toolId,
-            title: document.getElementById(`toolkit-title-${toolId}`)?.value || '',
-            description: document.getElementById(`toolkit-description-${toolId}`)?.value || '',
-            category: document.getElementById(`toolkit-category-${toolId}`)?.value || '',
-            url: document.getElementById(`toolkit-url-${toolId}`)?.value || '',
-            logoUrl: document.getElementById(`toolkit-logo-${toolId}`)?.value || '',
-            iconName: document.getElementById(`toolkit-icon-${toolId}`)?.value || '',
-            sortOrder: document.getElementById(`toolkit-sort-${toolId}`)?.value || '0'
-          })
-        );
-        toolkitTools = Array.isArray(result?.tools) ? result.tools : toolkitTools;
-        toolkitAnalytics = result?.analytics || toolkitAnalytics;
-        adminUiState.toolkitLoaded = true;
-        adminUiState.toolkitUsingFallback = false;
-        setAdminStatus('Toolkit tool deleted successfully.', 'success');
-      } catch (error) {
-        showAdminError(error, 'Toolkit tool delete failed.');
-      }
-      adminUiState.toolkitActionBusy = false;
-      renderAdminWorkspace();
-    }
-
-    async function deleteAllToolkitTools() {
-      if (adminUiState.toolkitActionBusy) return;
-      if (!window.confirm('Delete all toolkit tools? This will clear the toolkit so you can add your own tools from scratch.')) return;
-      const actionButton = resolveAdminActionButton();
-      adminUiState.toolkitActionBusy = true;
-      renderAdminWorkspace();
-      try {
-        const result = await runAdminActionFeedback(
-          actionButton,
-          'Deleting All Tools...',
-          'All toolkit tools deleted successfully.',
-          () => requestToolkitAction('POST', {
-            action: 'delete-all-tools'
-          })
-        );
-        toolkitTools = Array.isArray(result?.tools) ? result.tools : [];
-        toolkitAnalytics = result?.analytics || {
-          totalTools: 0,
-          activeTools: 0,
-          totalClicks: 0,
-          mostUsedTools: []
-        };
-        adminUiState.toolkitLoaded = true;
-        adminUiState.toolkitUsingFallback = false;
-        setAdminStatus('All toolkit tools deleted successfully.', 'success');
-      } catch (error) {
-        showAdminError(error, 'Bulk toolkit delete failed.');
-      }
-      adminUiState.toolkitActionBusy = false;
-      renderAdminWorkspace();
-    }
-
-    function renderToolkitManager() {
-      const target = document.getElementById('toolkitManagerList');
-      if (!target) return;
-      if (adminUiState.toolkitLoading) {
-        target.innerHTML = `<div class="admin-detail-empty">Loading toolkit manager...</div>`;
-        return;
-      }
-      if (!adminUiState.toolkitRequested) {
-        target.innerHTML = `<div class="admin-detail-empty">Open Toolkit Manager to load toolkit tools.</div>`;
-        return;
-      }
-
-      if (!adminUiState.toolkitLoaded) {
-        target.innerHTML = `<div class="admin-detail-empty">Open Toolkit Manager to load toolkit tools.</div>`;
-        return;
-      }
-
-      const entries = getFilteredToolkitTools();
-      const analytics = toolkitAnalytics || {
-        totalTools: 0,
-        activeTools: 0,
-        totalClicks: 0,
-        mostUsedTools: []
-      };
-
-      target.innerHTML = `
-        <div class="list">
-          <div class="item">
-            <div class="item-head">
-              <h4>Toolkit Analytics</h4>
-              <span class="badge blue">${analytics.totalClicks || 0} total clicks</span>
-            </div>
-            <p>${analytics.totalTools || 0} tools · ${analytics.activeTools || 0} active · ${(Array.isArray(analytics.mostUsedTools) ? analytics.mostUsedTools.length : 0)} top-used visible</p>
-            <div class="helper">${Array.isArray(analytics.mostUsedTools) && analytics.mostUsedTools.length
-              ? analytics.mostUsedTools.map(item => `${item.title || 'Tool'} (${item.clickCount || 0} clicks, ${item.favoriteCount || 0} favorites)`).join(' · ')
-              : 'Usage analytics will appear here after brokers start opening toolkit links.'}</div>
-          </div>
-
-          <div class="item">
-            <div class="item-head">
-              <h4>Add New Tool</h4>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <span class="badge gold">External link only</span>
-                <button class="btn btn-danger tiny-btn" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="deleteAllToolkitTools()">Delete All Tools</button>
-              </div>
-            </div>
-            <div class="form-grid">
-              <label class="sr-only" for="toolkitCreateTitle">Tool title</label>
-              <input id="toolkitCreateTitle" placeholder="Tool title" autocomplete="off">
-              <label class="sr-only" for="toolkitCreateDescription">Tool description</label>
-              <textarea id="toolkitCreateDescription" rows="3" placeholder="Short description"></textarea>
-              <label class="sr-only" for="toolkitCreateCategory">Tool category</label>
-              <select id="toolkitCreateCategory">
-                ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('')}
-              </select>
-              <label class="sr-only" for="toolkitCreateUrl">Tool URL</label>
-              <input id="toolkitCreateUrl" placeholder="https://example.com/tool" autocomplete="off">
-              <label class="sr-only" for="toolkitCreateLogoUrl">Tool logo URL</label>
-              <input id="toolkitCreateLogoUrl" placeholder="Logo URL (optional)" autocomplete="off">
-              <label class="sr-only" for="toolkitCreateIconName">Tool icon name</label>
-              <input id="toolkitCreateIconName" placeholder="Icon name / short label" autocomplete="off">
-              <label class="sr-only" for="toolkitCreateSortOrder">Tool sort order</label>
-              <input id="toolkitCreateSortOrder" type="number" value="0" placeholder="Sort order" autocomplete="off">
-              <label class="helper"><input id="toolkitCreateIsActive" type="checkbox" checked> Active</label>
-              <label class="helper"><input id="toolkitCreateIsFeatured" type="checkbox"> Featured</label>
-              <button class="btn btn-primary" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="createToolkitTool()">Add Tool</button>
-            </div>
-          </div>
-
-          ${entries.length ? entries.map(item => `
-            <div class="item">
-              <div class="item-head">
-                <h4>${escapeHtml(item.title || 'Toolkit tool')}</h4>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <span class="badge ${item.isActive ? 'green' : 'red'}">${item.isActive ? 'Active' : 'Inactive'}</span>
-                  ${item.isFeatured ? '<span class="badge gold">Featured</span>' : ''}
-                  <span class="badge blue">${item.clickCount || 0} clicks</span>
-                  <span class="badge blue">${item.favoriteCount || 0} favorites</span>
-                </div>
-              </div>
-              <div class="form-grid">
-                <label class="sr-only" for="toolkit-title-${escapeHtml(item.id)}">Tool title</label>
-                <input id="toolkit-title-${escapeHtml(item.id)}" value="${escapeHtml(item.title || '')}" placeholder="Tool title" autocomplete="off">
-                <label class="sr-only" for="toolkit-description-${escapeHtml(item.id)}">Tool description</label>
-                <textarea id="toolkit-description-${escapeHtml(item.id)}" rows="3" placeholder="Short description">${escapeHtml(item.description || '')}</textarea>
-                <label class="sr-only" for="toolkit-category-${escapeHtml(item.id)}">Tool category</label>
-                <select id="toolkit-category-${escapeHtml(item.id)}">
-                  ${TOOLKIT_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}" ${item.category === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}
-                </select>
-                <label class="sr-only" for="toolkit-url-${escapeHtml(item.id)}">Tool URL</label>
-                <input id="toolkit-url-${escapeHtml(item.id)}" value="${escapeHtml(item.url || '')}" placeholder="https://example.com/tool" autocomplete="off">
-                <label class="sr-only" for="toolkit-logo-${escapeHtml(item.id)}">Tool logo URL</label>
-                <input id="toolkit-logo-${escapeHtml(item.id)}" value="${escapeHtml(item.logoUrl || '')}" placeholder="Logo URL (optional)" autocomplete="off">
-                <label class="sr-only" for="toolkit-icon-${escapeHtml(item.id)}">Tool icon name</label>
-                <input id="toolkit-icon-${escapeHtml(item.id)}" value="${escapeHtml(item.iconName || '')}" placeholder="Icon name / short label" autocomplete="off">
-                <label class="sr-only" for="toolkit-sort-${escapeHtml(item.id)}">Tool sort order</label>
-                <input id="toolkit-sort-${escapeHtml(item.id)}" type="number" value="${escapeHtml(item.sortOrder || 0)}" placeholder="Sort order" autocomplete="off">
-                <label class="helper"><input id="toolkit-active-${escapeHtml(item.id)}" type="checkbox" ${item.isActive ? 'checked' : ''}> Active</label>
-                <label class="helper"><input id="toolkit-featured-${escapeHtml(item.id)}" type="checkbox" ${item.isFeatured ? 'checked' : ''}> Featured</label>
-              </div>
-              <div class="item-head" style="margin-top:12px;">
-                <p>${escapeHtml(item.category || 'Toolkit')} · Updated ${escapeHtml(formatAdminDateTime(item.updatedAt || item.updated_at || item.createdAt || ''))}</p>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button class="btn btn-secondary tiny-btn" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="saveToolkitTool('${escapeHtml(item.id)}')">Save</button>
-                  <button class="btn btn-danger tiny-btn" type="button" ${adminUiState.toolkitActionBusy ? 'disabled' : ''} onclick="deleteToolkitTool('${escapeHtml(item.id)}')">Delete</button>
-                </div>
-              </div>
-            </div>
-          `).join('') : '<div class="admin-detail-empty">No toolkit tools matched the current search.</div>'}
-        </div>
-      `;
-    }
 
     function renderAdminDetailPanel(collections) {
       const target = document.getElementById('adminDetailPanel');

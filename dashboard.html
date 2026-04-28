@@ -4752,217 +4752,6 @@
       line-height: 1;
     }
 
-    .toolkit-shell {
-      display: grid;
-      gap: 18px;
-    }
-
-    .toolkit-toolbar-card,
-    .toolkit-grid-card,
-    .toolkit-disclaimer-card,
-    .toolkit-favorites-card {
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 18px;
-      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
-    }
-
-    .toolkit-toolbar-grid {
-      display: grid;
-      grid-template-columns: minmax(260px, 1.35fr) minmax(220px, 0.7fr);
-      gap: 14px;
-      align-items: end;
-    }
-
-    .toolkit-header-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-
-    .toolkit-header-copy h3 {
-      font-size: 1.05rem;
-      margin-bottom: 6px;
-    }
-
-    .toolkit-header-copy p {
-      color: var(--muted);
-      line-height: 1.55;
-      max-width: 760px;
-    }
-
-    .toolkit-header-meta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(212, 175, 55, 0.12);
-      border: 1px solid rgba(212, 175, 55, 0.18);
-      font-size: 0.8rem;
-      color: var(--gold-deep);
-      white-space: nowrap;
-    }
-
-    .toolkit-header-meta strong {
-      color: var(--text);
-    }
-
-    .toolkit-favorites-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 12px;
-    }
-
-    .toolkit-tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 12px;
-    }
-
-    .toolkit-tool-card {
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
-      display: grid;
-      gap: 14px;
-      min-height: 240px;
-    }
-
-    .toolkit-tool-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .toolkit-tool-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-width: 0;
-    }
-
-    .toolkit-tool-logo {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      background: linear-gradient(180deg, rgba(239, 246, 255, 0.95), rgba(255, 255, 255, 0.98));
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex: 0 0 auto;
-      color: var(--gold-deep);
-      font-weight: 800;
-      font-size: 0.85rem;
-    }
-
-    .toolkit-tool-logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .toolkit-tool-copy {
-      min-width: 0;
-      display: grid;
-      gap: 5px;
-    }
-
-    .toolkit-tool-copy h4 {
-      font-size: 0.98rem;
-      line-height: 1.35;
-    }
-
-    .toolkit-tool-copy p {
-      color: var(--muted);
-      line-height: 1.5;
-      font-size: 0.84rem;
-    }
-
-    .toolkit-tool-meta {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .toolkit-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 5px 9px;
-      border-radius: 999px;
-      font-size: 0.72rem;
-      font-weight: 700;
-      border: 1px solid var(--line);
-      background: rgba(148, 163, 184, 0.08);
-      color: var(--text);
-    }
-
-    .toolkit-badge.is-featured {
-      background: rgba(212, 175, 55, 0.12);
-      border-color: rgba(212, 175, 55, 0.28);
-      color: var(--gold-deep);
-    }
-
-    .toolkit-badge.is-favorite {
-      background: rgba(56, 189, 248, 0.1);
-      border-color: rgba(56, 189, 248, 0.22);
-      color: #0369a1;
-    }
-
-    .toolkit-tool-actions {
-      margin-top: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .toolkit-open-btn {
-      min-width: 110px;
-    }
-
-    .toolkit-favorite-btn {
-      min-width: 44px;
-      padding: 0 14px;
-    }
-
-    .toolkit-favorite-btn.is-active {
-      border-color: rgba(212, 175, 55, 0.34);
-      background: rgba(212, 175, 55, 0.12);
-      color: var(--gold-deep);
-    }
-
-    .toolkit-empty-state {
-      padding: 18px;
-      border-radius: 18px;
-      border: 1px dashed var(--line-strong);
-      background: rgba(248, 250, 252, 0.86);
-      color: var(--muted);
-      display: grid;
-      gap: 8px;
-      text-align: center;
-    }
-
-    .toolkit-empty-state strong {
-      color: var(--text);
-      font-size: 1rem;
-    }
-
-    .toolkit-disclaimer-card p {
-      color: var(--muted);
-      line-height: 1.65;
-      font-size: 0.86rem;
-    }
 
     .workspace-actions {
       display: flex;
@@ -6021,8 +5810,321 @@
         grid-template-columns: 1fr;
       }
 
-      .toolkit-toolbar-grid {
+    }
+
+    @media (max-width: 768px) {
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      body {
+        font-size: 15px;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 120;
+      }
+
+      .topbar-inner {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+        align-items: stretch !important;
+        padding: 12px 14px !important;
+      }
+
+      .brand,
+      .top-search-inline,
+      .top-search-inline .search-hub,
+      .top-actions {
+        width: 100%;
+      }
+
+      .top-search-inline .search-row {
+        grid-template-columns: minmax(0, 1fr) auto auto;
+      }
+
+      .top-actions {
+        flex-wrap: wrap;
+        justify-content: flex-start !important;
+        gap: 10px;
+      }
+
+      .top-actions .btn,
+      .page-switch-btn,
+      .account-menu-trigger {
+        min-height: 46px;
+      }
+
+      .app-shell {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+        width: min(100%, 100vw);
+        padding: 14px;
+        overflow-x: hidden;
+      }
+
+      .sidebar-dock {
+        position: static !important;
+        width: 100%;
+      }
+
+      .sidebar {
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-height: 0;
+        padding: 14px;
+        border-radius: 20px;
+      }
+
+      .sidebar-dock:hover .sidebar,
+      .sidebar-dock:focus-within .sidebar {
+        transform: none !important;
+      }
+
+      .sidebar-peek {
+        display: none !important;
+      }
+
+      .sidebar .menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .sidebar .menu .btn {
+        min-height: 64px;
+        padding: 12px;
+        text-align: left;
+      }
+
+      main.panel {
+        min-width: 0;
+      }
+
+      .hero {
+        padding: 18px 16px;
+      }
+
+      .section {
+        padding: 16px !important;
+      }
+
+      .section-head,
+      .overview-list-head,
+      .overview-match-head {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px;
+      }
+
+      .overview-actions,
+      .overview-command-grid,
+      .workflow-insights {
+        grid-template-columns: 1fr !important;
+      }
+
+      .record-filter-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+      }
+
+      .record-filter-grid .field-block,
+      .record-filter-grid .btn {
+        width: 100%;
+      }
+
+      .workspace-split,
+      .workspace-split.no-detail {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+      }
+
+      .workspace-detail-card {
+        position: static !important;
+        top: auto !important;
+      }
+
+      .workspace-table-card {
+        overflow: hidden;
+      }
+
+      .workspace-table-scroll {
+        overflow: visible !important;
+      }
+
+      .workspace-table-inner {
+        min-width: 0 !important;
+      }
+
+      .workspace-table-head {
+        display: none !important;
+      }
+
+      .workspace-table-body {
+        display: grid;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .workspace-table-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+      }
+
+      .workspace-cell,
+      .workspace-cell.workspace-cell-right,
+      .workspace-cell.workspace-cell-center {
+        align-items: flex-start !important;
+        justify-items: flex-start !important;
+        text-align: left !important;
+      }
+
+      .workspace-cell::before,
+      .workspace-actions::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #64748b;
+      }
+
+      .workspace-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start !important;
+      }
+
+      .workspace-actions .btn,
+      .workspace-actions .record-quick-btn {
+        min-height: 44px;
+      }
+
+      .lead-form-actions,
+      .lead-form-actions-main,
+      .composer-actions,
+      .detail-panel-actions {
+        flex-direction: column;
+        align-items: stretch !important;
+      }
+
+      .lead-form-actions .btn,
+      .lead-form-actions-main .btn,
+      .composer-actions .btn,
+      .detail-panel-actions .btn {
+        width: 100%;
+      }
+
+      input,
+      select,
+      textarea,
+      .btn {
+        font-size: 16px;
+      }
+
+      input,
+      select,
+      textarea {
+        min-height: 48px;
+      }
+
+      .form-grid,
+      .form-grid-compact,
+      .record-inline-grid,
+      .detail-grid,
+      .check-grid,
+      .complaint-form-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .form-section,
+      .form-subsection,
+      .complaint-section-card {
+        padding: 14px !important;
+      }
+
+      .section-action-bar,
+      .workspace-action-bar {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+      }
+
+      .section-action-bar .btn,
+      .workspace-action-bar .btn {
+        width: 100%;
+      }
+
+      .notification-panel {
+        right: 0 !important;
+        left: 0 !important;
+        width: auto !important;
+      }
+
+      .account-menu-panel {
+        right: 0 !important;
+        left: auto;
+        width: min(320px, calc(100vw - 28px));
+      }
+
+      .call-popover {
+        width: min(320px, calc(100vw - 28px));
+        right: 14px !important;
+        left: 14px !important;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .sidebar .menu {
         grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: 1fr !important;
+      }
+
+      .top-search-inline .search-row {
+        grid-template-columns: 1fr;
+      }
+
+      .top-search-inline .search-row .btn {
+        width: 100%;
+      }
+    }
+
+    @media (hover: none) {
+      .workspace-table-row:hover {
+        transform: none;
+        box-shadow: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
       }
     }
   </style>
@@ -6111,7 +6213,6 @@
           <button class="btn" data-section="properties" onclick="openSection('properties')"><span class="menu-label">Listings</span><span class="menu-sub">Inventory / availability</span></button>
           <button class="btn" data-section="distress" onclick="openSection('distress')"><span class="menu-label">Distress Deals</span><span class="menu-sub">Urgent discounted stock</span></button>
           <button class="btn" data-section="complaints" onclick="openSection('complaints')"><span class="menu-label">Complaint Center</span><span class="menu-sub">Reports / review status</span></button>
-          <button class="btn" data-section="toolkit" onclick="openSection('toolkit')"><span class="menu-label">Broker Toolkit</span><span class="menu-sub">Dubai links / daily utilities</span></button>
           <button class="btn" data-section="settings" onclick="openSection('settings')"><span class="menu-label">Settings</span><span class="menu-sub">Account / controls</span></button>
         </div>
       </aside>
@@ -6949,16 +7050,6 @@
         <div id="complaintsCard"></div>
       </section>
 
-      <section class="section" id="toolkit-section">
-        <div class="section-head">
-          <div>
-            <h2>Broker Toolkit</h2>
-            <p>Quick access to essential Dubai real estate tools, portals, forms, and utilities.</p>
-          </div>
-        </div>
-        <div id="toolkitCard"></div>
-      </section>
-
       <section class="section" id="profile-section">
         <div class="section-head">
           <div>
@@ -7106,8 +7197,6 @@
       properties: [],
       followUps: [],
       sharedListings: [],
-      toolkitTools: [],
-      toolkitFavoriteToolIds: [],
       complaints: [],
       notifications: [],
       aiMatches: [],
@@ -7157,13 +7246,6 @@
       complaintDraft: null,
       complaintModalOpen: false,
       complaintModalSubmitting: false,
-      toolkitLoaded: false,
-      toolkitLoading: false,
-      toolkitError: '',
-      toolkitUsingFallback: false,
-      toolkitSearch: '',
-      toolkitCategory: 'all',
-      toolkitFavoriteBusy: '',
       rulesPromptOpen: false,
       rulesPromptChecked: false,
       rulesPromptSource: '',
@@ -7203,18 +7285,6 @@
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
     const COMPLAINT_REASON_OPTIONS = ['Spam', 'Fake Listing', 'Wrong Information', 'Duplicate Content', 'Misleading Price', 'Abuse / Misconduct', 'Harassment', 'Fraud / Scam', 'Other'];
     const COMPLAINT_ALLOWED_PROOF_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
-    const TOOLKIT_CATEGORIES = [
-      'Government & Compliance',
-      'DLD / RERA',
-      'Trakheesi',
-      'Ejari',
-      'Utilities',
-      'Property Portals',
-      'Forms & Agreements',
-      'Calculators',
-      'Company / Broker Tools'
-    ];
-    const TOOLKIT_FALLBACK_TOOLS = [];
     const COMPLAINT_STATUS_LABELS = {
       new: 'New',
       'under-review': 'Under Review',
@@ -10628,293 +10698,6 @@
       }
     }
 
-    async function fetchBrokerToolkit() {
-      let response;
-      try {
-        response = await fetchJsonWithTimeout('/api/toolkit', {
-          method: 'GET',
-          headers: apiHeaders()
-        }, 6500);
-      } catch (error) {
-        if (error?.name === 'AbortError') {
-          return {
-            tools: [],
-            favoriteToolIds: [],
-            fallback: false
-          };
-        }
-        throw error;
-      }
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.message || 'Toolkit is temporarily unavailable.');
-      }
-      return {
-        tools: Array.isArray(result?.tools) ? result.tools : [],
-        favoriteToolIds: Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : [],
-        fallback: false
-      };
-    }
-
-    async function ensureToolkitLoaded(force = false) {
-      if ((state.toolkitLoaded && !force) || state.toolkitLoading) {
-        renderToolkit();
-        return;
-      }
-      state.toolkitLoading = true;
-      state.toolkitError = '';
-      renderToolkit();
-      try {
-        const result = await fetchBrokerToolkit();
-        state.toolkitTools = Array.isArray(result.tools) ? result.tools : [];
-        state.toolkitFavoriteToolIds = Array.isArray(result.favoriteToolIds) ? result.favoriteToolIds : [];
-        state.toolkitUsingFallback = false;
-        state.toolkitLoaded = true;
-      } catch (error) {
-        state.toolkitTools = [];
-        state.toolkitFavoriteToolIds = [];
-        state.toolkitUsingFallback = false;
-        state.toolkitError = error?.message || 'Toolkit is temporarily unavailable.';
-        state.toolkitLoaded = true;
-      }
-      state.toolkitLoading = false;
-      renderToolkit();
-    }
-
-    function setToolkitSearch(value) {
-      state.toolkitSearch = String(value || '');
-      renderToolkit();
-    }
-
-    function setToolkitCategory(value) {
-      state.toolkitCategory = normalizeText(value) || 'all';
-      renderToolkit();
-    }
-
-    function buildToolkitSearchText(tool) {
-      return [
-        tool.title,
-        tool.description,
-        tool.category
-      ].join(' ').toLowerCase();
-    }
-
-    function getFilteredToolkitTools() {
-      const tools = Array.isArray(state.toolkitTools) ? state.toolkitTools : [];
-      const search = normalizeText(state.toolkitSearch).toLowerCase();
-      const category = normalizeText(state.toolkitCategory).toLowerCase();
-      return tools.filter(tool => {
-        if (!tool?.isActive) return false;
-        if (category && category !== 'all' && String(tool.category || '').toLowerCase() !== category) {
-          return false;
-        }
-        if (!search) return true;
-        return buildToolkitSearchText(tool).includes(search);
-      });
-    }
-
-    function renderToolkitLogo(tool) {
-      if (normalizeText(tool.logoUrl)) {
-        return `<div class="toolkit-tool-logo"><img src="${escapeHtml(tool.logoUrl)}" alt="${escapeHtml(tool.title)} logo" loading="lazy"></div>`;
-      }
-      const fallback = normalizeText(tool.iconName || tool.title).slice(0, 4).toUpperCase();
-      return `<div class="toolkit-tool-logo">${escapeHtml(fallback || 'TL')}</div>`;
-    }
-
-    function buildToolkitCard(tool, favoriteSet, options = {}) {
-      const isFavorite = favoriteSet.has(tool.id);
-      const favoriteLabel = isFavorite ? 'Unfavorite' : 'Favorite';
-      const favoriteIcon = isFavorite ? '?' : '?';
-      return `
-        <div class="toolkit-tool-card">
-          <div class="toolkit-tool-head">
-            <div class="toolkit-tool-brand">
-              ${renderToolkitLogo(tool)}
-              <div class="toolkit-tool-copy">
-                <h4>${escapeHtml(tool.title || 'Tool')}</h4>
-                <p>${escapeHtml(tool.description || 'External resource')}</p>
-              </div>
-            </div>
-            ${tool.isFeatured ? '<span class="toolkit-badge is-featured">Featured</span>' : ''}
-          </div>
-          <div class="toolkit-tool-meta">
-            <span class="toolkit-badge">${escapeHtml(tool.category || 'Toolkit')}</span>
-            ${isFavorite ? '<span class="toolkit-badge is-favorite">Favorite</span>' : ''}
-          </div>
-          <div class="toolkit-tool-actions">
-            <button class="btn btn-primary toolkit-open-btn" type="button" onclick="openToolkitExternalLink('${escapeHtml(tool.id)}')">Open</button>
-            <button class="btn btn-secondary toolkit-favorite-btn ${isFavorite ? 'is-active' : ''}" type="button" ${state.toolkitFavoriteBusy === tool.id ? 'disabled' : ''} onclick="toggleToolkitFavorite('${escapeHtml(tool.id)}')">${favoriteIcon}</button>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderToolkit() {
-      const target = document.getElementById('toolkitCard');
-      if (!target) return;
-
-      const filteredTools = getFilteredToolkitTools();
-      const favoriteSet = new Set((Array.isArray(state.toolkitFavoriteToolIds) ? state.toolkitFavoriteToolIds : []).map(item => String(item || '')));
-      const favoriteTools = filteredTools.filter(tool => favoriteSet.has(tool.id));
-
-      if (state.toolkitLoading && !state.toolkitTools.length) {
-        target.innerHTML = `
-          <div class="toolkit-shell">
-            <div class="toolkit-toolbar-card">
-              <div class="toolkit-empty-state">
-                <strong>Loading toolkit</strong>
-                <span>Essential links, portals, and daily-use utilities are loading now.</span>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      if (state.toolkitError && !state.toolkitTools.length) {
-        target.innerHTML = `
-          <div class="toolkit-shell">
-            <div class="toolkit-toolbar-card">
-              <div class="toolkit-empty-state">
-                <strong>Toolkit is temporarily unavailable.</strong>
-                <span>${escapeHtml(state.toolkitError)}</span>
-                <div><button class="btn btn-secondary btn-tiny" type="button" onclick="ensureToolkitLoaded(true)">Retry</button></div>
-              </div>
-            </div>
-          </div>
-        `;
-        return;
-      }
-
-      target.innerHTML = `
-        <div class="toolkit-shell">
-          <div class="toolkit-toolbar-card">
-            <div class="toolkit-header-row">
-              <div class="toolkit-header-copy">
-                <h3>Broker Toolkit</h3>
-                <p>Quick access to essential Dubai real estate tools, portals, forms, and utilities from one clean broker workspace.</p>
-              </div>
-              <div class="toolkit-header-meta">
-                <span>Live tools</span>
-                <strong>${filteredTools.length}</strong>
-              </div>
-            </div>
-            <div class="toolkit-toolbar-grid">
-              <div class="field-block">
-                <label class="small" for="toolkitSearchInput">Search Tools</label>
-                <input id="toolkitSearchInput" type="search" placeholder="Search title, description, category" value="${escapeHtml(state.toolkitSearch)}" oninput="setToolkitSearch(this.value)">
-              </div>
-              <div class="field-block">
-                <label class="small" for="toolkitCategoryFilter">Category</label>
-                <select id="toolkitCategoryFilter" onchange="setToolkitCategory(this.value)">
-                  <option value="all">All Categories</option>
-                  ${TOOLKIT_CATEGORIES.map(category => `<option value="${escapeHtml(category)}" ${state.toolkitCategory === category ? 'selected' : ''}>${escapeHtml(category)}</option>`).join('')}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="toolkit-favorites-card">
-            <div class="toolkit-header-row">
-              <div class="toolkit-header-copy">
-                <h3>Favorites</h3>
-                <p>Your starred tools stay pinned here for faster daily access.</p>
-              </div>
-            </div>
-            ${favoriteTools.length ? `<div class="toolkit-favorites-row">${favoriteTools.map(tool => buildToolkitCard(tool, favoriteSet, { compact: true })).join('')}</div>` : `
-              <div class="toolkit-empty-state">
-                <strong>No favorites yet</strong>
-                <span>Star important portals and calculators to keep them at the top of your toolkit.</span>
-              </div>
-            `}
-          </div>
-
-          <div class="toolkit-grid-card">
-            <div class="toolkit-header-row">
-              <div class="toolkit-header-copy">
-                <h3>All Tools</h3>
-                <p>External links always open in a new tab. Credentials stay on the official destination platform.</p>
-              </div>
-            </div>
-            ${filteredTools.length ? `<div class="toolkit-tools-grid">${filteredTools.map(tool => buildToolkitCard(tool, favoriteSet)).join('')}</div>` : `
-              <div class="toolkit-empty-state">
-                <strong>No tools added yet</strong>
-                <span>Your admin can add toolkit links from Toolkit Manager. Once added, they will appear here.</span>
-              </div>
-            `}
-          </div>
-
-          <div class="toolkit-disclaimer-card">
-            <div class="toolkit-header-copy">
-              <h3>Disclaimer</h3>
-            </div>
-      <p>All links redirect to external platforms. NexBridge is not affiliated with DLD, RERA, DEWA, Trakheesi, Ejari, utility providers, or any government authority unless explicitly stated. This toolkit is provided for convenience and guidance only. Brokers are responsible for using official sources and complying with applicable Dubai real estate regulations.</p>
-          </div>
-        </div>
-      `;
-    }
-
-    async function toggleToolkitFavorite(toolId) {
-      const normalizedId = normalizeText(toolId);
-      if (!normalizedId || state.toolkitFavoriteBusy === normalizedId) return;
-      const currentlyFavorite = (Array.isArray(state.toolkitFavoriteToolIds) ? state.toolkitFavoriteToolIds : []).includes(normalizedId);
-      state.toolkitFavoriteBusy = normalizedId;
-      renderToolkit();
-      try {
-        const response = await fetch('/api/toolkit', {
-          method: 'POST',
-          headers: apiHeaders(),
-          body: JSON.stringify({
-            action: 'toggle-favorite',
-            toolId: normalizedId,
-            favorite: !currentlyFavorite
-          })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(result?.message || 'Toolkit favorite update failed.');
-        }
-        state.toolkitFavoriteToolIds = Array.isArray(result?.favoriteToolIds) ? result.favoriteToolIds : state.toolkitFavoriteToolIds;
-      } catch (error) {
-        setStatus(error?.message || 'Toolkit favorite update failed.', 'error');
-      }
-      state.toolkitFavoriteBusy = '';
-      renderToolkit();
-    }
-
-    function trackToolkitClick(toolId) {
-      if (!normalizeText(toolId)) return;
-      fetch('/api/toolkit', {
-        method: 'POST',
-        headers: apiHeaders(),
-        body: JSON.stringify({
-          action: 'track-click',
-          toolId
-        })
-      }).catch(() => {});
-    }
-
-    function openToolkitExternalLink(toolId) {
-      const tool = (Array.isArray(state.toolkitTools) ? state.toolkitTools : []).find(item => item.id === String(toolId || ''));
-      if (!tool || !normalizeText(tool.url)) {
-        setStatus('Toolkit link is unavailable right now.', 'error');
-        return;
-      }
-      if (tool.url === '#') {
-        setStatus('This toolkit item is coming soon.', 'success');
-        return;
-      }
-
-      trackToolkitClick(tool.id);
-      const anchor = document.createElement('a');
-      anchor.href = tool.url;
-      anchor.target = '_blank';
-      anchor.rel = 'noopener noreferrer';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-    }
-
     function openSection(name) {
       closeAccountMenu();
       state.activeSection = name;
@@ -10929,10 +10712,6 @@
         scrollPanelTopIntoView(mainPanel || activeSection, activeSection);
       } else {
         scrollPanelTopIntoView(mainPanel || activeSection, activeSection);
-      }
-      if (name === 'toolkit') {
-        renderToolkit();
-        void ensureToolkitLoaded();
       }
     }
 
@@ -16683,36 +16462,36 @@
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openLeadRecord(${lead.id})}"
                         style="grid-template-columns:${leadColumns};"
                       >
-                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-center" data-label="#"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell" data-label="Client / Purpose">
                           <strong>${escapeHtml(lead.clientName || getLeadClientPurposeLabel(lead.clientPurpose))}</strong>
                           <span>${escapeHtml(getLeadIntentText(lead))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Property Type">
                           <strong>${escapeHtml(lead.propertyType || '--')}</strong>
                           <span>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Preferred Location">
                           <strong>${escapeHtml(lead.location || '--')}</strong>
                           <span>${escapeHtml(lead.preferredBuildingProject || '--')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Building">
                           <strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong>
                           <span>${escapeHtml(lead.paymentMethod || '--')}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Budget">
                           <strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong>
                           <span>${escapeHtml(lead.source || 'Broker desk')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Status">
                           <strong>${escapeHtml(formatStatusLabel(lead.status || 'new'))}</strong>
                           <span>${escapeHtml(followUpState.label)}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Updated">
                           <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
                           <span>${escapeHtml(`${lead.callCount || 0} calls / ${lead.whatsappCount || 0} WA`)}</span>
                         </div>
-                        <div class="workspace-actions">
+                        <div class="workspace-actions" data-label="Quick Actions">
                           ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
@@ -16787,20 +16566,20 @@
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'properties')}"
                         style="grid-template-columns:${listingColumns};"
                       >
-                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-center" data-label="#"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell" data-label="Purpose">
                           <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(getPropertyTermsSummary(property))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Location">
                           <strong>${escapeHtml(property.location || '--')}</strong>
                           <span>${escapeHtml(property.location ? 'Area / location' : 'No area set')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Building / Project">
                           <strong>${escapeHtml(property.buildingName || '--')}</strong>
                           <span>${escapeHtml(property.buildingName ? 'Building / project' : 'No building set')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Type">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
                           <span>${escapeHtml(
                             getPropertyPurpose(property.purpose) === 'sale'
@@ -16811,19 +16590,19 @@
                               : property.furnishing || '--'
                           )}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Price">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
                           <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Status">
                           <strong>${escapeHtml(formatStatusLabel(property.status || 'available'))}</strong>
                           <span>${escapeHtml(`${lastTouched} ago`)}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Visibility">
                           <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
                           <span>${property.isDistress ? (getPropertyDistressLabel(property, 'Add prices for gap') || 'Distress deal') : 'Standard inventory'}</span>
                         </div>
-                        <div class="workspace-actions">
+                        <div class="workspace-actions" data-label="Quick Actions">
                           ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
@@ -16897,12 +16676,12 @@
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'distress')}"
                         style="grid-template-columns:${distressColumns};"
                       >
-                        <div class="workspace-cell workspace-cell-center"><span class="workspace-number">#${index + 1}</span></div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell workspace-cell-center" data-label="#"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell" data-label="Purpose">
                           <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(property.isDistress ? 'Distress deal' : 'Active listing')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Type">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
                           <span>${escapeHtml(joinDisplayParts([
                             getPropertySaleStatusLabel(property),
@@ -16910,27 +16689,27 @@
                             property.furnishing
                           ]) || '--')}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Area / Building">
                           <strong>${escapeHtml(property.location || '--')}</strong>
                           <span>${escapeHtml(property.buildingName || '--')}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Asking Price">
                           <strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong>
                           <span>${escapeHtml(formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit))}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Distress Gap">
                           <strong>${escapeHtml(getPropertyDistressLabel(property, 'Add prices for gap') || 'Add prices for gap')}</strong>
                           <span>${escapeHtml(property.marketPrice ? `Market AED ${normalizeBudgetDigits(property.marketPrice)}` : formatStatusLabel(property.status || 'available'))}</span>
                         </div>
-                        <div class="workspace-cell">
+                        <div class="workspace-cell" data-label="Visibility">
                           <strong>${property.isListedPublic ? 'Listed Public' : 'Private Only'}</strong>
                           <span>${property.isArchived ? 'Archived' : 'Active'}</span>
                         </div>
-                        <div class="workspace-cell workspace-cell-right">
+                        <div class="workspace-cell workspace-cell-right" data-label="Updated">
                           <strong>${escapeHtml(`${lastTouched} ago`)}</strong>
                           <span>${escapeHtml(`${property.ownerCallCount || 0} calls / ${property.ownerWhatsappCount || 0} WA`)}</span>
                         </div>
-                        <div class="workspace-actions">
+                        <div class="workspace-actions" data-label="Quick Actions">
                           ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
@@ -16999,7 +16778,6 @@
         syncFilterInputs('leads');
         syncFilterInputs('properties');
         renderComplaintCenter();
-        renderToolkit();
         const ok = await verifySession();
         if (!ok) return;
         await loadDashboard();
