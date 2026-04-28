@@ -451,7 +451,10 @@
 
     async function loadSavedFilters() {
       try {
-        const payload = await request('/api/saved-filters');
+        const payload = await request('/api/broker-dashboard', {
+          method: 'POST',
+          body: { action: 'list-saved-filters' }
+        });
         savedFilters = Array.isArray(payload.savedFilters) ? payload.savedFilters : [];
         renderSavedFilters();
         showMessage(sessionMessage, '');
@@ -477,15 +480,22 @@
         };
 
         if (activeFilterId) {
-          await request(`/api/saved-filters/${encodeURIComponent(activeFilterId)}`, {
-            method: 'PATCH',
-            body: payload
+          await request('/api/broker-dashboard', {
+            method: 'POST',
+            body: {
+              action: 'update-saved-filter',
+              id: activeFilterId,
+              ...payload
+            }
           });
           showMessage(formMessage, 'Saved filter updated successfully.');
         } else {
-          await request('/api/saved-filters', {
+          await request('/api/broker-dashboard', {
             method: 'POST',
-            body: payload
+            body: {
+              action: 'create-saved-filter',
+              ...payload
+            }
           });
           showMessage(formMessage, 'Saved filter created successfully.');
         }
@@ -527,8 +537,12 @@
       const confirmed = window.confirm(`Delete saved filter "${target.name}"?`);
       if (!confirmed) return;
       try {
-        await request(`/api/saved-filters/${encodeURIComponent(id)}`, {
-          method: 'DELETE'
+        await request('/api/broker-dashboard', {
+          method: 'POST',
+          body: {
+            action: 'delete-saved-filter',
+            id
+          }
         });
         if (activeFilterId === id) {
           resetForm();

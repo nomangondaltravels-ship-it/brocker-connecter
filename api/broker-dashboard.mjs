@@ -40,6 +40,11 @@ import {
   supabasePatch,
   supabaseSelect
 } from '../server/_broker-platform.mjs';
+import {
+  buildCreateSavedFilterPayload,
+  buildUpdateSavedFilterPayload,
+  sanitizeSavedFilterRecord
+} from '../server/_saved-filters.mjs';
 
 const LEAD_STATUS_OPTIONS = ['new', 'contacted', 'follow-up', 'meeting scheduled', 'negotiation', 'closed won', 'closed lost', 'inactive'];
 const LISTING_STATUS_OPTIONS = ['available', 'reserved', 'rented', 'sold', 'off market', 'draft'];
@@ -1691,6 +1696,80 @@ export async function POST(request) {
         await removePublicListing(context, 'property', id);
       }
       return json({ property: sanitizeProperty(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'list-saved-filters') {
+      const rows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'saved_filters',
+        filters: { user_id: broker.id },
+        order: { column: 'updated_at', ascending: false }
+      });
+      return json({
+        savedFilters: (Array.isArray(rows) ? rows : [])
+          .map(sanitizeSavedFilterRecord)
+          .filter(Boolean)
+      });
+    }
+
+    if (action === 'create-saved-filter') {
+      const payload = buildCreateSavedFilterPayload(body, broker.id);
+      const rows = await supabaseInsert({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'saved_filters',
+        payload: [payload]
+      });
+      return json({
+        savedFilter: sanitizeSavedFilterRecord(Array.isArray(rows) ? rows[0] : null)
+      });
+    }
+
+    if (action === 'update-saved-filter') {
+      const id = normalizeText(body?.id);
+      if (!id) {
+        return json({ message: 'Saved filter id is required.' }, 400);
+      }
+      const existingRows = await supabaseSelect({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'saved_filters',
+        filters: { id, user_id: broker.id }
+      });
+      const existing = Array.isArray(existingRows) ? existingRows[0] : null;
+      if (!existing) {
+        return json({ message: 'Saved filter not found.' }, 404);
+      }
+      const payload = buildUpdateSavedFilterPayload(body, existing);
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'saved_filters',
+        filters: { id, user_id: broker.id },
+        payload
+      });
+      return json({
+        savedFilter: sanitizeSavedFilterRecord(Array.isArray(rows) ? rows[0] : null)
+      });
+    }
+
+    if (action === 'delete-saved-filter') {
+      const id = normalizeText(body?.id);
+      if (!id) {
+        return json({ message: 'Saved filter id is required.' }, 400);
+      }
+      const rows = await supabaseDelete({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'saved_filters',
+        filters: { id, user_id: broker.id }
+      });
+      const deleted = Array.isArray(rows) ? rows[0] : null;
+      if (!deleted) {
+        return json({ message: 'Saved filter not found.' }, 404);
+      }
+      return json({ success: true });
     }
 
     if (action === 'save-followup') {
