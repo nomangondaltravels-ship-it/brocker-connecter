@@ -17,6 +17,30 @@
     return String(value || '').trim();
   }
 
+  function sanitizePdfText(value) {
+    const normalized = normalizeText(value)
+      .replace(/\u00A0/g, ' ')
+      .replace(/[•·]/g, ' - ')
+      .replace(/[–—]/g, '-')
+      .replace(/…/g, '...')
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    let output = '';
+    for (const char of normalized) {
+      const code = char.charCodeAt(0);
+      if (code === 9 || code === 10 || code === 13) {
+        output += ' ';
+        continue;
+      }
+      if ((code >= 32 && code <= 126) || (code >= 161 && code <= 255)) {
+        output += char;
+      }
+    }
+    return output.replace(/\s+/g, ' ').trim();
+  }
+
   function getExtension(name) {
     const normalized = normalizeText(name).toLowerCase();
     if (!normalized.includes('.')) return '';
@@ -455,7 +479,7 @@
   }
 
   function splitText(text, maxChars = 90) {
-    const input = normalizeText(text);
+    const input = sanitizePdfText(text);
     if (!input) return [];
     const words = input.split(/\s+/);
     const lines = [];
@@ -474,15 +498,15 @@
   }
 
   function buildPdfFileName(title) {
-    const normalized = normalizeText(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const normalized = sanitizePdfText(title).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     return `${normalized || 'listing'}-summary.pdf`;
   }
 
   function normalizePdfFields(fields) {
     return (Array.isArray(fields) ? fields : [])
       .map((field) => ({
-        label: normalizeText(field?.label),
-        value: normalizeText(field?.value)
+        label: sanitizePdfText(field?.label),
+        value: sanitizePdfText(field?.value)
       }))
       .filter((field) => field.label && field.value);
   }
@@ -490,9 +514,9 @@
   function normalizePdfSections(sections) {
     return (Array.isArray(sections) ? sections : [])
       .map((section) => ({
-        title: normalizeText(section?.title),
+        title: sanitizePdfText(section?.title),
         fields: normalizePdfFields(section?.fields),
-        notes: normalizeText(section?.notes),
+        notes: sanitizePdfText(section?.notes),
         avatarDataUrl: normalizeText(section?.avatarDataUrl)
       }))
       .filter((section) => section.title && (section.fields.length || section.notes || section.avatarDataUrl));
@@ -543,7 +567,7 @@
     }
 
     function drawText(text, x, nextY, options = {}) {
-      page.drawText(String(text || ''), {
+      page.drawText(sanitizePdfText(text), {
         x,
         y: nextY,
         size: options.size || 11,
@@ -560,10 +584,14 @@
     async function embedMaybeImage(dataUrl) {
       const safe = normalizeText(dataUrl);
       if (!safe.startsWith('data:image/')) return null;
-      if (safe.includes('image/png')) {
-        return pdfDoc.embedPng(safe);
+      try {
+        if (safe.includes('image/png')) {
+          return await pdfDoc.embedPng(safe);
+        }
+        return await pdfDoc.embedJpg(safe);
+      } catch (error) {
+        return null;
       }
-      return pdfDoc.embedJpg(safe);
     }
 
     function sectionLineCount(section) {
@@ -687,7 +715,7 @@
             width,
             height
           });
-          drawText(image.name || `Picture ${index + 1}`, margin + width + 28, y - 24, { size: 10, bold: true, color: gold });
+          drawText(sanitizePdfText(image.name || `Picture ${index + 1}`), margin + width + 28, y - 24, { size: 10, bold: true, color: gold });
           y -= height + 28;
         }
       }
