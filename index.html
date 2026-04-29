@@ -1872,6 +1872,153 @@
       border-bottom-color: rgba(148, 163, 184, 0.16) !important;
     }
 
+    .hero-box.compact-public-hero.marketplace-hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(110deg, rgba(255,255,255,0.96) 0%, rgba(255,251,240,0.9) 42%, rgba(242,247,252,0.86) 100%),
+        url('https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1800&q=80') center/cover !important;
+      background-blend-mode: screen, normal;
+      border-bottom-color: rgba(212, 175, 55, 0.18) !important;
+    }
+
+    .hero-box.compact-public-hero.marketplace-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.74) 38%, rgba(247,250,252,0.52) 100%),
+        radial-gradient(circle at 82% 28%, rgba(212,175,55,0.18), transparent 22%),
+        radial-gradient(circle at 88% 82%, rgba(21, 94, 117, 0.12), transparent 24%);
+      pointer-events: none;
+    }
+
+    .hero-box.compact-public-hero.marketplace-hero > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .marketplace-hero-stage {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(250px, 0.72fr);
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    .marketplace-hero-copy {
+      max-width: 760px;
+    }
+
+    .marketplace-hero-copy h1 {
+      margin-bottom: 10px;
+    }
+
+    .marketplace-title-accent {
+      background: linear-gradient(90deg, #17202f 0%, #20314c 32%, #b58a1d 72%, #e1bb55 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent !important;
+      text-shadow: 0 10px 32px rgba(181, 138, 29, 0.08);
+    }
+
+    .marketplace-hero-copy p {
+      max-width: 640px;
+    }
+
+    .marketplace-hero-art {
+      position: relative;
+      min-height: 200px;
+      align-self: stretch;
+      border-radius: 24px;
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.88), rgba(248,250,252,0.68)),
+        linear-gradient(145deg, rgba(212,175,55,0.14), rgba(10,27,52,0.06));
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.78),
+        0 18px 36px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+    }
+
+    .marketplace-hero-art::before {
+      content: '';
+      position: absolute;
+      inset: auto 18px 18px 18px;
+      height: 74px;
+      border-radius: 20px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.28)),
+        linear-gradient(90deg,
+          rgba(21, 128, 61, 0.92) 0 22%,
+          rgba(255,255,255,0.96) 22% 46%,
+          rgba(17,24,39,0.92) 46% 72%,
+          rgba(220,38,38,0.92) 72% 100%);
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+      opacity: 0.95;
+    }
+
+    .marketplace-hero-art::after {
+      content: '';
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 42px;
+      height: 124px;
+      background:
+        linear-gradient(180deg, rgba(29, 42, 63, 0) 0%, rgba(29, 42, 63, 0.16) 32%, rgba(18, 31, 51, 0.82) 100%);
+      clip-path: polygon(0% 100%, 0% 78%, 8% 78%, 8% 48%, 15% 48%, 15% 68%, 21% 68%, 21% 36%, 30% 36%, 30% 70%, 37% 70%, 37% 24%, 45% 24%, 45% 76%, 54% 76%, 54% 42%, 63% 42%, 63% 64%, 71% 64%, 71% 18%, 79% 18%, 79% 68%, 86% 68%, 86% 54%, 92% 54%, 92% 82%, 100% 82%, 100% 100%);
+      opacity: 0.9;
+    }
+
+    .marketplace-flag-badge {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(212, 175, 55, 0.28);
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+      color: #20314c;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .marketplace-flag {
+      width: 38px;
+      height: 24px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+      background:
+        linear-gradient(90deg, #d62828 0 24%, transparent 24%),
+        linear-gradient(180deg, #0f9d58 0 33.34%, #ffffff 33.34% 66.67%, #111827 66.67% 100%);
+    }
+
+    .marketplace-hero-caption {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 28px;
+      max-width: 210px;
+      color: #455366;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .marketplace-hero-caption strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #17202f;
+      font-size: 0.86rem;
+    }
+
     .page-head,
     .search-hub {
       border-radius: 18px;
@@ -2843,6 +2990,21 @@
         justify-content: space-between;
       }
 
+      .marketplace-hero-stage {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .marketplace-hero-art {
+        min-height: 156px;
+      }
+
+      .marketplace-hero-caption {
+        max-width: none;
+        right: 88px;
+        font-size: 0.76rem;
+      }
+
       .connector-toolbar {
         margin: 0 !important;
         padding: 14px;
@@ -3035,10 +3197,24 @@
     </aside>
 
     <main class="content-panel">
-      <section class="hero-box compact-public-hero">
-        <div class="hero-kicker">Live NexBridge Marketplace</div>
-        <h1>NexBridge Marketplace</h1>
-        <p>Browse shared broker requirements, public listings, and distress opportunities in one data-first marketplace.</p>
+      <section class="hero-box compact-public-hero marketplace-hero">
+        <div class="marketplace-hero-stage">
+          <div class="marketplace-hero-copy">
+            <div class="hero-kicker">Live NexBridge Marketplace</div>
+            <h1 class="marketplace-title-accent">NexBridge Marketplace</h1>
+            <p>Browse shared broker requirements, public listings, and distress opportunities in one data-first marketplace.</p>
+          </div>
+          <div class="marketplace-hero-art" aria-hidden="true">
+            <div class="marketplace-flag-badge">
+              <span class="marketplace-flag"></span>
+              Dubai Real Estate
+            </div>
+            <div class="marketplace-hero-caption">
+              <strong>Dubai market energy</strong>
+              Prime towers, clean skyline lines, and a subtle UAE flag accent for a sharper first impression.
+            </div>
+          </div>
+        </div>
         <div class="hero-tabs">
           <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements <span class="tab-count" id="tabCountRequirements">0</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">NexBridge Listings <span class="tab-count" id="tabCountListings">0</span></button>
