@@ -207,13 +207,14 @@
       .listing-media-tile img { width:100%; height:220px; object-fit:cover; border-radius:14px; background:#f7f8fb; }
       .listing-media-tile span { font-size:13px; color:#667085; word-break:break-word; }
       .listing-media-empty { min-height:220px; display:grid; place-items:center; border:1px dashed rgba(15, 23, 42, 0.12); border-radius:20px; color:#667085; background:#fbfcff; text-align:center; padding:24px; }
-      .listing-pdf-options-overlay { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(10,17,35,.58); z-index:1650; }
+      .listing-pdf-options-overlay { position:fixed; inset:0; display:flex; align-items:flex-start; justify-content:center; padding:max(16px, env(safe-area-inset-top, 16px)) max(16px, env(safe-area-inset-right, 16px)) max(16px, env(safe-area-inset-bottom, 16px)) max(16px, env(safe-area-inset-left, 16px)); background:rgba(10,17,35,.58); z-index:1650; overflow:auto; overscroll-behavior:contain; }
       .listing-pdf-options-overlay.hidden { display:none; }
-      .listing-pdf-options-card { width:min(480px, 100%); max-height:min(82vh, 700px); display:grid; grid-template-rows:auto 1fr auto; border-radius:24px; background:#fffdfa; border:1px solid rgba(212, 186, 116, 0.34); box-shadow:0 28px 70px rgba(11, 20, 44, 0.22); overflow:hidden; }
-      .listing-pdf-options-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; padding:18px 20px 12px; border-bottom:1px solid rgba(15, 23, 42, 0.08); }
+      .listing-pdf-options-card { width:min(500px, 100%); max-height:min(calc(100dvh - 32px), 720px); margin:auto 0; display:grid; grid-template-rows:auto minmax(0, 1fr); border-radius:24px; background:#fffdfa; border:1px solid rgba(212, 186, 116, 0.34); box-shadow:0 28px 70px rgba(11, 20, 44, 0.22); overflow:hidden; }
+      .listing-pdf-options-head { display:flex; justify-content:space-between; gap:16px; align-items:flex-start; padding:18px 20px 12px; border-bottom:1px solid rgba(15, 23, 42, 0.08); background:linear-gradient(180deg, rgba(255,253,247,0.98), rgba(255,251,241,0.94)); }
       .listing-pdf-options-head h3 { margin:0; font-size:22px; line-height:1.15; color:#1f2a44; }
       .listing-pdf-options-head p { margin:4px 0 0; color:#667085; font-size:13px; line-height:1.5; }
-      .listing-pdf-options-body { display:grid; gap:8px; padding:14px 20px 8px; overflow:auto; align-content:start; }
+      #listingPdfOptionsForm { min-height:0; display:grid; grid-template-rows:minmax(0, 1fr) auto; }
+      .listing-pdf-options-body { display:grid; gap:8px; padding:14px 20px 10px; overflow:auto; align-content:start; min-height:0; }
       .listing-pdf-option { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; padding:10px 12px; border:1px solid rgba(15,23,42,0.08); border-radius:14px; background:#ffffff; transition:background-color .16s ease, border-color .16s ease, box-shadow .16s ease; cursor:pointer; }
       .listing-pdf-option:hover { border-color:rgba(196,156,31,.28); }
       .listing-pdf-option.is-selected { background:#fff6de; border-color:rgba(196,156,31,.38); box-shadow:inset 0 0 0 1px rgba(196,156,31,.08); }
@@ -221,19 +222,24 @@
       .listing-pdf-option-copy { display:grid; gap:2px; min-width:0; }
       .listing-pdf-option-title { color:#1f2a44; font-size:14px; line-height:1.35; font-weight:700; }
       .listing-pdf-option-desc { color:#667085; font-size:12px; line-height:1.4; }
-      .listing-pdf-options-actions { display:flex; justify-content:flex-end; gap:10px; padding:12px 20px 18px; border-top:1px solid rgba(15,23,42,0.08); }
+      .listing-pdf-options-actions { display:flex; justify-content:flex-end; gap:10px; padding:12px 20px 18px; border-top:1px solid rgba(15,23,42,0.08); background:linear-gradient(180deg, rgba(255,251,241,0.96), rgba(255,253,247,0.99)); position:sticky; bottom:0; z-index:2; }
       @media (max-width: 720px) {
         .listing-media-overlay { padding:16px; }
         .listing-media-card { border-radius:20px; }
         .listing-media-head { padding:18px 18px 14px; }
         .listing-media-head h3 { font-size:24px; }
         .listing-media-body { padding:18px; }
-        .listing-pdf-options-overlay { padding:16px; }
-        .listing-pdf-options-card { border-radius:20px; }
-        .listing-pdf-options-head { padding:16px 16px 10px; }
+        .listing-pdf-options-overlay { padding:max(10px, env(safe-area-inset-top, 10px)) max(10px, env(safe-area-inset-right, 10px)) max(10px, env(safe-area-inset-bottom, 10px)) max(10px, env(safe-area-inset-left, 10px)); }
+        .listing-pdf-options-card { border-radius:20px; max-height:calc(100dvh - 20px); width:100%; }
+        .listing-pdf-options-head { padding:16px 16px 10px; position:sticky; top:0; z-index:2; }
         .listing-pdf-options-head h3 { font-size:20px; }
-        .listing-pdf-options-body { padding:12px 16px 8px; }
+        .listing-pdf-options-head p { font-size:12px; }
+        .listing-pdf-options-body { padding:12px 16px 10px; }
+        .listing-pdf-option { grid-template-columns:20px 1fr; gap:10px; padding:10px 12px; }
+        .listing-pdf-option-title { font-size:13px; }
+        .listing-pdf-option-desc { font-size:11px; }
         .listing-pdf-options-actions { padding:12px 16px 16px; flex-wrap:wrap; }
+        .listing-pdf-options-actions .btn { flex:1 1 160px; min-height:46px; }
       }
     `;
     document.head.appendChild(style);
