@@ -7387,6 +7387,51 @@
       return rawValue.replace(/\s+/g, ' ');
     }
 
+    function collectDynamicLocationSuggestions() {
+      return dedupeTaxonomyValues([
+        state?.broker?.officeLocation,
+        ...(state?.leads || []).map(item => item.location),
+        ...(state?.properties || []).map(item => item.location),
+        ...(state?.sharedListings || []).map(item => item.location)
+      ]);
+    }
+
+    function collectDynamicBuildingSuggestions() {
+      return dedupeTaxonomyValues([
+        ...(state?.leads || []).map(item => item.preferredBuildingProject),
+        ...(state?.properties || []).map(item => item.buildingName),
+        ...(state?.sharedListings || []).map(item => item.buildingName)
+      ]);
+    }
+
+    function getLocationScopedBuildingSuggestions(selectedLocation = '') {
+      const normalizedSelectedLocation = normalizeDashboardLocationValue(selectedLocation);
+      const locationMatched = [];
+      const dynamic = [];
+
+      const appendBuilding = (buildingName, locationValue = '') => {
+        const normalizedBuildingName = normalizeText(buildingName);
+        if (!normalizedBuildingName) return;
+        dynamic.push(normalizedBuildingName);
+        if (!normalizedSelectedLocation) return;
+        if (normalizeDashboardLocationValue(locationValue) === normalizedSelectedLocation) {
+          locationMatched.push(normalizedBuildingName);
+        }
+      };
+
+      (state?.leads || []).forEach(item => appendBuilding(item.preferredBuildingProject, item.location));
+      (state?.properties || []).forEach(item => appendBuilding(item.buildingName, item.location));
+      (state?.sharedListings || []).forEach(item => appendBuilding(item.buildingName, item.location));
+
+      return dedupeTaxonomyValues([
+        ...locationMatched,
+        ...dynamic,
+        ...collectDynamicBuildingSuggestions(),
+        ...(CORE_TAXONOMY.buildingProjects || []),
+        ...(LEAD_CONFIG.buildingProjects || [])
+      ]);
+    }
+
     function normalizeDashboardPropertyTypeValue(value) {
       const supportedValues = dedupeTaxonomyValues([
         ...(CORE_TAXONOMY.propertyTypes?.listing || []),
@@ -8459,22 +8504,69 @@
       showOverviewWorkspace('property');
     }
 
-    function getAutocompleteMatches(dataset, query) {
-      const normalizedQuery = String(query || '').trim().toLowerCase();
-      const values = Array.from(new Set((dataset || []).filter(Boolean)));
-      if (!normalizedQuery) return values.slice(0, 8);
+    function getAutocompleteMatches(dataset, query, options = {}) {
+      const normalizedQuery = normalizeTaxonomyToken(query);
+      const values = dedupeTaxonomyValues(dataset || []);
+      const aliasMap = options?.aliasMap || {};
+      const maxResults = Number(options?.maxResults) > 0 ? Number(options.maxResults) : 12;
+      const aliasLookup = new Map();
+
+      Object.entries(aliasMap).forEach(([aliasKey, canonicalValue]) => {
+        const canonicalToken = normalizeTaxonomyToken(canonicalValue);
+        const aliasToken = normalizeTaxonomyToken(aliasKey);
+        if (!canonicalToken || !aliasToken) return;
+        if (!aliasLookup.has(canonicalToken)) aliasLookup.set(canonicalToken, []);
+        aliasLookup.get(canonicalToken).push(aliasToken);
+      });
+
+      if (!normalizedQuery) return values.slice(0, maxResults);
 
       const startsWith = [];
+      const wordStarts = [];
       const contains = [];
+      const aliasStarts = [];
+      const aliasContains = [];
+
       values.forEach(item => {
-        const normalizedItem = item.toLowerCase();
-        if (normalizedItem.startsWith(normalizedQuery)) startsWith.push(item);
-        else if (normalizedItem.includes(normalizedQuery)) contains.push(item);
+        const normalizedItem = normalizeTaxonomyToken(item);
+        const itemAliases = aliasLookup.get(normalizedItem) || [];
+        const itemWords = normalizedItem.split(' ');
+
+        if (normalizedItem.startsWith(normalizedQuery)) {
+          startsWith.push(item);
+          return;
+        }
+
+        if (itemWords.some(word => word.startsWith(normalizedQuery))) {
+          wordStarts.push(item);
+          return;
+        }
+
+        if (normalizedItem.includes(normalizedQuery)) {
+          contains.push(item);
+          return;
+        }
+
+        if (itemAliases.some(alias => alias.startsWith(normalizedQuery))) {
+          aliasStarts.push(item);
+          return;
+        }
+
+        if (itemAliases.some(alias => alias.includes(normalizedQuery))) {
+          aliasContains.push(item);
+        }
       });
-      return [...startsWith, ...contains].slice(0, 8);
+
+      return [
+        ...startsWith,
+        ...wordStarts,
+        ...contains,
+        ...aliasStarts,
+        ...aliasContains
+      ].slice(0, maxResults);
     }
 
-    function setupAutocompleteController({ inputId, menuId, boxId, datasetProvider }) {
+    function setupAutocompleteController({ inputId, menuId, boxId, datasetProvider, matchOptionsProvider = null }) {
       const input = document.getElementById(inputId);
       const menu = document.getElementById(menuId);
       const box = document.getElementById(boxId);
@@ -8495,7 +8587,11 @@
           input.dispatchEvent(new Event('change', { bubbles: true }));
         },
         render(query = input.value) {
-          controller.items = getAutocompleteMatches(datasetProvider(), query);
+          controller.items = getAutocompleteMatches(
+            datasetProvider(),
+            query,
+            typeof matchOptionsProvider === 'function' ? matchOptionsProvider() : {}
+          );
           if (!controller.items.length) {
             controller.close();
             return;
@@ -8569,8 +8665,13 @@
           boxId: 'leadLocationBox',
           datasetProvider: () => dedupeTaxonomyValues([
             ...(CORE_TAXONOMY.locations || []),
-            ...(LEAD_CONFIG.uaeLocations || [])
-          ])
+            ...(LEAD_CONFIG.uaeLocations || []),
+            ...collectDynamicLocationSuggestions()
+          ]),
+          matchOptionsProvider: () => ({
+            aliasMap: CORE_TAXONOMY.aliases?.locations || {},
+            maxResults: 12
+          })
         });
       }
 
@@ -8579,10 +8680,10 @@
           inputId: 'leadBuildingProject',
           menuId: 'leadBuildingMenu',
           boxId: 'leadBuildingBox',
-          datasetProvider: () => dedupeTaxonomyValues([
-            ...(CORE_TAXONOMY.buildingProjects || []),
-            ...(LEAD_CONFIG.buildingProjects || [])
-          ])
+          datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('leadLocation')?.value || ''),
+          matchOptionsProvider: () => ({
+            maxResults: 12
+          })
         });
       }
 
@@ -8967,8 +9068,13 @@
           boxId: 'propertyLocationBox',
           datasetProvider: () => dedupeTaxonomyValues([
             ...(CORE_TAXONOMY.locations || []),
-            ...(LEAD_CONFIG.uaeLocations || [])
-          ])
+            ...(LEAD_CONFIG.uaeLocations || []),
+            ...collectDynamicLocationSuggestions()
+          ]),
+          matchOptionsProvider: () => ({
+            aliasMap: CORE_TAXONOMY.aliases?.locations || {},
+            maxResults: 12
+          })
         });
       }
 
@@ -8977,10 +9083,10 @@
           inputId: 'propertyBuildingName',
           menuId: 'propertyBuildingMenu',
           boxId: 'propertyBuildingBox',
-          datasetProvider: () => dedupeTaxonomyValues([
-            ...(CORE_TAXONOMY.buildingProjects || []),
-            ...(LEAD_CONFIG.buildingProjects || [])
-          ])
+          datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('propertyLocation')?.value || ''),
+          matchOptionsProvider: () => ({
+            maxResults: 12
+          })
         });
       }
 
