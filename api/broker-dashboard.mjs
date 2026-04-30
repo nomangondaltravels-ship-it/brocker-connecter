@@ -471,6 +471,78 @@ async function selectOptionalBrokerRows(context, table) {
   }
 }
 
+function sanitizeDirectoryAliases(value) {
+  return Array.isArray(value)
+    ? value.map(item => normalizeText(item)).filter(Boolean)
+    : [];
+}
+
+function sanitizeMasterLocation(row) {
+  return {
+    id: normalizeText(row?.id),
+    name: normalizeText(row?.name),
+    emirate: normalizeText(row?.emirate) || 'Dubai',
+    city: normalizeText(row?.city) || 'Dubai',
+    country: normalizeText(row?.country) || 'UAE',
+    aliases: sanitizeDirectoryAliases(row?.aliases)
+  };
+}
+
+function sanitizeMasterBuildingProject(row) {
+  return {
+    id: normalizeText(row?.id),
+    name: normalizeText(row?.name),
+    locationName: normalizeText(row?.location_name),
+    emirate: normalizeText(row?.emirate) || 'Dubai',
+    developerName: normalizeText(row?.developer_name),
+    aliases: sanitizeDirectoryAliases(row?.aliases)
+  };
+}
+
+async function selectOptionalMasterDirectoryRows(context, table, select) {
+  const { supabaseUrl, serviceRoleKey } = context;
+  try {
+    return await supabaseSelect({
+      supabaseUrl,
+      serviceRoleKey,
+      table,
+      select,
+      filters: { is_active: true },
+      order: { column: 'name', ascending: true }
+    });
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (message.includes('could not find') || message.includes('relation') || message.includes('does not exist')) {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function fetchMasterDirectory(context) {
+  const [locationRows, buildingRows] = await Promise.all([
+    selectOptionalMasterDirectoryRows(
+      context,
+      'master_locations',
+      'id,name,aliases,emirate,city,country'
+    ),
+    selectOptionalMasterDirectoryRows(
+      context,
+      'master_building_projects',
+      'id,name,location_name,aliases,emirate,developer_name'
+    )
+  ]);
+
+  return {
+    locations: (Array.isArray(locationRows) ? locationRows : [])
+      .map(sanitizeMasterLocation)
+      .filter(item => item.name),
+    buildings: (Array.isArray(buildingRows) ? buildingRows : [])
+      .map(sanitizeMasterBuildingProject)
+      .filter(item => item.name)
+  };
+}
+
 async function fetchBrokerRow(context, table, id) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const rows = await supabaseSelect({
@@ -1056,7 +1128,7 @@ async function fetchBrokerDataset(context) {
   const { supabaseUrl, serviceRoleKey, broker } = context;
   const brokerFilter = { broker_uuid: broker.id };
 
-  const [leadRows, propertyRows, followUpRows, listingRows, allPublicRows, notificationRows, aiMatchRows, brokerRows] = await Promise.all([
+  const [leadRows, propertyRows, followUpRows, listingRows, allPublicRows, notificationRows, aiMatchRows, brokerRows, masterDirectory] = await Promise.all([
     supabaseSelect({
       supabaseUrl,
       serviceRoleKey,
@@ -1100,7 +1172,8 @@ async function fetchBrokerDataset(context) {
       table: 'brokers',
       filters: { is_blocked: false },
       order: { column: 'updated_at', ascending: false }
-    }).catch(() => [])
+    }).catch(() => []),
+    fetchMasterDirectory(context)
   ]);
 
   const leadRecords = (Array.isArray(leadRows) ? leadRows : []).map(sanitizeLead);
@@ -1116,6 +1189,7 @@ async function fetchBrokerDataset(context) {
   return {
     overview: buildOverview(computedMatches.leads, computedMatches.properties, sharedListings, broker, aiMatches),
     brokerActivity: buildBrokerActivitySnapshot(brokerRows),
+    masterDirectory,
     leads: computedMatches.leads,
     properties: computedMatches.properties,
     followUps,

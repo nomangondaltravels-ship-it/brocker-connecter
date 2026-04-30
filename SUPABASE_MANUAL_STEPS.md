@@ -22,8 +22,15 @@ Before complaint moderation can use the full backend fields, run:
 - `supabase-real-estate-companies.sql`
 - `supabase-property-category-layout.sql`
 - `supabase-sale-offplan-distress.sql`
+- `supabase-master-locations-buildings.sql`
 
 This safely adds the complaint schema, admin action fields, and repeat-offense summary view on top of the existing project.
+
+The master locations/buildings SQL also:
+
+- creates a dedicated Supabase directory for Dubai locations and building/project suggestions
+- seeds a large starter list for locations and projects
+- imports distinct locations/buildings from your current broker data into the master directory
 
 ### 1. Enable Email Auth
 

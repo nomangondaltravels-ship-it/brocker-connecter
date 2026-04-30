@@ -7204,6 +7204,10 @@
         activeCount: 0,
         brokers: []
       },
+      masterDirectory: {
+        locations: [],
+        buildings: []
+      },
       activeSection: 'overview',
       complaintsView: 'my-complaints',
       settingsView: 'account',
@@ -7396,6 +7400,10 @@
       ]);
     }
 
+    function collectMasterLocationSuggestions() {
+      return dedupeTaxonomyValues((state?.masterDirectory?.locations || []).map(item => item?.name));
+    }
+
     function collectDynamicBuildingSuggestions() {
       return dedupeTaxonomyValues([
         ...(state?.leads || []).map(item => item.preferredBuildingProject),
@@ -7404,10 +7412,60 @@
       ]);
     }
 
+    function collectMasterBuildingSuggestions() {
+      return dedupeTaxonomyValues((state?.masterDirectory?.buildings || []).map(item => item?.name));
+    }
+
+    function buildDashboardAliasMap(entries = []) {
+      const aliasMap = {};
+      (Array.isArray(entries) ? entries : []).forEach(entry => {
+        const canonicalName = normalizeText(entry?.name);
+        if (!canonicalName) return;
+        (Array.isArray(entry?.aliases) ? entry.aliases : []).forEach(alias => {
+          const aliasToken = normalizeTaxonomyToken(alias);
+          if (!aliasToken || aliasMap[aliasToken]) return;
+          aliasMap[aliasToken] = canonicalName;
+        });
+      });
+      return aliasMap;
+    }
+
+    function getDashboardLocationAliasMap() {
+      return {
+        ...(CORE_TAXONOMY.aliases?.locations || {}),
+        ...buildDashboardAliasMap(state?.masterDirectory?.locations || [])
+      };
+    }
+
+    function getDashboardBuildingAliasMap() {
+      return buildDashboardAliasMap(state?.masterDirectory?.buildings || []);
+    }
+
+    function getDashboardLocationAllowedValues() {
+      return dedupeTaxonomyValues([
+        ...(CORE_TAXONOMY.locations || []),
+        ...(LEAD_CONFIG.uaeLocations || []),
+        ...collectMasterLocationSuggestions(),
+        ...collectDynamicLocationSuggestions()
+      ]);
+    }
+
     function getLocationScopedBuildingSuggestions(selectedLocation = '') {
       const normalizedSelectedLocation = normalizeDashboardLocationValue(selectedLocation);
+      const masterLocationMatched = [];
       const locationMatched = [];
+      const master = [];
       const dynamic = [];
+
+      (state?.masterDirectory?.buildings || []).forEach(item => {
+        const normalizedBuildingName = normalizeText(item?.name);
+        if (!normalizedBuildingName) return;
+        master.push(normalizedBuildingName);
+        if (!normalizedSelectedLocation) return;
+        if (normalizeDashboardLocationValue(item?.locationName) === normalizedSelectedLocation) {
+          masterLocationMatched.push(normalizedBuildingName);
+        }
+      });
 
       const appendBuilding = (buildingName, locationValue = '') => {
         const normalizedBuildingName = normalizeText(buildingName);
@@ -7424,8 +7482,11 @@
       (state?.sharedListings || []).forEach(item => appendBuilding(item.buildingName, item.location));
 
       return dedupeTaxonomyValues([
+        ...masterLocationMatched,
         ...locationMatched,
+        ...master,
         ...dynamic,
+        ...collectMasterBuildingSuggestions(),
         ...collectDynamicBuildingSuggestions(),
         ...(CORE_TAXONOMY.buildingProjects || []),
         ...(LEAD_CONFIG.buildingProjects || [])
@@ -7609,7 +7670,7 @@
     }
 
     function normalizeDashboardLocationValue(value) {
-      return canonicalizeTaxonomyValue(value, CORE_TAXONOMY.aliases?.locations || {}, CORE_TAXONOMY.locations || []);
+      return canonicalizeTaxonomyValue(value, getDashboardLocationAliasMap(), getDashboardLocationAllowedValues());
     }
 
     function normalizeDashboardLeadStatusValue(value) {
@@ -8666,10 +8727,11 @@
           datasetProvider: () => dedupeTaxonomyValues([
             ...(CORE_TAXONOMY.locations || []),
             ...(LEAD_CONFIG.uaeLocations || []),
+            ...collectMasterLocationSuggestions(),
             ...collectDynamicLocationSuggestions()
           ]),
           matchOptionsProvider: () => ({
-            aliasMap: CORE_TAXONOMY.aliases?.locations || {},
+            aliasMap: getDashboardLocationAliasMap(),
             maxResults: 12
           })
         });
@@ -8682,6 +8744,7 @@
           boxId: 'leadBuildingBox',
           datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('leadLocation')?.value || ''),
           matchOptionsProvider: () => ({
+            aliasMap: getDashboardBuildingAliasMap(),
             maxResults: 12
           })
         });
@@ -9069,10 +9132,11 @@
           datasetProvider: () => dedupeTaxonomyValues([
             ...(CORE_TAXONOMY.locations || []),
             ...(LEAD_CONFIG.uaeLocations || []),
+            ...collectMasterLocationSuggestions(),
             ...collectDynamicLocationSuggestions()
           ]),
           matchOptionsProvider: () => ({
-            aliasMap: CORE_TAXONOMY.aliases?.locations || {},
+            aliasMap: getDashboardLocationAliasMap(),
             maxResults: 12
           })
         });
@@ -9085,6 +9149,7 @@
           boxId: 'propertyBuildingBox',
           datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('propertyLocation')?.value || ''),
           matchOptionsProvider: () => ({
+            aliasMap: getDashboardBuildingAliasMap(),
             maxResults: 12
           })
         });
@@ -10713,6 +10778,10 @@
       state.properties = Array.isArray(result.properties) ? result.properties : [];
       state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
       state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+      state.masterDirectory = {
+        locations: Array.isArray(result.masterDirectory?.locations) ? result.masterDirectory.locations : [],
+        buildings: Array.isArray(result.masterDirectory?.buildings) ? result.masterDirectory.buildings : []
+      };
       state.brokerActivity = result.brokerActivity || { activeCount: 0, brokers: [] };
       if (result.overview?.broker) {
         state.broker = { ...(state.broker || {}), ...result.overview.broker };
@@ -13785,6 +13854,10 @@
       state.properties = Array.isArray(result.properties) ? result.properties : [];
       state.followUps = Array.isArray(result.followUps) ? result.followUps : [];
       state.sharedListings = Array.isArray(result.sharedListings) ? result.sharedListings : [];
+      state.masterDirectory = {
+        locations: Array.isArray(result.masterDirectory?.locations) ? result.masterDirectory.locations : [],
+        buildings: Array.isArray(result.masterDirectory?.buildings) ? result.masterDirectory.buildings : []
+      };
       state.notifications = Array.isArray(result.notifications) ? result.notifications : [];
       state.aiMatches = Array.isArray(result.aiMatches) ? result.aiMatches : [];
       if (result.overview?.broker) {
