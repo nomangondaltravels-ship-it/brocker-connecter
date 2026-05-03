@@ -5326,7 +5326,8 @@
     }
 
     .complaint-modal-backdrop.hidden,
-    .rules-prompt-backdrop.hidden {
+    .rules-prompt-backdrop.hidden,
+    .dashboard-confirm-backdrop.hidden {
       display: none !important;
     }
 
@@ -5638,6 +5639,18 @@
       padding: 24px;
     }
 
+    .dashboard-confirm-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.42);
+      z-index: 1612;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(4px);
+    }
+
     .rules-prompt-card {
       width: min(620px, calc(100vw - 32px));
       max-height: calc(100vh - 48px);
@@ -5651,8 +5664,125 @@
       gap: 16px;
     }
 
+    .dashboard-confirm-card {
+      width: min(540px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+      border-radius: 20px;
+      border: 1px solid #E5E7EB;
+      background: #FFFFFF;
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.2);
+    }
+
+    .dashboard-confirm-shell {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .dashboard-confirm-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .dashboard-confirm-kicker {
+      color: #B7791F;
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dashboard-confirm-head h3 {
+      margin: 4px 0 0;
+      color: #0F172A;
+      font-size: 1.18rem;
+    }
+
+    .dashboard-confirm-copy {
+      margin: 0;
+      color: #64748B;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    .dashboard-confirm-summary {
+      display: grid;
+      gap: 8px;
+      border: 1px solid #E5E7EB;
+      border-radius: 16px;
+      background: #F8FAFC;
+      padding: 12px;
+    }
+
+    .dashboard-confirm-summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: #64748B;
+      font-size: 0.86rem;
+    }
+
+    .dashboard-confirm-summary-row strong {
+      color: #0F172A;
+      text-align: right;
+    }
+
+    .dashboard-confirm-warning {
+      border: 1px solid #FECACA;
+      border-radius: 16px;
+      background: #FEF2F2;
+      color: #991B1B;
+      padding: 12px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .dashboard-confirm-field {
+      display: grid;
+      gap: 7px;
+      color: #334155;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .dashboard-confirm-field input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #D8DEE8;
+      border-radius: 14px;
+      padding: 0 14px;
+      color: #0F172A;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .dashboard-confirm-field input:focus {
+      border-color: #C8A96B;
+      box-shadow: 0 0 0 4px rgba(200, 169, 107, 0.16);
+    }
+
+    .dashboard-confirm-error {
+      display: none;
+      border: 1px solid #FECACA;
+      border-radius: 14px;
+      background: #FEF2F2;
+      color: #991B1B;
+      padding: 10px 12px;
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .dashboard-confirm-error.active {
+      display: block;
+    }
+
     .complaint-modal-card:empty,
-    .rules-prompt-card:empty {
+    .rules-prompt-card:empty,
+    .dashboard-confirm-card:empty {
       display: none;
     }
 
@@ -5787,6 +5917,7 @@
 
     body.complaint-modal-open,
     body.rules-prompt-open,
+    body.dashboard-confirm-open,
     body.workflow-modal-open {
       overflow: hidden;
     }
@@ -6023,6 +6154,21 @@
       .lead-form-actions-main .btn,
       .composer-actions .btn,
       .detail-panel-actions .btn {
+        width: 100%;
+      }
+
+      .dashboard-confirm-shell {
+        padding: 16px;
+      }
+
+      .dashboard-confirm-head,
+      .complaint-modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .dashboard-confirm-head .btn,
+      .complaint-modal-actions .btn {
         width: 100%;
       }
 

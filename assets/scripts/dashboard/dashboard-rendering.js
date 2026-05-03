@@ -1,3 +1,112 @@
+    let dashboardConfirmState = null;
+
+    function getDashboardConfirmElements() {
+      return {
+        backdrop: document.getElementById('dashboardConfirmBackdrop'),
+        content: document.getElementById('dashboardConfirmContent')
+      };
+    }
+
+    function setDashboardConfirmError(message = '') {
+      const target = document.getElementById('dashboardConfirmError');
+      if (!target) return;
+      target.textContent = message;
+      target.classList.toggle('active', Boolean(message));
+    }
+
+    function renderDashboardConfirmContent(options = {}) {
+      const summary = Array.isArray(options.summary) ? options.summary : [];
+      const confirmPhrase = String(options.confirmPhrase || '').trim();
+      return `
+        <div class="dashboard-confirm-shell">
+          <div class="dashboard-confirm-head">
+            <div>
+              <div class="dashboard-confirm-kicker">${escapeHtml(options.eyebrow || 'Confirm action')}</div>
+              <h3 id="dashboardConfirmTitle">${escapeHtml(options.title || 'Confirm action')}</h3>
+            </div>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="closeDashboardConfirmModal()">Close</button>
+          </div>
+          <p class="dashboard-confirm-copy">${escapeHtml(options.description || 'Please confirm before continuing.')}</p>
+          ${summary.length ? `
+            <div class="dashboard-confirm-summary">
+              ${summary.map(item => `
+                <div class="dashboard-confirm-summary-row">
+                  <span>${escapeHtml(item.label || '')}</span>
+                  <strong>${escapeHtml(item.value || '')}</strong>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${options.warning ? `<div class="dashboard-confirm-warning">${escapeHtml(options.warning)}</div>` : ''}
+          ${confirmPhrase ? `
+            <label class="dashboard-confirm-field" for="dashboardConfirmPhrase">
+              Type ${escapeHtml(confirmPhrase)} to confirm
+              <input id="dashboardConfirmPhrase" type="text" placeholder="${escapeHtml(confirmPhrase)}" autocomplete="off">
+            </label>
+          ` : ''}
+          <div class="dashboard-confirm-error" id="dashboardConfirmError" role="alert"></div>
+          <div class="complaint-modal-actions">
+            <button class="btn btn-secondary" type="button" onclick="closeDashboardConfirmModal()">Cancel</button>
+            <button class="btn btn-danger" type="button" onclick="confirmDashboardConfirmModal()">${escapeHtml(options.confirmLabel || 'Confirm')}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function initDashboardConfirmModal() {
+      const elements = getDashboardConfirmElements();
+      if (!elements.backdrop || elements.backdrop.dataset.ready === 'true') return;
+      elements.backdrop.addEventListener('click', event => {
+        if (event.target === elements.backdrop) closeDashboardConfirmModal();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !elements.backdrop.classList.contains('hidden')) {
+          closeDashboardConfirmModal();
+        }
+      });
+      elements.backdrop.dataset.ready = 'true';
+    }
+
+    function openDashboardConfirmModal(options = {}) {
+      const elements = getDashboardConfirmElements();
+      if (!elements.backdrop || !elements.content) return Promise.resolve(null);
+      initDashboardConfirmModal();
+      if (dashboardConfirmState?.resolve) dashboardConfirmState.resolve(null);
+      return new Promise(resolve => {
+        dashboardConfirmState = { options, resolve };
+        elements.content.innerHTML = renderDashboardConfirmContent(options);
+        elements.backdrop.classList.remove('hidden');
+        document.body.classList.add('dashboard-confirm-open');
+        requestAnimationFrame(() => {
+          const field = document.getElementById('dashboardConfirmPhrase');
+          (field || elements.content.querySelector('button'))?.focus();
+        });
+      });
+    }
+
+    function closeDashboardConfirmModal(result = null) {
+      const elements = getDashboardConfirmElements();
+      const resolver = dashboardConfirmState?.resolve || null;
+      dashboardConfirmState = null;
+      if (elements.backdrop) elements.backdrop.classList.add('hidden');
+      if (elements.content) elements.content.innerHTML = '';
+      document.body.classList.remove('dashboard-confirm-open');
+      if (resolver) resolver(result);
+    }
+
+    function confirmDashboardConfirmModal() {
+      const state = dashboardConfirmState;
+      if (!state) return;
+      const confirmPhrase = String(state.options?.confirmPhrase || '').trim();
+      const field = document.getElementById('dashboardConfirmPhrase');
+      if (confirmPhrase && String(field?.value || '').trim() !== confirmPhrase) {
+        setDashboardConfirmError(`Type ${confirmPhrase} exactly to continue.`);
+        field?.focus();
+        return;
+      }
+      closeDashboardConfirmModal({ confirmed: true });
+    }
+
     function renderOverview() {
       const overview = state.overview || { totals: {}, broker: {} };
       const stats = [
@@ -1077,7 +1186,21 @@
     }
 
     async function deleteLead(id) {
-      if (!window.confirm('Delete this private broker requirement?')) return;
+      const lead = state.leads.find(item => String(item.id) === String(id));
+      const confirmed = await openDashboardConfirmModal({
+        title: 'Delete private requirement',
+        eyebrow: 'Broker workspace',
+        description: 'This removes the private broker requirement from your workspace.',
+        confirmLabel: 'Delete Requirement',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Requirement', value: joinDisplayParts([getLeadClientPurposeLabel(lead?.clientPurpose), lead?.propertyType || 'Requirement']) },
+          { label: 'Location', value: lead?.location || '--' },
+          { label: 'Budget', value: formatBudgetLabel(lead?.budget) || '--' }
+        ],
+        warning: 'This action cannot be undone from the dashboard.'
+      });
+      if (!confirmed) return;
       try {
         await dashboardAction({ action: 'delete-lead', id }, 'Requirement deleted successfully.', {
           button: window.ActionFeedbackUi?.resolveActionButton(),
@@ -1089,7 +1212,21 @@
     }
 
     async function deleteProperty(id) {
-      if (!window.confirm('Delete this private property?')) return;
+      const property = state.properties.find(item => String(item.id) === String(id));
+      const confirmed = await openDashboardConfirmModal({
+        title: 'Delete private listing',
+        eyebrow: 'Broker workspace',
+        description: 'This removes the private listing from your workspace.',
+        confirmLabel: 'Delete Listing',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Listing', value: joinDisplayParts([property?.propertyType || 'Listing', property?.category]) },
+          { label: 'Location', value: joinDisplayParts([property?.location, property?.buildingName]) || '--' },
+          { label: 'Price', value: property && typeof getPropertyDisplayPrice === 'function' ? getPropertyDisplayPrice(property) : (property?.price || '--') }
+        ],
+        warning: 'This action cannot be undone from the dashboard.'
+      });
+      if (!confirmed) return;
       try {
         await dashboardAction({ action: 'delete-property', id }, 'Listing deleted successfully.', {
           button: window.ActionFeedbackUi?.resolveActionButton(),

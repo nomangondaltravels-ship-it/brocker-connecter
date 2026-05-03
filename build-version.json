@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-04-phase4-admin-actions",
-  "phase": "admin-action-modals"
+  "version": "2026-05-04-phase5-safe-delete-modals",
+  "phase": "safe-delete-modals"
 }

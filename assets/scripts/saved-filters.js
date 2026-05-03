@@ -12,6 +12,113 @@
 
     let activeFilterId = '';
     let savedFilters = [];
+    let savedFilterConfirmState = null;
+
+    function getSavedFilterConfirmElements() {
+      return {
+        backdrop: document.getElementById('savedFilterConfirmBackdrop'),
+        content: document.getElementById('savedFilterConfirmContent')
+      };
+    }
+
+    function setSavedFilterConfirmError(message = '') {
+      const target = document.getElementById('savedFilterConfirmError');
+      if (!target) return;
+      target.textContent = message;
+      target.classList.toggle('active', Boolean(message));
+    }
+
+    function renderSavedFilterConfirm(options = {}) {
+      const summary = Array.isArray(options.summary) ? options.summary : [];
+      const confirmPhrase = String(options.confirmPhrase || '').trim();
+      return `
+        <div class="saved-confirm-shell">
+          <div class="saved-confirm-head">
+            <div>
+              <div class="eyebrow">${escapeHtml(options.eyebrow || 'Saved filter')}</div>
+              <h3 id="savedFilterConfirmTitle">${escapeHtml(options.title || 'Confirm action')}</h3>
+            </div>
+            <button class="btn btn-secondary" type="button" onclick="closeSavedFilterConfirm()">Close</button>
+          </div>
+          <p class="saved-confirm-copy">${escapeHtml(options.description || 'Please confirm before continuing.')}</p>
+          ${summary.length ? `
+            <div class="saved-confirm-summary">
+              ${summary.map(item => `
+                <div class="saved-confirm-summary-row">
+                  <span>${escapeHtml(item.label || '')}</span>
+                  <strong>${escapeHtml(item.value || '')}</strong>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${options.warning ? `<div class="saved-confirm-warning">${escapeHtml(options.warning)}</div>` : ''}
+          ${confirmPhrase ? `
+            <label class="saved-confirm-field" for="savedFilterConfirmPhrase">
+              Type ${escapeHtml(confirmPhrase)} to confirm
+              <input id="savedFilterConfirmPhrase" type="text" placeholder="${escapeHtml(confirmPhrase)}" autocomplete="off">
+            </label>
+          ` : ''}
+          <div class="saved-confirm-error" id="savedFilterConfirmError" role="alert"></div>
+          <div class="toolbar">
+            <button class="btn btn-secondary" type="button" onclick="closeSavedFilterConfirm()">Cancel</button>
+            <button class="btn btn-primary" type="button" onclick="confirmSavedFilterModal()">${escapeHtml(options.confirmLabel || 'Confirm')}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function openSavedFilterConfirm(options = {}) {
+      const elements = getSavedFilterConfirmElements();
+      if (!elements.backdrop || !elements.content) return Promise.resolve(null);
+      if (savedFilterConfirmState?.resolve) savedFilterConfirmState.resolve(null);
+      return new Promise(resolve => {
+        savedFilterConfirmState = { options, resolve };
+        elements.content.innerHTML = renderSavedFilterConfirm(options);
+        elements.backdrop.classList.remove('hidden');
+        document.body.classList.add('saved-confirm-open');
+        requestAnimationFrame(() => {
+          const field = document.getElementById('savedFilterConfirmPhrase');
+          (field || elements.content.querySelector('button'))?.focus();
+        });
+      });
+    }
+
+    function closeSavedFilterConfirm(result = null) {
+      const elements = getSavedFilterConfirmElements();
+      const resolver = savedFilterConfirmState?.resolve || null;
+      savedFilterConfirmState = null;
+      if (elements.backdrop) elements.backdrop.classList.add('hidden');
+      if (elements.content) elements.content.innerHTML = '';
+      document.body.classList.remove('saved-confirm-open');
+      if (resolver) resolver(result);
+    }
+
+    function confirmSavedFilterModal() {
+      const state = savedFilterConfirmState;
+      if (!state) return;
+      const confirmPhrase = String(state.options?.confirmPhrase || '').trim();
+      const field = document.getElementById('savedFilterConfirmPhrase');
+      if (confirmPhrase && String(field?.value || '').trim() !== confirmPhrase) {
+        setSavedFilterConfirmError(`Type ${confirmPhrase} exactly to continue.`);
+        field?.focus();
+        return;
+      }
+      closeSavedFilterConfirm({ confirmed: true });
+    }
+
+    function initSavedFilterConfirmModal() {
+      const elements = getSavedFilterConfirmElements();
+      if (!elements.backdrop || elements.backdrop.dataset.ready === 'true') return;
+      elements.backdrop.addEventListener('click', event => {
+        if (event.target === elements.backdrop) closeSavedFilterConfirm();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !elements.backdrop.classList.contains('hidden')) {
+          closeSavedFilterConfirm();
+        }
+      });
+      elements.backdrop.dataset.ready = 'true';
+    }
 
     function showMessage(target, message, isError = false) {
       target.textContent = message || '';
@@ -205,7 +312,18 @@
     window.deleteSavedFilter = async function deleteSavedFilter(id) {
       const target = savedFilters.find(item => item.id === id);
       if (!target) return;
-      const confirmed = window.confirm(`Delete saved filter "${target.name}"?`);
+      const confirmed = await openSavedFilterConfirm({
+        title: 'Delete saved filter',
+        eyebrow: 'Filter manager',
+        description: 'This removes the saved search from your private broker workspace.',
+        confirmLabel: 'Delete Filter',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Filter', value: target.name || 'Saved Filter' },
+          { label: 'Type', value: target.type || 'all' }
+        ],
+        warning: 'This action cannot be undone from the saved filters page.'
+      });
       if (!confirmed) return;
       try {
         await request('/api/broker-dashboard', {
@@ -237,5 +355,6 @@
         showMessage(sessionMessage, 'Broker session detected. You can manage your real saved filters here.');
       }
       resetForm();
+      initSavedFilterConfirmModal();
       loadSavedFilters();
     }());

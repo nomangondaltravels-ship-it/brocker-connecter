@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-04-phase4-admin-actions" />
+  <meta name="nexbridge-build" content="2026-05-04-phase5-safe-delete-modals" />
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-04-phase4-admin-actions" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-04-phase4-admin-actions">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-04-phase5-safe-delete-modals" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-04-phase5-safe-delete-modals">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-04-phase4-admin-actions" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-04-phase5-safe-delete-modals" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -967,21 +967,27 @@
     <div class="rules-prompt-card" id="dashboardRulesPromptCard"></div>
   </div>
 
+  <div class="dashboard-confirm-backdrop hidden" id="dashboardConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardConfirmTitle">
+    <div class="dashboard-confirm-card" id="dashboardConfirmCard">
+      <div id="dashboardConfirmContent"></div>
+    </div>
+  </div>
+
   <div class="workflow-modal-backdrop hidden" id="dashboardWorkflowModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="dashboardWorkflowModalTitle" onclick="if(event.target===this)closeWorkflowContextModal()">
     <div class="workflow-modal-card" id="dashboardWorkflowModalCard">
       <div id="dashboardWorkflowModalContent"></div>
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-04-phase4-admin-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-04-phase4-admin-actions"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-04-phase5-safe-delete-modals"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-04-phase5-safe-delete-modals"></script>
 </body>
 </html>
