@@ -41,6 +41,201 @@
       },
       pendingDetailScroll: null
     };
+    let adminActionModalState = null;
+
+    function adminActionEscapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getAdminActionModalElements() {
+      return {
+        backdrop: document.getElementById('adminActionConfirmBackdrop'),
+        dialog: document.getElementById('adminActionConfirmDialog'),
+        content: document.getElementById('adminActionConfirmContent')
+      };
+    }
+
+    function syncAdminActionModalBodyLock() {
+      if (typeof syncAdminModalBodyLock === 'function') {
+        syncAdminModalBodyLock();
+        return;
+      }
+      const hasVisibleModal = [
+        'brokerAccountModalBackdrop',
+        'complaintReviewModalBackdrop',
+        'complaintActionConfirmBackdrop',
+        'adminActionConfirmBackdrop'
+      ].some(id => {
+        const target = document.getElementById(id);
+        return target && !target.classList.contains('hidden');
+      });
+      document.body.classList.toggle('admin-modal-open', hasVisibleModal);
+    }
+
+    function setAdminActionModalError(message = '') {
+      const target = document.getElementById('adminActionConfirmError');
+      if (!target) return;
+      target.textContent = message;
+      target.classList.toggle('active', Boolean(message));
+    }
+
+    function renderAdminActionModalContent(options) {
+      const tone = options.tone || 'warning';
+      const fields = Array.isArray(options.fields) ? options.fields : [];
+      const summary = Array.isArray(options.summary) ? options.summary : [];
+      const confirmPhrase = String(options.confirmPhrase || '').trim();
+      const badgeTone = tone === 'danger' ? 'red' : tone === 'success' ? 'green' : 'gold';
+      const fieldMarkup = fields.map((field, index) => {
+        const type = field.type || 'text';
+        const fieldId = `adminActionField_${adminActionEscapeHtml(field.name || `field_${index}`)}`;
+        return `
+          <label class="admin-action-field" for="${fieldId}">
+            <span>${adminActionEscapeHtml(field.label || field.name || 'Field')}</span>
+            <input
+              id="${fieldId}"
+              data-admin-action-field="${adminActionEscapeHtml(field.name || `field_${index}`)}"
+              type="${adminActionEscapeHtml(type)}"
+              value="${adminActionEscapeHtml(field.value || '')}"
+              placeholder="${adminActionEscapeHtml(field.placeholder || '')}"
+              autocomplete="${adminActionEscapeHtml(field.autocomplete || 'off')}"
+              ${field.required === false ? '' : 'required'}
+              ${field.autofocus || index === 0 ? 'data-admin-action-autofocus="true"' : ''}
+            >
+            ${field.help ? `<small>${adminActionEscapeHtml(field.help)}</small>` : ''}
+          </label>
+        `;
+      }).join('');
+      const confirmMarkup = confirmPhrase ? `
+        <label class="admin-action-field" for="adminActionConfirmPhrase">
+          <span>Type ${adminActionEscapeHtml(confirmPhrase)} to confirm</span>
+          <input
+            id="adminActionConfirmPhrase"
+            data-admin-action-confirm-phrase="true"
+            type="text"
+            placeholder="${adminActionEscapeHtml(confirmPhrase)}"
+            autocomplete="off"
+            data-admin-action-autofocus="${fields.length ? 'false' : 'true'}"
+          >
+          <small>This prevents accidental destructive changes.</small>
+        </label>
+      ` : '';
+      return `
+        <div class="admin-action-modal ${adminActionEscapeHtml(tone)}">
+          <div class="admin-action-modal-header">
+            <div class="admin-action-modal-topline">
+              <span class="badge ${badgeTone}">${adminActionEscapeHtml(options.eyebrow || 'Admin action')}</span>
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="closeAdminActionModal()">Close</button>
+            </div>
+            <h3 id="adminActionConfirmTitle">${adminActionEscapeHtml(options.title || 'Confirm action')}</h3>
+            <p>${adminActionEscapeHtml(options.description || 'Please confirm before continuing.')}</p>
+          </div>
+          <div class="admin-action-modal-body">
+            ${summary.length ? `
+              <div class="admin-action-summary">
+                ${summary.map(item => `
+                  <div class="admin-action-summary-row">
+                    <span>${adminActionEscapeHtml(item.label || '')}</span>
+                    <strong>${adminActionEscapeHtml(item.value || '')}</strong>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${options.warning ? `<div class="admin-action-warning">${adminActionEscapeHtml(options.warning)}</div>` : ''}
+            ${fieldMarkup || confirmMarkup ? `<div class="admin-action-fields">${fieldMarkup}${confirmMarkup}</div>` : ''}
+            <div class="admin-action-error" id="adminActionConfirmError" role="alert"></div>
+            <div class="admin-action-actions">
+              <button class="btn btn-secondary tiny-btn" type="button" onclick="closeAdminActionModal()">Cancel</button>
+              <button class="btn ${tone === 'danger' ? 'btn-danger' : 'btn-primary'} tiny-btn" type="button" onclick="confirmAdminActionModal()">${adminActionEscapeHtml(options.confirmLabel || 'Confirm')}</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openAdminActionModal(options = {}) {
+      const elements = getAdminActionModalElements();
+      if (!elements.backdrop || !elements.content) {
+        return Promise.resolve(null);
+      }
+      if (adminActionModalState?.resolve) {
+        adminActionModalState.resolve(null);
+      }
+      return new Promise(resolve => {
+        adminActionModalState = { options, resolve };
+        elements.content.innerHTML = renderAdminActionModalContent(options);
+        elements.backdrop.classList.remove('hidden');
+        syncAdminActionModalBodyLock();
+        requestAnimationFrame(() => {
+          const focusTarget = elements.content.querySelector('[data-admin-action-autofocus="true"]') || elements.content.querySelector('button');
+          focusTarget?.focus();
+        });
+      });
+    }
+
+    function closeAdminActionModal(result = null) {
+      const elements = getAdminActionModalElements();
+      const resolver = adminActionModalState?.resolve || null;
+      adminActionModalState = null;
+      if (elements.backdrop) elements.backdrop.classList.add('hidden');
+      if (elements.content) elements.content.innerHTML = '';
+      syncAdminActionModalBodyLock();
+      if (resolver) resolver(result);
+    }
+
+    function confirmAdminActionModal() {
+      const state = adminActionModalState;
+      if (!state) return;
+      const elements = getAdminActionModalElements();
+      const values = {};
+      const fields = Array.from(elements.content?.querySelectorAll('[data-admin-action-field]') || []);
+      for (const field of fields) {
+        const name = field.getAttribute('data-admin-action-field');
+        const value = String(field.value || '');
+        values[name] = value;
+        if (field.hasAttribute('required') && !value.trim()) {
+          setAdminActionModalError('Please complete the required field before continuing.');
+          field.focus();
+          return;
+        }
+      }
+
+      const confirmPhrase = String(state.options?.confirmPhrase || '').trim();
+      const confirmField = elements.content?.querySelector('[data-admin-action-confirm-phrase="true"]');
+      if (confirmPhrase && String(confirmField?.value || '').trim() !== confirmPhrase) {
+        setAdminActionModalError(`Type ${confirmPhrase} exactly to continue.`);
+        confirmField?.focus();
+        return;
+      }
+
+      if (typeof state.options?.validate === 'function') {
+        const validationMessage = state.options.validate(values);
+        if (validationMessage) {
+          setAdminActionModalError(validationMessage);
+          return;
+        }
+      }
+
+      closeAdminActionModal(values);
+    }
+
+    function initAdminActionModal() {
+      const elements = getAdminActionModalElements();
+      if (!elements.backdrop || elements.backdrop.dataset.ready === 'true') return;
+      elements.backdrop.addEventListener('click', event => {
+        if (event.target === elements.backdrop) closeAdminActionModal();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && !elements.backdrop.classList.contains('hidden')) {
+          closeAdminActionModal();
+        }
+      });
+      elements.backdrop.dataset.ready = 'true';
+    }
 
     async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5000) {
       const controller = new AbortController();
@@ -361,6 +556,7 @@
     function showLogin() {
       renderBrokerAccountModal(null);
       renderComplaintReviewModal(null);
+      closeAdminActionModal();
       document.getElementById('loginView').style.display = 'block';
       document.getElementById('dashboardView').classList.remove('active');
       document.getElementById('logoutBtn').style.display = 'none';
@@ -794,11 +990,21 @@
       }
 
       const willBlock = !blockedBrokerIds[brokerId];
-      const confirmed = window.confirm(
-        willBlock
-          ? `Block broker ${account.name} (${brokerId})? They will no longer be able to sign in or post.`
-          : `Unblock broker ${account.name} (${brokerId})?`
-      );
+      const confirmed = await openAdminActionModal({
+        title: willBlock ? 'Block broker access' : 'Unblock broker access',
+        eyebrow: 'Broker account',
+        description: willBlock
+          ? 'This broker will no longer be able to sign in or post until access is restored.'
+          : 'This broker will regain sign in and posting access.',
+        tone: willBlock ? 'danger' : 'warning',
+        confirmLabel: willBlock ? 'Block Broker' : 'Unblock Broker',
+        confirmPhrase: willBlock ? 'BLOCK' : '',
+        summary: [
+          { label: 'Broker', value: account.name || 'Broker' },
+          { label: 'Broker ID', value: brokerId }
+        ],
+        warning: willBlock ? 'Use this only after checking complaints or policy issues.' : ''
+      });
       if (!confirmed) return;
 
       try {
@@ -973,7 +1179,20 @@
       if (!item) return;
       const actionButton = resolveAdminActionButton();
 
-      const confirmed = window.confirm(`Delete this requirement from ${item.broker}?`);
+      const confirmed = await openAdminActionModal({
+        title: 'Delete requirement',
+        eyebrow: 'Marketplace delete',
+        description: 'This removes the selected broker requirement from Supabase and the public marketplace.',
+        tone: 'danger',
+        confirmLabel: 'Delete Requirement',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Broker', value: item.broker || 'Unknown broker' },
+          { label: 'Location', value: item.location || 'Area missing' },
+          { label: 'Budget', value: item.budget || 'Not provided' }
+        ],
+        warning: 'This action cannot be undone from the admin panel.'
+      });
       if (!confirmed) return;
 
       try {
@@ -1009,7 +1228,20 @@
       if (!item) return;
       const actionButton = resolveAdminActionButton();
 
-      const confirmed = window.confirm(`Delete this broker connector listing from ${item.broker}?`);
+      const confirmed = await openAdminActionModal({
+        title: 'Delete listing',
+        eyebrow: 'Marketplace delete',
+        description: 'This removes the selected broker connector listing from Supabase and the public marketplace.',
+        tone: 'danger',
+        confirmLabel: 'Delete Listing',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Broker', value: item.broker || 'Unknown broker' },
+          { label: 'Location', value: item.location || 'Area missing' },
+          { label: 'Price', value: item.budget || 'Not provided' }
+        ],
+        warning: 'This action cannot be undone from the admin panel.'
+      });
       if (!confirmed) return;
 
       try {
@@ -1046,7 +1278,19 @@
         return;
       }
 
-      const confirmed = window.confirm('Delete all requirements from Supabase?');
+      const confirmed = await openAdminActionModal({
+        title: 'Delete all requirements',
+        eyebrow: 'Bulk delete',
+        description: 'This removes every requirement from Supabase and the public marketplace.',
+        tone: 'danger',
+        confirmLabel: 'Delete All Requirements',
+        confirmPhrase: 'DELETE ALL',
+        summary: [
+          { label: 'Records', value: String(requirements.length) },
+          { label: 'Table', value: 'requirements' }
+        ],
+        warning: 'Bulk delete is permanent. Export or verify records before continuing.'
+      });
       if (!confirmed) return;
 
       try {
@@ -1069,7 +1313,19 @@
         return;
       }
 
-      const confirmed = window.confirm('Delete all broker connector listings from Supabase?');
+      const confirmed = await openAdminActionModal({
+        title: 'Delete all listings',
+        eyebrow: 'Bulk delete',
+        description: 'This removes every broker connector listing from Supabase and the public marketplace.',
+        tone: 'danger',
+        confirmLabel: 'Delete All Listings',
+        confirmPhrase: 'DELETE ALL',
+        summary: [
+          { label: 'Records', value: String(deals.length) },
+          { label: 'Table', value: 'deals' }
+        ],
+        warning: 'Bulk delete is permanent. Export or verify records before continuing.'
+      });
       if (!confirmed) return;
 
       try {
@@ -1094,7 +1350,19 @@
         return;
       }
 
-      const confirmed = window.confirm(`Delete ${eligibleCount} ${entityLabel} older than ${days} days?`);
+      const confirmed = await openAdminActionModal({
+        title: `Delete old ${entityLabel}`,
+        eyebrow: 'Age cleanup',
+        description: `This removes records older than ${days} days from Supabase and the marketplace.`,
+        tone: 'danger',
+        confirmLabel: 'Delete Old Records',
+        confirmPhrase: 'DELETE OLD',
+        summary: [
+          { label: 'Eligible records', value: String(eligibleCount) },
+          { label: 'Older than', value: `${days} days` }
+        ],
+        warning: 'Only continue after confirming the age filter is correct.'
+      });
       if (!confirmed) return;
 
       try {
@@ -1144,19 +1412,50 @@
         return;
       }
 
-      const newPassword = window.prompt('Enter a new password for this broker:');
-      if (newPassword === null) return;
+      const passwordResult = await openAdminActionModal({
+        title: 'Change broker password',
+        eyebrow: 'Account security',
+        description: 'Set a new password for this broker account. The broker can use it on the next sign in.',
+        tone: 'warning',
+        confirmLabel: 'Update Password',
+        summary: [
+          { label: 'Broker', value: account.name || 'Broker' },
+          { label: 'Broker ID', value: brokerId }
+        ],
+        fields: [
+          {
+            name: 'newPassword',
+            label: 'New password',
+            type: 'password',
+            placeholder: 'Minimum 6 characters',
+            autocomplete: 'new-password',
+            help: 'Use a temporary password and ask the broker to change it after sign in.'
+          },
+          {
+            name: 'confirmPassword',
+            label: 'Confirm password',
+            type: 'password',
+            placeholder: 'Repeat new password',
+            autocomplete: 'new-password'
+          }
+        ],
+        validate(values) {
+          const newPassword = String(values.newPassword || '').trim();
+          const confirmPassword = String(values.confirmPassword || '').trim();
+          if (newPassword.length < 6) return 'Password must be at least 6 characters long.';
+          if (newPassword !== confirmPassword) return 'Password confirmation does not match.';
+          return '';
+        }
+      });
+      if (!passwordResult) return;
 
-      if (String(newPassword).trim().length < 6) {
-        setAdminStatus('Password must be at least 6 characters long.', 'error');
-        return;
-      }
+      const newPassword = String(passwordResult.newPassword || '').trim();
 
       try {
         await requestBrokerAdminAction({
           action: 'set-password',
           brokerId,
-          newPassword: String(newPassword).trim()
+          newPassword
         });
       } catch (error) {
         setAdminStatus(error?.message || 'Broker password update failed.', 'error');
@@ -1174,10 +1473,30 @@
         return;
       }
 
-      const nextBrokerIdInput = window.prompt('Enter the updated Broker ID for this broker:', String(account.brokerId || ''));
-      if (nextBrokerIdInput === null) return;
+      const brokerIdResult = await openAdminActionModal({
+        title: 'Edit broker ID',
+        eyebrow: 'Broker account',
+        description: 'Update the broker identifier used across the admin workspace and broker account records.',
+        tone: 'warning',
+        confirmLabel: 'Update Broker ID',
+        summary: [
+          { label: 'Broker', value: account.name || 'Broker' },
+          { label: 'Current ID', value: account.brokerId || 'Not set' }
+        ],
+        fields: [
+          {
+            name: 'brokerId',
+            label: 'Broker ID',
+            type: 'text',
+            value: account.brokerId || '',
+            placeholder: 'BC-12345',
+            help: 'Use 3-40 letters, numbers, or hyphens.'
+          }
+        ]
+      });
+      if (!brokerIdResult) return;
 
-      const nextBrokerId = String(nextBrokerIdInput || '').trim().toUpperCase();
+      const nextBrokerId = String(brokerIdResult.brokerId || '').trim().toUpperCase();
       if (!nextBrokerId) {
         setAdminStatus('Broker ID is required.', 'error');
         return;
@@ -1217,7 +1536,21 @@
         return;
       }
 
-      const confirmed = window.confirm(`Delete broker ${account.name} (${account.brokerId})? This will remove the broker account from the backend.`);
+      const exactBrokerId = String(account.brokerId || brokerId || '').trim();
+      const confirmed = await openAdminActionModal({
+        title: 'Delete broker account',
+        eyebrow: 'Account delete',
+        description: 'This removes the broker account from the backend. Marketplace content should be reviewed before deleting the account.',
+        tone: 'danger',
+        confirmLabel: 'Delete Broker',
+        confirmPhrase: exactBrokerId || 'DELETE',
+        summary: [
+          { label: 'Broker', value: account.name || 'Broker' },
+          { label: 'Broker ID', value: exactBrokerId || 'Not set' },
+          { label: 'Email', value: account.email || 'No email' }
+        ],
+        warning: 'This is a destructive account action. Make sure complaints, listings, and requirements have been checked first.'
+      });
       if (!confirmed) return;
 
       try {

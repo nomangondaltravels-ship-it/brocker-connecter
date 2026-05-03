@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-04-phase3-security-hardening" />
+  <meta name="nexbridge-build" content="2026-05-04-phase4-admin-actions" />
   <title>NexBridge Admin Portal</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-04-phase3-security-hardening" />
-  <link rel="stylesheet" href="assets/styles/admin.css?v=2026-05-04-phase3-security-hardening">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-04-phase4-admin-actions" />
+  <link rel="stylesheet" href="assets/styles/admin.css?v=2026-05-04-phase4-admin-actions">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-04-phase3-security-hardening" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-04-phase4-admin-actions" alt="NexBridge logo">
         <div class="brand-copy">
           <div>Nex<span>Bridge</span></div>
           <small>Admin Portal • Connect • Match • Close</small>
@@ -262,11 +262,16 @@
       <div id="complaintActionConfirmContent"></div>
     </div>
   </div>
+  <div class="admin-modal-backdrop hidden" id="adminActionConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="adminActionConfirmTitle">
+    <div class="admin-modal-dialog admin-modal-dialog--action" id="adminActionConfirmDialog">
+      <div id="adminActionConfirmContent"></div>
+    </div>
+  </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/action-feedback-ui.js?v=2026-05-04-phase3-security-hardening"></script>
-<script src="assets/scripts/admin/admin-state-api.js?v=2026-05-04-phase3-security-hardening"></script>
-<script src="assets/scripts/admin/admin-detail-render.js?v=2026-05-04-phase3-security-hardening"></script>
-<script src="assets/scripts/admin/admin-workspace.js?v=2026-05-04-phase3-security-hardening"></script>
+<script src="assets/action-feedback-ui.js?v=2026-05-04-phase4-admin-actions"></script>
+<script src="assets/scripts/admin/admin-state-api.js?v=2026-05-04-phase4-admin-actions"></script>
+<script src="assets/scripts/admin/admin-detail-render.js?v=2026-05-04-phase4-admin-actions"></script>
+<script src="assets/scripts/admin/admin-workspace.js?v=2026-05-04-phase4-admin-actions"></script>
 </body>
 </html>

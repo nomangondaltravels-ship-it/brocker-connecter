@@ -745,4 +745,5 @@
 
     initBrokerAccountModal();
     initComplaintReviewModal();
+    initAdminActionModal();
     restoreAdminSession();

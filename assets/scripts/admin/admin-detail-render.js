@@ -402,9 +402,11 @@
       const brokerBackdrop = document.getElementById('brokerAccountModalBackdrop');
       const complaintBackdrop = document.getElementById('complaintReviewModalBackdrop');
       const confirmBackdrop = document.getElementById('complaintActionConfirmBackdrop');
+      const adminActionBackdrop = document.getElementById('adminActionConfirmBackdrop');
       const hasVisibleModal = (brokerBackdrop && !brokerBackdrop.classList.contains('hidden'))
         || (complaintBackdrop && !complaintBackdrop.classList.contains('hidden'))
-        || (confirmBackdrop && !confirmBackdrop.classList.contains('hidden'));
+        || (confirmBackdrop && !confirmBackdrop.classList.contains('hidden'))
+        || (adminActionBackdrop && !adminActionBackdrop.classList.contains('hidden'));
       document.body.classList.toggle('admin-modal-open', Boolean(hasVisibleModal));
     }
 
