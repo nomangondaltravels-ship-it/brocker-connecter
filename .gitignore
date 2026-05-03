@@ -140,3 +140,18 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Flutter / Android local build artifacts
+android-flutter-source/.dart_tool/
+android-flutter-source/build/
+android-flutter-source/release/
+android-flutter-source/.idea/
+android-flutter-source/android/.gradle/
+android-flutter-source/android/local.properties
+
+# Website repo cleanup: native apps and raw import data live outside Git tracking.
+/android-flutter-source/
+/ios/
+/data/*.csv
+/data/*.tsv
+/data/*.xlsx

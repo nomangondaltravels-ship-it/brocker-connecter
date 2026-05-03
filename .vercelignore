@@ -1,0 +1,15 @@
+# Native app sources are kept locally / in separate app repositories.
+android-flutter-source/
+ios/
+
+# Raw import datasets are not needed by Vercel runtime.
+data/
+
+# Local import and setup material.
+scripts/
+*.sql
+SUPABASE_MANUAL_STEPS.md
+auth-email-templates.md
+
+# Local/editor noise.
+.DS_Store
