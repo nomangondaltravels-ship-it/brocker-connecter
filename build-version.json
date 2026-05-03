@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-04-phase2-cache-stable",
-  "phase": "deployment-cache-stability"
+  "version": "2026-05-04-phase3-security-hardening",
+  "phase": "security-hardening"
 }

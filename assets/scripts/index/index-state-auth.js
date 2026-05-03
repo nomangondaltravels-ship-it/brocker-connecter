@@ -55,7 +55,7 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
-      const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
+      const BROKER_SESSION_VERSION = '2026-05-04-phase3-session-hardening';
       const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
       const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
       const BCP_AUTH_RETURN_KEY = 'bcp_auth_return_intent';
@@ -119,6 +119,21 @@
         console.error(error);
         return fallback;
       }
+    }
+
+    function clearBrokerSupabaseSessionStorage() {
+      localStorage.removeItem('broker_supabase_session');
+      sessionStorage.removeItem('broker_supabase_session');
+    }
+
+    function storeBrokerSupabaseSession(session) {
+      if (!session || typeof session !== 'object') return;
+      try {
+        sessionStorage.setItem('broker_supabase_session', JSON.stringify(session));
+      } catch (error) {
+        console.warn('Could not store temporary Supabase session', error?.message || error);
+      }
+      localStorage.removeItem('broker_supabase_session');
     }
 
     function getPlatformRulesStorageKey() {
@@ -620,7 +635,7 @@
     function clearBrokerSessionState() {
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
-      localStorage.removeItem('broker_supabase_session');
+      clearBrokerSupabaseSessionStorage();
       state.sessionToken = '';
       state.brokerProfile = null;
     }
@@ -631,6 +646,7 @@
         localStorage.getItem('broker_session_token')
         || localStorage.getItem('broker_session_profile')
         || localStorage.getItem('broker_supabase_session')
+        || sessionStorage.getItem('broker_supabase_session')
       );
       if (storedVersion === BROKER_SESSION_VERSION) {
         return false;
@@ -685,7 +701,7 @@
         return false;
       }
       if (payload?.session && typeof payload.session === 'object') {
-        localStorage.setItem('broker_supabase_session', JSON.stringify(payload.session));
+        storeBrokerSupabaseSession(payload.session);
       }
       localStorage.setItem('broker_session_token', authPayload.token);
       localStorage.setItem('broker_session_profile', JSON.stringify(authPayload.broker));

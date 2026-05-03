@@ -56,7 +56,7 @@
     };
     const DASHBOARD_LEAD_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.leads || []).map(option => option.value);
     const DASHBOARD_LISTING_STATUS_OPTIONS = (CORE_TAXONOMY.statuses?.listings || []).map(option => option.value);
-    const BROKER_SESSION_VERSION = '2026-04-23-complaint-rules-fix';
+    const BROKER_SESSION_VERSION = '2026-05-04-phase3-session-hardening';
     const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
     const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
     const DASHBOARD_NOTIFICATIONS_SEEN_KEY = 'broker_dashboard_notifications_seen';
@@ -68,6 +68,7 @@
       localStorage.removeItem('broker_session_token');
       localStorage.removeItem('broker_session_profile');
       localStorage.removeItem('broker_supabase_session');
+      sessionStorage.removeItem('broker_supabase_session');
     }
 
     function enforceBrokerSessionVersion(redirectOnMismatch = false) {
@@ -76,6 +77,7 @@
         localStorage.getItem('broker_session_token')
         || localStorage.getItem('broker_session_profile')
         || localStorage.getItem('broker_supabase_session')
+        || sessionStorage.getItem('broker_supabase_session')
       );
       if (storedVersion === BROKER_SESSION_VERSION) {
         return false;
@@ -977,7 +979,13 @@
 
     function getStoredBrokerSupabaseAccessToken() {
       try {
-        const raw = localStorage.getItem('broker_supabase_session');
+        let raw = sessionStorage.getItem('broker_supabase_session');
+        const legacyRaw = localStorage.getItem('broker_supabase_session');
+        if (!raw && legacyRaw) {
+          raw = legacyRaw;
+          sessionStorage.setItem('broker_supabase_session', legacyRaw);
+        }
+        localStorage.removeItem('broker_supabase_session');
         if (!raw) return '';
         const parsed = JSON.parse(raw);
         return String(parsed?.access_token || '').trim();

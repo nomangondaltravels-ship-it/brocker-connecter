@@ -28,6 +28,34 @@
       };
     }
 
+    function scrubSensitiveResetUrl() {
+      if (!window.location.search && !window.location.hash) return;
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function readStoredRecoverySession() {
+      try {
+        const sessionRaw = sessionStorage.getItem('broker_supabase_session') || localStorage.getItem('broker_supabase_session') || '';
+        localStorage.removeItem('broker_supabase_session');
+        if (!sessionRaw) return null;
+        const parsed = JSON.parse(sessionRaw);
+        return parsed?.access_token ? parsed : null;
+      } catch (error) {
+        localStorage.removeItem('broker_supabase_session');
+        sessionStorage.removeItem('broker_supabase_session');
+        return null;
+      }
+    }
+
+    function storeRecoverySession(session) {
+      try {
+        sessionStorage.setItem('broker_supabase_session', JSON.stringify(session || {}));
+      } catch (error) {
+        console.warn('Could not store reset session', error?.message || error);
+      }
+      localStorage.removeItem('broker_supabase_session');
+    }
+
     async function verifyRecoveryToken(tokenHash, type) {
       const response = await fetch(`${supabaseUrl}/auth/v1/verify`, {
         method: 'POST',
@@ -59,10 +87,12 @@
     async function initializeRecoverySession() {
       const params = getRecoveryParams();
       if (params.errorDescription) {
+        scrubSensitiveResetUrl();
         throw new Error('This reset link is invalid or expired. Please request a new password reset email.');
       }
 
       if (params.accessToken) {
+        scrubSensitiveResetUrl();
         return {
           access_token: params.accessToken,
           refresh_token: params.refreshToken,
@@ -74,8 +104,12 @@
       }
 
       if (params.tokenHash && (params.type || '').toLowerCase() === 'recovery') {
+        scrubSensitiveResetUrl();
         return verifyRecoveryToken(params.tokenHash, 'recovery');
       }
+
+      const storedSession = readStoredRecoverySession();
+      if (storedSession) return storedSession;
 
       throw new Error('This reset link is invalid or expired. Please request a new password reset email.');
     }
@@ -90,7 +124,7 @@
       try {
         setStatus('Preparing password reset...', 'success');
         recoverySession = await initializeRecoverySession();
-        localStorage.setItem('broker_supabase_session', JSON.stringify(recoverySession));
+        storeRecoverySession(recoverySession);
         setStatus('Your secure reset session is ready. Enter a new password below.', 'success');
       } catch (error) {
         setStatus(error?.message || 'This reset link is invalid or has expired. Please request a new password reset email.');
@@ -134,6 +168,7 @@
         setStatus('Password updated successfully. Please sign in.', 'success');
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmNewPassword').value = '';
+        sessionStorage.removeItem('broker_supabase_session');
         localStorage.removeItem('broker_supabase_session');
         setTimeout(() => {
           window.location.replace('index.html');

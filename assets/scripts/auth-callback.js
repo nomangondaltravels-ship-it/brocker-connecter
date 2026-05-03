@@ -13,6 +13,20 @@
       return new URLSearchParams(window.location.hash.replace(/^#/, ''));
     }
 
+    function scrubSensitiveAuthUrl() {
+      if (!window.location.search && !window.location.hash) return;
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function storeBrokerSupabaseSession(session) {
+      try {
+        sessionStorage.setItem('broker_supabase_session', JSON.stringify(session || {}));
+      } catch (error) {
+        console.warn('Could not store temporary Supabase session', error?.message || error);
+      }
+      localStorage.removeItem('broker_supabase_session');
+    }
+
     function buildSessionFromParams(query, hash) {
       const accessToken = hash.get('access_token') || query.get('access_token') || '';
       const refreshToken = hash.get('refresh_token') || query.get('refresh_token') || '';
@@ -80,7 +94,7 @@
       }
       localStorage.setItem('broker_session_token', result.token || '');
       localStorage.setItem('broker_session_profile', JSON.stringify(result.broker || {}));
-      localStorage.setItem('broker_supabase_session', JSON.stringify(result.session || session || {}));
+      storeBrokerSupabaseSession(result.session || session || {});
       return result;
     }
 
@@ -90,6 +104,7 @@
       const errorDescription = query.get('error_description') || hash.get('error_description') || query.get('message') || '';
       const type = query.get('type') || hash.get('type') || '';
       const tokenHash = query.get('token_hash') || hash.get('token_hash') || '';
+      scrubSensitiveAuthUrl();
 
       if (errorDescription) {
         setState(
@@ -136,8 +151,8 @@
             'Preparing password reset...',
             'success'
           );
+          storeBrokerSupabaseSession({ ...session, type: 'recovery' });
           const target = new URL('reset-password.html', window.location.href);
-          target.hash = buildHashFromSession(session, 'recovery');
           setTimeout(() => {
             window.location.replace(target.toString());
           }, 450);
