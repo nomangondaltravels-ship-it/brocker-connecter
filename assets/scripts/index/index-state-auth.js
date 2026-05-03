@@ -13,6 +13,7 @@
       listings: [],
       publicListingsLoading: true,
       publicListingsLoaded: false,
+      publicListingsLoadError: '',
       listingMediaCache: {},
       activeSection: 'requirements',
       publicSearchQuery: '',

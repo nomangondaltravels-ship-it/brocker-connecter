@@ -462,7 +462,11 @@
         } catch (filterError) {
           console.error('BCP fallback filters could not render.', filterError);
         }
-        renderPublicViewsFallback();
+        if (state.publicListingsLoadError) {
+          renderPublicLoadErrorState(state.publicListingsLoadError);
+        } else {
+          renderPublicViewsFallback();
+        }
       } else {
         restoreMarketplaceContactRevealIfNeeded();
       }

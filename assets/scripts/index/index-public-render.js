@@ -85,8 +85,66 @@
     function setPublicTabCount(target, value, isLoading = false) {
       if (!target) return;
       target.classList.toggle('is-loading', isLoading);
+      target.classList.remove('is-error');
       target.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+      target.removeAttribute('title');
       target.textContent = isLoading ? '...' : String(value);
+    }
+
+    function setPublicTabError(target) {
+      if (!target) return;
+      target.classList.remove('is-loading');
+      target.classList.add('is-error');
+      target.removeAttribute('aria-busy');
+      target.setAttribute('title', 'Marketplace records could not load');
+      target.textContent = '!';
+    }
+
+    function getPublicLoadErrorMessage(error) {
+      if (typeof error === 'string' && error.trim()) {
+        return error.trim();
+      }
+      return getUiErrorMessage(error, 'Marketplace records could not load. Please try again.');
+    }
+
+    function renderPublicLoadErrorPanel(targetId, sectionLabel, message) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      target.classList.remove('is-loading');
+      target.removeAttribute('aria-busy');
+      target.innerHTML = `
+        <div class="public-load-state is-error">
+          <div class="public-load-state-icon" aria-hidden="true">!</div>
+          <div class="public-load-state-copy">
+            <strong>${escapeHtml(sectionLabel)} could not load</strong>
+            <span>${escapeHtml(message)}</span>
+          </div>
+          <button class="btn btn-primary btn-tiny" type="button" onclick="retryPublicListings()">Retry</button>
+        </div>
+      `;
+    }
+
+    function renderPublicLoadErrorState(error) {
+      const message = getPublicLoadErrorMessage(error);
+      state.publicListingsLoadError = message;
+      state.publicListingsLoading = false;
+      setPublicTabError(document.getElementById('tabCountRequirements'));
+      setPublicTabError(document.getElementById('tabCountListings'));
+      setPublicTabError(document.getElementById('tabCountDistress'));
+      renderPublicLoadErrorPanel('requirementsGrid', 'Broker requirements', message);
+      renderPublicLoadErrorPanel('marketplaceGrid', 'NexBridge listings', message);
+      renderPublicLoadErrorPanel('distressDealsGrid', 'Distress deals', message);
+      ['requirementsPager', 'marketplacePager', 'distressDealsPager'].forEach(id => {
+        const pager = document.getElementById(id);
+        if (pager) pager.classList.add('hidden');
+      });
+      [
+        ['requirementsDetailPanel', 'requirements'],
+        ['marketplaceDetailPanel', 'marketplace'],
+        ['distressDealsDetailPanel', 'distress-deals']
+      ].forEach(([targetId, sectionName]) => {
+        renderConnectorDetailPanel(targetId, sectionName, []);
+      });
     }
 
     function renderPublicLoadingRows(targetId, sectionName) {
@@ -148,6 +206,7 @@
     }
 
     function renderPublicLoadingState() {
+      state.publicListingsLoadError = '';
       setPublicTabCount(document.getElementById('tabCountRequirements'), 0, true);
       setPublicTabCount(document.getElementById('tabCountListings'), 0, true);
       setPublicTabCount(document.getElementById('tabCountDistress'), 0, true);
@@ -161,6 +220,10 @@
     }
 
     function updateStats() {
+      if (state.publicListingsLoadError && !state.publicListingsLoaded) {
+        renderPublicLoadErrorState(state.publicListingsLoadError);
+        return;
+      }
       if (state.publicListingsLoading && !state.publicListingsLoaded) {
         renderPublicLoadingState();
         return;
@@ -182,6 +245,10 @@
     }
 
     function renderPublicViews() {
+      if (state.publicListingsLoadError && !state.publicListingsLoaded) {
+        renderPublicLoadErrorState(state.publicListingsLoadError);
+        return;
+      }
       if (state.publicListingsLoading && !state.publicListingsLoaded) {
         renderPublicLoadingState();
         return;
@@ -196,9 +263,13 @@
       renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
     }
 
-    async function loadPublicListings() {
+    async function loadPublicListings(options = {}) {
+      const shouldShowLoading = options.showLoading !== false || !state.publicListingsLoaded;
       state.publicListingsLoading = true;
-      renderPublicLoadingState();
+      state.publicListingsLoadError = '';
+      if (shouldShowLoading) {
+        renderPublicLoadingState();
+      }
       let result = {};
       try {
         const response = await fetch('/api/public-marketplace', {
@@ -214,11 +285,15 @@
         }
       } catch (error) {
         state.publicListingsLoading = false;
+        if (!state.publicListingsLoaded || options.showErrorState) {
+          renderPublicLoadErrorState(error);
+        }
         throw error;
       }
       state.listings = Array.isArray(result.listings) ? result.listings : [];
       state.publicListingsLoaded = true;
       state.publicListingsLoading = false;
+      state.publicListingsLoadError = '';
       try {
         populateConnectorFilterOptions();
         renderPublicViews();
@@ -230,6 +305,16 @@
           console.error('BCP filter fallback failed.', filterError);
         }
         renderPublicViewsFallback(error);
+      }
+    }
+
+    async function retryPublicListings() {
+      setSystemBanner('');
+      try {
+        await loadPublicListings({ showLoading: true, showErrorState: true });
+        restoreMarketplaceContactRevealIfNeeded();
+      } catch (error) {
+        showSystemError(error, 'Marketplace records could not load.');
       }
     }
 

@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-04-phase6c-csp-cleanup",
-  "phase": "csp-asset-cleanup"
+  "version": "2026-05-04-phase7-public-load-states",
+  "phase": "public-marketplace-load-states"
 }
