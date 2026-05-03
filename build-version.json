@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-04-phase6b-deploy-scripts-fix",
-  "phase": "deploy-scripts-fix"
+  "version": "2026-05-04-phase6c-csp-cleanup",
+  "phase": "csp-asset-cleanup"
 }
