@@ -6649,6 +6649,115 @@
       line-height: 1.35;
     }
 
+    .overview-empty-state.is-error {
+      border-color: rgba(239, 68, 68, 0.24);
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .overview-empty-state.is-error strong {
+      color: #7f1d1d;
+    }
+
+    .dashboard-skeleton-card,
+    .dashboard-skeleton-row {
+      pointer-events: none;
+    }
+
+    .dashboard-skeleton-line,
+    .dashboard-skeleton-pill {
+      display: inline-flex;
+      max-width: 100%;
+      min-height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 45%, #eef2f7 100%);
+      background-size: 220% 100%;
+      animation: dashboardSkeletonPulse 1.35s ease-in-out infinite;
+    }
+
+    .dashboard-skeleton-line {
+      width: 100%;
+      height: 10px;
+    }
+
+    .dashboard-skeleton-line.is-short {
+      width: 42%;
+    }
+
+    .dashboard-skeleton-line.is-medium {
+      width: 68%;
+    }
+
+    .dashboard-skeleton-line.is-long {
+      width: 92%;
+    }
+
+    .dashboard-skeleton-pill {
+      width: 88px;
+      height: 22px;
+    }
+
+    .dashboard-skeleton-pill.is-small {
+      width: 54px;
+    }
+
+    .dashboard-skeleton-pill.is-button {
+      width: 110px;
+      height: 34px;
+    }
+
+    .dashboard-skeleton-pill.is-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 13px;
+    }
+
+    .dashboard-skeleton-card .stat-icon,
+    .dashboard-skeleton-card small,
+    .dashboard-skeleton-card strong,
+    .dashboard-skeleton-card .stat-helper {
+      color: transparent !important;
+    }
+
+    .overview-mini-list.is-loading .overview-mini-row {
+      cursor: default;
+      background: #ffffff;
+    }
+
+    .dashboard-skeleton-row .overview-mini-main,
+    .dashboard-skeleton-row .overview-mini-meta,
+    .dashboard-loading-detail {
+      display: grid;
+      gap: 9px;
+    }
+
+    .dashboard-skeleton-table-head {
+      grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    }
+
+    .workspace-table-row.dashboard-skeleton-row {
+      grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+      cursor: default;
+      background: #ffffff;
+    }
+
+    .workspace-table-row.dashboard-skeleton-row:hover {
+      background: #ffffff;
+    }
+
+    .workspace-split.is-loading .workspace-detail-card {
+      min-height: 280px;
+    }
+
+    @keyframes dashboardSkeletonPulse {
+      0% {
+        background-position: 180% 0;
+      }
+      100% {
+        background-position: -40% 0;
+      }
+    }
+
     .workflow-insights {
       gap: 12px !important;
     }

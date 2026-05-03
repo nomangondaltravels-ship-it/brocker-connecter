@@ -108,6 +108,9 @@
       complaints: [],
       notifications: [],
       aiMatches: [],
+      dashboardLoading: false,
+      dashboardLoaded: false,
+      dashboardLoadError: '',
       brokerActivity: {
         activeCount: 0,
         brokers: []

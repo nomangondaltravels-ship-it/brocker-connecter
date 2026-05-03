@@ -197,14 +197,166 @@
       }
     }
 
-    async function loadDashboard() {
-      const response = await fetch('/api/broker-dashboard', {
-        method: 'GET',
-        headers: apiHeaders()
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.message || 'Dashboard load failed.');
+    function renderDashboardSkeletonLines(count = 2) {
+      return Array.from({ length: count }).map((_, index) => (
+        `<span class="dashboard-skeleton-line ${index % 3 === 0 ? 'is-long' : index % 3 === 1 ? 'is-medium' : 'is-short'}"></span>`
+      )).join('');
+    }
+
+    function renderDashboardMiniSkeletonRows(count = 3) {
+      return `
+        <div class="overview-mini-list is-loading">
+          ${Array.from({ length: count }).map(() => `
+            <div class="overview-mini-row dashboard-skeleton-row" aria-hidden="true">
+              <div class="overview-mini-main">
+                ${renderDashboardSkeletonLines(2)}
+              </div>
+              <div class="overview-mini-meta">
+                <span class="dashboard-skeleton-pill"></span>
+                <span class="dashboard-skeleton-pill is-small"></span>
+                <span class="dashboard-skeleton-line is-short"></span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderWorkspaceSkeleton(label = 'records') {
+      return `
+        <div class="workspace-split has-detail is-loading" aria-busy="true" aria-label="Loading ${escapeHtml(label)}">
+          <div class="workspace-table-card">
+            <div class="workspace-table-scroll">
+              <div class="workspace-table-inner">
+                <div class="workspace-table-head dashboard-skeleton-table-head">
+                  ${Array.from({ length: 7 }).map(() => '<div class="dashboard-skeleton-line is-medium"></div>').join('')}
+                </div>
+                <div class="workspace-table-body">
+                  ${Array.from({ length: 4 }).map(() => `
+                    <div class="workspace-table-row dashboard-skeleton-row">
+                      ${Array.from({ length: 7 }).map((_, index) => `
+                        <div class="workspace-cell">
+                          <span class="dashboard-skeleton-line ${index === 1 ? 'is-long' : 'is-medium'}"></span>
+                          <span class="dashboard-skeleton-line ${index === 1 ? 'is-medium' : 'is-short'}"></span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+          <aside class="workspace-detail-card">
+            <div class="workspace-detail-empty dashboard-loading-detail">
+              <span class="dashboard-skeleton-pill is-icon"></span>
+              ${renderDashboardSkeletonLines(5)}
+            </div>
+          </aside>
+        </div>
+      `;
+    }
+
+    function renderDashboardLoadingState() {
+      const statsTarget = document.getElementById('overviewStats');
+      if (statsTarget) {
+        statsTarget.innerHTML = Array.from({ length: 4 }).map(() => `
+          <div class="stat-card dashboard-skeleton-card" aria-hidden="true">
+            <span class="stat-icon dashboard-skeleton-pill is-icon"></span>
+            <small><span class="dashboard-skeleton-line is-medium"></span></small>
+            <strong><span class="dashboard-skeleton-line is-short"></span></strong>
+            <span class="stat-helper"><span class="dashboard-skeleton-line is-medium"></span></span>
+          </div>
+        `).join('');
+      }
+
+      const todayTarget = document.getElementById('overviewTodayActions');
+      if (todayTarget) {
+        todayTarget.innerHTML = `
+          <div class="today-actions-card dashboard-skeleton-card" aria-busy="true">
+            <div class="today-actions-copy">
+              <span class="today-actions-kicker">Loading</span>
+              ${renderDashboardSkeletonLines(3)}
+            </div>
+            <div class="today-actions-buttons">
+              <span class="dashboard-skeleton-pill is-button"></span>
+              <span class="dashboard-skeleton-pill is-button"></span>
+            </div>
+          </div>
+        `;
+      }
+
+      const recentRequirements = document.getElementById('overviewRecentRequirements');
+      const recentListings = document.getElementById('overviewRecentListings');
+      const recentDistress = document.getElementById('overviewRecentDistress');
+      if (recentRequirements) recentRequirements.innerHTML = renderDashboardMiniSkeletonRows(3);
+      if (recentListings) recentListings.innerHTML = renderDashboardMiniSkeletonRows(3);
+      if (recentDistress) recentDistress.innerHTML = renderDashboardMiniSkeletonRows(2);
+
+      const alertsTarget = document.getElementById('workflowAlertsList');
+      const matchesTarget = document.getElementById('workflowMatchesList');
+      if (alertsTarget) alertsTarget.innerHTML = renderDashboardMiniSkeletonRows(2);
+      if (matchesTarget) matchesTarget.innerHTML = renderDashboardMiniSkeletonRows(2);
+
+      const workflowCountNode = document.getElementById('workflowAlertsCount');
+      const workflowMatchesNode = document.getElementById('workflowMatchesCount');
+      const notificationCountNode = document.getElementById('notificationCountBadge');
+      if (workflowCountNode) workflowCountNode.textContent = '--';
+      if (workflowMatchesNode) workflowMatchesNode.textContent = '--';
+      if (notificationCountNode) notificationCountNode.textContent = '--';
+
+      const leadsTarget = document.getElementById('leadsList');
+      const propertiesTarget = document.getElementById('propertiesList');
+      const distressTarget = document.getElementById('distressList');
+      if (leadsTarget) leadsTarget.innerHTML = renderWorkspaceSkeleton('requirements');
+      if (propertiesTarget) propertiesTarget.innerHTML = renderWorkspaceSkeleton('listings');
+      if (distressTarget) distressTarget.innerHTML = renderWorkspaceSkeleton('distress deals');
+    }
+
+    function renderDashboardLoadErrorState(message) {
+      const safeMessage = message || 'Dashboard data could not be loaded.';
+      const retryMarkup = `
+        <div class="overview-empty-state is-error">
+          <strong>Dashboard data did not load.</strong>
+          <span>${escapeHtml(safeMessage)}</span>
+          <button class="btn btn-primary btn-tiny" type="button" onclick="loadDashboard()">Retry</button>
+        </div>
+      `;
+      const statsTarget = document.getElementById('overviewStats');
+      const todayTarget = document.getElementById('overviewTodayActions');
+      if (statsTarget) statsTarget.innerHTML = '';
+      if (todayTarget) todayTarget.innerHTML = retryMarkup;
+      ['overviewRecentRequirements', 'overviewRecentListings', 'overviewRecentDistress', 'workflowAlertsList', 'workflowMatchesList', 'leadsList', 'propertiesList', 'distressList']
+        .forEach(id => {
+          const target = document.getElementById(id);
+          if (target) target.innerHTML = retryMarkup;
+        });
+    }
+
+    async function loadDashboard(options = {}) {
+      const shouldShowLoading = options.showLoading !== false && !state.dashboardLoaded;
+      state.dashboardLoading = true;
+      state.dashboardLoadError = '';
+      if (shouldShowLoading) {
+        renderDashboardLoadingState();
+      }
+
+      let result = {};
+      try {
+        const response = await fetch('/api/broker-dashboard', {
+          method: 'GET',
+          headers: apiHeaders()
+        });
+        result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result?.message || 'Dashboard load failed.');
+        }
+      } catch (error) {
+        state.dashboardLoading = false;
+        state.dashboardLoadError = error?.message || 'Dashboard load failed.';
+        if (shouldShowLoading) {
+          renderDashboardLoadErrorState(state.dashboardLoadError);
+        }
+        throw error;
       }
 
       state.overview = result.overview || null;
@@ -222,6 +374,9 @@
         state.broker = { ...(state.broker || {}), ...result.overview.broker };
         localStorage.setItem('broker_session_profile', JSON.stringify(state.broker));
       }
+      state.dashboardLoading = false;
+      state.dashboardLoaded = true;
+      state.dashboardLoadError = '';
       syncProfileStorage();
       syncBrokerIdentityButton();
 
