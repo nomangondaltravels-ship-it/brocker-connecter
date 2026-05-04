@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-04-phase7-public-load-states",
-  "phase": "public-marketplace-load-states"
+  "version": "2026-05-04-phase8-runtime-health",
+  "phase": "runtime-health-recovery"
 }
