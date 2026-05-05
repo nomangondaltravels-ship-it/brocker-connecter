@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-06-phase4-quick-actions" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-06-phase4-quick-actions"></script>
+  <meta name="nexbridge-build" content="2026-05-06-phase5-notification-controls" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-06-phase5-notification-controls"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-phase4-quick-actions" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-phase4-quick-actions">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-phase5-notification-controls" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-phase5-notification-controls">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-phase4-quick-actions" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-phase5-notification-controls" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -41,8 +41,11 @@
           </button>
           <div class="notification-panel hidden" id="notificationPanel" role="dialog" aria-label="Notifications panel">
             <div class="notification-panel-head">
-              <strong>Notifications</strong>
-              <span id="notificationPanelMeta">No notifications</span>
+              <div>
+                <strong>Notifications</strong>
+                <span id="notificationPanelMeta">No notifications</span>
+              </div>
+              <button class="btn btn-secondary btn-tiny notification-mark-done-btn" id="notificationPanelMarkDone" type="button" onclick="markAllWorkflowNotificationsDone('all')">Mark all done</button>
             </div>
             <div class="workflow-alert-list notification-panel-list" id="notificationPanelList"></div>
           </div>
@@ -185,7 +188,10 @@
                 <h3>Workflow Alerts</h3>
                 <p>Due today, overdue reminders, and important next actions.</p>
               </div>
-              <span class="insight-count" id="workflowAlertsCount">0</span>
+              <div class="insight-head-controls">
+                <span class="insight-count" id="workflowAlertsCount">0</span>
+                <button class="btn btn-secondary btn-tiny notification-mark-done-btn" id="workflowAlertsMarkDone" type="button" onclick="markAllWorkflowNotificationsDone('workflow')">Mark done</button>
+              </div>
             </div>
             <div class="workflow-alert-list" id="workflowAlertsList"></div>
           </div>
@@ -996,15 +1002,15 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-phase4-quick-actions"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-phase4-quick-actions"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-phase5-notification-controls"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-phase5-notification-controls"></script>
 </body>
 </html>

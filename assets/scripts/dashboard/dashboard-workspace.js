@@ -1370,10 +1370,57 @@
       setStatus('Notification snoozed for now.', 'success');
     }
 
+    function markAllWorkflowNotificationsDone(scope = 'workflow') {
+      const mode = String(scope || 'workflow').trim().toLowerCase();
+      const sourceItems = mode === 'all' ? getNotificationItems() : getWorkflowNotificationItems();
+      const unreadEntries = getUnreadNotificationItems(sourceItems);
+      if (!unreadEntries.length) {
+        setStatus('No unread notifications to clear.', 'info');
+        return;
+      }
+      const nextKeys = [
+        ...state.notificationSeenKeys,
+        ...unreadEntries.map(entry => entry.key)
+      ];
+      setSeenKeys('notifications', nextKeys);
+      state.activeNotificationKey = '';
+      renderWorkflowAlerts();
+      setStatus(
+        unreadEntries.length === 1
+          ? 'Notification marked done.'
+          : `${unreadEntries.length} notifications marked done.`,
+        'success'
+      );
+    }
+
+    function syncWorkflowNotificationControls() {
+      const workflowUnreadCount = getUnreadNotificationItems(getWorkflowNotificationItems()).length;
+      const allUnreadCount = getUnreadNotificationItems(getNotificationItems()).length;
+      [
+        {
+          node: document.getElementById('workflowAlertsMarkDone'),
+          count: workflowUnreadCount,
+          enabledLabel: workflowUnreadCount === 1 ? 'Mark done' : `Mark ${workflowUnreadCount} done`,
+          disabledLabel: 'All done'
+        },
+        {
+          node: document.getElementById('notificationPanelMarkDone'),
+          count: allUnreadCount,
+          enabledLabel: allUnreadCount === 1 ? 'Mark done' : `Mark ${allUnreadCount} done`,
+          disabledLabel: 'All done'
+        }
+      ].forEach(({ node, count, enabledLabel, disabledLabel }) => {
+        if (!node) return;
+        node.textContent = count > 0 ? enabledLabel : disabledLabel;
+        node.disabled = count < 1;
+        node.classList.toggle('is-disabled', count < 1);
+      });
+    }
+
     function renderNotificationAlertItems(items, limit = 8) {
       const unreadEntries = getUnreadNotificationItems(items);
       if (!unreadEntries.length) {
-        return '<div class="overview-empty-state"><strong>No urgent work right now.</strong><span>Your workflow looks clear.</span></div>';
+        return '<div class="overview-empty-state"><strong>No urgent work right now.</strong><span>Done and snoozed items stay hidden so the desk stays clean.</span></div>';
       }
       return unreadEntries.slice(0, limit).map(entry => {
         const item = entry.item;
@@ -1392,7 +1439,10 @@
           >
             <strong>${escapeHtml(item.title || 'Notification')}</strong>
             <div class="muted">${escapeHtml(item.message || '')}</div>
-            <small>${escapeHtml(createdLabel)}</small>
+            <div class="workflow-alert-meta-row">
+              <small>${escapeHtml(createdLabel)}</small>
+              <span class="workflow-alert-status">Unread</span>
+            </div>
             <div class="workflow-alert-actions" aria-label="Notification actions">
               <button class="btn btn-secondary btn-tiny" type="button" data-notification-key="${escapeHtml(notificationKey)}" onclick="event.stopPropagation();openWorkflowNotificationFromElement(this.closest('.workflow-alert-item'))">Open</button>
               <button class="btn btn-secondary btn-tiny" type="button" data-notification-key="${escapeHtml(notificationKey)}" onclick="markWorkflowNotificationDone(event, this)">Mark Done</button>
@@ -1426,6 +1476,7 @@
         todayActionsTarget.innerHTML = renderOverviewTodayActions(getUnreadNotificationItems(notifications));
       }
       syncNotificationIndicator();
+      syncWorkflowNotificationControls();
 
       if (matchesTarget) {
         matchesTarget.innerHTML = aiMatches.length

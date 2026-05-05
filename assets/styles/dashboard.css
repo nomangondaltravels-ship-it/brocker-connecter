@@ -292,6 +292,11 @@
       padding: 2px 4px 0;
     }
 
+    .notification-panel-head > div {
+      display: grid;
+      gap: 2px;
+    }
+
     .notification-panel-head strong {
       font-size: 0.92rem;
       color: #0f172a;
@@ -306,6 +311,17 @@
       max-height: 320px;
       overflow-y: auto;
       padding-right: 2px;
+    }
+
+    .notification-mark-done-btn {
+      white-space: nowrap;
+      font-size: 0.7rem !important;
+    }
+
+    .notification-mark-done-btn:disabled,
+    .notification-mark-done-btn.is-disabled {
+      opacity: 0.58;
+      cursor: default;
     }
 
     .notification-unread-dot {
@@ -2609,6 +2625,13 @@
       align-items: flex-start;
     }
 
+    .insight-head-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     .insight-head h3 {
       font-size: 1rem;
       margin-bottom: 4px;
@@ -2679,6 +2702,20 @@
 
     .workflow-alert-meta-row small {
       margin-top: 0;
+    }
+
+    .workflow-alert-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #fff7e6;
+      color: #9a6b11;
+      border: 1px solid rgba(200, 169, 107, 0.24);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
     }
 
     .workflow-match-remove-btn {
