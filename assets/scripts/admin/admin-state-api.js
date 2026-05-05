@@ -1275,11 +1275,25 @@
         summary: [
           { label: 'Broker', value: item.broker || 'Unknown broker' },
           { label: 'Location', value: item.location || 'Area missing' },
-          { label: item.sourceType === 'lead' ? 'Budget' : 'Price', value: item.budget || 'Not provided' }
+          { label: item.sourceType === 'lead' ? 'Budget' : 'Price', value: item.budget || 'Not provided' },
+          { label: 'Source', value: `${item.sourceType} #${item.sourceId}` }
         ],
+        fields: [
+          {
+            name: 'adminReason',
+            label: 'Admin reason',
+            placeholder: 'Duplicate, unsafe details, outdated, complaint review...',
+            help: 'Saved in the broker record activity log for audit history.'
+          }
+        ],
+        validate: values => {
+          const reason = String(values?.adminReason || '').trim();
+          return reason.length < 6 ? 'Add a short admin reason before unlisting.' : '';
+        },
         warning: 'Safe action: the broker can still see and manage the private record inside their workspace.'
       });
       if (!confirmed) return;
+      const adminReason = String(confirmed.adminReason || '').trim();
 
       try {
         await runAdminActionFeedback(
@@ -1290,7 +1304,8 @@
             action: 'unlist-marketplace-item',
             sourceType: item.sourceType,
             sourceId: item.sourceId,
-            publicListingId: item.publicListingId
+            publicListingId: item.publicListingId,
+            adminReason
           })
         );
       } catch (error) {

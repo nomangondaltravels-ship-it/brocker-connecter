@@ -5,7 +5,11 @@ import {
   getSupabaseConfig,
   json,
   normalizeText,
+  parseLeadMeta,
+  parsePropertyMeta,
   requiredEnv,
+  serializeLeadMeta,
+  serializePropertyMeta,
   supabaseAuthAdminUpdateUser,
   supabaseAuthDeleteUser,
   supabaseDelete,
@@ -97,6 +101,48 @@ function sanitizeAdminPublicListing(row) {
     distress: Boolean(row?.is_distress),
     postedAt: row?.updated_at || row?.created_at || null,
     createdAt: row?.created_at || null
+  };
+}
+
+function createAdminActivityEntry(text, type = 'admin') {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`,
+    type,
+    text: normalizeText(text),
+    createdAt: new Date().toISOString()
+  };
+}
+
+function prependAdminActivityLog(existingLog, text, type = 'admin') {
+  const message = normalizeText(text);
+  if (!message) return Array.isArray(existingLog) ? existingLog : [];
+  return [createAdminActivityEntry(message, type), ...(Array.isArray(existingLog) ? existingLog : [])].slice(0, 80);
+}
+
+function buildAdminUnlistSourceAuditPatch({ sourceType, row, reason, adminUser }) {
+  if (!row) return {};
+  const isLead = sourceType === 'lead';
+  const itemLabel = isLead ? 'requirement' : 'listing';
+  const reasonText = normalizeText(reason);
+  const adminLabel = normalizeText(adminUser) || 'admin';
+  const auditText = `Admin unlisted this ${itemLabel} from marketplace.${reasonText ? ` Reason: ${reasonText}.` : ''} Reviewed by ${adminLabel}.`;
+
+  if (isLead) {
+    const meta = parseLeadMeta(row.follow_up_notes);
+    return {
+      follow_up_notes: serializeLeadMeta({
+        ...meta,
+        activityLog: prependAdminActivityLog(meta.activityLog, auditText, 'admin-unlist')
+      })
+    };
+  }
+
+  const meta = parsePropertyMeta(row.description);
+  return {
+    description: serializePropertyMeta({
+      ...meta,
+      activityLog: prependAdminActivityLog(meta.activityLog, auditText, 'admin-unlist')
+    })
   };
 }
 
@@ -226,7 +272,7 @@ async function fetchAdminPublicListings({ supabaseUrl, serviceRoleKey }) {
     .filter(item => item.sourceType === 'lead' || item.sourceType === 'property');
 }
 
-async function unlistAdminMarketplaceItem({ supabaseUrl, serviceRoleKey, sourceType, sourceId, publicListingId }) {
+async function unlistAdminMarketplaceItem({ supabaseUrl, serviceRoleKey, sourceType, sourceId, publicListingId, adminReason, adminUser }) {
   const normalizedType = normalizeText(sourceType).toLowerCase();
   const numericSourceId = Number(sourceId);
   if (!['lead', 'property'].includes(normalizedType)) {
@@ -242,12 +288,27 @@ async function unlistAdminMarketplaceItem({ supabaseUrl, serviceRoleKey, sourceT
 
   const sourceTable = normalizedType === 'lead' ? 'broker_leads' : 'broker_properties';
   const updatedAt = new Date().toISOString();
+  const existingSourceRows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: sourceTable,
+    filters: { id: numericSourceId },
+    order: { column: 'updated_at', ascending: false }
+  }).catch(() => []);
+  const sourceRow = Array.isArray(existingSourceRows) ? existingSourceRows[0] : null;
+  const auditPatch = buildAdminUnlistSourceAuditPatch({
+    sourceType: normalizedType,
+    row: sourceRow,
+    reason: adminReason,
+    adminUser
+  });
   const sourceRows = await supabasePatch({
     supabaseUrl,
     serviceRoleKey,
     table: sourceTable,
     filters: { id: numericSourceId },
     payload: {
+      ...auditPatch,
       is_listed_public: false,
       public_listing_status: 'private',
       updated_at: updatedAt
@@ -449,7 +510,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    await requireAdmin(request);
+    const adminSession = await requireAdmin(request);
     const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
     if (!supabaseUrl || !serviceRoleKey) {
       return json({ message: 'Missing Supabase environment variables.' }, 500);
@@ -471,7 +532,9 @@ export async function POST(request) {
         serviceRoleKey,
         sourceType: body?.sourceType,
         sourceId: body?.sourceId,
-        publicListingId: body?.publicListingId
+        publicListingId: body?.publicListingId,
+        adminReason: body?.adminReason,
+        adminUser: adminSession?.u
       });
       return json({ success: true, unlisted: result });
     }
