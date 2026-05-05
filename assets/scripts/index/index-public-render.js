@@ -272,9 +272,10 @@
       }
       let result = {};
       try {
-        const response = await fetch('/api/public-marketplace', {
-          headers: state.sessionToken
-            ? {
+	        const response = await fetch('/api/public-marketplace', {
+	          cache: 'no-store',
+	          headers: state.sessionToken
+	            ? {
                 Authorization: `Bearer ${state.sessionToken}`
               }
             : {}

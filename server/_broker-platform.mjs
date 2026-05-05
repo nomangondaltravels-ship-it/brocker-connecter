@@ -1863,6 +1863,8 @@ export function sanitizePublicListing(row, options = {}) {
     isUrgent: Boolean(row.is_urgent),
     isDistress: Boolean(row.is_distress),
     createdAt: row.created_at,
-    updatedAt: row.updated_at
+    updatedAt: row.updated_at,
+    marketplaceRefreshedAt: row.marketplace_refreshed_at || row.updated_at,
+    marketplaceSortAt: row.marketplace_sort_at || row.marketplace_refreshed_at || row.updated_at || row.created_at
   };
 }

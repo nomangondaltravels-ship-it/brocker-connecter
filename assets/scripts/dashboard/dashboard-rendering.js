@@ -182,10 +182,11 @@
           <div class="muted"><strong>Private CRM note:</strong> ${escapeHtml(lead.privateNotes || 'No private note added')}</div>
           <div class="muted"><strong>Public-safe summary:</strong> ${escapeHtml(lead.publicGeneralNotes || 'No public summary generated yet')}</div>
           <div class="actions">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
-            <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
-            <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
-          </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
+              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
+              ${typeof renderMarketplaceRefreshInlineButton === 'function' ? renderMarketplaceRefreshInlineButton('lead', lead) : ''}
+            </div>
         </div>
       `).join('');
     }
@@ -220,10 +221,11 @@
           <div class="muted"><strong>Public-safe note:</strong> ${property.publicNotes || 'No public note added'}</div>
           <div class="muted"><strong>Internal note:</strong> ${property.internalNotes || 'No internal note added'}</div>
           <div class="actions">
-            <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
-            <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-            <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
-          </div>
+              <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
+              <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
+              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
+              ${typeof renderMarketplaceRefreshInlineButton === 'function' ? renderMarketplaceRefreshInlineButton('property', property) : ''}
+            </div>
         </div>
       `).join('');
     }
@@ -1246,6 +1248,21 @@
         }, listed ? 'Removed from Marketplace successfully.' : 'Shared on Marketplace successfully.', {
           button: buttonCandidate || window.ActionFeedbackUi?.resolveActionButton(),
           loadingText: listed ? 'Removing from Marketplace...' : 'Sharing on Marketplace...'
+        });
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function proceedRefreshMarketplaceItem(entityType, id, buttonCandidate = null) {
+      try {
+        await dashboardAction({
+          action: 'refresh-marketplace-item',
+          entityType,
+          id
+        }, 'Marketplace post refreshed. It will move back to the top.', {
+          button: buttonCandidate || window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Refreshing marketplace post...'
         });
       } catch (error) {
         setStatus(error.message, 'error');

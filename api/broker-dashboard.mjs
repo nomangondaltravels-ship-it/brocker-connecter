@@ -52,6 +52,7 @@ const CLOSED_LEAD_STATUSES = new Set(['closed won', 'closed lost']);
 const INACTIVE_LISTING_STATUSES = new Set(['rented', 'sold', 'off market']);
 const ACTIVE_MATCH_LISTING_STATUSES = new Set(['available', 'reserved']);
 const DUBAI_TIME_ZONE = 'Asia/Dubai';
+const MARKETPLACE_REFRESH_COOLDOWN_MS = 12 * 60 * 60 * 1000;
 
 function nowIso() {
   return new Date().toISOString();
@@ -65,6 +66,15 @@ function formatDateInDubai(date = new Date()) {
     day: '2-digit'
   });
   return formatter.format(date);
+}
+
+function formatMarketplaceRefreshWait(ms) {
+  const safeMs = Math.max(0, Number(ms) || 0);
+  const hours = Math.floor(safeMs / 3600000);
+  const minutes = Math.ceil((safeMs % 3600000) / 60000);
+  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${Math.max(1, minutes)}m`;
 }
 
 function normalizeLeadStatus(value) {
@@ -564,6 +574,7 @@ async function syncPublicListing(context, sourceType, item, broker) {
     serviceRoleKey,
     table: 'public_listings',
     filters: {
+      broker_uuid: broker.id,
       source_type: sourceType,
       source_id: item.id
     }
@@ -593,16 +604,42 @@ async function syncPublicListing(context, sourceType, item, broker) {
 }
 
 async function removePublicListing(context, sourceType, sourceId) {
-  const { supabaseUrl, serviceRoleKey } = context;
+  const { supabaseUrl, serviceRoleKey, broker } = context;
   await supabaseDelete({
     supabaseUrl,
     serviceRoleKey,
     table: 'public_listings',
     filters: {
+      broker_uuid: broker.id,
       source_type: sourceType,
       source_id: sourceId
     }
   });
+}
+
+async function fetchPublicListingForSource(context, sourceType, sourceId) {
+  const { supabaseUrl, serviceRoleKey, broker } = context;
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    filters: {
+      broker_uuid: broker.id,
+      source_type: sourceType,
+      source_id: sourceId
+    },
+    order: { column: 'updated_at', ascending: false }
+  });
+  return Array.isArray(rows) ? rows[0] : null;
+}
+
+function isMarketplaceSourceListed(entityType, row) {
+  if (!row || !row.is_listed_public) return false;
+  if (normalizeText(row.public_listing_status).toLowerCase() !== 'listed') return false;
+  const meta = entityType === 'lead'
+    ? parseLeadMeta(row.follow_up_notes)
+    : parsePropertyMeta(row.description);
+  return !Boolean(meta.isArchived);
 }
 
 function getFollowUpState(record) {
@@ -1155,7 +1192,7 @@ async function fetchBrokerDataset(context) {
       serviceRoleKey,
       table: 'public_listings',
       filters: { broker_uuid: broker.id },
-      order: { column: 'created_at', ascending: false }
+      order: { column: 'updated_at', ascending: false }
     }),
     supabaseSelect({
       supabaseUrl,
@@ -1527,6 +1564,61 @@ export async function POST(request) {
       if (action === 'list-item') await syncPublicListing(context, entityType, item, broker);
       else await removePublicListing(context, entityType, entityId);
       return json({ success: true });
+    }
+
+    if (action === 'refresh-marketplace-item') {
+      const entityType = normalizeText(body?.entityType).toLowerCase();
+      const entityId = Number(body?.id || 0);
+      if (!['lead', 'property'].includes(entityType) || !entityId) {
+        return json({ message: 'Entity type and id are required.' }, 400);
+      }
+
+      const table = entityType === 'lead' ? 'broker_leads' : 'broker_properties';
+      const sourceRow = await fetchBrokerRow(context, table, entityId);
+      if (!sourceRow) {
+        return json({ message: 'Item not found.' }, 404);
+      }
+      if (!isMarketplaceSourceListed(entityType, sourceRow)) {
+        return json({ message: 'Only active public marketplace items can be refreshed.' }, 400);
+      }
+
+      let publicListing = await fetchPublicListingForSource(context, entityType, entityId);
+      const hadPublicListing = Boolean(publicListing);
+      if (!publicListing) {
+        await syncPublicListing(context, entityType, sourceRow, broker);
+        publicListing = await fetchPublicListingForSource(context, entityType, entityId);
+      }
+      if (!publicListing) {
+        return json({ message: 'Marketplace listing could not be found.' }, 404);
+      }
+
+      const lastRefreshMs = Date.parse(publicListing.updated_at || publicListing.created_at || '');
+      const elapsedMs = Number.isFinite(lastRefreshMs) ? Date.now() - lastRefreshMs : MARKETPLACE_REFRESH_COOLDOWN_MS;
+      if (hadPublicListing && elapsedMs < MARKETPLACE_REFRESH_COOLDOWN_MS) {
+        const retryAfterMs = MARKETPLACE_REFRESH_COOLDOWN_MS - elapsedMs;
+        return json({
+          message: `You can refresh this marketplace post again in ${formatMarketplaceRefreshWait(retryAfterMs)}.`,
+          retryAfterMs
+        }, 429);
+      }
+
+      const refreshedAt = nowIso();
+      const rows = await supabasePatch({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'public_listings',
+        filters: { id: publicListing.id, broker_uuid: broker.id },
+        payload: {
+          public_listing_status: 'listed',
+          updated_at: refreshedAt
+        }
+      });
+      const refreshedListing = Array.isArray(rows) ? rows[0] : null;
+      return json({
+        success: true,
+        refreshedAt,
+        publicListing: sanitizePublicListing(refreshedListing || { ...publicListing, updated_at: refreshedAt })
+      });
     }
 
     if (action === 'update-lead-status') {

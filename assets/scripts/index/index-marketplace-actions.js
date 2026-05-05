@@ -572,7 +572,7 @@
       const target = document.getElementById('homeHighlights');
       if (!target) return;
       const highlights = getFilteredPublicListings()
-        .sort((a, b) => Number(Boolean(b.isDistress)) - Number(Boolean(a.isDistress)))
+        .sort((a, b) => getMarketplaceFreshnessMs(b) - getMarketplaceFreshnessMs(a))
         .slice(0, 4);
       if (!highlights.length) {
         target.innerHTML = `<div class="empty">No public broker requirements or NexBridge listings are live yet. Brokers can list private requirements or properties publicly from their dashboard.</div>`;
@@ -607,6 +607,19 @@
       }
       const diffDays = Math.max(1, Math.floor(diffHours / 24));
       return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
+    }
+
+    function getMarketplaceFreshnessTimestamp(listing) {
+      return listing?.marketplaceSortAt
+        || listing?.marketplaceRefreshedAt
+        || listing?.updatedAt
+        || listing?.createdAt
+        || '';
+    }
+
+    function getMarketplaceFreshnessMs(listing) {
+      const parsed = Date.parse(getMarketplaceFreshnessTimestamp(listing));
+      return Number.isFinite(parsed) ? parsed : 0;
     }
 
     function formatConnectorMoney(value) {
@@ -1072,7 +1085,7 @@
     }
 
     function sortPublicListings(items) {
-      return [...items].sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime());
+      return [...items].sort((a, b) => getMarketplaceFreshnessMs(b) - getMarketplaceFreshnessMs(a));
     }
 
     function paginatePublicItems(sectionName, items) {
@@ -1152,7 +1165,7 @@
           <div class="connector-detail-location">${escapeHtml(locationSummary || '--')}</div>
           <div class="connector-detail-price">${escapeHtml(priceLabel)}</div>
           <div class="connector-detail-inline-meta">
-            <span>Updated ${escapeHtml(formatRelativeTimeLabel(selected.updatedAt || selected.createdAt))}</span>
+            <span>Refreshed ${escapeHtml(formatRelativeTimeLabel(getMarketplaceFreshnessTimestamp(selected)))}</span>
           </div>
           <div class="connector-detail-toolbar">
             ${renderConnectorDetailActions(selected, shareLink)}
@@ -1206,7 +1219,7 @@
           <div>Building / Project</div>
           <div>Type</div>
           <div class="sheet-head-right">Budget</div>
-          <div class="sheet-head-right">Updated</div>
+          <div class="sheet-head-right">Refreshed</div>
           <div class="sheet-head-right">Open</div>
         </div>
         ${items.map((listing, index) => `
@@ -1242,8 +1255,8 @@
               <span class="sheet-primary money-text">${formatConnectorMoney(listing.priceLabel)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
-              <span class="sheet-label">Updated</span>
-              <span class="time-badge">${formatRelativeTimeLabel(listing.updatedAt || listing.createdAt)}</span>
+              <span class="sheet-label">Refreshed</span>
+              <span class="time-badge">${formatRelativeTimeLabel(getMarketplaceFreshnessTimestamp(listing))}</span>
             </div>
             ${buildPublicActionButtons(listing, sectionName)}
           </div>
@@ -1262,7 +1275,7 @@
           <div>Type</div>
           <div class="sheet-head-right">Price</div>
           <div class="sheet-head-right">Size</div>
-          <div class="sheet-head-right">Updated</div>
+          <div class="sheet-head-right">Refreshed</div>
           <div class="sheet-head-right">Open</div>
         </div>
         ${items.map((listing, index) => `
@@ -1297,8 +1310,8 @@
               <span class="sheet-primary">${listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col sheet-col-right">
-              <span class="sheet-label">Updated</span>
-              <span class="time-badge">${formatRelativeTimeLabel(listing.updatedAt || listing.createdAt)}</span>
+              <span class="sheet-label">Refreshed</span>
+              <span class="time-badge">${formatRelativeTimeLabel(getMarketplaceFreshnessTimestamp(listing))}</span>
             </div>
             ${buildPublicActionButtons(listing, sectionName)}
           </div>

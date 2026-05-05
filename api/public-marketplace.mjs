@@ -13,6 +13,12 @@ import {
   verifyToken
 } from '../server/_broker-platform.mjs';
 
+function getPublicRowFreshnessMs(row) {
+  const timestamp = row?.marketplace_sort_at || row?.marketplace_refreshed_at || row?.updated_at || row?.created_at || '';
+  const parsed = Date.parse(timestamp);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function applySectionFilter(rows, section) {
   const items = Array.isArray(rows) ? rows : [];
   switch (section) {
@@ -25,7 +31,7 @@ function applySectionFilter(rows, section) {
     case 'shared-properties':
       return items
         .filter(item => item.source_type === 'property')
-        .sort((left, right) => Number(Boolean(right.is_distress)) - Number(Boolean(left.is_distress)));
+        .sort((left, right) => getPublicRowFreshnessMs(right) - getPublicRowFreshnessMs(left));
     case 'distress-deals':
       return items.filter(item => item.source_type === 'property' && item.is_distress);
     default:
@@ -295,7 +301,7 @@ export async function GET(request) {
     return json(
       { listings: filtered, authenticated: exposeBrokerContact },
       200,
-      { 'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=120' }
+      { 'Cache-Control': 'no-store, max-age=0' }
     );
   } catch (error) {
     return json({ message: error.message || 'Broker Connector Page load failed.' }, 500);
