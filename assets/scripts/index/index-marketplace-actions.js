@@ -1084,6 +1084,33 @@
       `;
     }
 
+    function renderPublicMobileCardHead(listing, indexLabel, title, subtitle, buildingLabel = '') {
+      const priceLabel = formatConnectorMoney(listing.priceLabel);
+      const locationLabel = listing.location || '--';
+      const refreshedLabel = formatRelativeTimeLabel(getMarketplaceFreshnessTimestamp(listing));
+      const chips = [
+        getConnectorDisplayUnitLayout(listing),
+        priceLabel,
+        refreshedLabel
+      ].filter(Boolean);
+      return `
+        <div class="public-mobile-card-head">
+          <div class="public-mobile-title-row">
+            <span class="sheet-index">${escapeHtml(indexLabel)}</span>
+            <div class="public-mobile-title-copy">
+              <strong>${escapeHtml(title || 'Marketplace item')}</strong>
+              <span>${escapeHtml(subtitle || '--')}</span>
+            </div>
+          </div>
+          <div class="public-mobile-meta">${escapeHtml(joinDisplayParts([locationLabel, buildingLabel || 'Building not specified']))}</div>
+          <div class="public-mobile-chip-row">
+            ${chips.map(chip => `<span>${escapeHtml(chip)}</span>`).join('')}
+            ${listing.isDistress ? '<span class="is-distress">Distress</span>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
     function sortPublicListings(items) {
       return [...items].sort((a, b) => getMarketplaceFreshnessMs(b) - getMarketplaceFreshnessMs(a));
     }
@@ -1228,6 +1255,13 @@
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
+            ${renderPublicMobileCardHead(
+              listing,
+              startIndex + index + 1,
+              listing.purpose === 'rent' ? 'Rent Requirement' : 'Buy Requirement',
+              joinDisplayParts([getConnectorDisplayPropertyCategory(listing), getConnectorDisplayUnitLayout(listing)]),
+              listing.buildingLabel || listing.sizeLabel || ''
+            )}
             <div class="sheet-col">
               <span class="sheet-label">Intent</span>
               <span class="sheet-primary">${listing.purpose === 'rent' ? 'My client is looking to rent' : 'My client is looking to buy'}</span>
@@ -1284,6 +1318,13 @@
               <span class="sheet-label">#</span>
               <span class="sheet-index">${startIndex + index + 1}</span>
             </div>
+            ${renderPublicMobileCardHead(
+              listing,
+              startIndex + index + 1,
+              `${getConnectorPublicPurposeLabel(listing).toUpperCase()} ${getConnectorDisplayPropertyCategory(listing)}`,
+              getConnectorDisplayUnitLayout(listing),
+              listing.buildingLabel || ''
+            )}
             <div class="sheet-col">
               <span class="sheet-label">Purpose</span>
               <span class="sheet-primary">${getConnectorPublicPurposeLabel(listing).toUpperCase()} | ${getConnectorDisplayPropertyCategory(listing)}</span>
