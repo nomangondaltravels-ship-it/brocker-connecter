@@ -369,10 +369,10 @@
       document.getElementById('propertySizeSqft').value = formatSizeValue(property.sizeSqft || property.size || '');
       document.getElementById('propertySizeUnit').value = normalizeSizeUnit(property.sizeUnit || 'sqft');
       document.getElementById('propertyFurnishing').value = property.furnishing || '';
-      document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
+      setMoneyInputValue('propertyRentPrice', property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
       document.getElementById('propertyCheques').value = property.cheques || '';
       document.getElementById('propertyChiller').value = property.chiller || '';
-      document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
+      setMoneyInputValue('propertySalePrice', property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
       document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
       document.getElementById('propertyLeasehold').checked = Boolean(property.leasehold);
       document.getElementById('propertyPublicNotes').value = property.publicNotes || '';

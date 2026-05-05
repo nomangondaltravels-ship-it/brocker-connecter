@@ -612,9 +612,15 @@
     function formatConnectorMoney(value) {
       const raw = normalizeText(value);
       if (!raw || raw === '--') return '--';
-      const amountText = raw.replace(/[^\d.]/g, '');
+      const suffix = raw.trim().match(/([km])\s*$/iu)?.[1]?.toLowerCase();
+      const amountText = raw
+        .replace(/aed/giu, '')
+        .replace(/,/g, '')
+        .replace(/[km]\s*$/iu, '')
+        .replace(/[^\d.]/g, '');
       if (!amountText) return raw;
-      const amount = Number(amountText);
+      const multiplier = suffix === 'm' ? 1000000 : (suffix === 'k' ? 1000 : 1);
+      const amount = Number(amountText) * multiplier;
       if (!Number.isFinite(amount) || amount <= 0) return raw;
       return `AED ${Math.round(amount).toLocaleString('en-AE')}`;
     }
@@ -986,7 +992,7 @@
           { label: 'Distress Gap', value: getConnectorDistressGapLabel(listing) || details.distressGapPercent || 'Add both market and asking prices to calculate distress gap.' }
         ];
         if (listing.marketPrice || details.marketPrice) {
-          distressFields.push({ label: 'Market Price', value: `AED ${normalizeBudgetDigits(listing.marketPrice || details.marketPrice)}` });
+          distressFields.push({ label: 'Market Price', value: formatConnectorMoney(listing.marketPrice || details.marketPrice) });
         }
         sections.push({ title: 'Distress Details', fields: distressFields });
       }

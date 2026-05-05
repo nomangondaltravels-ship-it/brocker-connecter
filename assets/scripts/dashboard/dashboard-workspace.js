@@ -708,7 +708,7 @@
         propertyType: dimensions.propertyType || '',
         propertyCategory: dimensions.propertyCategory || '',
         unitLayout: dimensions.unitLayout || '',
-        budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
+        budget: getMoneyInputFullValue('leadBudget'),
         paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
         clientName: document.getElementById('leadClientName').value.trim(),
         clientPhone: normalizeLeadPhoneInput(document.getElementById('leadClientPhone').value.trim()),
@@ -759,7 +759,7 @@
       setLeadPurpose('', { preserveValues: false });
       document.getElementById('leadLocation').value = '';
       document.getElementById('leadBuildingProject').value = '';
-      document.getElementById('leadBudget').value = '';
+      setMoneyInputValue('leadBudget', '');
       document.getElementById('leadClientName').value = '';
       document.getElementById('leadClientPhone').value = '';
       document.getElementById('leadPrivateNotes').value = '';
@@ -786,7 +786,7 @@
       document.getElementById('leadLocation').value = lead.location || '';
       document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
       syncLeadPropertyDimensionControls(lead);
-      document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
+      setMoneyInputValue('leadBudget', lead.budget || '');
       populateLeadPaymentMethodOptions(lead.paymentMethod || '');
       document.getElementById('leadClientName').value = lead.clientName || '';
       document.getElementById('leadClientPhone').value = lead.clientPhone || '';
@@ -828,10 +828,10 @@
         : '';
       const handoverLabel = formatPropertyHandoverDisplay(handoverQuarter, handoverYear);
       const distressDeal = document.getElementById('propertyDistress').checked;
-      const marketPrice = normalizeBudgetDigits(document.getElementById('propertyMarketPrice').value);
+      const marketPrice = getMoneyInputFullValue('propertyMarketPrice');
       const activePrice = purpose === 'sale'
-        ? normalizeBudgetDigits(document.getElementById('propertySalePrice').value)
-        : normalizeBudgetDigits(document.getElementById('propertyRentPrice').value);
+        ? getMoneyInputFullValue('propertySalePrice')
+        : getMoneyInputFullValue('propertyRentPrice');
       const distressDiscountPercent = distressDeal && Number(marketPrice || 0) > 0 && Number(activePrice || 0) > 0 && Number(marketPrice || 0) > Number(activePrice || 0)
         ? Math.round(((Number(marketPrice) - Number(activePrice)) / Number(marketPrice)) * 100)
         : '';
@@ -847,10 +847,10 @@
         sizeUnit: normalizeSizeUnit(document.getElementById('propertySizeUnit').value),
         floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
         furnishing: document.getElementById('propertyFurnishing').value.trim(),
-        rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
+        rentPrice: getMoneyInputFullValue('propertyRentPrice'),
         cheques: document.getElementById('propertyCheques').value.trim(),
         chiller: document.getElementById('propertyChiller').value.trim(),
-        ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
+        ownerAskingPrice: getMoneyInputFullValue('propertySalePrice'),
         mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
         salePropertyStatus,
         handoverQuarter,
@@ -914,7 +914,9 @@
       document.getElementById('propertyBuildingName').value = '';
       document.getElementById('propertySizeSqft').value = '';
       document.getElementById('propertySizeUnit').value = 'sqft';
-      document.getElementById('propertyMarketPrice').value = '';
+      setMoneyInputValue('propertyRentPrice', '');
+      setMoneyInputValue('propertySalePrice', '');
+      setMoneyInputValue('propertyMarketPrice', '');
       document.getElementById('propertySaleStatus').value = 'Ready Property';
       document.getElementById('propertyHandoverQuarter').value = '';
       document.getElementById('propertyHandoverYear').value = '';
@@ -958,11 +960,11 @@
       document.getElementById('propertySizeSqft').value = formatSizeValue(property.sizeSqft || property.size || '');
       document.getElementById('propertySizeUnit').value = normalizeSizeUnit(property.sizeUnit || 'sqft');
       document.getElementById('propertyFurnishing').value = property.furnishing || '';
-      document.getElementById('propertyRentPrice').value = normalizeBudgetDigits(property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
+      setMoneyInputValue('propertyRentPrice', property.rentPrice || (getPropertyPurpose(property.purpose) === 'rent' ? property.price : ''));
       document.getElementById('propertyCheques').value = property.cheques || '';
       document.getElementById('propertyChiller').value = property.chiller || '';
-      document.getElementById('propertySalePrice').value = normalizeBudgetDigits(property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
-      document.getElementById('propertyMarketPrice').value = normalizeBudgetDigits(property.marketPrice || '');
+      setMoneyInputValue('propertySalePrice', property.ownerAskingPrice || (getPropertyPurpose(property.purpose) === 'sale' ? property.price : ''));
+      setMoneyInputValue('propertyMarketPrice', property.marketPrice || '');
       document.getElementById('propertyMortgageStatus').value = property.mortgageStatus || '';
       document.getElementById('propertySaleStatus').value = normalizeDashboardSalePropertyStatusValue(property.salePropertyStatus) || 'Ready Property';
       document.getElementById('propertyHandoverQuarter').value = normalizeDashboardHandoverQuarterValue(property.handoverQuarter);

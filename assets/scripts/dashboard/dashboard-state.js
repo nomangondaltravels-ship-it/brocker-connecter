@@ -1186,10 +1186,6 @@
       return String(lead?.purpose || '').trim().toLowerCase() === 'rent' ? 'rent' : 'buy';
     }
 
-    function normalizeBudgetDigits(value) {
-      return String(value || '').replace(/[^\d]/g, '');
-    }
-
     function normalizeDecimalInput(value) {
       const rawValue = String(value || '').replace(/,/g, '.');
       const sanitized = rawValue.replace(/[^\d.]/g, '');
@@ -1202,6 +1198,204 @@
         return hasTrailingDot ? `${whole}.` : whole;
       }
       return `${whole}.${decimal}`;
+    }
+
+    const MONEY_INPUT_UNITS = {
+      aed: { label: 'AED', multiplier: 1 },
+      k: { label: 'K', multiplier: 1000 },
+      m: { label: 'M', multiplier: 1000000 }
+    };
+    const MONEY_QUICK_VALUES = ['500K', '750K', '1M', '1.5M', '2M', '3M', '5M', '10M', '20M'];
+
+    function getMoneyUnit(unit) {
+      const normalized = String(unit || '').trim().toLowerCase();
+      return MONEY_INPUT_UNITS[normalized] ? normalized : 'aed';
+    }
+
+    function stripTrailingZeros(value) {
+      return String(value || '')
+        .replace(/(\.\d*?[1-9])0+$/u, '$1')
+        .replace(/\.0+$/u, '');
+    }
+
+    function normalizeMoneyAmountInput(value) {
+      const rawValue = String(value || '').replace(/,/g, '');
+      const sanitized = rawValue.replace(/[^\d.]/g, '');
+      if (!sanitized) return '';
+      const hasTrailingDot = sanitized.endsWith('.');
+      const parts = sanitized.split('.');
+      const whole = parts.shift() || '';
+      const decimal = parts.join('').slice(0, 2);
+      if (!decimal) return hasTrailingDot ? `${whole}.` : whole;
+      return `${whole}.${decimal}`;
+    }
+
+    function getMoneySuffixUnit(value) {
+      const suffix = String(value || '').trim().match(/([km])\s*$/iu);
+      return suffix ? getMoneyUnit(suffix[1]) : '';
+    }
+
+    function parseMoneyAmount(value, fallbackUnit = 'aed') {
+      const raw = String(value || '').trim();
+      if (!raw) return 0;
+      const suffixUnit = getMoneySuffixUnit(raw);
+      const unit = getMoneyUnit(suffixUnit || fallbackUnit);
+      const numericText = raw
+        .replace(/aed/giu, '')
+        .replace(/,/g, '')
+        .replace(/[km]\s*$/iu, '')
+        .replace(/[^\d.]/g, '');
+      const amount = Number(numericText);
+      if (!Number.isFinite(amount) || amount <= 0) return 0;
+      return Math.round(amount * MONEY_INPUT_UNITS[unit].multiplier);
+    }
+
+    function normalizeBudgetDigits(value) {
+      const parsedAmount = parseMoneyAmount(value, 'aed');
+      if (parsedAmount > 0) return String(parsedAmount);
+      return String(value || '').replace(/[^\d]/g, '');
+    }
+
+    function formatMoneyAmountForUnit(amount, unit = 'aed') {
+      const normalizedUnit = getMoneyUnit(unit);
+      const numericAmount = Number(normalizeBudgetDigits(amount));
+      if (!Number.isFinite(numericAmount) || numericAmount <= 0) return '';
+      const divisor = MONEY_INPUT_UNITS[normalizedUnit].multiplier;
+      const unitAmount = normalizedUnit === 'aed' ? numericAmount : numericAmount / divisor;
+      if (normalizedUnit === 'aed') return String(Math.round(unitAmount));
+      return stripTrailingZeros(unitAmount.toFixed(unitAmount % 1 === 0 ? 0 : 2));
+    }
+
+    function getPreferredMoneyUnit(value) {
+      const amount = Number(normalizeBudgetDigits(value));
+      if (!Number.isFinite(amount) || amount <= 0) return 'aed';
+      if (amount >= MONEY_INPUT_UNITS.m.multiplier) return 'm';
+      if (amount >= MONEY_INPUT_UNITS.k.multiplier) return 'k';
+      return 'aed';
+    }
+
+    function getMoneyInputFullValue(id) {
+      const field = document.getElementById(id);
+      if (!field) return '';
+      const suffixUnit = getMoneySuffixUnit(field.value);
+      const unit = suffixUnit || getMoneyUnit(field.dataset.moneyUnit);
+      const amount = parseMoneyAmount(field.value, unit);
+      return amount > 0 ? String(amount) : '';
+    }
+
+    function setMoneyInputValue(id, value) {
+      const field = document.getElementById(id);
+      if (!field) return;
+      const amount = Number(normalizeBudgetDigits(value));
+      if (!Number.isFinite(amount) || amount <= 0) {
+        field.value = '';
+        field.dataset.moneyUnit = 'aed';
+        const select = document.getElementById(`${id}MoneyUnit`);
+        if (select) select.value = 'aed';
+        updateMoneyInputPreview(id);
+        return;
+      }
+      const unit = getPreferredMoneyUnit(amount);
+      field.dataset.moneyUnit = unit;
+      field.value = formatMoneyAmountForUnit(amount, unit);
+      const select = document.getElementById(`${id}MoneyUnit`);
+      if (select) select.value = unit;
+      updateMoneyInputPreview(id);
+    }
+
+    function formatCompactMoneyLabel(value) {
+      const amount = Number(normalizeBudgetDigits(value));
+      if (!Number.isFinite(amount) || amount <= 0) return '';
+      if (amount >= MONEY_INPUT_UNITS.m.multiplier) {
+        return `AED ${stripTrailingZeros((amount / MONEY_INPUT_UNITS.m.multiplier).toFixed(amount % MONEY_INPUT_UNITS.m.multiplier === 0 ? 0 : 1))}M`;
+      }
+      if (amount >= MONEY_INPUT_UNITS.k.multiplier) {
+        return `AED ${stripTrailingZeros((amount / MONEY_INPUT_UNITS.k.multiplier).toFixed(amount % MONEY_INPUT_UNITS.k.multiplier === 0 ? 0 : 1))}K`;
+      }
+      return `AED ${amount.toLocaleString('en-AE')}`;
+    }
+
+    function updateMoneyInputPreview(id) {
+      const preview = document.getElementById(`${id}MoneyPreview`);
+      if (!preview) return;
+      const amount = getMoneyInputFullValue(id);
+      if (!amount) {
+        preview.textContent = 'Use full amount, K, or M. Example: 5.1M = AED 5,100,000.';
+        preview.classList.add('is-muted');
+        return;
+      }
+      const compact = formatCompactMoneyLabel(amount);
+      preview.textContent = `${formatBudgetLabel(amount)}${compact && compact !== formatBudgetLabel(amount) ? ` (${compact.replace('AED ', '')})` : ''}`;
+      preview.classList.remove('is-muted');
+    }
+
+    function setupMoneyInput(id) {
+      const field = document.getElementById(id);
+      if (!field || field.dataset.moneyEnhanced === 'true') return;
+      field.dataset.moneyEnhanced = 'true';
+      field.dataset.moneyUnit = getMoneyUnit(field.dataset.moneyUnit);
+      field.inputMode = 'decimal';
+      field.placeholder = '5M, 500K, or full AED';
+
+      const wrapper = field.closest('.currency-field');
+      if (wrapper && !document.getElementById(`${id}MoneyUnit`)) {
+        const unitSelect = document.createElement('select');
+        unitSelect.id = `${id}MoneyUnit`;
+        unitSelect.className = 'money-unit-select';
+        unitSelect.setAttribute('aria-label', 'Price unit');
+        unitSelect.innerHTML = Object.entries(MONEY_INPUT_UNITS)
+          .map(([value, meta]) => `<option value="${value}">${meta.label}</option>`)
+          .join('');
+        unitSelect.value = field.dataset.moneyUnit;
+        wrapper.appendChild(unitSelect);
+        unitSelect.addEventListener('change', () => {
+          field.dataset.moneyUnit = getMoneyUnit(unitSelect.value);
+          field.value = normalizeMoneyAmountInput(field.value);
+          updateMoneyInputPreview(id);
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
+
+      if (wrapper && !document.getElementById(`${id}MoneyQuickRow`)) {
+        const quickRow = document.createElement('div');
+        quickRow.id = `${id}MoneyQuickRow`;
+        quickRow.className = 'money-quick-row';
+        quickRow.innerHTML = MONEY_QUICK_VALUES.map(value => `<button type="button" class="money-quick-chip" data-money-value="${value}">${value}</button>`).join('');
+        wrapper.insertAdjacentElement('afterend', quickRow);
+        quickRow.addEventListener('click', event => {
+          const chip = event.target.closest('[data-money-value]');
+          if (!chip) return;
+          const value = chip.dataset.moneyValue || '';
+          const unit = getMoneySuffixUnit(value) || 'aed';
+          field.dataset.moneyUnit = unit;
+          field.value = normalizeMoneyAmountInput(value.replace(/[km]\s*$/iu, ''));
+          const select = document.getElementById(`${id}MoneyUnit`);
+          if (select) select.value = unit;
+          field.classList.remove('is-invalid');
+          updateMoneyInputPreview(id);
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      }
+
+      if (wrapper && !document.getElementById(`${id}MoneyPreview`)) {
+        const preview = document.createElement('div');
+        preview.id = `${id}MoneyPreview`;
+        preview.className = 'money-input-preview is-muted';
+        const quickRow = document.getElementById(`${id}MoneyQuickRow`);
+        (quickRow || wrapper).insertAdjacentElement('afterend', preview);
+      }
+
+      field.addEventListener('input', () => {
+        const suffixUnit = getMoneySuffixUnit(field.value);
+        if (suffixUnit) {
+          field.dataset.moneyUnit = suffixUnit;
+          const select = document.getElementById(`${id}MoneyUnit`);
+          if (select) select.value = suffixUnit;
+        }
+        field.value = normalizeMoneyAmountInput(field.value.replace(/[km]\s*$/iu, ''));
+        updateMoneyInputPreview(id);
+      });
+      updateMoneyInputPreview(id);
     }
 
     function normalizeSizeUnit(value) {
@@ -1678,8 +1872,8 @@
       populateLeadPaymentMethodOptions('');
       setLeadPurpose('', { preserveValues: false });
 
+      setupMoneyInput('leadBudget');
       document.getElementById('leadBudget')?.addEventListener('input', event => {
-        event.target.value = normalizeBudgetDigits(event.target.value);
         event.target.classList.remove('is-invalid');
         syncWorkspaceFormSummary('lead');
       });
@@ -1951,11 +2145,11 @@
 
       if (!options.preserveValues) {
         document.getElementById('propertyFurnishing').value = '';
-        document.getElementById('propertyRentPrice').value = '';
+        setMoneyInputValue('propertyRentPrice', '');
         document.getElementById('propertyCheques').value = '';
         document.getElementById('propertyChiller').value = '';
-        document.getElementById('propertySalePrice').value = '';
-        document.getElementById('propertyMarketPrice').value = '';
+        setMoneyInputValue('propertySalePrice', '');
+        setMoneyInputValue('propertyMarketPrice', '');
         document.getElementById('propertyMortgageStatus').value = '';
         document.getElementById('propertySaleStatus').value = 'Ready Property';
         document.getElementById('propertyHandoverQuarter').value = '';
@@ -1995,7 +2189,6 @@
     function refreshPropertyDistressUI() {
       const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
       const distressEnabled = Boolean(document.getElementById('propertyDistress')?.checked);
-      const marketPriceField = document.getElementById('propertyMarketPrice');
       const distressFields = document.getElementById('propertyDistressFields');
       const distressMetric = document.getElementById('propertyDistressMetric');
       const distressMetricText = document.getElementById('propertyDistressMetricText');
@@ -2003,9 +2196,9 @@
       const rentPriceLabel = document.getElementById('propertyRentPriceLabel');
       const salePriceLabel = document.getElementById('propertySalePriceLabel');
       const activePrice = purpose === 'sale'
-        ? normalizeBudgetDigits(document.getElementById('propertySalePrice')?.value || '')
-        : normalizeBudgetDigits(document.getElementById('propertyRentPrice')?.value || '');
-      const marketPrice = normalizeBudgetDigits(marketPriceField?.value || '');
+        ? getMoneyInputFullValue('propertySalePrice')
+        : getMoneyInputFullValue('propertyRentPrice');
+      const marketPrice = getMoneyInputFullValue('propertyMarketPrice');
 
       if (rentPriceLabel) {
         rentPriceLabel.textContent = distressEnabled ? 'Asking Price' : 'Rent Price';
@@ -2086,8 +2279,8 @@
       setPropertyPurpose('', { preserveValues: false });
 
       ['propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
+        setupMoneyInput(id);
         document.getElementById(id)?.addEventListener('input', event => {
-          event.target.value = normalizeBudgetDigits(event.target.value);
           event.target.classList.remove('is-invalid');
           refreshPropertyDistressUI();
           syncWorkspaceFormSummary('property');
@@ -2505,10 +2698,10 @@
         sizeUnit: normalizeSizeUnit(document.getElementById('propertySizeUnit').value),
         floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
         furnishing: document.getElementById('propertyFurnishing').value.trim(),
-        rentPrice: normalizeBudgetDigits(document.getElementById('propertyRentPrice').value),
+        rentPrice: getMoneyInputFullValue('propertyRentPrice'),
         cheques: document.getElementById('propertyCheques').value.trim(),
         chiller: document.getElementById('propertyChiller').value.trim(),
-        ownerAskingPrice: normalizeBudgetDigits(document.getElementById('propertySalePrice').value),
+        ownerAskingPrice: getMoneyInputFullValue('propertySalePrice'),
         mortgageStatus: document.getElementById('propertyMortgageStatus').value.trim(),
         leasehold: document.getElementById('propertyLeasehold').checked,
         distressDeal: document.getElementById('propertyDistress').checked,

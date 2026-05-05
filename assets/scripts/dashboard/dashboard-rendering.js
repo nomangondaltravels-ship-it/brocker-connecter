@@ -1053,7 +1053,7 @@
       setLeadPurpose('', { preserveValues: false });
       document.getElementById('leadLocation').value = '';
       document.getElementById('leadBuildingProject').value = '';
-      document.getElementById('leadBudget').value = '';
+      setMoneyInputValue('leadBudget', '');
       document.getElementById('leadClientName').value = '';
       document.getElementById('leadClientPhone').value = '';
       document.getElementById('leadPrivateNotes').value = '';
@@ -1095,7 +1095,7 @@
         location: normalizeDashboardLocationValue(document.getElementById('leadLocation').value),
         preferredBuildingProject: document.getElementById('leadBuildingProject').value.trim(),
         propertyType: normalizeDashboardPropertyTypeValue(document.getElementById('leadPropertyType').value),
-        budget: normalizeBudgetDigits(document.getElementById('leadBudget').value),
+        budget: getMoneyInputFullValue('leadBudget'),
         paymentMethod: document.getElementById('leadPaymentMethod').value.trim(),
         clientName: document.getElementById('leadClientName').value.trim(),
         clientPhone: normalizeLeadPhoneInput(document.getElementById('leadClientPhone').value.trim()),
@@ -1153,7 +1153,7 @@
       document.getElementById('leadLocation').value = lead.location || '';
       document.getElementById('leadBuildingProject').value = lead.preferredBuildingProject || '';
       syncLeadPropertyDimensionControls(lead);
-      document.getElementById('leadBudget').value = normalizeBudgetDigits(lead.budget || '');
+      setMoneyInputValue('leadBudget', lead.budget || '');
       populateLeadPaymentMethodOptions(lead.paymentMethod || '');
       document.getElementById('leadClientName').value = lead.clientName || '';
       document.getElementById('leadClientPhone').value = lead.clientPhone || '';
