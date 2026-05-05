@@ -3528,6 +3528,21 @@
       line-height: 1.5;
     }
 
+    .workspace-draft-actions {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .workspace-draft-actions.active {
+      display: grid;
+    }
+
+    .workspace-draft-actions .btn {
+      justify-content: center;
+      width: 100%;
+    }
+
     .workspace-progress-card {
       gap: 14px;
     }

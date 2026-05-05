@@ -1587,6 +1587,249 @@
       node.textContent = nextValue || fallback;
     }
 
+    const WORKSPACE_DRAFT_KEYS = {
+      lead: 'nexbridge:broker-draft:lead:v1',
+      property: 'nexbridge:broker-draft:property:v1'
+    };
+    const workspaceDraftSaveTimers = {};
+    let isRestoringWorkspaceDraft = false;
+
+    function getWorkspaceDraftKey(type) {
+      return WORKSPACE_DRAFT_KEYS[type] || '';
+    }
+
+    function readWorkspaceDraft(type) {
+      const key = getWorkspaceDraftKey(type);
+      if (!key) return null;
+      try {
+        const raw = window.localStorage?.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeWorkspaceDraft(type, values) {
+      const key = getWorkspaceDraftKey(type);
+      if (!key || !values || isRestoringWorkspaceDraft) return;
+      try {
+        window.localStorage?.setItem(key, JSON.stringify({
+          type,
+          values,
+          updatedAt: new Date().toISOString()
+        }));
+      } catch (error) {
+        // Draft safety is optional; storage limits should not block form entry.
+      }
+    }
+
+    function clearWorkspaceDraft(type, options = {}) {
+      const key = getWorkspaceDraftKey(type);
+      if (!key) return;
+      try {
+        window.localStorage?.removeItem(key);
+      } catch (error) {
+        // Ignore local storage failures.
+      }
+      if (!options.silent) {
+        setStatus(`${type === 'property' ? 'Listing' : 'Requirement'} draft cleared.`, 'success');
+      }
+      syncWorkspaceFormGuidance(type);
+    }
+
+    function getDraftAgeLabel(updatedAt) {
+      const parsed = Date.parse(updatedAt);
+      if (!Number.isFinite(parsed)) return 'earlier';
+      const minutes = Math.max(1, Math.floor((Date.now() - parsed) / 60000));
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return `${Math.floor(hours / 24)}d ago`;
+    }
+
+    function collectLeadDraftValues() {
+      if (document.getElementById('leadId')?.value) return null;
+      const purpose = document.getElementById('leadClientPurpose')?.value || '';
+      return {
+        clientPurpose: purpose,
+        location: document.getElementById('leadLocation')?.value || '',
+        preferredBuildingProject: document.getElementById('leadBuildingProject')?.value || '',
+        propertyCategory: document.getElementById('leadPropertyCategory')?.value || '',
+        unitLayout: document.getElementById('leadUnitLayout')?.value || '',
+        budget: getMoneyInputFullValue('leadBudget'),
+        budgetInput: document.getElementById('leadBudget')?.value || '',
+        budgetUnit: document.getElementById('leadBudget')?.dataset.moneyUnit || 'aed',
+        paymentMethod: document.getElementById('leadPaymentMethod')?.value || '',
+        clientName: document.getElementById('leadClientName')?.value || '',
+        clientPhone: document.getElementById('leadClientPhone')?.value || '',
+        privateNotes: document.getElementById('leadPrivateNotes')?.value || '',
+        status: document.getElementById('leadStatus')?.value || 'new',
+        nextFollowUpDate: document.getElementById('leadNextFollowUpDate')?.value || '',
+        nextFollowUpTime: document.getElementById('leadNextFollowUpTime')?.value || '',
+        followUpNote: document.getElementById('leadFollowUpNote')?.value || '',
+        isUrgentFollowUp: Boolean(document.getElementById('leadUrgentFollowUp')?.checked)
+      };
+    }
+
+    function collectPropertyDraftValues() {
+      if (document.getElementById('propertyId')?.value) return null;
+      const purpose = document.getElementById('propertyPurposeValue')?.value || '';
+      return {
+        purpose,
+        propertyCategory: document.getElementById('propertyCategory')?.value || '',
+        unitLayout: document.getElementById('propertyUnitLayout')?.value || '',
+        location: document.getElementById('propertyLocation')?.value || '',
+        buildingName: document.getElementById('propertyBuildingName')?.value || '',
+        sizeSqft: document.getElementById('propertySizeSqft')?.value || '',
+        sizeUnit: document.getElementById('propertySizeUnit')?.value || 'sqft',
+        floorLevel: document.getElementById('propertyFloorLevel')?.value || '',
+        furnishing: document.getElementById('propertyFurnishing')?.value || '',
+        rentPrice: getMoneyInputFullValue('propertyRentPrice'),
+        salePrice: getMoneyInputFullValue('propertySalePrice'),
+        marketPrice: getMoneyInputFullValue('propertyMarketPrice'),
+        cheques: document.getElementById('propertyCheques')?.value || '',
+        chiller: document.getElementById('propertyChiller')?.value || '',
+        mortgageStatus: document.getElementById('propertyMortgageStatus')?.value || '',
+        saleStatus: document.getElementById('propertySaleStatus')?.value || 'Ready Property',
+        handoverQuarter: document.getElementById('propertyHandoverQuarter')?.value || '',
+        handoverYear: document.getElementById('propertyHandoverYear')?.value || '',
+        leasehold: Boolean(document.getElementById('propertyLeasehold')?.checked),
+        distressDeal: Boolean(document.getElementById('propertyDistress')?.checked),
+        ownerName: document.getElementById('propertyOwnerName')?.value || '',
+        ownerPhone: document.getElementById('propertyOwnerPhone')?.value || '',
+        internalNotes: document.getElementById('propertyInternalNotes')?.value || '',
+        publicNotes: document.getElementById('propertyPublicNotes')?.value || '',
+        status: document.getElementById('propertyStatus')?.value || 'available',
+        nextFollowUpDate: document.getElementById('propertyNextFollowUpDate')?.value || '',
+        nextFollowUpTime: document.getElementById('propertyNextFollowUpTime')?.value || '',
+        followUpNote: document.getElementById('propertyFollowUpNote')?.value || '',
+        isUrgentFollowUp: Boolean(document.getElementById('propertyUrgentFollowUp')?.checked)
+      };
+    }
+
+    function scheduleWorkspaceDraftSave(type) {
+      if (!['lead', 'property'].includes(type)) return;
+      window.clearTimeout(workspaceDraftSaveTimers[type]);
+      workspaceDraftSaveTimers[type] = window.setTimeout(() => {
+        const values = type === 'property' ? collectPropertyDraftValues() : collectLeadDraftValues();
+        if (!values) {
+          syncWorkspaceFormGuidance(type);
+          return;
+        }
+        const hasMeaningfulValue = Object.entries(values).some(([key, value]) => {
+          if (['status', 'sizeUnit', 'saleStatus'].includes(key)) return false;
+          if (typeof value === 'boolean') return value;
+          return String(value || '').trim() !== '';
+        });
+        if (hasMeaningfulValue) {
+          writeWorkspaceDraft(type, values);
+        }
+        syncWorkspaceFormGuidance(type);
+      }, 220);
+    }
+
+    function wireWorkspaceDraftAutosave(type) {
+      const form = document.getElementById(type === 'property' ? 'propertyForm' : 'leadForm');
+      if (!form || form.dataset.draftAutosaveWired === 'true') return;
+      form.dataset.draftAutosaveWired = 'true';
+      ['input', 'change'].forEach(eventName => {
+        form.addEventListener(eventName, () => scheduleWorkspaceDraftSave(type));
+      });
+    }
+
+    function applyLeadDraftValues(values = {}) {
+      isRestoringWorkspaceDraft = true;
+      try {
+        setLeadPurpose(values.clientPurpose || '', { preserveValues: false });
+        document.getElementById('leadLocation').value = values.location || '';
+        document.getElementById('leadBuildingProject').value = values.preferredBuildingProject || '';
+        syncLeadPropertyDimensionControls({
+          propertyCategory: values.propertyCategory || '',
+          unitLayout: values.unitLayout || '',
+          propertyType: values.unitLayout || values.propertyCategory || ''
+        });
+        setMoneyInputValue('leadBudget', values.budget || values.budgetInput || '');
+        populateLeadPaymentMethodOptions(values.paymentMethod || '');
+        document.getElementById('leadClientName').value = values.clientName || '';
+        document.getElementById('leadClientPhone').value = values.clientPhone || '';
+        document.getElementById('leadPrivateNotes').value = values.privateNotes || '';
+        document.getElementById('leadStatus').value = values.status || 'new';
+        document.getElementById('leadNextFollowUpDate').value = values.nextFollowUpDate || '';
+        document.getElementById('leadNextFollowUpTime').value = values.nextFollowUpTime || '';
+        document.getElementById('leadFollowUpNote').value = values.followUpNote || '';
+        document.getElementById('leadUrgentFollowUp').checked = Boolean(values.isUrgentFollowUp);
+      } finally {
+        isRestoringWorkspaceDraft = false;
+      }
+      syncWorkspaceFormSummary('lead');
+    }
+
+    function applyPropertyDraftValues(values = {}) {
+      isRestoringWorkspaceDraft = true;
+      try {
+        setPropertyPurpose(values.purpose || '', { preserveValues: false });
+        syncPropertyDimensionControls({
+          propertyCategory: values.propertyCategory || '',
+          unitLayout: values.unitLayout || '',
+          propertyType: values.unitLayout || values.propertyCategory || ''
+        });
+        document.getElementById('propertyLocation').value = values.location || '';
+        document.getElementById('propertyBuildingName').value = values.buildingName || '';
+        document.getElementById('propertySizeSqft').value = values.sizeSqft || '';
+        document.getElementById('propertySizeUnit').value = values.sizeUnit || 'sqft';
+        document.getElementById('propertyFloorLevel').value = values.floorLevel || '';
+        document.getElementById('propertyFurnishing').value = values.furnishing || '';
+        setMoneyInputValue('propertyRentPrice', values.rentPrice || '');
+        setMoneyInputValue('propertySalePrice', values.salePrice || '');
+        setMoneyInputValue('propertyMarketPrice', values.marketPrice || '');
+        document.getElementById('propertyCheques').value = values.cheques || '';
+        document.getElementById('propertyChiller').value = values.chiller || '';
+        document.getElementById('propertyMortgageStatus').value = values.mortgageStatus || '';
+        document.getElementById('propertySaleStatus').value = values.saleStatus || 'Ready Property';
+        document.getElementById('propertyHandoverQuarter').value = values.handoverQuarter || '';
+        document.getElementById('propertyHandoverYear').value = values.handoverYear || '';
+        document.getElementById('propertyLeasehold').checked = Boolean(values.leasehold);
+        document.getElementById('propertyDistress').checked = Boolean(values.distressDeal);
+        document.getElementById('propertyOwnerName').value = values.ownerName || '';
+        document.getElementById('propertyOwnerPhone').value = values.ownerPhone || '';
+        document.getElementById('propertyInternalNotes').value = values.internalNotes || '';
+        document.getElementById('propertyPublicNotes').value = values.publicNotes || '';
+        document.getElementById('propertyStatus').value = values.status || 'available';
+        document.getElementById('propertyNextFollowUpDate').value = values.nextFollowUpDate || '';
+        document.getElementById('propertyNextFollowUpTime').value = values.nextFollowUpTime || '';
+        document.getElementById('propertyFollowUpNote').value = values.followUpNote || '';
+        document.getElementById('propertyUrgentFollowUp').checked = Boolean(values.isUrgentFollowUp);
+        refreshPropertySaleStatusUI();
+        refreshPropertyDistressUI();
+      } finally {
+        isRestoringWorkspaceDraft = false;
+      }
+      syncWorkspaceFormSummary('property');
+    }
+
+    function restoreActiveWorkspaceDraft() {
+      const type = document.getElementById('overviewWorkspace')?.dataset.activeType || 'lead';
+      const draft = readWorkspaceDraft(type);
+      if (!draft?.values) {
+        setStatus('No saved draft found for this composer.', 'error');
+        syncWorkspaceFormGuidance(type);
+        return;
+      }
+      if (type === 'property') {
+        applyPropertyDraftValues(draft.values);
+      } else {
+        applyLeadDraftValues(draft.values);
+      }
+      setStatus(`${type === 'property' ? 'Listing' : 'Requirement'} draft restored.`, 'success');
+    }
+
+    function clearActiveWorkspaceDraft() {
+      const type = document.getElementById('overviewWorkspace')?.dataset.activeType || 'lead';
+      clearWorkspaceDraft(type);
+    }
+
     function getWorkspaceCompletionItems(type) {
       if (type === 'property') {
         const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
@@ -1683,6 +1926,7 @@
       const progressBar = document.getElementById('workspaceFormProgressBar');
       const guidance = document.getElementById('workspaceFormGuidance');
       const draftState = document.getElementById('workspaceDraftState');
+      const draftActions = document.getElementById('workspaceDraftActions');
       if (!progressText || !progressBar || !guidance) return;
 
       const items = getWorkspaceCompletionItems(type);
@@ -1691,6 +1935,10 @@
       const percent = Math.round((completed / total) * 100);
       const missing = items.filter(item => !item.complete).map(item => item.label);
       const duplicateWarning = getWorkspaceDuplicateWarning(type);
+      const draft = readWorkspaceDraft(type);
+      const isCreateMode = type === 'property'
+        ? !document.getElementById('propertyId')?.value
+        : !document.getElementById('leadId')?.value;
 
       progressBar.style.width = `${percent}%`;
       progressText.textContent = percent >= 100
@@ -1710,9 +1958,16 @@
 
       guidance.innerHTML = guidanceItems.map(item => `<div class="workspace-guidance-item ${item.tone}">${escapeHtml(item.text)}</div>`).join('');
       if (draftState) {
-        draftState.textContent = percent > 0
-          ? 'Draft is active on this screen until you save or close.'
-          : 'Choose a purpose to start a clean private draft.';
+        if (isCreateMode && draft?.updatedAt) {
+          draftState.textContent = `Local draft saved ${getDraftAgeLabel(draft.updatedAt)}. Restore it after refresh, or clear it when no longer needed.`;
+        } else if (percent > 0) {
+          draftState.textContent = 'Draft is active on this screen until you save or close.';
+        } else {
+          draftState.textContent = 'Choose a purpose to start a clean private draft.';
+        }
+      }
+      if (draftActions) {
+        draftActions.classList.toggle('active', Boolean(isCreateMode && draft?.updatedAt));
       }
     }
 
@@ -2002,6 +2257,7 @@
       syncLeadPropertyDimensionControls();
       populateLeadPaymentMethodOptions('');
       setLeadPurpose('', { preserveValues: false });
+      wireWorkspaceDraftAutosave('lead');
 
       setupMoneyInput('leadBudget');
       document.getElementById('leadBudget')?.addEventListener('input', event => {
@@ -2408,6 +2664,7 @@
       populatePropertyRentOptions();
       populatePropertySaleOptions();
       setPropertyPurpose('', { preserveValues: false });
+      wireWorkspaceDraftAutosave('property');
 
       ['propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
         setupMoneyInput(id);

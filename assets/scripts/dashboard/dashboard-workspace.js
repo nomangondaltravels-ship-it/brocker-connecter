@@ -1073,6 +1073,7 @@
             button: submitButton,
             loadingText: formData.id ? 'Updating Requirement...' : 'Saving Requirement...'
           });
+          clearWorkspaceDraft('lead', { silent: true });
           resetLeadForm();
           hideOverviewWorkspace();
         } catch (error) {
@@ -1153,6 +1154,7 @@
           } else if (savedProperty?.id && formData.listingImages !== undefined) {
             state.propertyMediaCache[String(savedProperty.id)] = window.ListingMediaUi?.sanitizeImageList(formData.listingImages) || [];
           }
+          clearWorkspaceDraft('property', { silent: true });
           resetPropertyForm();
           hideOverviewWorkspace();
         } catch (error) {

@@ -424,6 +424,7 @@
 
       const showLead = type === 'lead';
       shell.classList.add('active');
+      shell.dataset.activeType = showLead ? 'lead' : 'property';
       leadCard.classList.toggle('hidden', !showLead);
       propertyCard.classList.toggle('hidden', showLead);
       if (showLead) {
@@ -436,7 +437,9 @@
     }
 
     function hideOverviewWorkspace() {
-      document.getElementById('overviewWorkspace')?.classList.remove('active');
+      const shell = document.getElementById('overviewWorkspace');
+      shell?.classList.remove('active');
+      if (shell) shell.dataset.activeType = '';
       updateOverviewActionState('');
     }
 
