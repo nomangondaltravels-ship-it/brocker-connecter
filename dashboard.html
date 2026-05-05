@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-05-phase1-ux-consistency" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <meta name="nexbridge-build" content="2026-05-06-phase2-form-guidance" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-06-phase2-form-guidance"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-05-phase1-ux-consistency" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-05-phase1-ux-consistency">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-phase2-form-guidance" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-phase2-form-guidance">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-05-phase1-ux-consistency" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-phase2-form-guidance" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -722,15 +722,27 @@
                 </div>
               </div>
             </div>
+            <div class="workspace-summary-card workspace-progress-card">
+              <div class="workspace-summary-head">
+                <h4>Save Readiness</h4>
+                <p id="workspaceFormProgressText">Choose a purpose to start.</p>
+              </div>
+              <div class="workspace-progress-track" aria-hidden="true">
+                <span id="workspaceFormProgressBar"></span>
+              </div>
+              <div class="workspace-guidance-list" id="workspaceFormGuidance">
+                <div class="workspace-guidance-item is-muted">Required fields and possible duplicate records will appear here.</div>
+              </div>
+            </div>
             <div class="workspace-summary-card workspace-summary-note">
               <div class="workspace-summary-head">
                 <h4>Before you save</h4>
-                <p>Use the same compact workflow for new and edit flows without changing how records are submitted.</p>
+                <p id="workspaceDraftState">Draft safety is active while this composer is open.</p>
               </div>
               <ul>
                 <li>Finish the basics first, then add private contacts and notes.</li>
                 <li>Workflow fields help you set reminders without leaving the form.</li>
-        <li>Only safe public notes can ever appear on NexBridge.</li>
+                <li>Only safe public notes can ever appear on Market.</li>
               </ul>
             </div>
           </aside>
@@ -980,15 +992,15 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-05-phase1-ux-consistency"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-phase2-form-guidance"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-phase2-form-guidance"></script>
 </body>
 </html>

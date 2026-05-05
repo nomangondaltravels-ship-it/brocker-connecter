@@ -738,7 +738,8 @@
       const errors = {};
       if (!formData.clientPurpose) errors.clientPurpose = 'Select client purpose';
       if (!formData.location) errors.location = 'Enter preferred location';
-      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.propertyCategory) errors.propertyCategory = 'Select property category';
+      if (dashboardCategoryAllowsSelectableLayout(formData.propertyCategory) && !formData.unitLayout) errors.unitLayout = 'Select unit layout';
       if (!formData.budget || Number(formData.budget) <= 0) errors.budget = 'Enter budget';
       if (getLeadClientPurpose(formData.clientPurpose) === 'buy' && !formData.paymentMethod) {
         errors.paymentMethod = 'Select payment method';
@@ -882,7 +883,8 @@
     function validatePropertyFormData(formData) {
       const errors = {};
       if (!formData.purpose) errors.purpose = 'Select purpose';
-      if (!formData.propertyType) errors.propertyType = 'Select property type';
+      if (!formData.propertyCategory) errors.propertyCategory = 'Select property category';
+      if (dashboardCategoryAllowsSelectableLayout(formData.propertyCategory) && !formData.unitLayout) errors.unitLayout = 'Select unit layout';
       if (!formData.location) errors.location = 'Enter location';
       if (formData.purpose === 'rent' && (!formData.rentPrice || Number(formData.rentPrice) <= 0)) {
         errors.rentPrice = 'Enter rent price';

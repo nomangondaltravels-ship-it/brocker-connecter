@@ -1587,6 +1587,135 @@
       node.textContent = nextValue || fallback;
     }
 
+    function getWorkspaceCompletionItems(type) {
+      if (type === 'property') {
+        const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
+        const propertyCategory = document.getElementById('propertyCategory')?.value || '';
+        const unitLayout = document.getElementById('propertyUnitLayout')?.value || '';
+        const saleStatus = normalizeDashboardSalePropertyStatusValue(document.getElementById('propertySaleStatus')?.value) || '';
+        const distressDeal = Boolean(document.getElementById('propertyDistress')?.checked);
+        return [
+          { label: 'Purpose', complete: Boolean(purpose) },
+          { label: 'Property category', complete: Boolean(propertyCategory) },
+          { label: 'Unit layout', complete: !dashboardCategoryAllowsSelectableLayout(propertyCategory) || Boolean(unitLayout), active: Boolean(propertyCategory) },
+          { label: 'Location', complete: Boolean(document.getElementById('propertyLocation')?.value?.trim()) },
+          { label: purpose === 'rent' ? 'Rent price' : 'Asking price', complete: Boolean(purpose === 'rent' ? getMoneyInputFullValue('propertyRentPrice') : getMoneyInputFullValue('propertySalePrice')), active: Boolean(purpose) },
+          { label: 'Sale status', complete: Boolean(saleStatus), active: purpose === 'sale' },
+          { label: 'Handover timing', complete: Boolean(document.getElementById('propertyHandoverQuarter')?.value && document.getElementById('propertyHandoverYear')?.value), active: purpose === 'sale' && saleStatus === 'Off Plan Property' },
+          { label: 'Market price', complete: Boolean(getMoneyInputFullValue('propertyMarketPrice')), active: distressDeal }
+        ].filter(item => item.active !== false);
+      }
+
+      const purpose = getLeadClientPurpose(document.getElementById('leadClientPurpose')?.value);
+      const propertyCategory = document.getElementById('leadPropertyCategory')?.value || '';
+      const unitLayout = document.getElementById('leadUnitLayout')?.value || '';
+      return [
+        { label: 'Client purpose', complete: Boolean(purpose) },
+        { label: 'Location', complete: Boolean(document.getElementById('leadLocation')?.value?.trim()) },
+        { label: 'Property category', complete: Boolean(propertyCategory) },
+        { label: 'Unit layout', complete: !dashboardCategoryAllowsSelectableLayout(propertyCategory) || Boolean(unitLayout), active: Boolean(propertyCategory) },
+        { label: 'Budget', complete: Boolean(getMoneyInputFullValue('leadBudget')) },
+        { label: 'Payment method', complete: Boolean(document.getElementById('leadPaymentMethod')?.value), active: purpose === 'buy' },
+        { label: 'Client name', complete: Boolean(document.getElementById('leadClientName')?.value?.trim()) },
+        { label: 'Client phone', complete: Boolean(normalizeLeadPhoneInput(document.getElementById('leadClientPhone')?.value || '').replace(/[^\d]/g, '').length >= 8) }
+      ].filter(item => item.active !== false);
+    }
+
+    function isSimilarMoneyValue(firstValue, secondValue) {
+      const first = Number(normalizeBudgetDigits(firstValue));
+      const second = Number(normalizeBudgetDigits(secondValue));
+      if (!Number.isFinite(first) || !Number.isFinite(second) || first <= 0 || second <= 0) return true;
+      const difference = Math.abs(first - second);
+      return difference <= Math.max(25000, Math.max(first, second) * 0.08);
+    }
+
+    function getWorkspaceDuplicateWarning(type) {
+      if (type === 'property') {
+        const id = Number(document.getElementById('propertyId')?.value || 0);
+        const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
+        const location = normalizeTaxonomyToken(document.getElementById('propertyLocation')?.value || '');
+        const building = normalizeTaxonomyToken(document.getElementById('propertyBuildingName')?.value || '');
+        const propertyType = normalizeTaxonomyToken(document.getElementById('propertyType')?.value || '');
+        const price = purpose === 'rent' ? getMoneyInputFullValue('propertyRentPrice') : getMoneyInputFullValue('propertySalePrice');
+        if (!purpose || !location || !propertyType) return '';
+        const match = (Array.isArray(state.properties) ? state.properties : []).find(item => {
+          if (Number(item.id) === id) return false;
+          const itemPurpose = getPropertyPurpose(item.purpose);
+          const itemLocation = normalizeTaxonomyToken(item.location || '');
+          const itemBuilding = normalizeTaxonomyToken(item.buildingName || '');
+          const itemLayout = getDashboardDisplayUnitLayout(item);
+          const itemType = normalizeTaxonomyToken(itemLayout && itemLayout !== 'N/A' ? itemLayout : (item.propertyType || ''));
+          const itemPrice = item.ownerAskingPrice || item.rentPrice || item.price || '';
+          return itemPurpose === purpose
+            && itemLocation === location
+            && itemType === propertyType
+            && (!building || !itemBuilding || itemBuilding === building)
+            && isSimilarMoneyValue(price, itemPrice);
+        });
+        return match ? `Possible duplicate listing: ${joinDisplayParts([getPropertyPurposeLabel(match.purpose), getDashboardDisplayUnitLayout(match) || match.propertyType, match.location, match.buildingName])}.` : '';
+      }
+
+      const id = Number(document.getElementById('leadId')?.value || 0);
+      const purpose = getLeadClientPurpose(document.getElementById('leadClientPurpose')?.value);
+      const location = normalizeTaxonomyToken(document.getElementById('leadLocation')?.value || '');
+      const building = normalizeTaxonomyToken(document.getElementById('leadBuildingProject')?.value || '');
+      const propertyType = normalizeTaxonomyToken(document.getElementById('leadPropertyType')?.value || '');
+      const budget = getMoneyInputFullValue('leadBudget');
+      if (!purpose || !location || !propertyType) return '';
+      const match = (Array.isArray(state.leads) ? state.leads : []).find(item => {
+        if (Number(item.id) === id) return false;
+        const itemPurpose = getLeadClientPurposeFromRecord(item);
+        const itemLocation = normalizeTaxonomyToken(item.location || '');
+        const itemBuilding = normalizeTaxonomyToken(item.preferredBuildingProject || item.buildingName || '');
+        const itemLayout = getDashboardDisplayUnitLayout(item);
+        const itemType = normalizeTaxonomyToken(itemLayout && itemLayout !== 'N/A' ? itemLayout : (item.propertyType || ''));
+        return itemPurpose === purpose
+          && itemLocation === location
+          && itemType === propertyType
+          && (!building || !itemBuilding || itemBuilding === building)
+          && isSimilarMoneyValue(budget, item.budget);
+      });
+      return match ? `Possible duplicate requirement: ${joinDisplayParts([getLeadClientPurposeLabel(getLeadClientPurposeFromRecord(match)), getDashboardDisplayUnitLayout(match) || match.propertyType, match.location, match.preferredBuildingProject])}.` : '';
+    }
+
+    function syncWorkspaceFormGuidance(type) {
+      const progressText = document.getElementById('workspaceFormProgressText');
+      const progressBar = document.getElementById('workspaceFormProgressBar');
+      const guidance = document.getElementById('workspaceFormGuidance');
+      const draftState = document.getElementById('workspaceDraftState');
+      if (!progressText || !progressBar || !guidance) return;
+
+      const items = getWorkspaceCompletionItems(type);
+      const completed = items.filter(item => item.complete).length;
+      const total = Math.max(1, items.length);
+      const percent = Math.round((completed / total) * 100);
+      const missing = items.filter(item => !item.complete).map(item => item.label);
+      const duplicateWarning = getWorkspaceDuplicateWarning(type);
+
+      progressBar.style.width = `${percent}%`;
+      progressText.textContent = percent >= 100
+        ? 'Ready to save. Review notes, then submit.'
+        : `${completed}/${items.length} required fields complete.`;
+
+      const guidanceItems = [];
+      if (duplicateWarning) {
+        guidanceItems.push({ tone: 'is-warning', text: duplicateWarning });
+      }
+      if (missing.length) {
+        guidanceItems.push({ tone: 'is-muted', text: `Next: ${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ` +${missing.length - 3} more` : ''}.` });
+      } else {
+        guidanceItems.push({ tone: 'is-ok', text: 'All required details are complete.' });
+      }
+      guidanceItems.push({ tone: 'is-muted', text: type === 'property' ? 'Owner contact stays private after save.' : 'Client contact stays private after save.' });
+
+      guidance.innerHTML = guidanceItems.map(item => `<div class="workspace-guidance-item ${item.tone}">${escapeHtml(item.text)}</div>`).join('');
+      if (draftState) {
+        draftState.textContent = percent > 0
+          ? 'Draft is active on this screen until you save or close.'
+          : 'Choose a purpose to start a clean private draft.';
+      }
+    }
+
     function syncWorkspaceFormSummary(type) {
       if (type === 'property') {
         const purpose = getPropertyPurposeLabel(document.getElementById('propertyPurposeValue')?.value);
@@ -1603,6 +1732,7 @@
         setWorkspaceSummaryValue('workspaceSummaryType', formatDashboardPropertyDimensions(propertyCategory, unitLayout), 'Choose category and layout');
         setWorkspaceSummaryValue('workspaceSummaryLocation', [location, building].filter(Boolean).join(' · '), 'Add area or project details');
         setWorkspaceSummaryValue('workspaceSummaryState', visibilityText, 'Starts private inside Broker Desk');
+        syncWorkspaceFormGuidance('property');
         return;
       }
 
@@ -1619,6 +1749,7 @@
       setWorkspaceSummaryValue('workspaceSummaryType', formatDashboardPropertyDimensions(propertyCategory, unitLayout), 'Choose category and layout');
       setWorkspaceSummaryValue('workspaceSummaryLocation', [location, building].filter(Boolean).join(' · '), 'Add area or project details');
       setWorkspaceSummaryValue('workspaceSummaryState', stateText, 'Starts private inside Broker Desk');
+      syncWorkspaceFormGuidance('lead');
     }
 
     function setLeadPurpose(purpose, options = {}) {
