@@ -2280,6 +2280,23 @@
       line-height: 1.45;
     }
 
+    .public-load-state-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .public-load-state.is-empty {
+      border-style: solid;
+      background: #ffffff;
+    }
+
+    .public-load-state.is-empty .public-load-state-icon {
+      color: #8f6a12;
+      background: #fff7e6;
+    }
+
     @keyframes publicSkeletonSweep {
       0% { background-position: 100% 0; }
       100% { background-position: -100% 0; }
@@ -3622,6 +3639,15 @@
         grid-template-columns: 1fr;
         justify-items: start;
         min-height: 220px;
+      }
+
+      .public-load-state-actions {
+        justify-content: flex-start;
+        width: 100%;
+      }
+
+      .public-load-state-actions .btn {
+        min-height: 40px;
       }
 
       .connector-detail-panel {

@@ -1,10 +1,42 @@
+    function getPublicSectionLabel(sectionName) {
+      const value = String(sectionName || '').trim().toLowerCase();
+      if (value === 'requirements') return 'Broker requirements';
+      if (value === 'distress-deals') return 'Distress deals';
+      return 'NexBridge listings';
+    }
+
+    function hasActivePublicDiscoveryFilters() {
+      const filters = state.publicFilters || {};
+      return Boolean(String(state.publicSearchQuery || '').trim())
+        || ['purpose', 'propertyCategory', 'unitLayout', 'location'].some(key => String(filters[key] || 'all') !== 'all');
+    }
+
+    function renderPublicEmptyState(sectionLabel = 'Marketplace') {
+      const hasFilters = hasActivePublicDiscoveryFilters();
+      return `
+        <div class="public-load-state is-empty">
+          <div class="public-load-state-icon" aria-hidden="true">0</div>
+          <div class="public-load-state-copy">
+            <strong>No ${escapeHtml(sectionLabel).toLowerCase()} found</strong>
+            <span>${hasFilters
+              ? 'Your current search or filters are too narrow. Clear them to see the full marketplace again.'
+              : 'No public broker records are live in this section right now. Please refresh after new posts are shared.'}</span>
+          </div>
+          <div class="public-load-state-actions">
+            ${hasFilters ? '<button class="btn btn-primary btn-tiny" type="button" onclick="clearPublicDiscoveryFilters()">Clear Search & Filters</button>' : ''}
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="retryPublicListings()">Refresh</button>
+          </div>
+        </div>
+      `;
+    }
+
     function renderPublicFallbackCards(targetId, items) {
       const target = document.getElementById(targetId);
       if (!target) return;
       target.classList.remove('is-loading');
       target.removeAttribute('aria-busy');
       if (!Array.isArray(items) || !items.length) {
-        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
+        target.innerHTML = renderPublicEmptyState('marketplace records');
         return;
       }
       target.innerHTML = items.map((listing, index) => `

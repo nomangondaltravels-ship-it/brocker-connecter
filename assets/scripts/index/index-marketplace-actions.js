@@ -337,6 +337,15 @@
       safeRenderPublicViews();
     }
 
+    function clearPublicDiscoveryFilters() {
+      state.publicSearchQuery = '';
+      const searchInput = document.getElementById('publicSearchInput');
+      if (searchInput) searchInput.value = '';
+      renderPublicSuggestions('');
+      clearConnectorFilters();
+      setSystemBanner('Search and filters cleared.', 'success');
+    }
+
     function getPublicSelectionKey(sectionName, listing) {
       return `${sectionName}:${listing?.id ?? ''}`;
     }
@@ -1366,7 +1375,7 @@
       target.classList.remove('is-loading');
       target.removeAttribute('aria-busy');
       if (!items.length) {
-        target.innerHTML = `<div class="empty">No matching items are available in this section right now.</div>`;
+        target.innerHTML = renderPublicEmptyState(getPublicSectionLabel(sectionName));
         renderPager(sectionName, 0);
         const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
         renderConnectorDetailPanel(detailTargetId, sectionName, []);
