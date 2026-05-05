@@ -2977,6 +2977,13 @@
               <path d="M5 20h14"></path>
             </svg>
           `;
+        case 'view':
+          return `
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+              <circle cx="12" cy="12" r="2.5"></circle>
+            </svg>
+          `;
         default:
           return '';
       }
@@ -3138,25 +3145,35 @@
 
     function normalizeWorkspacePropertyRowActions(target, section = 'properties') {
       if (!target) return;
+      const openBuilder = (id) => `event.stopPropagation();openPropertyRecord(${Number(id)}, '${section}')`;
       const onclickBuilder = (id) => `event.stopPropagation();editProperty(${Number(id)})`;
       target.querySelectorAll('.workspace-table-row[data-workspace-row-id]').forEach(row => {
         const rowId = row.getAttribute('data-workspace-row-id');
         const actions = row.querySelector('.workspace-actions');
         if (!rowId || !actions) return;
-        actions.innerHTML = renderRecordActionButton({
-          label: 'Edit',
-          icon: 'edit',
-          tone: 'secondary',
-          onclick: onclickBuilder(rowId),
-          extraClass: 'record-quick-btn'
-        });
+        actions.innerHTML = `
+          ${renderRecordActionButton({
+            label: 'View',
+            icon: 'view',
+            tone: 'ghost',
+            onclick: openBuilder(rowId),
+            extraClass: 'record-quick-btn'
+          })}
+          ${renderRecordActionButton({
+            label: 'Edit',
+            icon: 'edit',
+            tone: 'secondary',
+            onclick: onclickBuilder(rowId),
+            extraClass: 'record-quick-btn'
+          })}
+        `;
       });
     }
 
     const WORKSPACE_TABLE_COLUMNS = {
-      leads: '56px 180px 110px 120px 160px 120px 110px 96px 90px',
-      listings: '56px 180px 120px 160px 110px 120px 110px 110px 90px',
-      distress: '56px 180px 110px 160px 120px 120px 110px 96px 90px'
+      leads: '56px 180px 110px 120px 160px 120px 110px 96px 140px',
+      listings: '56px 180px 120px 160px 110px 120px 110px 110px 140px',
+      distress: '56px 180px 110px 160px 120px 120px 110px 96px 140px'
     };
 
     function renderLeadDetailPanel(lead) {
@@ -3453,6 +3470,13 @@
                         </div>
                         <div class="workspace-actions" data-label="Quick Actions">
                           ${renderRecordActionButton({
+                            label: 'View',
+                            icon: 'view',
+                            tone: 'ghost',
+                            onclick: `event.stopPropagation();openLeadRecord(${lead.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
                             tone: 'secondary',
@@ -3564,6 +3588,13 @@
                         </div>
                         <div class="workspace-actions" data-label="Quick Actions">
                           ${renderRecordActionButton({
+                            label: 'View',
+                            icon: 'view',
+                            tone: 'ghost',
+                            onclick: `event.stopPropagation();openPropertyRecord(${property.id}, 'properties')`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
                             tone: 'secondary',
@@ -3670,6 +3701,13 @@
                           <span>${escapeHtml(`${property.ownerCallCount || 0} calls / ${property.ownerWhatsappCount || 0} WA`)}</span>
                         </div>
                         <div class="workspace-actions" data-label="Quick Actions">
+                          ${renderRecordActionButton({
+                            label: 'View',
+                            icon: 'view',
+                            tone: 'ghost',
+                            onclick: `event.stopPropagation();openPropertyRecord(${property.id}, 'distress')`,
+                            extraClass: 'record-quick-btn'
+                          })}
                           ${renderRecordActionButton({
                             label: 'Edit',
                             icon: 'edit',
