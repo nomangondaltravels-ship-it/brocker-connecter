@@ -68,6 +68,38 @@ function sanitizeBroker(row, summary = EMPTY_SUMMARY) {
   };
 }
 
+function sanitizeAdminPublicListing(row) {
+  const sourceType = normalizeText(row?.source_type).toLowerCase();
+  const isProperty = sourceType === 'property';
+  const status = normalizeText(row?.status || row?.public_listing_status || 'listed');
+  const unitLabel = normalizeText(row?.unit_layout || row?.property_type || row?.category || row?.property_category);
+  const categoryLabel = normalizeText(row?.property_category || row?.category || row?.property_type);
+  const buildingLabel = normalizeText(row?.building_label || row?.size_label);
+  return {
+    id: row?.id ?? null,
+    publicListingId: row?.id ?? null,
+    sourceType,
+    sourceId: row?.source_id ?? null,
+    kind: sourceType === 'lead' ? 'requirement' : row?.is_distress ? 'distress' : 'listing',
+    broker: normalizeText(row?.broker_display_name || row?.broker_id_number || 'Broker'),
+    brokerId: normalizeText(row?.broker_id_number),
+    phone: normalizeText(row?.broker_mobile),
+    purpose: normalizeText(row?.purpose || (sourceType === 'lead' ? 'Requirement' : 'Listing')),
+    category: unitLabel || categoryLabel || (isProperty ? 'Property' : 'Requirement'),
+    propertyCategory: categoryLabel,
+    building: buildingLabel,
+    location: normalizeText(row?.location),
+    budget: normalizeText(row?.price_label),
+    notes: normalizeText(row?.public_notes),
+    status,
+    publicListingStatus: normalizeText(row?.public_listing_status || 'listed'),
+    urgent: Boolean(row?.is_urgent),
+    distress: Boolean(row?.is_distress),
+    postedAt: row?.updated_at || row?.created_at || null,
+    createdAt: row?.created_at || null
+  };
+}
+
 async function aggregateBrokerSummaries({ supabaseUrl, serviceRoleKey, brokers }) {
   const brokerIds = Array.from(new Set((Array.isArray(brokers) ? brokers : [])
     .map(row => String(row?.id || '').trim())
@@ -153,6 +185,107 @@ async function clearBrokerPublicListings({ supabaseUrl, serviceRoleKey, broker }
       })
     : [];
   return [...(Array.isArray(deletedByUuid) ? deletedByUuid : []), ...(Array.isArray(deletedByBrokerId) ? deletedByBrokerId : [])];
+}
+
+async function fetchAdminPublicListings({ supabaseUrl, serviceRoleKey }) {
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    select: [
+      'id',
+      'broker_uuid',
+      'broker_display_name',
+      'broker_id_number',
+      'broker_mobile',
+      'source_type',
+      'source_id',
+      'listing_kind',
+      'purpose',
+      'property_type',
+      'category',
+      'property_category',
+      'unit_layout',
+      'location',
+      'price_label',
+      'size_label',
+      'public_notes',
+      'status',
+      'is_urgent',
+      'is_distress',
+      'public_listing_status',
+      'created_at',
+      'updated_at'
+    ].join(','),
+    filters: { public_listing_status: 'listed' },
+    order: { column: 'updated_at', ascending: false }
+  }).catch(() => []);
+
+  return (Array.isArray(rows) ? rows : [])
+    .map(sanitizeAdminPublicListing)
+    .filter(item => item.sourceType === 'lead' || item.sourceType === 'property');
+}
+
+async function unlistAdminMarketplaceItem({ supabaseUrl, serviceRoleKey, sourceType, sourceId, publicListingId }) {
+  const normalizedType = normalizeText(sourceType).toLowerCase();
+  const numericSourceId = Number(sourceId);
+  if (!['lead', 'property'].includes(normalizedType)) {
+    const error = new Error('Marketplace source type must be lead or property.');
+    error.status = 400;
+    throw error;
+  }
+  if (!Number.isFinite(numericSourceId) || numericSourceId <= 0) {
+    const error = new Error('Marketplace source id is required.');
+    error.status = 400;
+    throw error;
+  }
+
+  const sourceTable = normalizedType === 'lead' ? 'broker_leads' : 'broker_properties';
+  const updatedAt = new Date().toISOString();
+  const sourceRows = await supabasePatch({
+    supabaseUrl,
+    serviceRoleKey,
+    table: sourceTable,
+    filters: { id: numericSourceId },
+    payload: {
+      is_listed_public: false,
+      public_listing_status: 'private',
+      updated_at: updatedAt
+    }
+  });
+
+  const removedBySource = await deleteOptionalTableRows({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    filters: {
+      source_type: normalizedType,
+      source_id: numericSourceId
+    }
+  });
+
+  const numericPublicListingId = Number(publicListingId);
+  const removedByPublicId = Number.isFinite(numericPublicListingId) && numericPublicListingId > 0
+    ? await deleteOptionalTableRows({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'public_listings',
+        filters: { id: numericPublicListingId }
+      })
+    : [];
+  const removedCount = (Array.isArray(removedBySource) ? removedBySource.length : 0) + (Array.isArray(removedByPublicId) ? removedByPublicId.length : 0);
+  if ((!Array.isArray(sourceRows) || !sourceRows.length) && !removedCount) {
+    const error = new Error('Marketplace source record was not found.');
+    error.status = 404;
+    throw error;
+  }
+
+  return {
+    sourceType: normalizedType,
+    sourceId: numericSourceId,
+    publicListingId: Number.isFinite(numericPublicListingId) ? numericPublicListingId : null,
+    removedCount
+  };
 }
 
 async function setBrokerSourcesPrivate({ supabaseUrl, serviceRoleKey, broker }) {
@@ -296,14 +429,18 @@ export async function GET(request) {
     });
 
     const brokerRows = Array.isArray(rows) ? rows : [];
-    const summaryMap = await aggregateBrokerSummaries({
-      supabaseUrl,
-      serviceRoleKey,
-      brokers: brokerRows
-    });
+    const [summaryMap, publicListings] = await Promise.all([
+      aggregateBrokerSummaries({
+        supabaseUrl,
+        serviceRoleKey,
+        brokers: brokerRows
+      }),
+      fetchAdminPublicListings({ supabaseUrl, serviceRoleKey })
+    ]);
 
     return json({
-      brokers: brokerRows.map(row => sanitizeBroker(row, summaryMap.get(String(row?.id || '').trim()) || EMPTY_SUMMARY))
+      brokers: brokerRows.map(row => sanitizeBroker(row, summaryMap.get(String(row?.id || '').trim()) || EMPTY_SUMMARY)),
+      publicListings
     });
   } catch (error) {
     return json({ message: error?.message || 'Failed to load brokers.' }, error?.status || 500);
@@ -322,9 +459,21 @@ export async function POST(request) {
     const action = normalizeText(body?.action).toLowerCase();
     const brokerId = normalizeText(body?.brokerId);
     const brokerRecordId = normalizeText(body?.brokerRecordId);
+    const itemScopedActions = new Set(['unlist-marketplace-item']);
 
-    if (!action || (!brokerId && !brokerRecordId)) {
+    if (!action || (!itemScopedActions.has(action) && !brokerId && !brokerRecordId)) {
       return json({ message: 'Broker action and broker reference are required.' }, 400);
+    }
+
+    if (action === 'unlist-marketplace-item') {
+      const result = await unlistAdminMarketplaceItem({
+        supabaseUrl,
+        serviceRoleKey,
+        sourceType: body?.sourceType,
+        sourceId: body?.sourceId,
+        publicListingId: body?.publicListingId
+      });
+      return json({ success: true, unlisted: result });
     }
 
     const broker = brokerRecordId

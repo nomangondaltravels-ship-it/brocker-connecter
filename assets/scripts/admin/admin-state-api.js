@@ -497,7 +497,7 @@
       return result;
     }
 
-    async function fetchAdminBrokers() {
+    async function fetchAdminBrokerWorkspace() {
       const token = getAdminToken();
       if (!token) {
         throw new Error('Admin login required.');
@@ -518,7 +518,15 @@
         throw new Error(result?.message || 'Failed to load broker accounts.');
       }
 
-      return Array.isArray(result?.brokers) ? result.brokers : [];
+      return {
+        brokers: Array.isArray(result?.brokers) ? result.brokers : [],
+        publicListings: Array.isArray(result?.publicListings) ? result.publicListings : []
+      };
+    }
+
+    async function fetchAdminBrokers() {
+      const workspace = await fetchAdminBrokerWorkspace();
+      return workspace.brokers;
     }
 
     async function requestBrokerAdminAction(payload) {
@@ -619,7 +627,91 @@
       }
     }
 
+    function formatAdminMoneyLabel(value) {
+      const raw = String(value || '').trim();
+      if (!raw || raw === '--') return '';
+      const numericText = raw.replace(/[^\d.]/g, '');
+      if (!numericText) return raw;
+      const amount = Number(numericText);
+      if (!Number.isFinite(amount) || amount <= 0) return raw;
+      return `AED ${Math.round(amount).toLocaleString('en-AE')}`;
+    }
+
+    function buildPublicMarketplaceItem(item, fallbackType = '') {
+      const sourceType = String(item?.sourceType || '').trim().toLowerCase();
+      const isRequirement = sourceType === 'lead' || fallbackType === 'requirement';
+      const isDistress = Boolean(item?.distress);
+      const category = item?.category || item?.propertyCategory || (isRequirement ? 'Requirement' : 'Property');
+      const purpose = item?.purpose || (isRequirement ? 'Requirement' : isDistress ? 'Distress' : 'Listing');
+      return {
+        broker: item?.broker || 'Unknown broker',
+        phone: item?.phone || '',
+        purpose,
+        category,
+        location: item?.location || '',
+        budget: formatAdminMoneyLabel(item?.budget) || item?.budget || '',
+        notes: item?.notes || item?.building || '',
+        verified: true,
+        premium: false,
+        urgent: Boolean(item?.urgent || isDistress),
+        distress: isDistress,
+        status: 'open',
+        marketplaceStatus: item?.status || item?.publicListingStatus || 'listed',
+        publicListingStatus: item?.publicListingStatus || 'listed',
+        postedAt: item?.postedAt || item?.createdAt || null,
+        sourceType,
+        sourceId: item?.sourceId ?? null,
+        publicListingId: item?.publicListingId ?? item?.id ?? null,
+        canUnlist: Boolean(sourceType && item?.sourceId),
+        canDelete: false
+      };
+    }
+
+    function buildLegacyRequirementItem(item) {
+      return {
+        broker: item.broker_name,
+        phone: item.phone,
+        purpose: item.purpose,
+        category: item.category,
+        location: item.location,
+        budget: formatAdminMoneyLabel(item.budget) || item.budget,
+        notes: item.notes,
+        verified: item.verified,
+        premium: item.premium,
+        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
+        postedAt: item.created_at || null,
+        canUnlist: false,
+        canDelete: true
+      };
+    }
+
+    function buildLegacyDealItem(item) {
+      return {
+        broker: item.broker_name,
+        phone: item.phone,
+        purpose: item.type,
+        category: item.category,
+        location: item.location,
+        budget: formatAdminMoneyLabel(item.price) || item.price,
+        notes: item.notes,
+        urgent: item.urgent,
+        distress: item.distress,
+        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
+        postedAt: item.created_at || null,
+        canUnlist: false,
+        canDelete: true
+      };
+    }
+
     function getEntryKey(item, urgent = false) {
+      if (item?.sourceType && item?.sourceId) {
+        return [
+          urgent ? 'urgent' : 'need',
+          item.sourceType,
+          item.sourceId,
+          item.publicListingId || ''
+        ].join('|');
+      }
       return [
         urgent ? 'urgent' : 'need',
         item.broker,
@@ -861,9 +953,12 @@
       renderAdminWorkspace();
       loadLocalAdminState();
       let accounts = [];
+      let publicListings = [];
       let brokerLoadError = '';
       try {
-        accounts = await fetchAdminBrokers();
+        const brokerWorkspace = await fetchAdminBrokerWorkspace();
+        accounts = brokerWorkspace.brokers;
+        publicListings = brokerWorkspace.publicListings;
       } catch (error) {
         console.error(error);
         brokerLoadError = error?.message || 'Broker accounts could not load.';
@@ -894,7 +989,8 @@
         complaintsReadable = false;
       }
 
-      if (reqError || dealError) {
+      const hasPublicMarketplaceRows = publicListings.length > 0;
+      if ((reqError || dealError) && !hasPublicMarketplaceRows) {
         setAdminStatus('Some Supabase data could not load correctly. Please refresh or check table permissions.', 'error');
       } else if (brokerLoadError) {
         setAdminStatus(brokerLoadError, 'error');
@@ -906,33 +1002,17 @@
         setAdminStatus('');
       }
 
-      requirements = (reqData || []).map(item => ({
-        broker: item.broker_name,
-        phone: item.phone,
-        purpose: item.purpose,
-        category: item.category,
-        location: item.location,
-        budget: item.budget,
-        notes: item.notes,
-        verified: item.verified,
-        premium: item.premium,
-        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
-        postedAt: item.created_at || null
-      }));
+      requirements = hasPublicMarketplaceRows
+        ? publicListings
+            .filter(item => item.sourceType === 'lead')
+            .map(item => buildPublicMarketplaceItem(item, 'requirement'))
+        : (reqData || []).map(buildLegacyRequirementItem);
 
-      deals = (dealData || []).map(item => ({
-        broker: item.broker_name,
-        phone: item.phone,
-        purpose: item.type,
-        category: item.category,
-        location: item.location,
-        budget: item.price,
-        notes: item.notes,
-        urgent: item.urgent,
-        distress: item.distress,
-        status: item.status === 'pending' ? 'open' : (item.status || 'open'),
-        postedAt: item.created_at || null
-      }));
+      deals = hasPublicMarketplaceRows
+        ? publicListings
+            .filter(item => item.sourceType === 'property')
+            .map(item => buildPublicMarketplaceItem(item, 'deal'))
+        : (dealData || []).map(buildLegacyDealItem);
 
       complaints = (resolvedComplaints || []).map(parseComplaintRecord);
       supportRequests = [];
@@ -1174,9 +1254,61 @@
       return result;
     }
 
+    async function unlistMarketplaceAt(index, urgent = false) {
+      const item = urgent ? deals[index] : requirements[index];
+      if (!item) return;
+      if (!item.canUnlist || !item.sourceType || !item.sourceId) {
+        setAdminStatus('This record is from the legacy review queue and cannot be unlisted from the live marketplace safely.', 'error');
+        return;
+      }
+
+      const entityLabel = item.sourceType === 'lead'
+        ? 'requirement'
+        : item.distress ? 'distress deal' : 'listing';
+      const actionButton = resolveAdminActionButton();
+      const confirmed = await openAdminActionModal({
+        title: `Unlist ${entityLabel}`,
+        eyebrow: 'Marketplace visibility',
+        description: 'This removes the item from the public marketplace without deleting the broker record from Broker Desk.',
+        tone: 'warning',
+        confirmLabel: 'Unlist',
+        summary: [
+          { label: 'Broker', value: item.broker || 'Unknown broker' },
+          { label: 'Location', value: item.location || 'Area missing' },
+          { label: item.sourceType === 'lead' ? 'Budget' : 'Price', value: item.budget || 'Not provided' }
+        ],
+        warning: 'Safe action: the broker can still see and manage the private record inside their workspace.'
+      });
+      if (!confirmed) return;
+
+      try {
+        await runAdminActionFeedback(
+          actionButton,
+          'Unlisting...',
+          'Removed from marketplace.',
+          () => requestBrokerAdminAction({
+            action: 'unlist-marketplace-item',
+            sourceType: item.sourceType,
+            sourceId: item.sourceId,
+            publicListingId: item.publicListingId
+          })
+        );
+      } catch (error) {
+        showAdminError(error, 'Marketplace unlist failed.');
+        return;
+      }
+
+      setAdminStatus(`${entityLabel.charAt(0).toUpperCase()}${entityLabel.slice(1)} removed from marketplace.`, 'success');
+      loadAdminData();
+    }
+
     async function deleteRequirementAt(index) {
       const item = requirements[index];
       if (!item) return;
+      if (item.canDelete === false) {
+        setAdminStatus('Use Unlist for live marketplace requirements. Delete is only available for legacy admin records.', 'error');
+        return;
+      }
       const actionButton = resolveAdminActionButton();
 
       const confirmed = await openAdminActionModal({
@@ -1226,6 +1358,10 @@
     async function deleteDealAt(index) {
       const item = deals[index];
       if (!item) return;
+      if (item.canDelete === false) {
+        setAdminStatus('Use Unlist for live marketplace listings. Delete is only available for legacy admin records.', 'error');
+        return;
+      }
       const actionButton = resolveAdminActionButton();
 
       const confirmed = await openAdminActionModal({

@@ -23,8 +23,8 @@
 
     const ADMIN_TABLE_COLUMNS = {
       brokers: '180px 160px 180px 110px 80px 80px 110px 96px 220px',
-      requirements: '180px 140px 120px 120px 110px 96px 200px',
-      deals: '180px 140px 120px 120px 110px 96px 200px',
+      requirements: '180px 140px 120px 120px 110px 96px 260px',
+      deals: '180px 140px 120px 120px 110px 96px 260px',
       complaints: '120px 140px 140px 96px 110px 132px 110px 120px 128px'
     };
 
@@ -150,7 +150,7 @@
                 </div>
                 <div class="admin-cell">
                   <strong>${escapeHtml(entry.item.location || 'Area missing')}</strong>
-                  <span>${entry.item.verified ? 'Verified details' : 'Pending verification'}</span>
+                  <span>${entry.item.canUnlist ? 'Public marketplace' : entry.item.verified ? 'Verified details' : 'Pending verification'}</span>
                 </div>
                 <div class="admin-cell admin-cell-right">
                   <strong>${escapeHtml(entry.item.budget || 'â€”')}</strong>
@@ -164,11 +164,12 @@
                   <span>${escapeHtml(formatAdminDateTime(entry.item.postedAt))}</span>
                 </div>
                 <div class="admin-table-actions" onclick="event.stopPropagation()">
+                  ${entry.item.canUnlist ? `<button class="btn btn-warning tiny-btn" type="button" onclick="unlistMarketplaceAt(${entry.index}, false)">Unlist</button>` : ''}
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'open')">Open</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'matched')">Matched</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'closed')">Closed</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'expired')">Expired</button>
-                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete</button>
+                  ${entry.item.canDelete === false ? '' : `<button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete</button>`}
                 </div>
               </div>
             `;
@@ -216,11 +217,12 @@
                 </div>
                 <div class="admin-table-actions" onclick="event.stopPropagation()">
                   ${entry.item.distress ? '<span class="badge gold">Distress</span>' : ''}
+                  ${entry.item.canUnlist ? `<button class="btn btn-warning tiny-btn" type="button" onclick="unlistMarketplaceAt(${entry.index}, true)">Unlist</button>` : ''}
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'open')">Open</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'matched')">Matched</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'closed')">Closed</button>
                   <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'expired')">Expired</button>
-                  <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete</button>
+                  ${entry.item.canDelete === false ? '' : `<button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete</button>`}
                 </div>
               </div>
             `;
@@ -589,13 +591,15 @@
             <div class="admin-detail-meta">
               <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
               <span class="badge ${entry.item.verified ? 'green' : 'gold'}">${entry.item.verified ? 'Verified' : 'Pending'}</span>
+              ${entry.item.canUnlist ? '<span class="badge blue">Public Marketplace</span>' : ''}
             </div>
             <div class="admin-detail-toolbar">
+              ${entry.item.canUnlist ? `<button class="btn btn-warning tiny-btn" type="button" onclick="unlistMarketplaceAt(${entry.index}, false)">Unlist from Marketplace</button>` : ''}
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'open')">Open</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'matched')">Matched</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'closed')">Closed</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(requirements[${entry.index}], false, 'expired')">Expired</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete Requirement</button>
+              ${entry.item.canDelete === false ? '' : `<button class="btn btn-danger tiny-btn" type="button" onclick="deleteRequirementAt(${entry.index})">Delete Requirement</button>`}
             </div>
           </div>
           <div class="admin-detail-section">
@@ -629,13 +633,15 @@
             <div class="admin-detail-meta">
               <span class="status-pill ${entry.status}">${escapeHtml(entry.status)}</span>
               ${entry.item.distress ? '<span class="badge gold">Distress</span>' : '<span class="badge blue">Connector Listing</span>'}
+              ${entry.item.canUnlist ? '<span class="badge blue">Public Marketplace</span>' : ''}
             </div>
             <div class="admin-detail-toolbar">
+              ${entry.item.canUnlist ? `<button class="btn btn-warning tiny-btn" type="button" onclick="unlistMarketplaceAt(${entry.index}, true)">Unlist from Marketplace</button>` : ''}
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'open')">Open</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'matched')">Matched</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'closed')">Closed</button>
               <button class="btn btn-secondary tiny-btn" type="button" onclick="savePostStatus(deals[${entry.index}], true, 'expired')">Expired</button>
-              <button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete Listing</button>
+              ${entry.item.canDelete === false ? '' : `<button class="btn btn-danger tiny-btn" type="button" onclick="deleteDealAt(${entry.index})">Delete Listing</button>`}
             </div>
           </div>
           <div class="admin-detail-section">
