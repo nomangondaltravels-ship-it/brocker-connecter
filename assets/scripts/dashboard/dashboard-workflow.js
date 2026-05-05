@@ -327,7 +327,7 @@
           <div class="actions">
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
               <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
-              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
+              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
               ${typeof renderMarketplaceRefreshInlineButton === 'function' ? renderMarketplaceRefreshInlineButton('property', property) : ''}
             </div>
         </div>

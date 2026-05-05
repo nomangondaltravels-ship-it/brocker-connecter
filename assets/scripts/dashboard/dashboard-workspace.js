@@ -521,7 +521,7 @@
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editLead(${lead.id})">Edit</button>
               <button class="btn btn-secondary btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'call', this)">Call</button>
               <button class="btn btn-success btn-tiny" type="button" ${phoneAvailable ? '' : 'disabled'} onclick="contactLead(${lead.id}, 'whatsapp')">WhatsApp</button>
-              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
+              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(lead.isListedPublic)}</button>
               ${renderMarketplaceRefreshInlineButton('lead', lead)}
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
               <button class="btn btn-danger btn-tiny" type="button" onclick="deleteLead(${lead.id})">Delete</button>
@@ -621,7 +621,7 @@
               <button class="btn btn-secondary btn-tiny" type="button" onclick="editProperty(${property.id})">Edit</button>
               <button class="btn btn-secondary btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)">Call Owner</button>
               <button class="btn btn-success btn-tiny" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')">WhatsApp Owner</button>
-              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
+              <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(property.isListedPublic)}</button>
               ${renderMarketplaceRefreshInlineButton('property', property)}
               <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
               <button class="btn btn-danger btn-tiny" type="button" onclick="deleteProperty(${property.id})">Delete</button>
@@ -1592,7 +1592,7 @@
                 <details class="crm-row-more">
                   <summary class="crm-row-more-toggle">More</summary>
                     <div class="crm-row-more-menu">
-                      <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
+                      <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                       ${renderMarketplaceRefreshInlineButton('lead', lead)}
                       <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
@@ -1741,7 +1741,7 @@
                 <details class="crm-row-more">
                   <summary class="crm-row-more-toggle">More</summary>
                     <div class="crm-row-more-menu">
-                      <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
+                      <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                       ${renderMarketplaceRefreshInlineButton('property', property)}
                       <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
                     <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">Matches</button>
@@ -1908,7 +1908,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                         <div class="crm-row-more-menu">
-                          <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
+                          <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                           ${renderMarketplaceRefreshInlineButton('lead', lead)}
                           <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
@@ -2045,7 +2045,7 @@
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="editProperty(${property.id})" title="Edit">&#9998; Edit</button>
                     <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'call', this)" title="Call Owner">&#9742; Call</button>
                       <button class="btn btn-success btn-tiny crm-row-action-btn" type="button" ${ownerPhone ? '' : 'disabled'} onclick="contactPropertyOwner(${property.id}, 'whatsapp')" title="WhatsApp Owner">WA</button>
-                      <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
+                      <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny crm-row-action-btn" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                       ${renderMarketplaceRefreshInlineButton('property', property, 'crm-row-action-btn')}
                       <button class="btn btn-secondary btn-tiny crm-row-action-btn" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}" title="${property.isArchived ? 'Restore' : 'Archive'}">${property.isArchived ? '&#8634; Restore' : 'Archive'}</button>
                     <button class="btn btn-danger btn-tiny crm-row-action-btn" type="button" onclick="deleteProperty(${property.id})" title="Delete">&times;</button>
@@ -2192,7 +2192,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                         <div class="crm-row-more-menu">
-              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
+              <button class="btn ${getBcpShareButtonClass(lead.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('lead', ${lead.id}, ${lead.isListedPublic}, this)" title="${lead.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(lead.isListedPublic, true)}</button>
                           ${renderMarketplaceRefreshInlineButton('lead', lead)}
                           <button class="btn btn-secondary btn-tiny" type="button" onclick="${lead.isArchived ? `restoreLead(${lead.id})` : `archiveLead(${lead.id})`}">${lead.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('lead-panel-${lead.id}')">Matches</button>
@@ -2349,7 +2349,7 @@
                     <details class="crm-row-more">
                       <summary class="crm-row-more-toggle">More</summary>
                         <div class="crm-row-more-menu">
-                          <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Remove from Marketplace' : 'Share on Marketplace'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
+                          <button class="btn ${getBcpShareButtonClass(property.isListedPublic)} btn-tiny" type="button" onclick="toggleListItem('property', ${property.id}, ${property.isListedPublic}, this)" title="${property.isListedPublic ? 'Unlist from Market' : 'Publish to Market'}">${getBcpShareButtonLabel(property.isListedPublic, true)}</button>
                           ${renderMarketplaceRefreshInlineButton('property', property)}
                           <button class="btn btn-secondary btn-tiny" type="button" onclick="${property.isArchived ? `restoreProperty(${property.id})` : `archiveProperty(${property.id})`}">${property.isArchived ? 'Restore' : 'Archive'}</button>
                         <button class="btn btn-secondary btn-tiny" type="button" onclick="openRecordPanel('property-panel-${property.id}')">Matches</button>
@@ -2548,9 +2548,9 @@
 
     function getBcpShareButtonLabel(listed, compact = false) {
       if (listed) {
-        return compact ? 'Remove from Marketplace' : 'Remove from Marketplace';
+        return compact ? 'Unlist from Market' : 'Unlist from Market';
       }
-      return compact ? 'Share on Marketplace' : 'Share on Marketplace';
+      return compact ? 'Publish to Market' : 'Publish to Market';
     }
 
     function getMarketplaceListingForRecord(entityType, id) {
@@ -2583,13 +2583,13 @@
 
     function getMarketplaceRefreshState(entityType, item) {
       if (!item?.isListedPublic) {
-        return { visible: false, disabled: true, label: 'Refresh', title: 'Share on Marketplace first.' };
+        return { visible: false, disabled: true, label: 'Refresh to Top', title: 'Publish to Market first.' };
       }
       const refreshedAt = getMarketplaceRefreshTimestamp(entityType, item);
       const parsed = Date.parse(refreshedAt);
       const cooldownMs = 12 * 60 * 60 * 1000;
       if (!Number.isFinite(parsed)) {
-        return { visible: true, disabled: false, label: 'Refresh', title: 'Move this public post back to the top.' };
+        return { visible: true, disabled: false, label: 'Refresh to Top', title: 'Move this public post back to the top.' };
       }
       const remainingMs = cooldownMs - (Date.now() - parsed);
       if (remainingMs > 0) {
@@ -2601,7 +2601,7 @@
           title: `This post can be refreshed again in ${waitLabel}.`
         };
       }
-      return { visible: true, disabled: false, label: 'Refresh', title: 'Move this public post back to the top.' };
+      return { visible: true, disabled: false, label: 'Refresh to Top', title: 'Move this public post back to the top.' };
     }
 
     function renderMarketplaceRefreshInlineButton(entityType, item, extraClass = '') {

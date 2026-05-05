@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-05-marketplace-refresh-bump" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-05-marketplace-refresh-bump"></script>
+  <meta name="nexbridge-build" content="2026-05-05-phase1-ux-consistency" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-05-phase1-ux-consistency"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-05-marketplace-refresh-bump" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-05-marketplace-refresh-bump">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-05-phase1-ux-consistency" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-05-phase1-ux-consistency">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-05-marketplace-refresh-bump" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-05-phase1-ux-consistency" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -195,10 +195,10 @@
             <div class="workspace-head-main">
               <div class="workspace-kicker" id="workspaceKicker">Broker Desk Form</div>
               <h3 id="workspaceTitle">Add New Lead</h3>
-      <p id="workspaceCopy">Create a private client requirement. You can choose later whether to share only the non-private details on NexBridge Marketplace.</p>
+              <p id="workspaceCopy">Create a private client requirement. You can choose later whether to publish only the non-private details to Market.</p>
               <div class="workspace-chip-row">
                 <span class="workspace-chip" id="workspaceModePill">Draft flow</span>
-                <span class="workspace-chip" id="workspaceVisibilityPill">Private until shared</span>
+                <span class="workspace-chip" id="workspaceVisibilityPill">Private until published</span>
               </div>
             </div>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="hideOverviewWorkspace()">Close</button>
@@ -314,7 +314,7 @@
                 </div>
                 <div class="privacy-note">
                   <strong>Private Section</strong>
-      <p>This section is private. Even if you share this lead on NexBridge Marketplace, the client name and phone number will never be shown publicly.</p>
+      <p>This section is private. Even if you publish this lead to Market, the client name and phone number will never be shown publicly.</p>
                 </div>
               </div>
 
@@ -333,9 +333,9 @@
 
               <div class="form-section form-section-workflow crm-hidden" id="leadWorkflowSection">
                 <div class="form-section-head">
-                  <span class="form-section-kicker">BCP Sharing / Visibility</span>
+                  <span class="form-section-kicker">Market Visibility</span>
                   <h4>Workflow &amp; Follow-up</h4>
-                  <p>This requirement stays private by default. Track status and reminders here, then share only safe details later on BCP if needed.</p>
+                  <p>This requirement stays private by default. Track status and reminders here, then publish only safe details later if needed.</p>
                 </div>
                 <div class="form-grid">
                   <div class="field-block">
@@ -633,9 +633,9 @@
 
               <div class="form-section crm-hidden" id="propertyNotesSection">
                 <div class="form-section-head">
-                  <span class="form-section-kicker">BCP Sharing / Visibility</span>
+                  <span class="form-section-kicker">Market Visibility</span>
                   <h4>Sharing &amp; Notes</h4>
-                  <p>Internal notes stay private. Public notes are the only text that can be shared later if you publish this listing on BCP.</p>
+                  <p>Internal notes stay private. Public notes are the only text that can be published later if you publish this listing to Market.</p>
                 </div>
                 <div class="field-block full">
                   <label class="small" for="propertyInternalNotes">Internal Notes</label>
@@ -688,7 +688,7 @@
               </div>
 
               <div class="lead-form-actions">
-      <div class="form-action-note">Keep the listing private while you build it, then decide later whether to publish the safe public version on NexBridge.</div>
+                <div class="form-action-note">Keep the listing private while you build it, then decide later whether to publish the safe public version to Market.</div>
                 <div class="lead-form-actions-main">
                   <button class="btn btn-secondary" type="button" onclick="cancelPropertyForm()">Cancel</button>
                   <button class="btn btn-primary" type="submit" id="propertySubmitBtn">Save Listing</button>
@@ -980,15 +980,15 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-05-marketplace-refresh-bump"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-05-marketplace-refresh-bump"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-05-phase1-ux-consistency"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-05-phase1-ux-consistency"></script>
 </body>
 </html>

@@ -1564,7 +1564,7 @@
 
       if (mode === 'edit') {
         workspaceTitle.textContent = 'Edit Lead';
-      workspaceCopy.textContent = 'Update the private client requirement below. Only safe, non-private details can be shared later on NexBridge Marketplace.';
+        workspaceCopy.textContent = 'Update the private client requirement below. Only safe, non-private details can be published later to Market.';
         if (workspaceKicker) workspaceKicker.textContent = 'Requirement Editor';
         if (workspaceModePill) workspaceModePill.textContent = 'Edit flow';
         if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private client record';
@@ -1573,10 +1573,10 @@
       }
 
       workspaceTitle.textContent = 'Add New Lead';
-      workspaceCopy.textContent = 'Create a private client requirement. You can choose later whether to share only the non-private details on NexBridge Marketplace.';
+      workspaceCopy.textContent = 'Create a private client requirement. You can choose later whether to publish only the non-private details to Market.';
       if (workspaceKicker) workspaceKicker.textContent = 'Requirement Composer';
       if (workspaceModePill) workspaceModePill.textContent = 'Create flow';
-      if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private until shared';
+      if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private until published';
       syncWorkspaceFormSummary('lead');
     }
 
@@ -2087,7 +2087,7 @@
 
       if (mode === 'edit') {
         workspaceTitle.textContent = 'Edit Listing';
-      workspaceCopy.textContent = 'Update your private property inventory below. Only non-private details can be published later on NexBridge Marketplace.';
+        workspaceCopy.textContent = 'Update your private property inventory below. Only non-private details can be published later to Market.';
         if (workspaceKicker) workspaceKicker.textContent = 'Listing Editor';
         if (workspaceModePill) workspaceModePill.textContent = 'Edit flow';
         if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private inventory record';
@@ -2099,7 +2099,7 @@
       workspaceCopy.textContent = 'Create and manage your private property inventory. You can choose later whether to publish non-private details publicly.';
       if (workspaceKicker) workspaceKicker.textContent = 'Listing Composer';
       if (workspaceModePill) workspaceModePill.textContent = 'Create flow';
-      if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private until shared';
+      if (workspaceVisibilityPill) workspaceVisibilityPill.textContent = 'Private until published';
       syncWorkspaceFormSummary('property');
     }
 
