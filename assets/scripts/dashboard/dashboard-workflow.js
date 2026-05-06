@@ -988,7 +988,7 @@
       return `
         <div class="detail-grid">
           <div class="detail-cell"><small>Intent</small><strong>${escapeHtml(getLeadIntentText(lead) || '--')}</strong></div>
-          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
           <div class="detail-cell"><small>Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
           <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
           <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong></div>
@@ -1004,7 +1004,7 @@
       return `
         <div class="detail-grid">
           <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong></div>
-          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
           <div class="detail-cell"><small>Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
           <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(property.buildingName || '--')}</strong></div>
           <div class="detail-cell"><small>Price</small><strong>${escapeHtml(getPropertyDisplayPrice(property))}</strong></div>
@@ -1084,7 +1084,7 @@
       return `
         <div class="detail-grid">
           <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(formatStatusLabel(match.counterpartPurpose || '--'))}</strong></div>
-          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
           <div class="detail-cell"><small>Location</small><strong>${escapeHtml(match.counterpartLocation || '--')}</strong></div>
           <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(match.counterpartBuilding || '--')}</strong></div>
           <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(match.counterpartPriceLabel || '--')}</strong></div>
@@ -1101,7 +1101,7 @@
       return `
         <div class="detail-grid">
           <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(match.counterpartPurpose || '--'))}</strong></div>
-          <div class="detail-cell"><small>Type</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
+          <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(match.counterpartPropertyType || '--')}</strong></div>
           <div class="detail-cell"><small>Location</small><strong>${escapeHtml(match.counterpartLocation || '--')}</strong></div>
           <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(match.counterpartBuilding || '--')}</strong></div>
           <div class="detail-cell"><small>Price</small><strong>${escapeHtml(match.counterpartPriceLabel || '--')}</strong></div>

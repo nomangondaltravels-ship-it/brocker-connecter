@@ -243,7 +243,7 @@
       return [
         { id: 'connectorPurposeFilter', field: 'purpose', defaultLabel: 'All Purposes' },
         { id: 'connectorCategoryFilter', field: 'propertyCategory', defaultLabel: 'All Categories' },
-        { id: 'connectorLayoutFilter', field: 'unitLayout', defaultLabel: 'All Types' },
+        { id: 'connectorLayoutFilter', field: 'unitLayout', defaultLabel: 'All Layouts' },
         { id: 'connectorLocationFilter', field: 'location', defaultLabel: 'All Areas' }
       ];
     }
@@ -533,7 +533,7 @@
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
-            <div class="detail-cell"><small>Type</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
+            <div class="detail-cell"><small>Unit Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${priceLabel}</strong></div>
             </div>
@@ -565,7 +565,7 @@
           </div>
           <div class="detail-grid">
             <div class="detail-cell"><small>Category</small><strong>${getConnectorDisplayPropertyCategory(listing)}</strong></div>
-            <div class="detail-cell"><small>Type</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
+            <div class="detail-cell"><small>Unit Layout</small><strong>${getConnectorDisplayUnitLayout(listing)}</strong></div>
             <div class="detail-cell"><small>Location</small><strong>${listing.location || '--'}</strong></div>
             <div class="detail-cell"><small>Price / Budget</small><strong>${priceLabel}</strong></div>
             </div>
@@ -972,7 +972,7 @@
       const fields = [
         { label: 'Purpose', value: getConnectorPublicPurposeLabel(listing) },
         { label: 'Property Category', value: getConnectorDisplayPropertyCategory(listing) || '--' },
-        { label: 'Type', value: getConnectorDisplayUnitLayout(listing) || getConnectorDisplayPropertyType(listing) || '--' },
+        { label: 'Unit Layout', value: getConnectorDisplayUnitLayout(listing) || getConnectorDisplayPropertyType(listing) || '--' },
         { label: 'Location', value: listing.location || '--' },
         { label: 'Building / Project', value: listing.buildingLabel || '--' },
         { label: 'Price', value: formatConnectorMoney(listing.priceLabel) },
@@ -1211,7 +1211,7 @@
           <h4>Details</h4>
           <div class="connector-detail-grid">
             <div class="connector-detail-cell"><small>Purpose</small><strong>${escapeHtml(getConnectorPublicPurposeLabel(selected))}</strong></div>
-            <div class="connector-detail-cell"><small>Type</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
+            <div class="connector-detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getConnectorDisplayUnitLayout(selected))}</strong></div>
             <div class="connector-detail-cell"><small>Category</small><strong>${escapeHtml(getConnectorDisplayPropertyCategory(selected))}</strong></div>
             ${selected.sourceType === 'property' && getConnectorPublicPurposeValue(selected) === 'sale' ? `<div class="connector-detail-cell"><small>Sale Status</small><strong>${escapeHtml(getConnectorSalePropertyStatus(selected) || '--')}</strong></div>` : ''}
             ${selected.sourceType === 'property' && getConnectorHandoverLabel(selected) ? `<div class="connector-detail-cell"><small>Expected Handover</small><strong>${escapeHtml(getConnectorHandoverLabel(selected))}</strong></div>` : ''}
@@ -1253,7 +1253,7 @@
           <div>Intent</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Type</div>
+          <div>Unit Layout</div>
           <div class="sheet-head-right">Budget</div>
           <div class="sheet-head-right">Refreshed</div>
           <div class="sheet-head-right">Open</div>
@@ -1285,7 +1285,7 @@
               <span class="sheet-primary">${listing.buildingLabel || listing.sizeLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Type</span>
+              <span class="sheet-label">Unit Layout</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
               <span class="sheet-secondary">${escapeHtml(joinDisplayParts([
                 getConnectorSalePropertyStatus(listing),
@@ -1315,7 +1315,7 @@
           <div>Purpose</div>
           <div>Location</div>
           <div>Building / Project</div>
-          <div>Type</div>
+          <div>Unit Layout</div>
           <div class="sheet-head-right">Price</div>
           <div class="sheet-head-right">Size</div>
           <div class="sheet-head-right">Refreshed</div>
@@ -1348,7 +1348,7 @@
               <span class="sheet-primary">${listing.buildingLabel || '--'}</span>
             </div>
             <div class="sheet-col">
-              <span class="sheet-label">Type</span>
+              <span class="sheet-label">Unit Layout</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">

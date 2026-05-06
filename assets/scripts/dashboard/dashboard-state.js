@@ -599,7 +599,9 @@
         unitLayout = dashboardCategoryAllowsSelectableLayout(propertyCategory) ? '' : 'N/A';
       }
 
-      const propertyType = legacyPropertyType || (unitLayout && unitLayout !== 'N/A' ? unitLayout : propertyCategory);
+      const propertyType = unitLayout && unitLayout !== 'N/A'
+        ? unitLayout
+        : propertyCategory || legacyPropertyType;
       return {
         propertyCategory,
         unitLayout,

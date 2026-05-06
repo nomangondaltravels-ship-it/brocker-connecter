@@ -382,7 +382,7 @@
       return {
         propertyCategory,
         unitLayout,
-        propertyType: legacyType || (unitLayout !== 'N/A' ? unitLayout : propertyCategory)
+        propertyType: unitLayout !== 'N/A' ? unitLayout : propertyCategory || legacyType
       };
     }
 

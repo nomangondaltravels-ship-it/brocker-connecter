@@ -386,19 +386,11 @@ export function derivePropertyDimensions(source, options = {}) {
 }
 
 export function getDisplayPropertyType(record) {
-  const directValue = normalizePropertyTypeValue(
-    record?.propertyType
-    || record?.property_type
-    || record?.legacyPropertyType
-    || record?.category
-    || ''
-  );
-  if (directValue) return directValue;
   const dimensions = derivePropertyDimensions(record, { includeLeadType: true });
   if (dimensions.unitLayout && dimensions.unitLayout !== 'N/A') {
     return dimensions.unitLayout;
   }
-  return dimensions.propertyCategory || '';
+  return dimensions.propertyCategory || dimensions.legacyPropertyType || '';
 }
 
 export function getDisplayPropertyCategory(record) {

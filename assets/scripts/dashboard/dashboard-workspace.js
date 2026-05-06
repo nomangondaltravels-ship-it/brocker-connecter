@@ -1661,7 +1661,7 @@
         <div class="crm-sheet">
           <div class="crm-sheet-head">
             <div>Sr.</div>
-            <div>Purpose / Type</div>
+            <div>Purpose / Layout</div>
             <div>Location</div>
             <div>Building / Project</div>
             <div>Budget</div>
@@ -1682,7 +1682,7 @@
                 <span class="crm-index">#${index + 1}</span>
               </div>
               <div class="crm-col">
-                <span class="crm-col-label">Purpose / Type</span>
+                <span class="crm-col-label">Purpose / Layout</span>
                 <div class="crm-primary">${escapeHtml(`${getLeadClientPurposeLabel(lead.clientPurpose)} | ${lead.propertyType || 'Requirement'}`)}</div>
                 <div class="crm-secondary">${escapeHtml(joinDisplayParts([getLeadIntentText(lead), lead.paymentMethod]))}</div>
               </div>
@@ -1808,7 +1808,7 @@
         <div class="crm-sheet">
           <div class="crm-sheet-head">
             <div>Sr.</div>
-            <div>Purpose / Type</div>
+            <div>Purpose / Layout</div>
             <div>Location</div>
             <div>Building / Project</div>
             <div>Price</div>
@@ -1830,7 +1830,7 @@
                 <span class="crm-index">#${index + 1}</span>
               </div>
               <div class="crm-col">
-                <span class="crm-col-label">Purpose / Type</span>
+                <span class="crm-col-label">Purpose / Layout</span>
                 <div class="crm-primary">${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</div>
                 <div class="crm-secondary">${escapeHtml(getPropertyTermsSummary(property))}</div>
               </div>
@@ -1983,7 +1983,7 @@
             <div>Purpose</div>
             <div>Location</div>
             <div>Building / Project</div>
-            <div>Type</div>
+            <div>Unit Layout</div>
             <div>Budget</div>
             <div>Payment</div>
             <div>Status</div>
@@ -2015,7 +2015,7 @@
                     <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || 'â€”')}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Type</span>
+                    <span class="crm-col-label">Unit Layout</span>
                     <div class="crm-primary">${escapeHtml(lead.propertyType || 'â€”')}</div>
                   </div>
                   <div class="crm-col">
@@ -2127,7 +2127,7 @@
             <div>Listing</div>
             <div>Location</div>
             <div>Building / Project</div>
-            <div>Property Type</div>
+            <div>Unit Layout</div>
             <div>Price</div>
             <div>Workflow</div>
             <div>Actions</div>
@@ -2164,7 +2164,7 @@
                     <div class="crm-primary">${escapeHtml(property.buildingName || '--')}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Property Type</span>
+                    <span class="crm-col-label">Unit Layout</span>
                     <div class="crm-primary">${escapeHtml(property.propertyType || '--')}</div>
                   </div>
                   <div class="crm-col">
@@ -2269,7 +2269,7 @@
             <div>Purpose</div>
             <div>Location</div>
             <div>Building / Project</div>
-            <div>Type</div>
+            <div>Unit Layout</div>
             <div>Budget</div>
             <div>Payment</div>
             <div>Status</div>
@@ -2301,7 +2301,7 @@
                     <div class="crm-primary">${escapeHtml(lead.preferredBuildingProject || '--')}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Type</span>
+                    <span class="crm-col-label">Unit Layout</span>
                     <div class="crm-primary">${escapeHtml(lead.propertyType || '--')}</div>
                   </div>
                   <div class="crm-col">
@@ -2418,7 +2418,7 @@
             <div>Purpose</div>
             <div>Location</div>
             <div>Building / Project</div>
-            <div>Type</div>
+            <div>Unit Layout</div>
             <div>Price</div>
             <div>Status</div>
             <div>Follow-up</div>
@@ -2451,7 +2451,7 @@
                     <div class="crm-primary">${escapeHtml(property.buildingName || '--')}</div>
                   </div>
                   <div class="crm-col">
-                    <span class="crm-col-label">Type</span>
+                    <span class="crm-col-label">Unit Layout</span>
                     <div class="crm-primary">${escapeHtml(property.propertyType || '--')}</div>
                   </div>
                   <div class="crm-col">
@@ -3417,7 +3417,8 @@
             <div class="detail-cell"><small>Client Name</small><strong>${renderPrivateNameValue('lead', lead.id, lead.clientName, 'Hidden for privacy')}</strong></div>
             <div class="detail-cell"><small>Client Phone</small><strong>${renderPrivatePhoneValue('lead', lead.id, lead.clientPhone)}</strong></div>
             <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
-            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>Property Category</small><strong>${escapeHtml(getDashboardDisplayPropertyCategory(lead) || '--')}</strong></div>
+            <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getDashboardDisplayUnitLayout(lead) || lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>Preferred Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
             <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
             <div class="detail-cell"><small>Budget</small><strong>${escapeHtml(formatBudgetLabel(lead.budget))}</strong></div>
@@ -3512,7 +3513,6 @@
           <h4>Overview</h4>
           <div class="detail-grid">
             <div class="detail-cell"><small>Purpose</small><strong>${escapeHtml(getPropertyPurposeLabel(property.purpose))}</strong></div>
-            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(property.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>Property Category</small><strong>${escapeHtml(getDashboardDisplayPropertyCategory(property) || '--')}</strong></div>
             <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(getDashboardDisplayUnitLayout(property) || '--')}</strong></div>
             <div class="detail-cell"><small>Area / Location</small><strong>${escapeHtml(property.location || '--')}</strong></div>
@@ -3623,7 +3623,7 @@
                 <div class="workspace-table-head" style="grid-template-columns:${leadColumns};">
                   <div class="workspace-head-center">#</div>
                   <div>Client / Purpose</div>
-                  <div>Property Type</div>
+                  <div>Unit Layout</div>
                   <div>Preferred Location</div>
                   <div>Building</div>
                   <div class="workspace-head-right">Budget</div>
@@ -3652,7 +3652,7 @@
                           <strong>${escapeHtml(lead.clientName || getLeadClientPurposeLabel(lead.clientPurpose))}</strong>
                           <span>${escapeHtml(getLeadIntentText(lead))}</span>
                         </div>
-                        <div class="workspace-cell" data-label="Property Type">
+                        <div class="workspace-cell" data-label="Unit Layout">
                           <strong>${escapeHtml(lead.propertyType || '--')}</strong>
                           <span>${escapeHtml(getLeadClientPurposeLabel(lead.clientPurpose))}</span>
                         </div>
@@ -3947,7 +3947,7 @@
                   <div>Purpose</div>
                   <div>Location</div>
                   <div>Building / Project</div>
-                  <div>Type</div>
+                  <div>Unit Layout</div>
                   <div class="workspace-head-right">Price</div>
                   <div>Status</div>
                   <div>Visibility</div>
@@ -3986,7 +3986,7 @@
                           <strong>${escapeHtml(property.buildingName || '--')}</strong>
                           <span>${escapeHtml(property.buildingName ? 'Building / project' : 'No building set')}</span>
                         </div>
-                        <div class="workspace-cell" data-label="Type">
+                        <div class="workspace-cell" data-label="Unit Layout">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
                           <span>${escapeHtml(
                             getPropertyPurpose(property.purpose) === 'sale'
@@ -4068,7 +4068,7 @@
                 <div class="workspace-table-head" style="grid-template-columns:${distressColumns};">
                   <div class="workspace-head-center">#</div>
                   <div>Purpose</div>
-                  <div>Type</div>
+                  <div>Unit Layout</div>
                   <div>Area / Building</div>
                   <div class="workspace-head-right">Asking Price</div>
                   <div class="workspace-head-right">Distress Gap</div>
@@ -4101,7 +4101,7 @@
                           <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(property.isDistress ? 'Distress deal' : 'Active listing')}</span>
                         </div>
-                        <div class="workspace-cell" data-label="Type">
+                        <div class="workspace-cell" data-label="Unit Layout">
                           <strong>${escapeHtml(property.propertyType || '--')}</strong>
                           <span>${escapeHtml(joinDisplayParts([
                             getPropertySaleStatusLabel(property),

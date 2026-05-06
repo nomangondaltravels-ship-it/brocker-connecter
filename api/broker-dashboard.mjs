@@ -2,6 +2,7 @@ import {
   buildLeadPublicSummary,
   buildPublicListingPayload,
   deriveBrokerActivity,
+  derivePropertyDimensions,
   getPropertyDimensionDbFields,
   getSupabasePublishableKey,
   isPropertyDimensionColumnError,
@@ -14,7 +15,6 @@ import {
   normalizeListingStatusValue,
   normalizeLocationValue,
   normalizePhoneNumber,
-  normalizePropertyTypeValue,
   normalizeSalePropertyStatusValue,
   normalizeSizeUnit,
   normalizeText,
@@ -56,6 +56,14 @@ const MARKETPLACE_REFRESH_COOLDOWN_MS = 12 * 60 * 60 * 1000;
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function getCanonicalPropertyTypeFromDimensions(source, options = {}) {
+  const dimensions = derivePropertyDimensions(source, options);
+  const propertyType = dimensions.unitLayout && dimensions.unitLayout !== 'N/A'
+    ? dimensions.unitLayout
+    : dimensions.propertyCategory || dimensions.legacyPropertyType || '';
+  return { dimensions, propertyType };
 }
 
 function formatDateInDubai(date = new Date()) {
@@ -345,7 +353,13 @@ function buildPropertyActivityLog(existingProperty, body, extraEntries = []) {
 function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
   const clientPurpose = normalizeText(body?.clientPurpose || body?.purpose || existingLead?.purpose).toLowerCase() === 'rent' ? 'rent' : 'buy';
   const purpose = clientPurpose === 'rent' ? 'rent' : 'sale';
-  const propertyType = normalizePropertyTypeValue(body?.propertyType || body?.category || existingLead?.category);
+  const { dimensions, propertyType } = getCanonicalPropertyTypeFromDimensions({
+    propertyCategory: body?.propertyCategory ?? existingLead?.property_category,
+    unitLayout: body?.unitLayout ?? existingLead?.unit_layout,
+    propertyType: body?.propertyType || body?.category || existingLead?.category,
+    category: body?.category || existingLead?.category,
+    lead_type: existingLead?.lead_type
+  }, { includeLeadType: true });
   const meta = getLeadMeta(body, existingLead, overrides);
   const publicGeneralNotes = body?.publicGeneralNotes !== undefined
     ? normalizeText(body?.publicGeneralNotes)
@@ -366,11 +380,7 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
     lead_type: clientPurpose === 'rent' ? 'tenant' : 'buyer',
     purpose,
     category: propertyType,
-    ...getPropertyDimensionDbFields({
-      propertyCategory: body?.propertyCategory ?? existingLead?.property_category,
-      unitLayout: body?.unitLayout ?? existingLead?.unit_layout,
-      propertyType
-    }),
+    ...getPropertyDimensionDbFields(dimensions),
     location: normalizeLocationValue(body?.location || existingLead?.location),
     budget: normalizeText(body?.budget || existingLead?.budget),
     notes: normalizeText(body?.privateNotes ?? body?.notes ?? existingLead?.notes),
@@ -400,7 +410,12 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
 
 function getPropertyPayload(body, brokerId, existingProperty = null, overrides = {}) {
   const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
-  const propertyType = normalizePropertyTypeValue(body?.propertyType || existingProperty?.property_type || existingProperty?.category);
+  const { dimensions, propertyType } = getCanonicalPropertyTypeFromDimensions({
+    propertyCategory: body?.propertyCategory ?? existingProperty?.property_category,
+    unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
+    propertyType: body?.propertyType || existingProperty?.property_type || existingProperty?.category,
+    category: existingProperty?.category
+  });
   const meta = getPropertyMeta(body, existingProperty, overrides);
   const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
   const effectivePrice = normalizeText(
@@ -419,11 +434,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     purpose,
     property_type: propertyType,
     category: propertyType,
-    ...getPropertyDimensionDbFields({
-      propertyCategory: body?.propertyCategory ?? existingProperty?.property_category,
-      unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
-      propertyType
-    }),
+    ...getPropertyDimensionDbFields(dimensions),
     sale_property_status: purpose === 'sale' ? meta.salePropertyStatus || 'Ready Property' : null,
     handover_quarter: purpose === 'sale' ? meta.handoverQuarter || null : null,
     handover_year: purpose === 'sale' ? meta.handoverYear || null : null,

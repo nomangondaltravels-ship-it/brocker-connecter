@@ -61,7 +61,7 @@
               <strong>${escapeHtml(listing.priceLabel || '--')}</strong>
             </div>
             <div class="detail-cell">
-              <small>${listing.sourceType === 'lead' ? 'Type' : 'Category'}</small>
+              <small>${listing.sourceType === 'lead' ? 'Unit Layout' : 'Category'}</small>
               <strong>${escapeHtml((listing.sourceType === 'lead' ? getConnectorDisplayUnitLayout(listing) : getConnectorDisplayPropertyCategory(listing)) || '--')}</strong>
             </div>
             ${listing.sourceType === 'property' ? `

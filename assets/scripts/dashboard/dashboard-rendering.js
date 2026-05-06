@@ -175,7 +175,7 @@
           <div class="detail-grid">
             <div class="detail-cell"><small>Preferred Location</small><strong>${escapeHtml(lead.location || '--')}</strong></div>
             <div class="detail-cell"><small>Building / Project</small><strong>${escapeHtml(lead.preferredBuildingProject || '--')}</strong></div>
-            <div class="detail-cell"><small>Property Type</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
+            <div class="detail-cell"><small>Unit Layout</small><strong>${escapeHtml(lead.propertyType || '--')}</strong></div>
             <div class="detail-cell"><small>${getLeadClientPurpose(lead.clientPurpose) === 'buy' ? 'Payment Method' : 'Client Purpose'}</small><strong>${escapeHtml(getLeadClientPurpose(lead.clientPurpose) === 'buy' ? (lead.paymentMethod || '--') : getLeadClientPurposeLabel(lead.clientPurpose))}</strong></div>
           </div>
                   <div class="muted"><strong>Private client:</strong> ${escapeHtml(getLeadPrivateContactSummary(lead))}</div>
