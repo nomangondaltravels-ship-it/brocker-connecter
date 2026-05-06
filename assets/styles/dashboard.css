@@ -5167,6 +5167,98 @@
       justify-content: flex-end;
     }
 
+    .bulk-share-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid #eef2f7;
+      background: linear-gradient(180deg, #ffffff, #fffaf0);
+    }
+
+    .bulk-share-toolbar-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .bulk-share-toolbar-copy strong {
+      color: #0f172a;
+      font-size: 0.86rem;
+    }
+
+    .bulk-share-toolbar-copy span {
+      color: #64748b;
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .bulk-share-toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .bulk-select-cell {
+      justify-items: center;
+    }
+
+    .bulk-share-check {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .bulk-share-check input {
+      width: 16px;
+      height: 16px;
+      accent-color: #b58a1d;
+    }
+
+    .bulk-share-modal-card {
+      width: min(820px, calc(100vw - 32px));
+    }
+
+    .bulk-share-modal-shell {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+    }
+
+    .bulk-share-contact-toggle {
+      margin: 0;
+    }
+
+    .bulk-share-message-box {
+      width: 100%;
+      min-height: 360px;
+      resize: vertical;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 14px;
+      background: #f8fafc;
+      color: #0f172a;
+      font: 0.9rem/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      outline: none;
+    }
+
+    .bulk-share-message-box:focus {
+      border-color: rgba(181, 138, 29, 0.42);
+      box-shadow: 0 0 0 3px rgba(181, 138, 29, 0.12);
+      background: #ffffff;
+    }
+
+    .bulk-share-modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
     .workspace-actions .record-quick-btn {
       min-height: 32px !important;
       padding: 0 10px !important;
@@ -6289,6 +6381,21 @@
         overflow: hidden;
       }
 
+      .bulk-share-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .bulk-share-toolbar-actions,
+      .bulk-share-modal-actions {
+        justify-content: flex-start;
+      }
+
+      .bulk-share-toolbar-actions .btn,
+      .bulk-share-modal-actions .btn {
+        min-height: 40px;
+      }
+
       .workspace-table-scroll {
         overflow: visible !important;
       }
@@ -6322,6 +6429,10 @@
         align-items: flex-start !important;
         justify-items: flex-start !important;
         text-align: left !important;
+      }
+
+      .bulk-select-cell::before {
+        content: "Select";
       }
 
       .workspace-cell::before,

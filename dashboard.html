@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-06-phase8-empty-states" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-06-phase8-empty-states"></script>
+  <meta name="nexbridge-build" content="2026-05-06-bulk-whatsapp-share" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-06-bulk-whatsapp-share"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-phase8-empty-states" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-phase8-empty-states">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-bulk-whatsapp-share" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-bulk-whatsapp-share">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-phase8-empty-states" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-bulk-whatsapp-share" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -1002,15 +1002,43 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-phase8-empty-states"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-phase8-empty-states"></script>
+  <div class="workflow-modal-backdrop hidden" id="bulkListingShareModalBackdrop" role="dialog" aria-modal="true" aria-labelledby="bulkListingShareModalTitle" onclick="if(event.target===this)closeBulkListingShareModal()">
+    <div class="workflow-modal-card bulk-share-modal-card" id="bulkListingShareModalCard">
+      <div class="bulk-share-modal-shell">
+        <div class="workflow-modal-head">
+          <div>
+            <div class="workflow-modal-kicker">WhatsApp Message</div>
+            <h3 id="bulkListingShareModalTitle">Share Selected Listings</h3>
+            <p class="workflow-modal-copy">Only share-safe listing details are included. Owner names, owner numbers, client details, and private notes stay private.</p>
+          </div>
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="closeBulkListingShareModal()">Close</button>
+        </div>
+        <label class="toggle-card compact-toggle bulk-share-contact-toggle">
+          <input type="checkbox" id="bulkListingShareIncludeContact" checked onchange="updateBulkListingShareContactToggle(this.checked)">
+          <span>
+            <strong>Include my broker contact at bottom</strong>
+            <small>Uses only your logged-in broker profile name and WhatsApp/mobile number.</small>
+          </span>
+        </label>
+        <textarea class="bulk-share-message-box" id="bulkListingShareMessage" rows="16" oninput="updateBulkListingShareMessageDraft(this.value)"></textarea>
+        <div class="bulk-share-modal-actions">
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="refreshBulkListingShareMessage()">Refresh Message</button>
+          <button class="btn btn-primary btn-tiny" type="button" onclick="copyBulkListingShareMessage()">Copy Message</button>
+          <button class="btn btn-secondary btn-tiny" type="button" onclick="openBulkListingShareWhatsapp()">Open WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/dashboard-lead-config.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-bulk-whatsapp-share"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-bulk-whatsapp-share"></script>
 </body>
 </html>

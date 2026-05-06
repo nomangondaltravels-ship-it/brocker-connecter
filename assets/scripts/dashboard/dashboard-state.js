@@ -173,6 +173,9 @@
       selectedLeadId: null,
       selectedPropertyId: null,
       selectedDistressId: null,
+      bulkListingShareIds: [],
+      bulkListingShareIncludeContact: true,
+      bulkListingShareMessage: '',
       privateContactReveal: {
         lead: {},
         property: {}

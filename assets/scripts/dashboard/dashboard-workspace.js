@@ -3550,6 +3550,179 @@
       flushWorkspaceSplitScroll('leads');
     }
 
+    function normalizeBulkListingShareIds() {
+      const validIds = new Set((Array.isArray(state.properties) ? state.properties : []).map(item => String(item.id)));
+      state.bulkListingShareIds = [...new Set((Array.isArray(state.bulkListingShareIds) ? state.bulkListingShareIds : [])
+        .map(id => String(id))
+        .filter(id => validIds.has(id)))];
+      return state.bulkListingShareIds;
+    }
+
+    function isBulkListingShareSelected(id) {
+      return normalizeBulkListingShareIds().includes(String(id));
+    }
+
+    function toggleBulkListingShareSelection(event, id) {
+      event?.stopPropagation?.();
+      const key = String(id);
+      const selectedIds = normalizeBulkListingShareIds();
+      if (!selectedIds.includes(key) && selectedIds.length >= 10) {
+        setStatus('You can select up to 10 listings per WhatsApp message.', 'error');
+        renderProperties();
+        renderDistressDeals();
+        return;
+      }
+      state.bulkListingShareIds = selectedIds.includes(key)
+        ? selectedIds.filter(item => item !== key)
+        : [...selectedIds, key];
+      renderProperties();
+      renderDistressDeals();
+    }
+
+    function setBulkListingShareVisibleSelection(event, sectionName = 'properties', selected = true) {
+      event?.stopPropagation?.();
+      const visibleItems = sectionName === 'distress'
+        ? getFilteredDashboardItems(state.properties, 'property').filter(item => item.isDistress)
+        : getFilteredDashboardItems(state.properties, 'property');
+      const visibleIds = visibleItems.map(item => String(item.id));
+      const current = normalizeBulkListingShareIds();
+      state.bulkListingShareIds = selected
+        ? [...new Set([...current, ...visibleIds])].slice(0, 10)
+        : current.filter(id => !visibleIds.includes(id));
+      renderProperties();
+      renderDistressDeals();
+    }
+
+    function clearBulkListingShareSelection(event) {
+      event?.stopPropagation?.();
+      state.bulkListingShareIds = [];
+      renderProperties();
+      renderDistressDeals();
+    }
+
+    function getSelectedBulkListingShareProperties() {
+      const selectedIds = normalizeBulkListingShareIds();
+      return selectedIds
+        .map(id => (Array.isArray(state.properties) ? state.properties : []).find(item => String(item.id) === id))
+        .filter(Boolean)
+        .slice(0, 10);
+    }
+
+    function getDashboardBrokerShareContact() {
+      const profile = typeof buildBrokerProfileModel === 'function' ? buildBrokerProfileModel() : {};
+      const broker = state.overview?.broker || state.broker || {};
+      const name = normalizeText(profile.fullName || broker.fullName || broker.name || broker.email || 'NexBridge broker');
+      const company = normalizeText(profile.companyName || broker.companyName || '');
+      const phone = formatPhoneDisplay(profile.whatsappNumber || profile.mobileNumber || broker.whatsappNumber || broker.mobileNumber || broker.phone || '');
+      return { name, company, phone };
+    }
+
+    function buildBulkListingShareMessage(properties = getSelectedBulkListingShareProperties(), includeContact = state.bulkListingShareIncludeContact) {
+      const items = (Array.isArray(properties) ? properties : []).slice(0, 10);
+      const lines = ['NexBridge Listings Available', ''];
+      items.forEach((property, index) => {
+        lines.push(`${index + 1}. ${getPropertyPurposeLabel(property.purpose).toUpperCase()} ${property.propertyType || 'Property'}`);
+        lines.push(`Location: ${property.location || '-'}`);
+        lines.push(`Building: ${property.buildingName || 'Building not specified'}`);
+        lines.push(`Price: ${getPropertyDisplayPrice(property)}`);
+        const sizeLabel = formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit);
+        if (sizeLabel && sizeLabel !== '-') lines.push(`Size: ${sizeLabel}`);
+        const statusParts = [
+          formatStatusLabel(property.status || 'available'),
+          getPropertyPurpose(property.purpose) === 'sale' ? getPropertySaleStatusLabel(property) : '',
+          getPropertyHandoverLabel(property) ? `Handover ${getPropertyHandoverLabel(property)}` : '',
+          property.isDistress ? 'Distress deal' : ''
+        ].filter(Boolean);
+        lines.push(`Status: ${statusParts.join(' | ') || 'Available'}`);
+        lines.push('');
+      });
+      if (includeContact) {
+        const contact = getDashboardBrokerShareContact();
+        lines.push('Shared by:');
+        lines.push(contact.company ? `${contact.name} - ${contact.company}` : contact.name);
+        lines.push(`WhatsApp/Call: ${contact.phone || 'Number not set'}`);
+        lines.push('');
+      }
+      lines.push('Generated from NexBridge');
+      return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    function renderBulkListingShareToolbar(items = [], sectionName = 'properties') {
+      const selectedCount = normalizeBulkListingShareIds().length;
+      const visibleSelectedCount = (Array.isArray(items) ? items : []).filter(item => isBulkListingShareSelected(item.id)).length;
+      const reachedLimit = selectedCount >= 10;
+      return `
+        <div class="bulk-share-toolbar">
+          <div class="bulk-share-toolbar-copy">
+            <strong>${selectedCount ? `${selectedCount} listing${selectedCount === 1 ? '' : 's'} selected` : 'Bulk WhatsApp share'}</strong>
+            <span>Select up to 10 listings and create one safe WhatsApp-ready message.</span>
+          </div>
+          <div class="bulk-share-toolbar-actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="setBulkListingShareVisibleSelection(event, '${sectionName}', true)" ${reachedLimit ? 'disabled' : ''}>Select Visible</button>
+            ${visibleSelectedCount ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="setBulkListingShareVisibleSelection(event, '${sectionName}', false)">Unselect Visible</button>` : ''}
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="clearBulkListingShareSelection(event)" ${selectedCount ? '' : 'disabled'}>Clear</button>
+            <button class="btn btn-primary btn-tiny" type="button" onclick="openBulkListingShareModal()" ${selectedCount ? '' : 'disabled'}>Create WhatsApp Message</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function openBulkListingShareModal() {
+      const selected = getSelectedBulkListingShareProperties();
+      if (!selected.length) {
+        setStatus('Select at least one listing first.', 'error');
+        return;
+      }
+      state.bulkListingShareMessage = buildBulkListingShareMessage(selected, state.bulkListingShareIncludeContact);
+      const backdrop = document.getElementById('bulkListingShareModalBackdrop');
+      const textarea = document.getElementById('bulkListingShareMessage');
+      const toggle = document.getElementById('bulkListingShareIncludeContact');
+      if (textarea) textarea.value = state.bulkListingShareMessage;
+      if (toggle) toggle.checked = Boolean(state.bulkListingShareIncludeContact);
+      if (backdrop) backdrop.classList.remove('hidden');
+      document.body.classList.add('workflow-modal-open');
+    }
+
+    function closeBulkListingShareModal() {
+      document.getElementById('bulkListingShareModalBackdrop')?.classList.add('hidden');
+      document.body.classList.remove('workflow-modal-open');
+    }
+
+    function refreshBulkListingShareMessage() {
+      state.bulkListingShareMessage = buildBulkListingShareMessage();
+      const textarea = document.getElementById('bulkListingShareMessage');
+      if (textarea) textarea.value = state.bulkListingShareMessage;
+      setStatus('Share message refreshed.', 'success');
+    }
+
+    function updateBulkListingShareContactToggle(checked) {
+      state.bulkListingShareIncludeContact = Boolean(checked);
+      refreshBulkListingShareMessage();
+    }
+
+    function updateBulkListingShareMessageDraft(value) {
+      state.bulkListingShareMessage = String(value || '');
+    }
+
+    async function copyBulkListingShareMessage() {
+      const message = String(document.getElementById('bulkListingShareMessage')?.value || state.bulkListingShareMessage || '').trim();
+      if (!message) {
+        setStatus('Share message is empty.', 'error');
+        return;
+      }
+      await copyTextToClipboard(message);
+      setStatus('WhatsApp message copied.', 'success');
+    }
+
+    function openBulkListingShareWhatsapp() {
+      const message = String(document.getElementById('bulkListingShareMessage')?.value || state.bulkListingShareMessage || '').trim();
+      if (!message) {
+        setStatus('Share message is empty.', 'error');
+        return;
+      }
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener');
+    }
+
     function renderProperties() {
       const target = document.getElementById('propertiesList');
       if (!target) return;
@@ -3573,6 +3746,7 @@
       target.innerHTML = `
         <div class="workspace-split ${selectedProperty ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
+            ${renderBulkListingShareToolbar(properties, 'properties')}
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
                 <div class="workspace-table-head" style="grid-template-columns:${listingColumns};">
@@ -3601,7 +3775,12 @@
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'properties')}"
                         style="grid-template-columns:${listingColumns};"
                       >
-                        <div class="workspace-cell workspace-cell-center" data-label="#"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell workspace-cell-center bulk-select-cell" data-label="#">
+                          <label class="bulk-share-check" onclick="event.stopPropagation()">
+                            <input type="checkbox" ${isBulkListingShareSelected(property.id) ? 'checked' : ''} onchange="toggleBulkListingShareSelection(event, ${property.id})" aria-label="Select listing ${index + 1} for WhatsApp message">
+                            <span class="workspace-number">#${index + 1}</span>
+                          </label>
+                        </div>
                         <div class="workspace-cell" data-label="Purpose">
                           <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(getPropertyTermsSummary(property))}</span>
@@ -3690,6 +3869,7 @@
       target.innerHTML = `
         <div class="workspace-split ${selectedDistress ? 'has-detail' : 'no-detail'}">
           <div class="workspace-table-card">
+            ${renderBulkListingShareToolbar(distressItems, 'distress')}
             <div class="workspace-table-scroll">
               <div class="workspace-table-inner">
                 <div class="workspace-table-head" style="grid-template-columns:${distressColumns};">
@@ -3718,7 +3898,12 @@
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPropertyRecord(${property.id}, 'distress')}"
                         style="grid-template-columns:${distressColumns};"
                       >
-                        <div class="workspace-cell workspace-cell-center" data-label="#"><span class="workspace-number">#${index + 1}</span></div>
+                        <div class="workspace-cell workspace-cell-center bulk-select-cell" data-label="#">
+                          <label class="bulk-share-check" onclick="event.stopPropagation()">
+                            <input type="checkbox" ${isBulkListingShareSelected(property.id) ? 'checked' : ''} onchange="toggleBulkListingShareSelection(event, ${property.id})" aria-label="Select distress listing ${index + 1} for WhatsApp message">
+                            <span class="workspace-number">#${index + 1}</span>
+                          </label>
+                        </div>
                         <div class="workspace-cell" data-label="Purpose">
                           <strong>${escapeHtml(`${getPropertyPurposeLabel(property.purpose)} | ${property.propertyType || 'Listing'}`)}</strong>
                           <span>${escapeHtml(property.isDistress ? 'Distress deal' : 'Active listing')}</span>
