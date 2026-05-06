@@ -555,6 +555,7 @@
               </div>
               <div class="workflow-strip">
                 <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="clearLeadFollowUp(${lead.id})">Clear Follow-up</button>
               </div>
               <div>
                 <h4>Matching Listings</h4>
@@ -655,6 +656,7 @@
               </div>
               <div class="workflow-strip">
                 <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="clearPropertyFollowUp(${property.id})">Clear Follow-up</button>
               </div>
               <div>
                 <h4>Matching Leads</h4>
@@ -1344,17 +1346,89 @@
       });
     }
 
-    function markWorkflowNotificationDone(event, element) {
+    function findWorkflowNotificationEntry(notificationKey = '') {
+      const key = String(notificationKey || '').trim();
+      if (!key) return null;
+      const notifications = getNotificationItems();
+      for (let index = 0; index < notifications.length; index += 1) {
+        const item = notifications[index];
+        if (getNotificationEntryKey(item, index) === key) {
+          return { item, index, key };
+        }
+      }
+      return null;
+    }
+
+    function getFollowUpCompletionPayload(entry) {
+      const item = entry?.item || {};
+      if (String(item.notificationType || '').trim().toLowerCase() !== 'follow-up') return null;
+      const relatedType = String(item.relatedSourceType || '').trim().toLowerCase();
+      const relatedId = Number(item.relatedSourceId || 0);
+      if (!relatedId) return null;
+      const basePayload = {
+        id: relatedId,
+        nextFollowUpDate: '',
+        nextFollowUpTime: '',
+        followUpNote: '',
+        isUrgentFollowUp: false
+      };
+      if (relatedType === 'lead') {
+        return { ...basePayload, action: 'set-lead-followup' };
+      }
+      if (relatedType === 'property') {
+        return { ...basePayload, action: 'set-property-followup' };
+      }
+      return null;
+    }
+
+    async function sendDashboardActionWithoutReload(payload) {
+      const response = await fetch('/api/broker-dashboard', {
+        method: 'POST',
+        headers: apiHeaders(),
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || 'Dashboard action failed.');
+      }
+      return result;
+    }
+
+    function dedupeFollowUpCompletionPayloads(payloads = []) {
+      return [...new Map((Array.isArray(payloads) ? payloads : [])
+        .filter(Boolean)
+        .map(payload => [`${payload.action}:${payload.id}`, payload])).values()];
+    }
+
+    async function markWorkflowNotificationDone(event, element) {
       event?.preventDefault?.();
       event?.stopPropagation?.();
       const key = String(element?.dataset?.notificationKey || '').trim();
       if (!key) return;
-      markNotificationRead(key);
-      if (state.activeNotificationKey === key) {
-        state.activeNotificationKey = '';
+      const entry = findWorkflowNotificationEntry(key);
+      const completionPayload = getFollowUpCompletionPayload(entry);
+      try {
+        if (completionPayload) {
+          await dashboardAction(completionPayload, 'Follow-up marked done and cleared.', {
+            button: element,
+            loadingText: 'Marking...'
+          });
+          markNotificationRead(key);
+          if (state.activeNotificationKey === key) {
+            state.activeNotificationKey = '';
+          }
+          renderWorkflowAlerts();
+        } else {
+          markNotificationRead(key);
+          if (state.activeNotificationKey === key) {
+            state.activeNotificationKey = '';
+          }
+          renderWorkflowAlerts();
+          setStatus('Notification marked done.', 'success');
+        }
+      } catch (error) {
+        setStatus(error.message || 'Could not mark notification done.', 'error');
       }
-      renderWorkflowAlerts();
-      setStatus('Notification marked done.', 'success');
     }
 
     function snoozeWorkflowNotification(event, element) {
@@ -1370,7 +1444,7 @@
       setStatus('Notification snoozed for now.', 'success');
     }
 
-    function markAllWorkflowNotificationsDone(scope = 'workflow') {
+    async function markAllWorkflowNotificationsDone(scope = 'workflow') {
       const mode = String(scope || 'workflow').trim().toLowerCase();
       const sourceItems = mode === 'all' ? getNotificationItems() : getWorkflowNotificationItems();
       const unreadEntries = getUnreadNotificationItems(sourceItems);
@@ -1378,19 +1452,31 @@
         setStatus('No unread notifications to clear.', 'info');
         return;
       }
-      const nextKeys = [
-        ...state.notificationSeenKeys,
-        ...unreadEntries.map(entry => entry.key)
-      ];
-      setSeenKeys('notifications', nextKeys);
-      state.activeNotificationKey = '';
-      renderWorkflowAlerts();
-      setStatus(
-        unreadEntries.length === 1
-          ? 'Notification marked done.'
-          : `${unreadEntries.length} notifications marked done.`,
-        'success'
-      );
+      try {
+        const completionPayloads = dedupeFollowUpCompletionPayloads(unreadEntries.map(getFollowUpCompletionPayload));
+        if (completionPayloads.length) {
+          await Promise.all(completionPayloads.map(payload => sendDashboardActionWithoutReload(payload)));
+        }
+        const nextKeys = [
+          ...state.notificationSeenKeys,
+          ...unreadEntries.map(entry => entry.key)
+        ];
+        setSeenKeys('notifications', nextKeys);
+        state.activeNotificationKey = '';
+        if (completionPayloads.length) {
+          await loadDashboard();
+        } else {
+          renderWorkflowAlerts();
+        }
+        setStatus(
+          unreadEntries.length === 1
+            ? 'Notification marked done.'
+            : `${unreadEntries.length} notifications marked done.`,
+          'success'
+        );
+      } catch (error) {
+        setStatus(error.message || 'Could not mark notifications done.', 'error');
+      }
     }
 
     function syncWorkflowNotificationControls() {
@@ -1686,6 +1772,7 @@
               </div>
               <div class="workflow-strip">
                 <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="clearLeadFollowUp(${lead.id})">Clear Follow-up</button>
               </div>
               <div>
                 <h4>Matching Listings</h4>
@@ -1835,6 +1922,7 @@
               </div>
               <div class="workflow-strip">
                 <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+                <button class="btn btn-secondary btn-tiny" type="button" onclick="clearPropertyFollowUp(${property.id})">Clear Follow-up</button>
               </div>
               <div>
                 <h4>Matching Leads</h4>
@@ -2005,6 +2093,7 @@
                   </div>
                   <div class="workflow-strip">
                     <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="clearLeadFollowUp(${lead.id})">Clear Follow-up</button>
                   </div>
                   <div>
                     <h4>Matching Listings</h4>
@@ -2141,6 +2230,7 @@
                   </div>
                   <div class="workflow-strip">
                     <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="clearPropertyFollowUp(${property.id})">Clear Follow-up</button>
                   </div>
                   <div>
                     <h4>Matching Leads</h4>
@@ -2289,6 +2379,7 @@
                   </div>
                   <div class="workflow-strip">
                     <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUp(${lead.id})">Save Follow-up</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="clearLeadFollowUp(${lead.id})">Clear Follow-up</button>
                   </div>
                   <div>
                     <h4>Matching Listings</h4>
@@ -2449,6 +2540,7 @@
                   </div>
                   <div class="workflow-strip">
                     <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUp(${property.id})">Save Follow-up</button>
+                    <button class="btn btn-secondary btn-tiny" type="button" onclick="clearPropertyFollowUp(${property.id})">Clear Follow-up</button>
                   </div>
                   <div>
                     <h4>Matching Leads</h4>
@@ -2718,6 +2810,69 @@
         }, prefix === 'distress' ? 'Distress follow-up updated.' : 'Listing follow-up updated.');
       } catch (error) {
         setStatus(error.message, 'error');
+      }
+    }
+
+    async function clearLeadFollowUpRecord(id, successMessage = 'Requirement follow-up cleared.') {
+      await dashboardAction({
+        action: 'set-lead-followup',
+        id,
+        nextFollowUpDate: '',
+        nextFollowUpTime: '',
+        followUpNote: '',
+        isUrgentFollowUp: false
+      }, successMessage, {
+        button: window.ActionFeedbackUi?.resolveActionButton(),
+        loadingText: 'Clearing...'
+      });
+    }
+
+    async function clearPropertyFollowUpRecord(id, successMessage = 'Listing follow-up cleared.') {
+      await dashboardAction({
+        action: 'set-property-followup',
+        id,
+        nextFollowUpDate: '',
+        nextFollowUpTime: '',
+        followUpNote: '',
+        isUrgentFollowUp: false
+      }, successMessage, {
+        button: window.ActionFeedbackUi?.resolveActionButton(),
+        loadingText: 'Clearing...'
+      });
+    }
+
+    async function clearLeadFollowUp(id) {
+      try {
+        await clearLeadFollowUpRecord(id);
+      } catch (error) {
+        setStatus(error.message || 'Could not clear requirement follow-up.', 'error');
+      }
+    }
+
+    async function clearPropertyFollowUp(id) {
+      try {
+        await clearPropertyFollowUpRecord(id);
+      } catch (error) {
+        setStatus(error.message || 'Could not clear listing follow-up.', 'error');
+      }
+    }
+
+    async function clearLeadFollowUpFromPanel(id, prefix = 'requirement') {
+      try {
+        await clearLeadFollowUpRecord(id, 'Requirement follow-up cleared.');
+      } catch (error) {
+        setStatus(error.message || 'Could not clear requirement follow-up.', 'error');
+      }
+    }
+
+    async function clearPropertyFollowUpFromPanel(id, prefix = 'listing') {
+      try {
+        await clearPropertyFollowUpRecord(
+          id,
+          prefix === 'distress' ? 'Distress follow-up cleared.' : 'Listing follow-up cleared.'
+        );
+      } catch (error) {
+        setStatus(error.message || 'Could not clear listing follow-up.', 'error');
       }
     }
 
@@ -3303,6 +3458,7 @@
           </div>
           <div class="detail-toolbar">
             <button class="btn btn-primary btn-tiny" type="button" onclick="saveLeadFollowUpFromPanel(${lead.id}, 'requirement')">Save Follow-up</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="clearLeadFollowUpFromPanel(${lead.id}, 'requirement')">Clear Follow-up</button>
           </div>
         </div>
         <div class="detail-section">
@@ -3407,6 +3563,7 @@
           </div>
           <div class="detail-toolbar">
             <button class="btn btn-primary btn-tiny" type="button" onclick="savePropertyFollowUpFromPanel(${property.id}, '${prefix}')">Save Follow-up</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="clearPropertyFollowUpFromPanel(${property.id}, '${prefix}')">Clear Follow-up</button>
           </div>
         </div>
         <div class="detail-section">

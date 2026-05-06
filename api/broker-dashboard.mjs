@@ -162,7 +162,7 @@ async function safeSupabasePatchWithPropertyDimensions(options) {
 }
 
 function buildFollowUpText(dateValue, timeValue, urgent) {
-  if (!dateValue && !timeValue) return 'Follow-up details updated.';
+  if (!dateValue && !timeValue) return 'Follow-up cleared.';
   const suffix = urgent ? ' (Urgent)' : '';
   return `Follow-up set for ${[dateValue, timeValue].filter(Boolean).join(' ')}${suffix}.`;
 }
@@ -1950,6 +1950,18 @@ export async function POST(request) {
         payload: [payload]
       });
       return json({ followUp: sanitizeFollowUp(Array.isArray(rows) ? rows[0] : null) });
+    }
+
+    if (action === 'delete-followup') {
+      const id = Number(body?.id || 0);
+      if (!id) return json({ message: 'Follow-up id is required.' }, 400);
+      await supabaseDelete({
+        supabaseUrl,
+        serviceRoleKey,
+        table: 'broker_followups',
+        filters: { id, broker_uuid: broker.id }
+      });
+      return json({ success: true });
     }
 
     return json({ message: 'Unsupported dashboard action.' }, 400);

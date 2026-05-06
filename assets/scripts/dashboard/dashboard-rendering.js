@@ -275,6 +275,9 @@
           <strong>${item.followUpType}</strong>
                 <div class="muted">${escapeHtml(joinDisplayParts([`${item.entityType} #${item.entityId}`, `${item.meetingDate || '--'} ${item.meetingTime || ''}`]))}</div>
                 <div class="muted">${escapeHtml(joinDisplayParts([item.note || 'No note', item.nextAction ? `Next: ${item.nextAction}` : '']))}</div>
+                <div class="actions">
+                  <button class="btn btn-danger btn-tiny" type="button" onclick="deleteFollowup(${Number(item.id)})">Delete Follow-up</button>
+                </div>
         </div>
       `).join('');
     }
@@ -1233,6 +1236,32 @@
         await dashboardAction({ action: 'delete-property', id }, 'Listing deleted successfully.', {
           button: window.ActionFeedbackUi?.resolveActionButton(),
           loadingText: 'Deleting Listing...'
+        });
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    async function deleteFollowup(id) {
+      const followup = state.followUps.find(item => String(item.id) === String(id));
+      const confirmed = await openDashboardConfirmModal({
+        title: 'Delete follow-up',
+        eyebrow: 'Broker workspace',
+        description: 'This removes the saved follow-up from your workspace.',
+        confirmLabel: 'Delete Follow-up',
+        confirmPhrase: 'DELETE',
+        summary: [
+          { label: 'Follow-up', value: followup?.followUpType || 'Follow-up' },
+          { label: 'Entity', value: joinDisplayParts([followup?.entityType, followup?.entityId ? `#${followup.entityId}` : '']) || '--' },
+          { label: 'Date', value: joinDisplayParts([followup?.meetingDate, followup?.meetingTime]) || '--' }
+        ],
+        warning: 'This action cannot be undone from the dashboard.'
+      });
+      if (!confirmed) return;
+      try {
+        await dashboardAction({ action: 'delete-followup', id }, 'Follow-up deleted successfully.', {
+          button: window.ActionFeedbackUi?.resolveActionButton(),
+          loadingText: 'Deleting Follow-up...'
         });
       } catch (error) {
         setStatus(error.message, 'error');
