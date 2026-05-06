@@ -176,6 +176,7 @@
       bulkListingShareIds: [],
       bulkListingShareIncludeContact: true,
       bulkListingShareMessage: '',
+      bulkListingShareCopyTimer: null,
       privateContactReveal: {
         lead: {},
         property: {}

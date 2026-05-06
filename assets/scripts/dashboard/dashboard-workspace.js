@@ -3704,14 +3704,50 @@
       state.bulkListingShareMessage = String(value || '');
     }
 
-    async function copyBulkListingShareMessage() {
+    function showBulkListingShareCopyFeedback(button = null) {
+      const target = button || document.getElementById('bulkListingShareCopyBtn');
+      const status = document.getElementById('bulkListingShareCopyStatus');
+      if (state.bulkListingShareCopyTimer) {
+        clearTimeout(state.bulkListingShareCopyTimer);
+      }
+      if (target) {
+        target.dataset.defaultLabel = target.dataset.defaultLabel || target.textContent || 'Copy Message';
+        target.textContent = 'Message Copied';
+        target.classList.add('is-copied');
+        target.disabled = true;
+      }
+      if (status) {
+        status.textContent = 'Message copied';
+        status.classList.add('is-visible');
+      }
+      state.bulkListingShareCopyTimer = window.setTimeout(() => {
+        if (target) {
+          target.textContent = target.dataset.defaultLabel || 'Copy Message';
+          target.classList.remove('is-copied');
+          target.disabled = false;
+        }
+        if (status) {
+          status.textContent = '';
+          status.classList.remove('is-visible');
+        }
+        state.bulkListingShareCopyTimer = null;
+      }, 1800);
+    }
+
+    async function copyBulkListingShareMessage(button = null) {
       const message = String(document.getElementById('bulkListingShareMessage')?.value || state.bulkListingShareMessage || '').trim();
       if (!message) {
         setStatus('Share message is empty.', 'error');
         return;
       }
-      await copyTextToClipboard(message);
-      setStatus('WhatsApp message copied.', 'success');
+      try {
+        await copyTextToClipboard(message);
+        showBulkListingShareCopyFeedback(button);
+        window.ActionFeedbackUi?.showToast?.('success', 'Message copied.');
+        setStatus('WhatsApp message copied.', 'success');
+      } catch (error) {
+        setStatus('Could not copy message. Please select the text manually.', 'error');
+      }
     }
 
     function openBulkListingShareWhatsapp() {

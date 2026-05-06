@@ -5257,6 +5257,28 @@
       flex-wrap: wrap;
       justify-content: flex-end;
       gap: 8px;
+      align-items: center;
+    }
+
+    .bulk-share-modal-actions .btn.is-copied {
+      background: #16a34a !important;
+      border-color: #16a34a !important;
+      color: #ffffff !important;
+    }
+
+    .bulk-share-copy-status {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      color: #15803d;
+      font-size: 0.78rem;
+      font-weight: 800;
+      opacity: 0;
+      transition: opacity 0.16s ease;
+    }
+
+    .bulk-share-copy-status.is-visible {
+      opacity: 1;
     }
 
     .workspace-actions .record-quick-btn {
@@ -6394,6 +6416,11 @@
       .bulk-share-toolbar-actions .btn,
       .bulk-share-modal-actions .btn {
         min-height: 40px;
+      }
+
+      .bulk-share-copy-status {
+        width: 100%;
+        justify-content: flex-end;
       }
 
       .workspace-table-scroll {
