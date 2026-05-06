@@ -199,6 +199,12 @@
 
     const leadAutocompleteControllers = {};
     const propertyAutocompleteControllers = {};
+    const dashboardAutocompleteCache = {
+      buildingAliasSignature: '',
+      buildingAliasMap: {},
+      buildingSuggestionSignature: '',
+      buildingSuggestionsByLocation: new Map()
+    };
     let brokerActivityHeartbeatTimer = null;
     const PROFILE_SPECIALIZATION_OPTIONS = ['Rent', 'Sale', 'Off-plan', 'Commercial'];
     const PROFILE_LANGUAGE_OPTIONS = ['English', 'Arabic', 'Urdu', 'Hindi', 'Punjabi', 'Russian'];
@@ -352,8 +358,36 @@
       };
     }
 
+    function getAutocompleteSourceSignature(items = []) {
+      const values = Array.isArray(items) ? items : [];
+      if (!values.length) return '0';
+      const first = values[0] || {};
+      const middle = values[Math.floor(values.length / 2)] || {};
+      const last = values[values.length - 1] || {};
+      return [
+        values.length,
+        normalizeText(first.id || first.name || first),
+        normalizeText(middle.id || middle.name || middle),
+        normalizeText(last.id || last.name || last)
+      ].join('|');
+    }
+
+    function getDashboardBuildingSourceSignature() {
+      return [
+        getAutocompleteSourceSignature(state?.masterDirectory?.buildings || []),
+        getAutocompleteSourceSignature(state?.leads || []),
+        getAutocompleteSourceSignature(state?.properties || []),
+        getAutocompleteSourceSignature(state?.sharedListings || [])
+      ].join('::');
+    }
+
     function getDashboardBuildingAliasMap() {
-      return buildDashboardAliasMap(state?.masterDirectory?.buildings || []);
+      const signature = getAutocompleteSourceSignature(state?.masterDirectory?.buildings || []);
+      if (dashboardAutocompleteCache.buildingAliasSignature !== signature) {
+        dashboardAutocompleteCache.buildingAliasSignature = signature;
+        dashboardAutocompleteCache.buildingAliasMap = buildDashboardAliasMap(state?.masterDirectory?.buildings || []);
+      }
+      return dashboardAutocompleteCache.buildingAliasMap;
     }
 
     function getDashboardLocationAllowedValues() {
@@ -367,6 +401,15 @@
 
     function getLocationScopedBuildingSuggestions(selectedLocation = '') {
       const normalizedSelectedLocation = normalizeDashboardLocationValue(selectedLocation);
+      const sourceSignature = getDashboardBuildingSourceSignature();
+      if (dashboardAutocompleteCache.buildingSuggestionSignature !== sourceSignature) {
+        dashboardAutocompleteCache.buildingSuggestionSignature = sourceSignature;
+        dashboardAutocompleteCache.buildingSuggestionsByLocation.clear();
+      }
+      const cacheKey = normalizeTaxonomyToken(normalizedSelectedLocation || '__all__');
+      if (dashboardAutocompleteCache.buildingSuggestionsByLocation.has(cacheKey)) {
+        return dashboardAutocompleteCache.buildingSuggestionsByLocation.get(cacheKey);
+      }
       const masterLocationMatched = [];
       const locationMatched = [];
       const master = [];
@@ -396,16 +439,16 @@
       (state?.properties || []).forEach(item => appendBuilding(item.buildingName, item.location));
       (state?.sharedListings || []).forEach(item => appendBuilding(item.buildingName, item.location));
 
-      return dedupeTaxonomyValues([
+      const suggestions = dedupeTaxonomyValues([
         ...masterLocationMatched,
         ...locationMatched,
         ...master,
         ...dynamic,
-        ...collectMasterBuildingSuggestions(),
-        ...collectDynamicBuildingSuggestions(),
         ...(CORE_TAXONOMY.buildingProjects || []),
         ...(LEAD_CONFIG.buildingProjects || [])
       ]);
+      dashboardAutocompleteCache.buildingSuggestionsByLocation.set(cacheKey, suggestions);
+      return suggestions;
     }
 
     function normalizeDashboardPropertyTypeValue(value) {
@@ -2068,7 +2111,9 @@
 
     function getAutocompleteMatches(dataset, query, options = {}) {
       const normalizedQuery = normalizeTaxonomyToken(query);
-      const values = dedupeTaxonomyValues(dataset || []);
+      const values = options?.dedupeDataset === false
+        ? (Array.isArray(dataset) ? dataset : []).map(item => normalizeText(item)).filter(Boolean)
+        : dedupeTaxonomyValues(dataset || []);
       const aliasMap = options?.aliasMap || {};
       const maxResults = Number(options?.maxResults) > 0 ? Number(options.maxResults) : 12;
       const aliasLookup = new Map();
@@ -2128,6 +2173,91 @@
       ].slice(0, maxResults);
     }
 
+    function getAutocompleteOptionSignature(options = {}) {
+      const aliasKeys = Object.keys(options?.aliasMap || {});
+      return [
+        Number(options?.maxResults || 12),
+        Number(options?.minChars || 0),
+        options?.dedupeDataset === false ? 'raw' : 'dedupe',
+        aliasKeys.length
+      ].join('|');
+    }
+
+    function buildAutocompleteSearchIndex(dataset, options = {}) {
+      const values = options?.dedupeDataset === false
+        ? (Array.isArray(dataset) ? dataset : []).map(item => normalizeText(item)).filter(Boolean)
+        : dedupeTaxonomyValues(dataset || []);
+      const aliasMap = options?.aliasMap || {};
+      const aliasLookup = new Map();
+
+      Object.entries(aliasMap).forEach(([aliasKey, canonicalValue]) => {
+        const canonicalToken = normalizeTaxonomyToken(canonicalValue);
+        const aliasToken = normalizeTaxonomyToken(aliasKey);
+        if (!canonicalToken || !aliasToken) return;
+        if (!aliasLookup.has(canonicalToken)) aliasLookup.set(canonicalToken, []);
+        aliasLookup.get(canonicalToken).push(aliasToken);
+      });
+
+      return values.map(value => {
+        const token = normalizeTaxonomyToken(value);
+        return {
+          value,
+          token,
+          words: token.split(' '),
+          aliases: aliasLookup.get(token) || []
+        };
+      }).filter(item => item.token);
+    }
+
+    function getAutocompleteMatchesFromIndex(index, query, options = {}) {
+      const normalizedQuery = normalizeTaxonomyToken(query);
+      const maxResults = Number(options?.maxResults) > 0 ? Number(options.maxResults) : 12;
+      if (!normalizedQuery) return (Array.isArray(index) ? index : []).slice(0, maxResults).map(item => item.value);
+
+      const startsWith = [];
+      const wordStarts = [];
+      const contains = [];
+      const aliasStarts = [];
+      const aliasContains = [];
+
+      for (const item of (Array.isArray(index) ? index : [])) {
+        if (item.token.startsWith(normalizedQuery)) {
+          startsWith.push(item.value);
+          if (startsWith.length >= maxResults) break;
+          continue;
+        }
+
+        if (item.words.some(word => word.startsWith(normalizedQuery))) {
+          wordStarts.push(item.value);
+          if (startsWith.length + wordStarts.length >= maxResults) break;
+          continue;
+        }
+
+        if (item.token.includes(normalizedQuery)) {
+          contains.push(item.value);
+          if (!startsWith.length && !wordStarts.length && normalizedQuery.length >= 3 && contains.length >= maxResults) break;
+          continue;
+        }
+
+        if (item.aliases.some(alias => alias.startsWith(normalizedQuery))) {
+          aliasStarts.push(item.value);
+          continue;
+        }
+
+        if (item.aliases.some(alias => alias.includes(normalizedQuery))) {
+          aliasContains.push(item.value);
+        }
+      }
+
+      return [
+        ...startsWith,
+        ...wordStarts,
+        ...contains,
+        ...aliasStarts,
+        ...aliasContains
+      ].slice(0, maxResults);
+    }
+
     function setupAutocompleteController({ inputId, menuId, boxId, datasetProvider, matchOptionsProvider = null }) {
       const input = document.getElementById(inputId);
       const menu = document.getElementById(menuId);
@@ -2137,7 +2267,14 @@
       const controller = {
         items: [],
         highlightedIndex: -1,
+        renderTimer: null,
+        indexSignature: '',
+        searchIndex: [],
         close() {
+          if (controller.renderTimer) {
+            clearTimeout(controller.renderTimer);
+            controller.renderTimer = null;
+          }
           menu.innerHTML = '';
           menu.classList.add('hidden');
           input.setAttribute('aria-expanded', 'false');
@@ -2148,12 +2285,24 @@
           controller.close();
           input.dispatchEvent(new Event('change', { bubbles: true }));
         },
+        getSearchIndex(options = {}) {
+          const dataset = datasetProvider();
+          const signature = `${getAutocompleteSourceSignature(dataset)}::${getAutocompleteOptionSignature(options)}`;
+          if (controller.indexSignature !== signature) {
+            controller.indexSignature = signature;
+            controller.searchIndex = buildAutocompleteSearchIndex(dataset, options);
+          }
+          return controller.searchIndex;
+        },
         render(query = input.value) {
-          controller.items = getAutocompleteMatches(
-            datasetProvider(),
-            query,
-            typeof matchOptionsProvider === 'function' ? matchOptionsProvider() : {}
-          );
+          const options = typeof matchOptionsProvider === 'function' ? matchOptionsProvider() : {};
+          const normalizedQuery = normalizeTaxonomyToken(query);
+          const minChars = Math.max(0, Number(options?.minChars || 0));
+          if (normalizedQuery.length < minChars) {
+            controller.close();
+            return;
+          }
+          controller.items = getAutocompleteMatchesFromIndex(controller.getSearchIndex(options), query, options);
           if (!controller.items.length) {
             controller.close();
             return;
@@ -2164,22 +2313,38 @@
           `).join('');
           menu.classList.remove('hidden');
           input.setAttribute('aria-expanded', 'true');
+        },
+        scheduleRender(query = input.value, immediate = false) {
+          const options = typeof matchOptionsProvider === 'function' ? matchOptionsProvider() : {};
+          const debounceMs = Math.max(0, Number(options?.debounceMs || 0));
+          if (controller.renderTimer) {
+            clearTimeout(controller.renderTimer);
+            controller.renderTimer = null;
+          }
+          if (immediate || debounceMs < 1) {
+            controller.render(query);
+            return;
+          }
+          controller.renderTimer = window.setTimeout(() => {
+            controller.renderTimer = null;
+            controller.render(query);
+          }, debounceMs);
         }
       };
 
       input.addEventListener('input', () => {
         input.classList.remove('is-invalid');
         controller.highlightedIndex = -1;
-        controller.render(input.value);
+        controller.scheduleRender(input.value);
       });
 
-      input.addEventListener('focus', () => controller.render(input.value));
+      input.addEventListener('focus', () => controller.scheduleRender(input.value, true));
 
       input.addEventListener('keydown', event => {
         if (menu.classList.contains('hidden')) {
           if (event.key === 'ArrowDown') {
             event.preventDefault();
-            controller.render(input.value);
+            controller.scheduleRender(input.value, true);
           }
           return;
         }
@@ -2187,11 +2352,11 @@
         if (event.key === 'ArrowDown') {
           event.preventDefault();
           controller.highlightedIndex = Math.min(controller.highlightedIndex + 1, controller.items.length - 1);
-          controller.render(input.value);
+          controller.scheduleRender(input.value, true);
         } else if (event.key === 'ArrowUp') {
           event.preventDefault();
           controller.highlightedIndex = Math.max(controller.highlightedIndex - 1, 0);
-          controller.render(input.value);
+          controller.scheduleRender(input.value, true);
         } else if (event.key === 'Enter' && controller.highlightedIndex >= 0) {
           event.preventDefault();
           controller.select(controller.items[controller.highlightedIndex]);
@@ -2246,7 +2411,10 @@
           datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('leadLocation')?.value || ''),
           matchOptionsProvider: () => ({
             aliasMap: getDashboardBuildingAliasMap(),
-            maxResults: 12
+            maxResults: 12,
+            minChars: 2,
+            debounceMs: 120,
+            dedupeDataset: false
           })
         });
       }
@@ -2651,7 +2819,10 @@
           datasetProvider: () => getLocationScopedBuildingSuggestions(document.getElementById('propertyLocation')?.value || ''),
           matchOptionsProvider: () => ({
             aliasMap: getDashboardBuildingAliasMap(),
-            maxResults: 12
+            maxResults: 12,
+            minChars: 2,
+            debounceMs: 120,
+            dedupeDataset: false
           })
         });
       }
