@@ -324,6 +324,11 @@
       'Land / Plot',
       'Other'
     ]);
+    const CONNECTOR_MONTHLY_PROPERTY_CATEGORY_OPTIONS = Object.freeze([
+      'Apartment',
+      'Villa',
+      'Townhouse'
+    ]);
 
     const CONNECTOR_UNIT_LAYOUT_OPTIONS = Object.freeze([
       'Studio',
@@ -465,7 +470,11 @@
         return CONNECTOR_PURPOSE_OPTIONS[normalizedSection] || CONNECTOR_PURPOSE_OPTIONS.requirements;
       }
       if (field === 'propertyCategory') {
-        return CONNECTOR_PROPERTY_CATEGORY_OPTIONS.map(value => ({ value, label: value }));
+        const normalizedSection = normalizePublicSectionName(sectionName || state.activeSection || 'requirements');
+        const options = normalizedSection === 'monthly-rent'
+          ? CONNECTOR_MONTHLY_PROPERTY_CATEGORY_OPTIONS
+          : CONNECTOR_PROPERTY_CATEGORY_OPTIONS;
+        return options.map(value => ({ value, label: value }));
       }
       if (field === 'unitLayout') {
         return CONNECTOR_UNIT_LAYOUT_OPTIONS.map(value => ({ value, label: value }));
@@ -564,9 +573,13 @@
     function getConnectorFilterOptions(field) {
       const baseOptions = getConnectorTaxonomyOptions(field, state.activeSection);
       const baseValues = baseOptions.map(option => option.value);
-      const dynamicValues = getListingsForActiveConnectorSection(state.activeSection)
+      const normalizedSection = normalizePublicSectionName(state.activeSection || 'requirements');
+      let dynamicValues = getListingsForActiveConnectorSection(state.activeSection)
         .map(listing => getConnectorCanonicalFieldValue(field, listing, state.activeSection))
         .filter(Boolean);
+      if (field === 'propertyCategory' && normalizedSection === 'monthly-rent') {
+        dynamicValues = dynamicValues.filter(value => baseValues.includes(value));
+      }
       return dedupeConnectorValues([...baseValues, ...dynamicValues]).map(value => ({
         value,
         label: getConnectorOptionLabel(field, value, state.activeSection)
