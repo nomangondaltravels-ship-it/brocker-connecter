@@ -866,7 +866,7 @@
         gymAvailable: Boolean(document.getElementById('propertyGymAvailable').checked),
         poolAvailable: Boolean(document.getElementById('propertyPoolAvailable').checked),
         parkingAvailable: Boolean(document.getElementById('propertyParkingAvailable').checked),
-        petsAvailable: Boolean(document.getElementById('propertyPetsAvailable').checked),
+        petsAvailable: getDashboardMonthlyPetsAllowed(document.getElementById('propertyPetsPolicy').value),
         securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
         paymentTerms: document.getElementById('propertyPaymentTerms').value.trim(),
         unitPermit: document.getElementById('propertyUnitPermit').value.trim(),
@@ -961,7 +961,7 @@
       document.getElementById('propertyGymAvailable').checked = false;
       document.getElementById('propertyPoolAvailable').checked = false;
       document.getElementById('propertyParkingAvailable').checked = false;
-      document.getElementById('propertyPetsAvailable').checked = false;
+      document.getElementById('propertyPetsPolicy').value = 'not_allowed';
       document.getElementById('propertyPaymentTerms').value = '';
       document.getElementById('propertyUnitPermit').value = '';
       document.getElementById('propertySaleStatus').value = 'Ready Property';
@@ -1019,7 +1019,7 @@
       document.getElementById('propertyGymAvailable').checked = Boolean(property.gymAvailable);
       document.getElementById('propertyPoolAvailable').checked = Boolean(property.poolAvailable);
       document.getElementById('propertyParkingAvailable').checked = Boolean(property.parkingAvailable);
-      document.getElementById('propertyPetsAvailable').checked = Boolean(property.petsAvailable);
+      document.getElementById('propertyPetsPolicy').value = property.petsAvailable ? 'allowed' : 'not_allowed';
       setMoneyInputValue('propertySecurityDeposit', property.securityDeposit || '');
       document.getElementById('propertyPaymentTerms').value = property.paymentTerms || '';
       document.getElementById('propertyUnitPermit').value = property.unitPermit || '';
@@ -3599,7 +3599,8 @@
             ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Available From</small><strong>${escapeHtml(property.availableFrom || '--')}</strong></div>` : ''}
             ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Monthly Status</small><strong>${escapeHtml(formatStatusLabel(property.availabilityStatus || property.status || 'available'))}</strong></div>` : ''}
             ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Included</small><strong>${escapeHtml(joinDisplayParts([property.billsIncluded ? 'Bills' : '', property.chillerIncluded ? 'Chiller' : '', property.internetIncluded ? 'Internet' : '', property.dewaIncluded ? 'DEWA' : '']) || '--')}</strong></div>` : ''}
-            ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Amenities</small><strong>${escapeHtml(joinDisplayParts([property.gymAvailable ? 'Gym' : '', property.poolAvailable ? 'Pool' : '', property.parkingAvailable ? 'Parking' : '', property.petsAvailable ? 'Pets Available' : '']) || '--')}</strong></div>` : ''}
+            ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Amenities</small><strong>${escapeHtml(joinDisplayParts([property.gymAvailable ? 'Gym' : '', property.poolAvailable ? 'Pool' : '', property.parkingAvailable ? 'Parking' : '']) || '--')}</strong></div>` : ''}
+            ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Pets</small><strong>${escapeHtml(property.petsAvailable ? 'Pets Allowed' : 'Pets Not Allowed')}</strong></div>` : ''}
             ${getPropertyPurpose(property.purpose) === 'monthly_rent' ? `<div class="detail-cell"><small>Deposit / Terms</small><strong>${escapeHtml(joinDisplayParts([property.securityDeposit ? formatBudgetLabel(property.securityDeposit) : '', property.paymentTerms || '']) || '--')}</strong></div>` : ''}
             ${getPropertyPurpose(property.purpose) === 'monthly_rent' && property.unitPermit ? `<div class="detail-cell"><small>Unit Permit</small><strong>${escapeHtml(property.unitPermit)}</strong></div>` : ''}
             ${property.isDistress ? `<div class="detail-cell"><small>Distress Gap</small><strong>${escapeHtml(distressLabel || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
@@ -3870,6 +3871,7 @@
           getPropertyPurpose(property.purpose) === 'monthly_rent' && property.gymAvailable ? 'Gym' : '',
           getPropertyPurpose(property.purpose) === 'monthly_rent' && property.poolAvailable ? 'Pool' : '',
           getPropertyPurpose(property.purpose) === 'monthly_rent' && property.parkingAvailable ? 'Parking' : '',
+          getPropertyPurpose(property.purpose) === 'monthly_rent' ? (property.petsAvailable ? 'Pets allowed' : 'Pets not allowed') : '',
           getPropertyPurpose(property.purpose) === 'monthly_rent' && property.availableFrom ? `Available ${property.availableFrom}` : '',
           getPropertyHandoverLabel(property) ? `Handover ${getPropertyHandoverLabel(property)}` : '',
           property.isDistress ? 'Distress deal' : ''

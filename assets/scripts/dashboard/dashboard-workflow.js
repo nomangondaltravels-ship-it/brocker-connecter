@@ -38,7 +38,7 @@
           property.gymAvailable ? 'Gym' : '',
           property.poolAvailable ? 'Pool' : '',
           property.parkingAvailable ? 'Parking' : '',
-          property.petsAvailable ? 'Pets available' : '',
+          property.petsAvailable ? 'Pets allowed' : 'Pets not allowed',
           property.availableFrom ? `Available ${property.availableFrom}` : '',
           property.minimumStay ? `Min ${property.minimumStay}` : '',
           property.availabilityStatus ? formatStatusLabel(property.availabilityStatus) : ''

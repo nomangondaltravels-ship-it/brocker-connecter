@@ -1775,7 +1775,7 @@
         gymAvailable: Boolean(document.getElementById('propertyGymAvailable')?.checked),
         poolAvailable: Boolean(document.getElementById('propertyPoolAvailable')?.checked),
         parkingAvailable: Boolean(document.getElementById('propertyParkingAvailable')?.checked),
-        petsAvailable: Boolean(document.getElementById('propertyPetsAvailable')?.checked),
+        petsAvailable: getDashboardMonthlyPetsAllowed(document.getElementById('propertyPetsPolicy')?.value),
         securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
         paymentTerms: document.getElementById('propertyPaymentTerms')?.value || '',
         unitPermit: document.getElementById('propertyUnitPermit')?.value || '',
@@ -1886,7 +1886,7 @@
         document.getElementById('propertyGymAvailable').checked = Boolean(values.gymAvailable);
         document.getElementById('propertyPoolAvailable').checked = Boolean(values.poolAvailable);
         document.getElementById('propertyParkingAvailable').checked = Boolean(values.parkingAvailable);
-        document.getElementById('propertyPetsAvailable').checked = Boolean(values.petsAvailable);
+        document.getElementById('propertyPetsPolicy').value = values.petsAvailable ? 'allowed' : 'not_allowed';
         setMoneyInputValue('propertySecurityDeposit', values.securityDeposit || '');
         document.getElementById('propertyPaymentTerms').value = values.paymentTerms || '';
         document.getElementById('propertyUnitPermit').value = values.unitPermit || '';
@@ -2581,6 +2581,18 @@
       return fallback;
     }
 
+    function normalizeDashboardMonthlyPetsPolicy(value, fallback = 'not_allowed') {
+      const normalized = String(value || '').trim().toLowerCase().replace(/[_-]+/g, ' ');
+      if (!normalized) return fallback;
+      if (['allowed', 'yes', 'true', '1', 'pets allowed', 'pet friendly'].includes(normalized)) return 'allowed';
+      if (['not allowed', 'no', 'false', '0', 'pets not allowed', 'not pet friendly'].includes(normalized)) return 'not_allowed';
+      return fallback;
+    }
+
+    function getDashboardMonthlyPetsAllowed(value) {
+      return normalizeDashboardMonthlyPetsPolicy(value) === 'allowed';
+    }
+
     function populatePropertyCategoryOptions(selectedValue = '') {
       const select = document.getElementById('propertyCategory');
       if (!select) return;
@@ -2845,7 +2857,7 @@
         document.getElementById('propertyGymAvailable').checked = false;
         document.getElementById('propertyPoolAvailable').checked = false;
         document.getElementById('propertyParkingAvailable').checked = false;
-        document.getElementById('propertyPetsAvailable').checked = false;
+        document.getElementById('propertyPetsPolicy').value = 'not_allowed';
         document.getElementById('propertyPaymentTerms').value = '';
         document.getElementById('propertyUnitPermit').value = '';
         setMoneyInputValue('propertySalePrice', '');
@@ -3033,7 +3045,7 @@
         'propertyGymAvailable',
         'propertyPoolAvailable',
         'propertyParkingAvailable',
-        'propertyPetsAvailable',
+        'propertyPetsPolicy',
         'propertyPaymentTerms',
         'propertyUnitPermit',
         'propertyCheques',
@@ -3439,7 +3451,7 @@
         gymAvailable: Boolean(document.getElementById('propertyGymAvailable').checked),
         poolAvailable: Boolean(document.getElementById('propertyPoolAvailable').checked),
         parkingAvailable: Boolean(document.getElementById('propertyParkingAvailable').checked),
-        petsAvailable: Boolean(document.getElementById('propertyPetsAvailable').checked),
+        petsAvailable: getDashboardMonthlyPetsAllowed(document.getElementById('propertyPetsPolicy').value),
         securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
         paymentTerms: document.getElementById('propertyPaymentTerms').value.trim(),
         unitPermit: document.getElementById('propertyUnitPermit').value.trim(),

@@ -713,9 +713,12 @@
       return joinDisplayParts([
         listing?.gymAvailable ? 'Gym' : '',
         listing?.poolAvailable ? 'Pool' : '',
-        listing?.parkingAvailable ? 'Parking' : '',
-        listing?.petsAvailable ? 'Pets Available' : ''
+        listing?.parkingAvailable ? 'Parking' : ''
       ]) || '';
+    }
+
+    function getMonthlyPetsPolicyLabel(listing) {
+      return listing?.petsAvailable ? 'Pets Allowed' : 'Pets Not Allowed';
     }
 
     function getMonthlyListingBadges(listing) {
@@ -724,6 +727,7 @@
         listing.billsIncluded ? 'Bills Included' : '',
         listing.furnishedStatus ? formatConnectorStatusLabel(listing.furnishedStatus) : '',
         getMonthlyAmenitiesLabel(listing),
+        getMonthlyPetsPolicyLabel(listing),
         listing.availableFrom ? `Available ${formatConnectorDateLabel(listing.availableFrom)}` : '',
         listing.availabilityStatus ? formatConnectorStatusLabel(listing.availabilityStatus) : ''
       ].filter(Boolean);
@@ -1092,6 +1096,7 @@
           { label: 'Availability', value: formatConnectorStatusLabel(details.availabilityStatus || listing.availabilityStatus) || '--' },
           { label: 'Included', value: getMonthlyIncludedLabel({ ...listing, ...details }) || '--' },
           { label: 'Amenities', value: getMonthlyAmenitiesLabel({ ...listing, ...details }) || '--' },
+          { label: 'Pets', value: getMonthlyPetsPolicyLabel({ ...listing, ...details }) },
           { label: 'Minimum Stay', value: details.minimumStay || listing.minimumStay || '--' },
           { label: 'Security Deposit', value: details.securityDeposit || listing.securityDeposit ? formatConnectorMoney(details.securityDeposit || listing.securityDeposit) : '--' },
           { label: 'Payment Terms', value: details.paymentTerms || listing.paymentTerms || '--' },
@@ -1327,6 +1332,7 @@
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Monthly Status</small><strong>${escapeHtml(formatConnectorStatusLabel(selected.availabilityStatus) || '--')}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Included</small><strong>${escapeHtml(monthlyIncludedLabel || '--')}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Amenities</small><strong>${escapeHtml(getMonthlyAmenitiesLabel(selected) || '--')}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Pets</small><strong>${escapeHtml(getMonthlyPetsPolicyLabel(selected))}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(buildingLabel)}</strong></div>
             <div class="connector-detail-cell"><small>${escapeHtml(priceRowLabel)}</small><strong>${escapeHtml(priceLabel)}</strong></div>
@@ -1471,6 +1477,7 @@
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
               ${isMonthlyRentListing(listing) ? `<span class="sheet-secondary">${escapeHtml(joinDisplayParts([formatConnectorStatusLabel(listing.furnishedStatus), getMonthlyIncludedLabel(listing)])) || '--'}</span>` : ''}
               ${isMonthlyRentListing(listing) && getMonthlyAmenitiesLabel(listing) ? `<span class="sheet-secondary">${escapeHtml(getMonthlyAmenitiesLabel(listing))}</span>` : ''}
+              ${isMonthlyRentListing(listing) ? `<span class="sheet-secondary">${escapeHtml(getMonthlyPetsPolicyLabel(listing))}</span>` : ''}
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">${escapeHtml(priceHeadLabel)}</span>
