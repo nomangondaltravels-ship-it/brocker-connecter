@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-10-monthly-rent-apartment-price-fix" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
+  <meta name="nexbridge-build" content="2026-05-10-monthly-rent-furnished-amenities" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-10-monthly-rent-apartment-price-fix" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-10-monthly-rent-apartment-price-fix">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-10-monthly-rent-furnished-amenities" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-10-monthly-rent-furnished-amenities">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-10-monthly-rent-apartment-price-fix" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-10-monthly-rent-furnished-amenities" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -529,10 +529,8 @@
                   <div class="field-block">
                     <label class="small" for="propertyMonthlyFurnishedStatus">Furnished Status</label>
                     <select id="propertyMonthlyFurnishedStatus">
-                      <option value="">Select furnished status</option>
-                      <option value="furnished">Furnished</option>
-                      <option value="unfurnished">Unfurnished</option>
-                      <option value="semi_furnished">Semi Furnished</option>
+                      <option value="fully_furnished">Fully Furnished</option>
+                      <option value="airbnb_furnished">Airbnb Furnished</option>
                     </select>
                     <div class="field-error" id="propertyMonthlyFurnishedStatusError"></div>
                   </div>
@@ -560,6 +558,10 @@
                       <option value="rented">Rented</option>
                     </select>
                   </div>
+                  <div class="field-block">
+                    <label class="small" for="propertyUnitPermit">Unit Permit</label>
+                    <input id="propertyUnitPermit" type="text" placeholder="Enter permit number" autocomplete="off">
+                  </div>
                   <label class="toggle-card compact-toggle">
                     <input type="checkbox" id="propertyBillsIncluded">
                     <span>
@@ -586,6 +588,34 @@
                     <span>
                       <strong>DEWA Included</strong>
                       <small>Only shown for monthly rent.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyGymAvailable">
+                    <span>
+                      <strong>Gym Available</strong>
+                      <small>Show as a monthly amenity.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyPoolAvailable">
+                    <span>
+                      <strong>Pool Available</strong>
+                      <small>Show as a monthly amenity.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyParkingAvailable">
+                    <span>
+                      <strong>Parking Available</strong>
+                      <small>Show as a monthly amenity.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyPetsAvailable">
+                    <span>
+                      <strong>Pets Available</strong>
+                      <small>Show as a monthly amenity.</small>
                     </span>
                   </label>
                   <div class="field-block full">
@@ -1109,15 +1139,15 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-10-monthly-rent-apartment-price-fix"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-10-monthly-rent-furnished-amenities"></script>
 </body>
 </html>

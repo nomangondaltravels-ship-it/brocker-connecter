@@ -6,6 +6,7 @@ import {
   getPropertyDimensionDbFields,
   getSupabasePublishableKey,
   isMonthlyListingColumnError,
+  isMonthlyListingExtendedColumnError,
   isPropertyDimensionColumnError,
   json,
   normalizeBooleanFlag,
@@ -36,6 +37,7 @@ import {
   serializeLeadMeta,
   serializePropertyMeta,
   stripMonthlyListingFields,
+  stripMonthlyListingExtendedFields,
   stripPropertyDimensionFields,
   supabaseAuthAdminGetUser,
   supabaseAuthGetUser,
@@ -175,6 +177,9 @@ function stripOptionalListingFields(payload, options = {}) {
   if (options.stripPropertyDimensions) {
     nextPayload = stripPropertyDimensionFields(nextPayload);
   }
+  if (options.stripMonthlyExtendedFields) {
+    nextPayload = stripMonthlyListingExtendedFields(nextPayload);
+  }
   if (options.stripMonthlyFields) {
     nextPayload = stripMonthlyListingFields(nextPayload);
   }
@@ -184,19 +189,25 @@ function stripOptionalListingFields(payload, options = {}) {
 async function safeSupabaseInsertWithPropertyDimensions(options) {
   let payload = options.payload;
   let stripPropertyDimensions = false;
+  let stripMonthlyExtendedFields = false;
   let stripMonthlyFields = false;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       return await supabaseInsert({ ...options, payload });
     } catch (error) {
       if (!stripPropertyDimensions && isPropertyDimensionColumnError(error)) {
         stripPropertyDimensions = true;
-        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
+        continue;
+      }
+      if (!stripMonthlyExtendedFields && isMonthlyListingExtendedColumnError(error)) {
+        stripMonthlyExtendedFields = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
         continue;
       }
       if (!stripMonthlyFields && isMonthlyListingColumnError(error)) {
         stripMonthlyFields = true;
-        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
         continue;
       }
       throw error;
@@ -208,19 +219,25 @@ async function safeSupabaseInsertWithPropertyDimensions(options) {
 async function safeSupabasePatchWithPropertyDimensions(options) {
   let payload = options.payload;
   let stripPropertyDimensions = false;
+  let stripMonthlyExtendedFields = false;
   let stripMonthlyFields = false;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       return await supabasePatch({ ...options, payload });
     } catch (error) {
       if (!stripPropertyDimensions && isPropertyDimensionColumnError(error)) {
         stripPropertyDimensions = true;
-        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
+        continue;
+      }
+      if (!stripMonthlyExtendedFields && isMonthlyListingExtendedColumnError(error)) {
+        stripMonthlyExtendedFields = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
         continue;
       }
       if (!stripMonthlyFields && isMonthlyListingColumnError(error)) {
         stripMonthlyFields = true;
-        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyExtendedFields, stripMonthlyFields });
         continue;
       }
       throw error;
@@ -314,6 +331,10 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   const chillerIncludedInput = firstDefined(body?.chillerIncluded, body?.chiller_included);
   const internetIncludedInput = firstDefined(body?.internetIncluded, body?.internet_included);
   const dewaIncludedInput = firstDefined(body?.dewaIncluded, body?.dewa_included);
+  const gymAvailableInput = firstDefined(body?.gymAvailable, body?.gym_available);
+  const poolAvailableInput = firstDefined(body?.poolAvailable, body?.pool_available);
+  const parkingAvailableInput = firstDefined(body?.parkingAvailable, body?.parking_available);
+  const petsAvailableInput = firstDefined(body?.petsAvailable, body?.pets_available);
   const availabilityStatusInput = firstDefined(body?.availabilityStatus, body?.availability_status, body?.status);
   return {
     buildingName: body?.buildingName !== undefined ? normalizeText(body?.buildingName) : existingMeta.buildingName,
@@ -347,7 +368,7 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
       ? normalizeBooleanFlag(billsIncludedInput, normalizeBooleanFlag(existingProperty?.bills_included, existingMeta.billsIncluded))
       : false,
     furnishedStatus: isMonthlyRent
-      ? normalizeFurnishedStatusValue(firstDefined(body?.furnishedStatus, body?.furnished_status) ?? existingProperty?.furnished_status ?? existingMeta.furnishedStatus)
+      ? normalizeFurnishedStatusValue(firstDefined(body?.furnishedStatus, body?.furnished_status) ?? existingProperty?.furnished_status ?? existingMeta.furnishedStatus, 'fully_furnished')
       : '',
     availableFrom: isMonthlyRent
       ? normalizeDateValue(firstDefined(body?.availableFrom, body?.available_from), existingProperty?.available_from || existingMeta.availableFrom)
@@ -364,11 +385,26 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
     dewaIncluded: isMonthlyRent
       ? normalizeBooleanFlag(dewaIncludedInput, normalizeBooleanFlag(existingProperty?.dewa_included, existingMeta.dewaIncluded))
       : false,
+    gymAvailable: isMonthlyRent
+      ? normalizeBooleanFlag(gymAvailableInput, normalizeBooleanFlag(existingProperty?.gym_available, existingMeta.gymAvailable))
+      : false,
+    poolAvailable: isMonthlyRent
+      ? normalizeBooleanFlag(poolAvailableInput, normalizeBooleanFlag(existingProperty?.pool_available, existingMeta.poolAvailable))
+      : false,
+    parkingAvailable: isMonthlyRent
+      ? normalizeBooleanFlag(parkingAvailableInput, normalizeBooleanFlag(existingProperty?.parking_available, existingMeta.parkingAvailable))
+      : false,
+    petsAvailable: isMonthlyRent
+      ? normalizeBooleanFlag(petsAvailableInput, normalizeBooleanFlag(existingProperty?.pets_available, existingMeta.petsAvailable))
+      : false,
     securityDeposit: isMonthlyRent
       ? normalizeText(firstDefined(body?.securityDeposit, body?.security_deposit) ?? existingProperty?.security_deposit ?? existingMeta.securityDeposit)
       : '',
     paymentTerms: isMonthlyRent
       ? normalizeText(firstDefined(body?.paymentTerms, body?.payment_terms) ?? existingProperty?.payment_terms ?? existingMeta.paymentTerms)
+      : '',
+    unitPermit: isMonthlyRent
+      ? normalizeText(firstDefined(body?.unitPermit, body?.unit_permit) ?? existingProperty?.unit_permit ?? existingMeta.unitPermit)
       : '',
     availabilityStatus: isMonthlyRent
       ? normalizeMonthlyAvailabilityStatusValue(
@@ -571,8 +607,13 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     chiller_included: isMonthlyRent ? Boolean(meta.chillerIncluded) : false,
     internet_included: isMonthlyRent ? Boolean(meta.internetIncluded) : false,
     dewa_included: isMonthlyRent ? Boolean(meta.dewaIncluded) : false,
+    gym_available: isMonthlyRent ? Boolean(meta.gymAvailable) : false,
+    pool_available: isMonthlyRent ? Boolean(meta.poolAvailable) : false,
+    parking_available: isMonthlyRent ? Boolean(meta.parkingAvailable) : false,
+    pets_available: isMonthlyRent ? Boolean(meta.petsAvailable) : false,
     security_deposit: isMonthlyRent ? normalizeNumericColumnValue(meta.securityDeposit) : null,
     payment_terms: isMonthlyRent ? meta.paymentTerms || null : null,
+    unit_permit: isMonthlyRent ? meta.unitPermit || null : null,
     availability_status: isMonthlyRent ? listingStatus : null,
     expiry_date: isMonthlyRent ? meta.expiryDate || existingProperty?.expiry_date || defaultMonthlyExpiryDate() : null,
     location: normalizeLocationValue(body?.location || existingProperty?.location),

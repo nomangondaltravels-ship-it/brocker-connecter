@@ -446,7 +446,7 @@ export function isPropertyDimensionColumnError(error) {
   );
 }
 
-const MONTHLY_LISTING_COLUMN_NAMES = Object.freeze([
+const MONTHLY_CORE_LISTING_COLUMN_NAMES = Object.freeze([
   'monthly_rent_price',
   'bills_included',
   'furnished_status',
@@ -460,24 +460,45 @@ const MONTHLY_LISTING_COLUMN_NAMES = Object.freeze([
   'availability_status',
   'expiry_date'
 ]);
+const MONTHLY_EXTENDED_LISTING_COLUMN_NAMES = Object.freeze([
+  'gym_available',
+  'pool_available',
+  'parking_available',
+  'pets_available',
+  'unit_permit'
+]);
+const MONTHLY_LISTING_COLUMN_NAMES = Object.freeze([
+  ...MONTHLY_CORE_LISTING_COLUMN_NAMES,
+  ...MONTHLY_EXTENDED_LISTING_COLUMN_NAMES
+]);
 
-export function stripMonthlyListingFields(payload) {
+export function stripMonthlyListingFields(payload, columnNames = MONTHLY_LISTING_COLUMN_NAMES) {
   if (Array.isArray(payload)) {
-    return payload.map(item => stripMonthlyListingFields(item));
+    return payload.map(item => stripMonthlyListingFields(item, columnNames));
   }
   if (!payload || typeof payload !== 'object') {
     return payload;
   }
   const clone = { ...payload };
-  MONTHLY_LISTING_COLUMN_NAMES.forEach(columnName => {
+  const columns = Array.isArray(columnNames) && columnNames.length ? columnNames : MONTHLY_LISTING_COLUMN_NAMES;
+  columns.forEach(columnName => {
     delete clone[columnName];
   });
   return clone;
 }
 
+export function stripMonthlyListingExtendedFields(payload) {
+  return stripMonthlyListingFields(payload, MONTHLY_EXTENDED_LISTING_COLUMN_NAMES);
+}
+
 export function isMonthlyListingColumnError(error) {
   const message = String(error?.message || error || '').toLowerCase();
   return MONTHLY_LISTING_COLUMN_NAMES.some(columnName => message.includes(columnName));
+}
+
+export function isMonthlyListingExtendedColumnError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return MONTHLY_EXTENDED_LISTING_COLUMN_NAMES.some(columnName => message.includes(columnName));
 }
 
 export function normalizeLocationValue(value) {
@@ -566,7 +587,8 @@ export function normalizeBooleanFlag(value, fallback = false) {
 export function normalizeFurnishedStatusValue(value, fallback = '') {
   const normalized = normalizeTaxonomyToken(value);
   if (!normalized) return fallback;
-  if (normalized === 'furnished' || normalized === 'fully furnished') return 'furnished';
+  if (normalized === 'furnished' || normalized === 'fully furnished' || normalized === 'full furnished') return 'fully_furnished';
+  if (normalized === 'airbnb' || normalized === 'airbnb furnished' || normalized === 'holiday home' || normalized === 'holiday home furnished') return 'airbnb_furnished';
   if (normalized === 'unfurnished' || normalized === 'not furnished') return 'unfurnished';
   if (normalized === 'semi furnished' || normalized === 'semi') return 'semi_furnished';
   return fallback;
@@ -717,8 +739,13 @@ function normalizeMonthlyListingMeta(rawMonthly) {
     chillerIncluded: normalizeBooleanFlag(source.chillerIncluded ?? source.chiller_included, false),
     internetIncluded: normalizeBooleanFlag(source.internetIncluded ?? source.internet_included, false),
     dewaIncluded: normalizeBooleanFlag(source.dewaIncluded ?? source.dewa_included, false),
+    gymAvailable: normalizeBooleanFlag(source.gymAvailable ?? source.gym_available, false),
+    poolAvailable: normalizeBooleanFlag(source.poolAvailable ?? source.pool_available, false),
+    parkingAvailable: normalizeBooleanFlag(source.parkingAvailable ?? source.parking_available, false),
+    petsAvailable: normalizeBooleanFlag(source.petsAvailable ?? source.pets_available, false),
     securityDeposit: normalizeText(source.securityDeposit ?? source.security_deposit),
     paymentTerms: normalizeText(source.paymentTerms ?? source.payment_terms),
+    unitPermit: normalizeText(source.unitPermit ?? source.unit_permit),
     availabilityStatus: normalizeMonthlyAvailabilityStatusValue(source.availabilityStatus ?? source.availability_status, 'available'),
     expiryDate: normalizeText(source.expiryDate ?? source.expiry_date)
   };
@@ -939,8 +966,13 @@ export function serializePropertyMeta(meta) {
     payload.chillerIncluded ||
     payload.internetIncluded ||
     payload.dewaIncluded ||
+    payload.gymAvailable ||
+    payload.poolAvailable ||
+    payload.parkingAvailable ||
+    payload.petsAvailable ||
     payload.securityDeposit ||
     payload.paymentTerms ||
+    payload.unitPermit ||
     payload.availabilityStatus !== 'available' ||
     payload.expiryDate;
 
@@ -1723,7 +1755,7 @@ export function buildPublicListingPayload(sourceType, broker, item) {
       ? normalizeBooleanFlag(item?.billsIncluded ?? item?.bills_included, propertyMeta?.billsIncluded)
       : false,
     furnished_status: purpose === 'monthly_rent'
-      ? normalizeFurnishedStatusValue(item?.furnishedStatus || item?.furnished_status || propertyMeta?.furnishedStatus)
+      ? normalizeFurnishedStatusValue(item?.furnishedStatus || item?.furnished_status || propertyMeta?.furnishedStatus, 'fully_furnished')
       : null,
     available_from: purpose === 'monthly_rent'
       ? normalizeText(item?.availableFrom || item?.available_from || propertyMeta?.availableFrom) || null
@@ -1740,11 +1772,26 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     dewa_included: purpose === 'monthly_rent'
       ? normalizeBooleanFlag(item?.dewaIncluded ?? item?.dewa_included, propertyMeta?.dewaIncluded)
       : false,
+    gym_available: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.gymAvailable ?? item?.gym_available, propertyMeta?.gymAvailable)
+      : false,
+    pool_available: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.poolAvailable ?? item?.pool_available, propertyMeta?.poolAvailable)
+      : false,
+    parking_available: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.parkingAvailable ?? item?.parking_available, propertyMeta?.parkingAvailable)
+      : false,
+    pets_available: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.petsAvailable ?? item?.pets_available, propertyMeta?.petsAvailable)
+      : false,
     security_deposit: purpose === 'monthly_rent'
       ? normalizeNumericColumnValue(item?.securityDeposit || item?.security_deposit || propertyMeta?.securityDeposit)
       : null,
     payment_terms: purpose === 'monthly_rent'
       ? normalizeText(item?.paymentTerms || item?.payment_terms || propertyMeta?.paymentTerms) || null
+      : null,
+    unit_permit: purpose === 'monthly_rent'
+      ? normalizeText(item?.unitPermit || item?.unit_permit || propertyMeta?.unitPermit) || null
       : null,
     availability_status: purpose === 'monthly_rent' ? availabilityStatus : null,
     expiry_date: purpose === 'monthly_rent'
@@ -1892,14 +1939,19 @@ export function sanitizeProperty(row) {
     distressDiscountPercent: distressGapPercent,
     distressGapPercent,
     billsIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.bills_included, meta.billsIncluded) : false,
-    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status || meta.furnishedStatus) : '',
+    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status || meta.furnishedStatus, 'fully_furnished') : '',
     availableFrom: isMonthlyRentPurpose ? normalizeText(row.available_from || meta.availableFrom) : '',
     minimumStay: isMonthlyRentPurpose ? normalizeText(row.minimum_stay || meta.minimumStay) : '',
     chillerIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.chiller_included, meta.chillerIncluded) : false,
     internetIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.internet_included, meta.internetIncluded) : false,
     dewaIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.dewa_included, meta.dewaIncluded) : false,
+    gymAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.gym_available, meta.gymAvailable) : false,
+    poolAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.pool_available, meta.poolAvailable) : false,
+    parkingAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.parking_available, meta.parkingAvailable) : false,
+    petsAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.pets_available, meta.petsAvailable) : false,
     securityDeposit: isMonthlyRentPurpose ? normalizeText(row.security_deposit || meta.securityDeposit) : '',
     paymentTerms: isMonthlyRentPurpose ? normalizeText(row.payment_terms || meta.paymentTerms) : '',
+    unitPermit: isMonthlyRentPurpose ? normalizeText(row.unit_permit || meta.unitPermit) : '',
     availabilityStatus: isMonthlyRentPurpose ? availabilityStatus : '',
     expiryDate: isMonthlyRentPurpose ? normalizeText(row.expiry_date || meta.expiryDate) : '',
     listingImageCount: Number(row.listing_image_count || listingImages.length || 0) || 0,
@@ -2045,14 +2097,19 @@ export function sanitizePublicListing(row, options = {}) {
     distressGapPercent,
     monthlyRentPrice: isMonthlyRentPurpose ? normalizeText(row.monthly_rent_price || row.price_label) : '',
     billsIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.bills_included, false) : false,
-    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status) : '',
+    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status, 'fully_furnished') : '',
     availableFrom: isMonthlyRentPurpose ? normalizeText(row.available_from) : '',
     minimumStay: isMonthlyRentPurpose ? normalizeText(row.minimum_stay) : '',
     chillerIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.chiller_included, false) : false,
     internetIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.internet_included, false) : false,
     dewaIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.dewa_included, false) : false,
+    gymAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.gym_available, false) : false,
+    poolAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.pool_available, false) : false,
+    parkingAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.parking_available, false) : false,
+    petsAvailable: isMonthlyRentPurpose ? normalizeBooleanFlag(row.pets_available, false) : false,
     securityDeposit: isMonthlyRentPurpose ? normalizeText(row.security_deposit) : '',
     paymentTerms: isMonthlyRentPurpose ? normalizeText(row.payment_terms) : '',
+    unitPermit: isMonthlyRentPurpose ? normalizeText(row.unit_permit) : '',
     availabilityStatus,
     expiryDate: isMonthlyRentPurpose ? normalizeText(row.expiry_date) : '',
     listingImageCount: !isLead ? Number(row.listing_image_count || listingImages.length || 0) || 0 : 0,

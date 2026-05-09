@@ -10,8 +10,13 @@ alter table if exists public.broker_properties
   add column if not exists chiller_included boolean not null default false,
   add column if not exists internet_included boolean not null default false,
   add column if not exists dewa_included boolean not null default false,
+  add column if not exists gym_available boolean not null default false,
+  add column if not exists pool_available boolean not null default false,
+  add column if not exists parking_available boolean not null default false,
+  add column if not exists pets_available boolean not null default false,
   add column if not exists security_deposit numeric,
   add column if not exists payment_terms text,
+  add column if not exists unit_permit text,
   add column if not exists availability_status text not null default 'available',
   add column if not exists expiry_date date;
 
@@ -24,8 +29,13 @@ alter table if exists public.public_listings
   add column if not exists chiller_included boolean not null default false,
   add column if not exists internet_included boolean not null default false,
   add column if not exists dewa_included boolean not null default false,
+  add column if not exists gym_available boolean not null default false,
+  add column if not exists pool_available boolean not null default false,
+  add column if not exists parking_available boolean not null default false,
+  add column if not exists pets_available boolean not null default false,
   add column if not exists security_deposit numeric,
   add column if not exists payment_terms text,
+  add column if not exists unit_permit text,
   add column if not exists availability_status text not null default 'available',
   add column if not exists expiry_date date;
 

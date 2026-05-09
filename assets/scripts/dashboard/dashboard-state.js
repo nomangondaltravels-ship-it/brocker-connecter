@@ -1761,14 +1761,19 @@
         rentPrice: getMoneyInputFullValue('propertyRentPrice'),
         monthlyRentPrice: getMoneyInputFullValue('propertyMonthlyRentPrice'),
         billsIncluded: Boolean(document.getElementById('propertyBillsIncluded')?.checked),
-        furnishedStatus: document.getElementById('propertyMonthlyFurnishedStatus')?.value || '',
+        furnishedStatus: normalizeDashboardMonthlyFurnishedStatus(document.getElementById('propertyMonthlyFurnishedStatus')?.value),
         availableFrom: document.getElementById('propertyAvailableFrom')?.value || '',
         minimumStay: document.getElementById('propertyMinimumStay')?.value || '',
         chillerIncluded: Boolean(document.getElementById('propertyChillerIncluded')?.checked),
         internetIncluded: Boolean(document.getElementById('propertyInternetIncluded')?.checked),
         dewaIncluded: Boolean(document.getElementById('propertyDewaIncluded')?.checked),
+        gymAvailable: Boolean(document.getElementById('propertyGymAvailable')?.checked),
+        poolAvailable: Boolean(document.getElementById('propertyPoolAvailable')?.checked),
+        parkingAvailable: Boolean(document.getElementById('propertyParkingAvailable')?.checked),
+        petsAvailable: Boolean(document.getElementById('propertyPetsAvailable')?.checked),
         securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
         paymentTerms: document.getElementById('propertyPaymentTerms')?.value || '',
+        unitPermit: document.getElementById('propertyUnitPermit')?.value || '',
         availabilityStatus: document.getElementById('propertyMonthlyAvailabilityStatus')?.value || 'available',
         salePrice: getMoneyInputFullValue('propertySalePrice'),
         marketPrice: getMoneyInputFullValue('propertyMarketPrice'),
@@ -1867,14 +1872,19 @@
         setMoneyInputValue('propertyRentPrice', values.rentPrice || '');
         setMoneyInputValue('propertyMonthlyRentPrice', values.monthlyRentPrice || '');
         document.getElementById('propertyBillsIncluded').checked = Boolean(values.billsIncluded);
-        document.getElementById('propertyMonthlyFurnishedStatus').value = values.furnishedStatus || '';
+        document.getElementById('propertyMonthlyFurnishedStatus').value = normalizeDashboardMonthlyFurnishedStatus(values.furnishedStatus);
         document.getElementById('propertyAvailableFrom').value = values.availableFrom || '';
         document.getElementById('propertyMinimumStay').value = values.minimumStay || '';
         document.getElementById('propertyChillerIncluded').checked = Boolean(values.chillerIncluded);
         document.getElementById('propertyInternetIncluded').checked = Boolean(values.internetIncluded);
         document.getElementById('propertyDewaIncluded').checked = Boolean(values.dewaIncluded);
+        document.getElementById('propertyGymAvailable').checked = Boolean(values.gymAvailable);
+        document.getElementById('propertyPoolAvailable').checked = Boolean(values.poolAvailable);
+        document.getElementById('propertyParkingAvailable').checked = Boolean(values.parkingAvailable);
+        document.getElementById('propertyPetsAvailable').checked = Boolean(values.petsAvailable);
         setMoneyInputValue('propertySecurityDeposit', values.securityDeposit || '');
         document.getElementById('propertyPaymentTerms').value = values.paymentTerms || '';
+        document.getElementById('propertyUnitPermit').value = values.unitPermit || '';
         document.getElementById('propertyMonthlyAvailabilityStatus').value = values.availabilityStatus || 'available';
         setMoneyInputValue('propertySalePrice', values.salePrice || '');
         setMoneyInputValue('propertyMarketPrice', values.marketPrice || '');
@@ -2558,6 +2568,14 @@
       return 'Listing';
     }
 
+    function normalizeDashboardMonthlyFurnishedStatus(value, fallback = 'fully_furnished') {
+      const normalized = String(value || '').trim().toLowerCase().replace(/[_-]+/g, ' ');
+      if (!normalized) return fallback;
+      if (normalized.includes('airbnb') || normalized.includes('holiday')) return 'airbnb_furnished';
+      if (normalized === 'furnished' || normalized.includes('fully')) return 'fully_furnished';
+      return fallback;
+    }
+
     function populatePropertyCategoryOptions(selectedValue = '') {
       const select = document.getElementById('propertyCategory');
       if (!select) return;
@@ -2809,7 +2827,7 @@
         setMoneyInputValue('propertySecurityDeposit', '');
         document.getElementById('propertyCheques').value = '';
         document.getElementById('propertyChiller').value = '';
-        document.getElementById('propertyMonthlyFurnishedStatus').value = '';
+        document.getElementById('propertyMonthlyFurnishedStatus').value = normalizedPurpose === 'monthly_rent' ? 'fully_furnished' : '';
         document.getElementById('propertyAvailableFrom').value = '';
         document.getElementById('propertyMinimumStay').value = '';
         document.getElementById('propertyMonthlyAvailabilityStatus').value = 'available';
@@ -2817,7 +2835,12 @@
         document.getElementById('propertyChillerIncluded').checked = false;
         document.getElementById('propertyInternetIncluded').checked = false;
         document.getElementById('propertyDewaIncluded').checked = false;
+        document.getElementById('propertyGymAvailable').checked = false;
+        document.getElementById('propertyPoolAvailable').checked = false;
+        document.getElementById('propertyParkingAvailable').checked = false;
+        document.getElementById('propertyPetsAvailable').checked = false;
         document.getElementById('propertyPaymentTerms').value = '';
+        document.getElementById('propertyUnitPermit').value = '';
         setMoneyInputValue('propertySalePrice', '');
         setMoneyInputValue('propertyMarketPrice', '');
         document.getElementById('propertyMortgageStatus').value = '';
@@ -2825,6 +2848,12 @@
         document.getElementById('propertyHandoverQuarter').value = '';
         document.getElementById('propertyHandoverYear').value = '';
         document.getElementById('propertyLeasehold').checked = false;
+      }
+      if (normalizedPurpose === 'monthly_rent') {
+        const furnishedStatus = document.getElementById('propertyMonthlyFurnishedStatus');
+        if (furnishedStatus) {
+          furnishedStatus.value = normalizeDashboardMonthlyFurnishedStatus(furnishedStatus.value);
+        }
       }
 
       refreshPropertyDistressUI();
@@ -2994,7 +3023,12 @@
         'propertyChillerIncluded',
         'propertyInternetIncluded',
         'propertyDewaIncluded',
+        'propertyGymAvailable',
+        'propertyPoolAvailable',
+        'propertyParkingAvailable',
+        'propertyPetsAvailable',
         'propertyPaymentTerms',
+        'propertyUnitPermit',
         'propertyCheques',
         'propertyChiller',
         'propertyMortgageStatus',
@@ -3389,14 +3423,19 @@
         rentPrice: getMoneyInputFullValue('propertyRentPrice'),
         monthlyRentPrice: getMoneyInputFullValue('propertyMonthlyRentPrice'),
         billsIncluded: Boolean(document.getElementById('propertyBillsIncluded').checked),
-        furnishedStatus: document.getElementById('propertyMonthlyFurnishedStatus').value.trim(),
+        furnishedStatus: normalizeDashboardMonthlyFurnishedStatus(document.getElementById('propertyMonthlyFurnishedStatus').value),
         availableFrom: document.getElementById('propertyAvailableFrom').value,
         minimumStay: document.getElementById('propertyMinimumStay').value.trim(),
         chillerIncluded: Boolean(document.getElementById('propertyChillerIncluded').checked),
         internetIncluded: Boolean(document.getElementById('propertyInternetIncluded').checked),
         dewaIncluded: Boolean(document.getElementById('propertyDewaIncluded').checked),
+        gymAvailable: Boolean(document.getElementById('propertyGymAvailable').checked),
+        poolAvailable: Boolean(document.getElementById('propertyPoolAvailable').checked),
+        parkingAvailable: Boolean(document.getElementById('propertyParkingAvailable').checked),
+        petsAvailable: Boolean(document.getElementById('propertyPetsAvailable').checked),
         securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
         paymentTerms: document.getElementById('propertyPaymentTerms').value.trim(),
+        unitPermit: document.getElementById('propertyUnitPermit').value.trim(),
         availabilityStatus: document.getElementById('propertyMonthlyAvailabilityStatus').value || 'available',
         cheques: document.getElementById('propertyCheques').value.trim(),
         chiller: document.getElementById('propertyChiller').value.trim(),

@@ -709,11 +709,21 @@
       ]) || '';
     }
 
+    function getMonthlyAmenitiesLabel(listing) {
+      return joinDisplayParts([
+        listing?.gymAvailable ? 'Gym' : '',
+        listing?.poolAvailable ? 'Pool' : '',
+        listing?.parkingAvailable ? 'Parking' : '',
+        listing?.petsAvailable ? 'Pets Available' : ''
+      ]) || '';
+    }
+
     function getMonthlyListingBadges(listing) {
       if (!isMonthlyRentListing(listing)) return [];
       return [
         listing.billsIncluded ? 'Bills Included' : '',
         listing.furnishedStatus ? formatConnectorStatusLabel(listing.furnishedStatus) : '',
+        getMonthlyAmenitiesLabel(listing),
         listing.availableFrom ? `Available ${formatConnectorDateLabel(listing.availableFrom)}` : '',
         listing.availabilityStatus ? formatConnectorStatusLabel(listing.availabilityStatus) : ''
       ].filter(Boolean);
@@ -1081,9 +1091,11 @@
           { label: 'Available From', value: formatConnectorDateLabel(details.availableFrom || listing.availableFrom) || '--' },
           { label: 'Availability', value: formatConnectorStatusLabel(details.availabilityStatus || listing.availabilityStatus) || '--' },
           { label: 'Included', value: getMonthlyIncludedLabel({ ...listing, ...details }) || '--' },
+          { label: 'Amenities', value: getMonthlyAmenitiesLabel({ ...listing, ...details }) || '--' },
           { label: 'Minimum Stay', value: details.minimumStay || listing.minimumStay || '--' },
           { label: 'Security Deposit', value: details.securityDeposit || listing.securityDeposit ? formatConnectorMoney(details.securityDeposit || listing.securityDeposit) : '--' },
-          { label: 'Payment Terms', value: details.paymentTerms || listing.paymentTerms || '--' }
+          { label: 'Payment Terms', value: details.paymentTerms || listing.paymentTerms || '--' },
+          { label: 'Unit Permit', value: details.unitPermit || listing.unitPermit || '--' }
         ];
         sections.push({ title: 'Monthly Rent Details', fields: monthlyFields });
       }
@@ -1314,12 +1326,14 @@
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Available From</small><strong>${escapeHtml(formatConnectorDateLabel(selected.availableFrom) || '--')}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Monthly Status</small><strong>${escapeHtml(formatConnectorStatusLabel(selected.availabilityStatus) || '--')}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Included</small><strong>${escapeHtml(monthlyIncludedLabel || '--')}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Amenities</small><strong>${escapeHtml(getMonthlyAmenitiesLabel(selected) || '--')}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(buildingLabel)}</strong></div>
             <div class="connector-detail-cell"><small>${escapeHtml(priceRowLabel)}</small><strong>${escapeHtml(priceLabel)}</strong></div>
             ${isMonthlyRentListing(selected) && selected.minimumStay ? `<div class="connector-detail-cell"><small>Minimum Stay</small><strong>${escapeHtml(selected.minimumStay)}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) && selected.securityDeposit ? `<div class="connector-detail-cell"><small>Security Deposit</small><strong>${escapeHtml(formatConnectorMoney(selected.securityDeposit))}</strong></div>` : ''}
             ${isMonthlyRentListing(selected) && selected.paymentTerms ? `<div class="connector-detail-cell"><small>Payment Terms</small><strong>${escapeHtml(selected.paymentTerms)}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) && selected.unitPermit ? `<div class="connector-detail-cell"><small>Unit Permit</small><strong>${escapeHtml(selected.unitPermit)}</strong></div>` : ''}
             ${paymentMethod ? `<div class="connector-detail-cell"><small>Payment</small><strong>${escapeHtml(paymentMethod)}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
             ${selected.sourceType === 'property' && selected.isDistress ? `<div class="connector-detail-cell"><small>Distress Gap</small><strong>${escapeHtml(getConnectorDistressGapLabel(selected) || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
@@ -1456,6 +1470,7 @@
               <span class="sheet-label">Unit Layout</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
               ${isMonthlyRentListing(listing) ? `<span class="sheet-secondary">${escapeHtml(joinDisplayParts([formatConnectorStatusLabel(listing.furnishedStatus), getMonthlyIncludedLabel(listing)])) || '--'}</span>` : ''}
+              ${isMonthlyRentListing(listing) && getMonthlyAmenitiesLabel(listing) ? `<span class="sheet-secondary">${escapeHtml(getMonthlyAmenitiesLabel(listing))}</span>` : ''}
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">${escapeHtml(priceHeadLabel)}</span>
