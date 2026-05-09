@@ -1,6 +1,7 @@
     function getPublicSectionLabel(sectionName) {
       const value = String(sectionName || '').trim().toLowerCase();
       if (value === 'requirements') return 'Broker requirements';
+      if (value === 'monthly-rent') return 'Monthly rent listings';
       if (value === 'distress-deals') return 'Distress deals';
       return 'NexBridge listings';
     }
@@ -90,11 +91,13 @@
     function renderPublicViewsFallback(error = null) {
       const filtered = getFilteredPublicListings();
       const requirements = filtered.filter(item => item.sourceType === 'lead');
-      const marketplace = filtered.filter(item => item.sourceType === 'property');
-      const distress = marketplace.filter(item => item.isDistress);
+      const marketplace = filtered.filter(item => item.sourceType === 'property' && !item.isDistress && getConnectorPublicPurposeValue(item) !== 'monthly_rent');
+      const monthlyRent = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'monthly_rent');
+      const distress = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'sale' && item.isDistress);
       updateStats();
       renderPublicFallbackCards('requirementsGrid', requirements);
       renderPublicFallbackCards('marketplaceGrid', marketplace);
+      renderPublicFallbackCards('monthlyRentGrid', monthlyRent);
       renderPublicFallbackCards('distressDealsGrid', distress);
       if (error) {
         console.error('BCP primary renderer failed, fallback view used.', error);
@@ -162,17 +165,21 @@
       state.publicListingsLoading = false;
       setPublicTabError(document.getElementById('tabCountRequirements'));
       setPublicTabError(document.getElementById('tabCountListings'));
+      setPublicTabError(document.getElementById('tabCountMonthlyRent'));
       setPublicTabError(document.getElementById('tabCountDistress'));
       renderPublicLoadErrorPanel('requirementsGrid', 'Broker requirements', message);
       renderPublicLoadErrorPanel('marketplaceGrid', 'NexBridge listings', message);
+      renderPublicLoadErrorPanel('monthlyRentGrid', 'Monthly rent listings', message);
       renderPublicLoadErrorPanel('distressDealsGrid', 'Distress deals', message);
-      ['requirementsPager', 'marketplacePager', 'distressDealsPager'].forEach(id => {
+      PUBLIC_SECTION_KEYS.forEach(sectionName => {
+        const id = getPublicSectionElementIds(sectionName).pager;
         const pager = document.getElementById(id);
         if (pager) pager.classList.add('hidden');
       });
       [
         ['requirementsDetailPanel', 'requirements'],
         ['marketplaceDetailPanel', 'marketplace'],
+        ['monthlyRentDetailPanel', 'monthly-rent'],
         ['distressDealsDetailPanel', 'distress-deals']
       ].forEach(([targetId, sectionName]) => {
         renderConnectorDetailPanel(targetId, sectionName, []);
@@ -241,11 +248,14 @@
       state.publicListingsLoadError = '';
       setPublicTabCount(document.getElementById('tabCountRequirements'), 0, true);
       setPublicTabCount(document.getElementById('tabCountListings'), 0, true);
+      setPublicTabCount(document.getElementById('tabCountMonthlyRent'), 0, true);
       setPublicTabCount(document.getElementById('tabCountDistress'), 0, true);
       renderPublicLoadingRows('requirementsGrid', 'requirements');
       renderPublicLoadingRows('marketplaceGrid', 'marketplace');
+      renderPublicLoadingRows('monthlyRentGrid', 'monthly-rent');
       renderPublicLoadingRows('distressDealsGrid', 'distress-deals');
-      ['requirementsPager', 'marketplacePager', 'distressDealsPager'].forEach(id => {
+      PUBLIC_SECTION_KEYS.forEach(sectionName => {
+        const id = getPublicSectionElementIds(sectionName).pager;
         const pager = document.getElementById(id);
         if (pager) pager.classList.add('hidden');
       });
@@ -262,14 +272,17 @@
       }
       const filtered = getFilteredPublicListings();
       const requirements = filtered.filter(item => item.sourceType === 'lead');
-      const listings = filtered.filter(item => item.sourceType === 'property');
-      const distress = listings.filter(item => item.isDistress);
+      const listings = filtered.filter(item => item.sourceType === 'property' && !item.isDistress && getConnectorPublicPurposeValue(item) !== 'monthly_rent');
+      const monthlyRent = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'monthly_rent');
+      const distress = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'sale' && item.isDistress);
       const requirementCount = document.getElementById('tabCountRequirements');
       const listingCount = document.getElementById('tabCountListings');
+      const monthlyRentCount = document.getElementById('tabCountMonthlyRent');
       const distressCount = document.getElementById('tabCountDistress');
       const toolbarMeta = document.getElementById('connectorToolbarMeta');
       setPublicTabCount(requirementCount, requirements.length);
       setPublicTabCount(listingCount, listings.length);
+      setPublicTabCount(monthlyRentCount, monthlyRent.length);
       setPublicTabCount(distressCount, distress.length);
       if (toolbarMeta) {
         toolbarMeta.textContent = '';
@@ -287,11 +300,13 @@
       }
       const filtered = getFilteredPublicListings();
       const requirements = filtered.filter(item => item.sourceType === 'lead');
-      const marketplace = filtered.filter(item => item.sourceType === 'property');
-      const distress = marketplace.filter(item => item.isDistress);
+      const marketplace = filtered.filter(item => item.sourceType === 'property' && !item.isDistress && getConnectorPublicPurposeValue(item) !== 'monthly_rent');
+      const monthlyRent = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'monthly_rent');
+      const distress = filtered.filter(item => item.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'sale' && item.isDistress);
       updateStats();
       renderSectionGrid('requirementsGrid', 'requirements', requirements);
       renderSectionGrid('marketplaceGrid', 'marketplace', marketplace);
+      renderSectionGrid('monthlyRentGrid', 'monthly-rent', monthlyRent);
       renderSectionGrid('distressDealsGrid', 'distress-deals', distress);
     }
 
@@ -464,7 +479,7 @@
       const section = params.get('section');
       const listingId = params.get('listing');
       if (!listingId) return;
-      const normalizedSection = section === 'shared-leads' ? 'requirements' : section;
+      const normalizedSection = normalizePublicSectionName(section || state.activeSection);
       if (normalizedSection && normalizedSection !== state.activeSection) {
         document.getElementById(`${normalizedSection}-section`)?.classList.add('active');
         openSection(normalizedSection, { preserveRevealParams: true });

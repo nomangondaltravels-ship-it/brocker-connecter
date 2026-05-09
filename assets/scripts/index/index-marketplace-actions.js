@@ -1,6 +1,6 @@
     function openSection(name, options = {}) {
       const preserveRevealParams = Boolean(options?.preserveRevealParams);
-      const normalized = name === 'shared-leads' ? 'requirements' : name;
+      const normalized = normalizePublicSectionName(name);
       const targetSection = document.getElementById(`${normalized}-section`) ? normalized : 'requirements';
       state.activeSection = targetSection;
       document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
@@ -43,6 +43,7 @@
 
     function badgeText(listing) {
       if (listing.isDistress) return 'Hot Distress';
+      if (getConnectorPublicPurposeValue(listing) === 'monthly_rent') return 'Monthly Rent';
       return listing.sourceType === 'lead' ? 'Broker Requirement' : 'NexBridge Listing';
     }
 
@@ -90,6 +91,20 @@
     }
 
     function buildConnectorWhatsappMessage(listing, sectionName) {
+      if (listing?.sourceType === 'property' && getConnectorPublicPurposeValue(listing) === 'monthly_rent') {
+        const brokerName = normalizeText(listing.brokerName);
+        const greeting = brokerName && brokerName !== 'Broker Hidden' ? `Hi ${brokerName},` : 'Hi,';
+        return [
+          greeting,
+          getConnectorWhatsappIdentityLine(),
+          'I am interested in this monthly apartment:',
+          `Reference: ${normalizeText(listing.sourceId || listing.id) || buildConnectorWhatsappReference(listing)}`,
+          `Building: ${getConnectorBuildingDisplay(listing)}`,
+          `Area: ${normalizeText(listing.location) || '--'}`,
+          `Monthly Rent: ${getConnectorPriceLabel(listing)}`,
+          'Please confirm availability.'
+        ].filter(Boolean).join('\n');
+      }
       const referenceLabel = buildConnectorWhatsappReference(listing);
       const link = listing ? buildListingLink(listing, sectionName) : '';
       return [
@@ -208,6 +223,9 @@
     }
 
     function prefilledMatchText(listing) {
+      if (isMonthlyRentListing(listing)) {
+        return 'I have a tenant for your monthly rental listing.';
+      }
       return listing?.sourceType === 'lead'
         ? 'I have a matching property for your requirement.'
         : 'I have a matching client for your property.';
@@ -231,6 +249,12 @@
         getConnectorSalePropertyStatus(listing),
         getConnectorHandoverLabel(listing),
         getConnectorDistressGapLabel(listing),
+        listing.monthlyRentPrice,
+        listing.furnishedStatus,
+        listing.availableFrom,
+        listing.minimumStay,
+        listing.availabilityStatus,
+        listing.billsIncluded ? 'bills included' : '',
         listing.location,
         listing.priceLabel,
         listing.publicNotes,
@@ -314,9 +338,7 @@
       state.publicFilters.propertyCategory = document.getElementById('connectorCategoryFilter')?.value || 'all';
       state.publicFilters.unitLayout = document.getElementById('connectorLayoutFilter')?.value || 'all';
       state.publicFilters.location = document.getElementById('connectorLocationFilter')?.value || 'all';
-      state.pagination.requirements = 1;
-      state.pagination.marketplace = 1;
-      state.pagination['distress-deals'] = 1;
+      resetPublicPagination();
       safeRenderPublicViews();
     }
 
@@ -331,9 +353,7 @@
         const element = document.getElementById(id);
         if (element) element.value = 'all';
       });
-      state.pagination.requirements = 1;
-      state.pagination.marketplace = 1;
-      state.pagination['distress-deals'] = 1;
+      resetPublicPagination();
       safeRenderPublicViews();
     }
 
@@ -461,7 +481,8 @@
           listing.purpose,
           listing.brokerName,
           listing.isDistress ? 'Distress Deals' : '',
-        listing.sourceType === 'lead' ? 'Broker Requirements' : 'NexBridge Listings'
+          isMonthlyRentListing(listing) ? 'Monthly Rent' : '',
+          listing.sourceType === 'lead' ? 'Broker Requirements' : 'NexBridge Listings'
         ].filter(Boolean).forEach(term => {
           if (String(term).toLowerCase().includes(normalized)) terms.add(String(term));
         });
@@ -485,9 +506,7 @@
 
     function applyPublicSearch(query = document.getElementById('publicSearchInput').value) {
       state.publicSearchQuery = String(query || '').trim();
-      state.pagination.requirements = 1;
-      state.pagination.marketplace = 1;
-      state.pagination['distress-deals'] = 1;
+      resetPublicPagination();
       document.getElementById('publicSearchInput').value = state.publicSearchQuery;
       renderPublicSuggestions('');
       safeRenderPublicViews();
@@ -500,9 +519,7 @@
 
     function clearPublicSearch() {
       state.publicSearchQuery = '';
-      state.pagination.requirements = 1;
-      state.pagination.marketplace = 1;
-      state.pagination['distress-deals'] = 1;
+      resetPublicPagination();
       document.getElementById('publicSearchInput').value = '';
       renderPublicSuggestions('');
       safeRenderPublicViews();
@@ -515,7 +532,7 @@
 
     function renderListingCard(listing, sectionName) {
       const shareLink = buildListingLink(listing, sectionName);
-      const priceLabel = formatConnectorMoney(listing.priceLabel);
+      const priceLabel = getConnectorPriceLabel(listing);
       const contactActions = canAccessBrokerContact(listing)
         ? `
               <button class="btn btn-secondary btn-tiny" type="button" onclick="sendProtectedMatchInterest('${sectionName}', '${listing.id}')">I Have Match</button>
@@ -547,7 +564,7 @@
 
     function renderPublicCard(listing, sectionName) {
       const shareLink = buildListingLink(listing, sectionName);
-      const priceLabel = formatConnectorMoney(listing.priceLabel);
+      const priceLabel = getConnectorPriceLabel(listing);
       const contactActions = canAccessBrokerContact(listing)
         ? `
               <button class="btn btn-secondary btn-tiny" type="button" onclick="sendProtectedMatchInterest('${sectionName}', '${listing.id}')">I Have Match</button>
@@ -587,7 +604,7 @@
         target.innerHTML = `<div class="empty">No public broker requirements or NexBridge listings are live yet. Brokers can list private requirements or properties publicly from their dashboard.</div>`;
         return;
       }
-      target.innerHTML = highlights.map(item => renderListingCard(item, item.sourceType === 'lead' ? 'requirements' : item.isDistress ? 'distress-deals' : 'marketplace')).join('');
+      target.innerHTML = highlights.map(item => renderListingCard(item, getPublicSectionForListing(item))).join('');
     }
 
     function formatCompactRelativeTime(value) {
@@ -647,6 +664,61 @@
       return `AED ${Math.round(amount).toLocaleString('en-AE')}`;
     }
 
+    function getConnectorPriceLabel(listing) {
+      const money = formatConnectorMoney(isMonthlyRentListing(listing) ? (listing?.monthlyRentPrice || listing?.priceLabel) : listing?.priceLabel);
+      if (money === '--') return money;
+      if (isMonthlyRentListing(listing)) return `${money} / month`;
+      if (listing?.sourceType === 'property' && getConnectorPublicPurposeValue(listing) === 'rent') return `${money} / year`;
+      return money;
+    }
+
+    function formatConnectorDateLabel(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return normalizeText(value);
+      try {
+        return date.toLocaleDateString('en-AE', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch (error) {
+        return normalizeText(value);
+      }
+    }
+
+    function formatConnectorStatusLabel(value) {
+      const text = normalizeText(value).replace(/[_-]+/g, ' ');
+      if (!text) return '';
+      return text.replace(/\b\w/g, letter => letter.toUpperCase());
+    }
+
+    function isMonthlyRentListing(listing) {
+      return listing?.sourceType === 'property' && getConnectorPublicPurposeValue(listing) === 'monthly_rent';
+    }
+
+    function getPublicSectionForListing(listing) {
+      if (listing?.sourceType === 'lead') return 'requirements';
+      if (isMonthlyRentListing(listing)) return 'monthly-rent';
+      if (listing?.isDistress && getConnectorPublicPurposeValue(listing) === 'sale') return 'distress-deals';
+      return 'marketplace';
+    }
+
+    function getMonthlyIncludedLabel(listing) {
+      return joinDisplayParts([
+        listing?.billsIncluded ? 'Bills' : '',
+        listing?.chillerIncluded ? 'Chiller' : '',
+        listing?.internetIncluded ? 'Internet' : '',
+        listing?.dewaIncluded ? 'DEWA' : ''
+      ]) || '';
+    }
+
+    function getMonthlyListingBadges(listing) {
+      if (!isMonthlyRentListing(listing)) return [];
+      return [
+        listing.billsIncluded ? 'Bills Included' : '',
+        listing.furnishedStatus ? formatConnectorStatusLabel(listing.furnishedStatus) : '',
+        listing.availableFrom ? `Available ${formatConnectorDateLabel(listing.availableFrom)}` : '',
+        listing.availabilityStatus ? formatConnectorStatusLabel(listing.availabilityStatus) : ''
+      ].filter(Boolean);
+    }
+
     function getConnectorBuildingDisplay(listing) {
       const value = normalizeText(listing?.buildingLabel || listing?.sizeLabel);
       if (!value || value === '--' || value.toLowerCase() === 'any') {
@@ -666,6 +738,7 @@
     function getConnectorDetailTitle(listing) {
       const purpose = getConnectorPublicPurposeLabel(listing);
       if (listing?.sourceType === 'lead') return `${purpose} Requirement`;
+      if (isMonthlyRentListing(listing)) return 'Monthly Rent Listing';
       if (listing?.isDistress) return 'Distress Deal';
       return `${purpose} Listing`;
     }
@@ -804,14 +877,14 @@
     function renderConnectorDetailActions(listing, shareLink) {
       const reportRecordButton = renderConnectorReportButton({
         label: listing.sourceType === 'lead' ? 'Report Requirement' : 'Report Listing',
-        onClick: `openRecordComplaint('${listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace'}', '${listing.id}')`,
+        onClick: `openRecordComplaint('${getPublicSectionForListing(listing)}', '${listing.id}')`,
         currentUserId: state.brokerProfile?.id || '',
         reportedUserId: listing.brokerUuid || '',
         targetType: listing.sourceType === 'lead' ? 'requirement' : 'listing',
         targetId: listing.sourceId || listing.id,
         selfDisabledText: 'You cannot report your own shared record.'
       });
-      const sectionName = listing.sourceType === 'lead' ? 'requirements' : listing.isDistress ? 'distress-deals' : 'marketplace';
+      const sectionName = getPublicSectionForListing(listing);
       const mediaActions = listing.sourceType === 'property'
         ? `
             ${renderConnectorActionButton({
@@ -831,7 +904,7 @@
       const protectedActions = canAccessBrokerContact(listing)
         ? `
             ${renderConnectorActionButton({
-              label: 'WhatsApp',
+              label: isMonthlyRentListing(listing) ? 'WhatsApp Inquiry' : 'WhatsApp',
               icon: 'whatsapp',
               tone: 'primary',
               onclick: `openConnectorWhatsappContactById('${sectionName}', '${listing.id}')`,
@@ -931,6 +1004,13 @@
           hidden: purpose !== 'rent'
         },
         {
+          key: 'monthlyDetails',
+          label: 'Monthly rent details',
+          description: 'Include furnishing, availability, included bills, deposit, and payment terms.',
+          checked: true,
+          hidden: purpose !== 'monthly_rent'
+        },
+        {
           key: 'companyDetails',
           label: 'Company details',
           description: 'Show your company name and office location.',
@@ -975,7 +1055,7 @@
         { label: 'Unit Layout', value: getConnectorDisplayUnitLayout(listing) || getConnectorDisplayPropertyType(listing) || '--' },
         { label: 'Location', value: listing.location || '--' },
         { label: 'Building / Project', value: listing.buildingLabel || '--' },
-        { label: 'Price', value: formatConnectorMoney(listing.priceLabel) },
+        { label: 'Price', value: getConnectorPriceLabel(listing) },
         { label: 'Size', value: listing.sizeLabel || '--' }
       ];
       if (details.furnishing) fields.push({ label: 'Furnishing', value: details.furnishing });
@@ -994,6 +1074,18 @@
           title: 'Cheques Details',
           fields: [{ label: 'Cheques', value: details.cheques }]
         });
+      }
+      if (selections.monthlyDetails && getConnectorPublicPurposeValue(listing) === 'monthly_rent') {
+        const monthlyFields = [
+          { label: 'Furnished', value: formatConnectorStatusLabel(details.furnishedStatus || listing.furnishedStatus) || '--' },
+          { label: 'Available From', value: formatConnectorDateLabel(details.availableFrom || listing.availableFrom) || '--' },
+          { label: 'Availability', value: formatConnectorStatusLabel(details.availabilityStatus || listing.availabilityStatus) || '--' },
+          { label: 'Included', value: getMonthlyIncludedLabel({ ...listing, ...details }) || '--' },
+          { label: 'Minimum Stay', value: details.minimumStay || listing.minimumStay || '--' },
+          { label: 'Security Deposit', value: details.securityDeposit || listing.securityDeposit ? formatConnectorMoney(details.securityDeposit || listing.securityDeposit) : '--' },
+          { label: 'Payment Terms', value: details.paymentTerms || listing.paymentTerms || '--' }
+        ];
+        sections.push({ title: 'Monthly Rent Details', fields: monthlyFields });
       }
       if (selections.companyDetails && (requester?.companyName || requester?.officeLocation)) {
         const companyFields = [];
@@ -1094,7 +1186,7 @@
     }
 
     function renderPublicMobileCardHead(listing, indexLabel, title, subtitle, buildingLabel = '') {
-      const priceLabel = formatConnectorMoney(listing.priceLabel);
+      const priceLabel = getConnectorPriceLabel(listing);
       const locationLabel = listing.location || '--';
       const refreshedLabel = formatRelativeTimeLabel(getMarketplaceFreshnessTimestamp(listing));
       const chips = [
@@ -1102,6 +1194,7 @@
         priceLabel,
         refreshedLabel
       ].filter(Boolean);
+      const monthlyBadges = getMonthlyListingBadges(listing);
       return `
         <div class="public-mobile-card-head">
           <div class="public-mobile-title-row">
@@ -1114,6 +1207,7 @@
           <div class="public-mobile-meta">${escapeHtml(joinDisplayParts([locationLabel, buildingLabel || 'Building not specified']))}</div>
           <div class="public-mobile-chip-row">
             ${chips.map(chip => `<span>${escapeHtml(chip)}</span>`).join('')}
+            ${monthlyBadges.map(chip => `<span>${escapeHtml(chip)}</span>`).join('')}
             ${listing.isDistress ? '<span class="is-distress">Distress</span>' : ''}
           </div>
         </div>
@@ -1140,7 +1234,7 @@
     }
 
     function renderPager(sectionName, totalItems) {
-      const pager = document.getElementById(`${sectionName}Pager`);
+      const pager = document.getElementById(getPublicSectionElementIds(sectionName).pager);
       if (!pager) return;
       const totalPages = Math.max(1, Math.ceil(totalItems / 30));
       if (totalPages <= 1) {
@@ -1185,15 +1279,16 @@
         const locationSummary = [getConnectorDisplayPropertyCategory(selected), selected.location || '--']
           .filter(Boolean)
           .join(' | ');
-        const priceLabel = formatConnectorMoney(selected.priceLabel);
+        const priceLabel = getConnectorPriceLabel(selected);
         const buildingLabel = getConnectorBuildingDisplay(selected);
         const paymentMethod = getConnectorPaymentMethod(selected);
-        const priceRowLabel = selected.sourceType === 'lead' ? 'Budget' : 'Price';
+        const priceRowLabel = selected.sourceType === 'lead' ? 'Budget' : isMonthlyRentListing(selected) ? 'Monthly Rent' : 'Price';
+        const monthlyIncludedLabel = getMonthlyIncludedLabel(selected);
       target.innerHTML = `
         <div class="connector-detail-header">
           <div class="connector-detail-head-row">
             <div class="connector-detail-meta">
-              <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : 'Shared Listing'}</span>
+              <span class="badge ${selected.sourceType === 'lead' ? 'badge-blue' : selected.isDistress ? 'badge-red' : 'badge-green'}">${selected.sourceType === 'lead' ? 'Shared Requirement' : isMonthlyRentListing(selected) ? 'Monthly Rent' : selected.isDistress ? 'Distress Deal' : 'Shared Listing'}</span>
             </div>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="closePublicDetailPanel('${sectionName}')">Close</button>
           </div>
@@ -1215,9 +1310,16 @@
             <div class="connector-detail-cell"><small>Category</small><strong>${escapeHtml(getConnectorDisplayPropertyCategory(selected))}</strong></div>
             ${selected.sourceType === 'property' && getConnectorPublicPurposeValue(selected) === 'sale' ? `<div class="connector-detail-cell"><small>Sale Status</small><strong>${escapeHtml(getConnectorSalePropertyStatus(selected) || '--')}</strong></div>` : ''}
             ${selected.sourceType === 'property' && getConnectorHandoverLabel(selected) ? `<div class="connector-detail-cell"><small>Expected Handover</small><strong>${escapeHtml(getConnectorHandoverLabel(selected))}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Furnished</small><strong>${escapeHtml(formatConnectorStatusLabel(selected.furnishedStatus) || '--')}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Available From</small><strong>${escapeHtml(formatConnectorDateLabel(selected.availableFrom) || '--')}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Monthly Status</small><strong>${escapeHtml(formatConnectorStatusLabel(selected.availabilityStatus) || '--')}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) ? `<div class="connector-detail-cell"><small>Included</small><strong>${escapeHtml(monthlyIncludedLabel || '--')}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Location</small><strong>${escapeHtml(selected.location || '--')}</strong></div>
             <div class="connector-detail-cell"><small>Building / Project</small><strong>${escapeHtml(buildingLabel)}</strong></div>
             <div class="connector-detail-cell"><small>${escapeHtml(priceRowLabel)}</small><strong>${escapeHtml(priceLabel)}</strong></div>
+            ${isMonthlyRentListing(selected) && selected.minimumStay ? `<div class="connector-detail-cell"><small>Minimum Stay</small><strong>${escapeHtml(selected.minimumStay)}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) && selected.securityDeposit ? `<div class="connector-detail-cell"><small>Security Deposit</small><strong>${escapeHtml(formatConnectorMoney(selected.securityDeposit))}</strong></div>` : ''}
+            ${isMonthlyRentListing(selected) && selected.paymentTerms ? `<div class="connector-detail-cell"><small>Payment Terms</small><strong>${escapeHtml(selected.paymentTerms)}</strong></div>` : ''}
             ${paymentMethod ? `<div class="connector-detail-cell"><small>Payment</small><strong>${escapeHtml(paymentMethod)}</strong></div>` : ''}
             <div class="connector-detail-cell"><small>Size</small><strong>${escapeHtml(selected.sizeLabel || '--')}</strong></div>
             ${selected.sourceType === 'property' && selected.isDistress ? `<div class="connector-detail-cell"><small>Distress Gap</small><strong>${escapeHtml(getConnectorDistressGapLabel(selected) || 'Add both market and asking prices to calculate distress gap.')}</strong></div>` : ''}
@@ -1295,7 +1397,7 @@
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Budget</span>
-              <span class="sheet-primary money-text">${formatConnectorMoney(listing.priceLabel)}</span>
+              <span class="sheet-primary money-text">${getConnectorPriceLabel(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Refreshed</span>
@@ -1309,6 +1411,7 @@
 
     function renderListingsSheet(items, sectionName, startIndex) {
       const columns = CONNECTOR_TABLE_COLUMNS.listings;
+      const priceHeadLabel = sectionName === 'monthly-rent' ? 'Monthly Rent' : 'Price';
       return `
         <div class="public-sheet-head" style="grid-template-columns:${columns};">
           <div class="sheet-head-center">#</div>
@@ -1316,7 +1419,7 @@
           <div>Location</div>
           <div>Building / Project</div>
           <div>Unit Layout</div>
-          <div class="sheet-head-right">Price</div>
+          <div class="sheet-head-right">${escapeHtml(priceHeadLabel)}</div>
           <div class="sheet-head-right">Size</div>
           <div class="sheet-head-right">Refreshed</div>
           <div class="sheet-head-right">Open</div>
@@ -1331,7 +1434,9 @@
               listing,
               startIndex + index + 1,
               `${getConnectorPublicPurposeLabel(listing).toUpperCase()} ${getConnectorDisplayPropertyCategory(listing)}`,
-              getConnectorDisplayUnitLayout(listing),
+              isMonthlyRentListing(listing)
+                ? joinDisplayParts([getConnectorDisplayUnitLayout(listing), formatConnectorStatusLabel(listing.furnishedStatus)])
+                : getConnectorDisplayUnitLayout(listing),
               listing.buildingLabel || ''
             )}
             <div class="sheet-col">
@@ -1350,10 +1455,11 @@
             <div class="sheet-col">
               <span class="sheet-label">Unit Layout</span>
               <span class="sheet-primary">${getConnectorDisplayUnitLayout(listing)}</span>
+              ${isMonthlyRentListing(listing) ? `<span class="sheet-secondary">${escapeHtml(joinDisplayParts([formatConnectorStatusLabel(listing.furnishedStatus), getMonthlyIncludedLabel(listing)])) || '--'}</span>` : ''}
             </div>
             <div class="sheet-col sheet-col-right">
-              <span class="sheet-label">Price</span>
-              <span class="sheet-primary money-text">${formatConnectorMoney(listing.priceLabel)}</span>
+              <span class="sheet-label">${escapeHtml(priceHeadLabel)}</span>
+              <span class="sheet-primary money-text">${getConnectorPriceLabel(listing)}</span>
             </div>
             <div class="sheet-col sheet-col-right">
               <span class="sheet-label">Size</span>
@@ -1377,7 +1483,7 @@
       if (!items.length) {
         target.innerHTML = renderPublicEmptyState(getPublicSectionLabel(sectionName));
         renderPager(sectionName, 0);
-        const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
+        const detailTargetId = getPublicSectionElementIds(sectionName).detail;
         renderConnectorDetailPanel(detailTargetId, sectionName, []);
         flushPublicSplitScroll(sectionName);
         return;
@@ -1388,7 +1494,7 @@
         ? renderRequirementsSheet(page.pageItems, sectionName, page.startIndex)
         : renderListingsSheet(page.pageItems, sectionName, page.startIndex);
       renderPager(sectionName, sortedItems.length);
-      const detailTargetId = sectionName === 'requirements' ? 'requirementsDetailPanel' : sectionName === 'marketplace' ? 'marketplaceDetailPanel' : 'distressDealsDetailPanel';
+      const detailTargetId = getPublicSectionElementIds(sectionName).detail;
       renderConnectorDetailPanel(detailTargetId, sectionName, sortedItems);
       flushPublicSplitScroll(sectionName);
     }

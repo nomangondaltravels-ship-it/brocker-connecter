@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-06-layout-type-conflict-fix" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-06-layout-type-conflict-fix"></script>
+  <meta name="nexbridge-build" content="2026-05-10-monthly-rent-public-phase4" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-10-monthly-rent-public-phase4"></script>
   <title>NexBridge Marketplace | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-layout-type-conflict-fix" />
-  <link rel="stylesheet" href="assets/styles/index.css?v=2026-05-06-layout-type-conflict-fix">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-10-monthly-rent-public-phase4" />
+  <link rel="stylesheet" href="assets/styles/index.css?v=2026-05-10-monthly-rent-public-phase4">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner public-topbar">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-layout-type-conflict-fix" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-10-monthly-rent-public-phase4" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -43,6 +43,7 @@
       <div class="menu">
         <button class="btn btn-secondary menu-btn active" data-target="requirements" onclick="openSection('requirements')">Broker Requirements</button>
         <button class="btn btn-secondary menu-btn" data-target="marketplace" onclick="openSection('marketplace')">NexBridge Listings</button>
+        <button class="btn btn-secondary menu-btn" data-target="monthly-rent" onclick="openSection('monthly-rent')">Monthly Rent</button>
         <button class="btn btn-secondary menu-btn" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals</button>
       </div>
       <div class="support-menu-group">
@@ -72,6 +73,7 @@
         <div class="hero-tabs">
           <button class="btn btn-secondary section-switch-btn is-active" type="button" data-target="requirements" onclick="openSection('requirements')">Broker Requirements <span class="tab-count is-loading" id="tabCountRequirements" aria-busy="true">...</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="marketplace" onclick="openSection('marketplace')">NexBridge Listings <span class="tab-count is-loading" id="tabCountListings" aria-busy="true">...</span></button>
+          <button class="btn btn-secondary section-switch-btn" type="button" data-target="monthly-rent" onclick="openSection('monthly-rent')">Monthly Rent <span class="tab-count is-loading" id="tabCountMonthlyRent" aria-busy="true">...</span></button>
           <button class="btn btn-secondary section-switch-btn" type="button" data-target="distress-deals" onclick="openSection('distress-deals')">Distress Deals <span class="tab-count is-loading" id="tabCountDistress" aria-busy="true">...</span></button>
         </div>
       </section>
@@ -129,7 +131,7 @@
       <section class="section" id="marketplace-section">
         <div class="page-head compact-head">
           <h2>NexBridge Listings</h2>
-          <p>Latest broker listings available for quick scanning and direct connection.</p>
+          <p>Sale and yearly rent listings available for quick scanning and direct connection.</p>
         </div>
         <div class="connector-results-shell no-detail">
           <div class="connector-list-panel">
@@ -137,6 +139,20 @@
             <div class="pager hidden" id="marketplacePager"></div>
           </div>
           <div class="connector-detail-panel" id="marketplaceDetailPanel"></div>
+        </div>
+      </section>
+
+      <section class="section" id="monthly-rent-section">
+        <div class="page-head compact-head">
+          <h2>Monthly Rent</h2>
+          <p>Short-stay and monthly rental listings with bills, furnishing, and availability details.</p>
+        </div>
+        <div class="connector-results-shell no-detail">
+          <div class="connector-list-panel">
+            <div class="public-sheet is-loading" id="monthlyRentGrid" aria-busy="true"></div>
+            <div class="pager hidden" id="monthlyRentPager"></div>
+          </div>
+          <div class="connector-detail-panel" id="monthlyRentDetailPanel"></div>
         </div>
       </section>
 
@@ -297,16 +313,16 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/whatsapp-contact-config.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/whatsapp-contact-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/listing-media-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/index/index-state-auth.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/index/index-marketplace-actions.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/index/index-public-render.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/index/index-auth-init.js?v=2026-05-06-layout-type-conflict-fix"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/whatsapp-contact-config.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/whatsapp-contact-ui.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/listing-media-ui.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/scripts/index/index-state-auth.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/scripts/index/index-marketplace-actions.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/scripts/index/index-public-render.js?v=2026-05-10-monthly-rent-public-phase4"></script>
+  <script src="assets/scripts/index/index-auth-init.js?v=2026-05-10-monthly-rent-public-phase4"></script>
 </body>
 </html>

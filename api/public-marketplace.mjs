@@ -35,7 +35,11 @@ function applySectionFilter(rows, section) {
     case 'broker-connector-listings':
     case 'shared-properties':
       return items
-        .filter(item => item.source_type === 'property')
+        .filter(item =>
+          item.source_type === 'property'
+          && getPublicPropertyPurpose(item) !== 'monthly_rent'
+          && !(getPublicPropertyPurpose(item) === 'sale' && item.is_distress)
+        )
         .sort((left, right) => getPublicRowFreshnessMs(right) - getPublicRowFreshnessMs(left));
     case 'sale':
     case 'sale-listings':

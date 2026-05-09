@@ -26,17 +26,20 @@
       selectedPublicListingKeys: {
         requirements: '',
         marketplace: '',
+        'monthly-rent': '',
         'distress-deals': ''
       },
       publicSplitScrollMemory: {
         requirements: '',
         marketplace: '',
+        'monthly-rent': '',
         'distress-deals': ''
       },
       pendingPublicSplitScroll: null,
       revealedPublicContactKeys: {
         requirements: '',
         marketplace: '',
+        'monthly-rent': '',
         'distress-deals': ''
       },
       complaintDraft: null,
@@ -49,6 +52,7 @@
       pagination: {
         requirements: 1,
         marketplace: 1,
+        'monthly-rent': 1,
         'distress-deals': 1
       },
       shareLink: '',
@@ -56,6 +60,37 @@
       menuOpen: false,
       forcePublicView: new URLSearchParams(window.location.search).get('view') === 'public'
     };
+    const PUBLIC_SECTION_KEYS = Object.freeze(['requirements', 'marketplace', 'monthly-rent', 'distress-deals']);
+
+    function normalizePublicSectionName(name = 'requirements') {
+      const normalized = String(name || '').trim().toLowerCase();
+      if (normalized === 'shared-leads' || normalized === 'broker-requirements') return 'requirements';
+      if (normalized === 'shared-properties' || normalized === 'broker-connector-listings') return 'marketplace';
+      if (['monthly', 'monthly-rentals', 'monthly_rent', 'monthly-rent'].includes(normalized)) return 'monthly-rent';
+      if (normalized === 'distress' || normalized === 'distress-deals') return 'distress-deals';
+      if (normalized === 'all') return 'all';
+      return PUBLIC_SECTION_KEYS.includes(normalized) ? normalized : 'requirements';
+    }
+
+    function getPublicSectionElementIds(sectionName = state.activeSection) {
+      const normalized = normalizePublicSectionName(sectionName);
+      if (normalized === 'requirements') {
+        return { grid: 'requirementsGrid', pager: 'requirementsPager', detail: 'requirementsDetailPanel', count: 'tabCountRequirements' };
+      }
+      if (normalized === 'monthly-rent') {
+        return { grid: 'monthlyRentGrid', pager: 'monthlyRentPager', detail: 'monthlyRentDetailPanel', count: 'tabCountMonthlyRent' };
+      }
+      if (normalized === 'distress-deals') {
+        return { grid: 'distressDealsGrid', pager: 'distressDealsPager', detail: 'distressDealsDetailPanel', count: 'tabCountDistress' };
+      }
+      return { grid: 'marketplaceGrid', pager: 'marketplacePager', detail: 'marketplaceDetailPanel', count: 'tabCountListings' };
+    }
+
+    function resetPublicPagination() {
+      PUBLIC_SECTION_KEYS.forEach(sectionName => {
+        state.pagination[sectionName] = 1;
+      });
+    }
       const BROKER_SESSION_VERSION = '2026-05-04-phase3-session-hardening';
       const BROKER_SESSION_VERSION_KEY = 'broker_session_version';
       const BROKER_FORCE_RELOGIN_REASON_KEY = 'broker_force_relogin_reason';
@@ -237,11 +272,13 @@
         { value: 'buy', label: 'Buy' }
       ],
       marketplace: [
-        { value: 'rent', label: 'Rent' },
+        { value: 'rent', label: 'Yearly Rent' },
         { value: 'sale', label: 'Sale' }
       ],
+      'monthly-rent': [
+        { value: 'monthly_rent', label: 'Monthly Rent' }
+      ],
       'distress-deals': [
-        { value: 'rent', label: 'Rent' },
         { value: 'sale', label: 'Sale' }
       ]
     });
@@ -424,7 +461,7 @@
 
     function getConnectorTaxonomyOptions(field, sectionName = state.activeSection) {
       if (field === 'purpose') {
-        const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+        const normalizedSection = normalizePublicSectionName(sectionName || state.activeSection || 'requirements');
         return CONNECTOR_PURPOSE_OPTIONS[normalizedSection] || CONNECTOR_PURPOSE_OPTIONS.requirements;
       }
       if (field === 'propertyCategory') {
@@ -448,12 +485,13 @@
     function normalizeConnectorPurpose(value, sourceType = '', sectionName = state.activeSection) {
       const normalized = (CORE_TAXONOMY.aliases?.purposes || {})[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
       if (!normalized) return '';
-      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+      const normalizedSection = normalizePublicSectionName(sectionName || state.activeSection || 'requirements');
       if (sourceType === 'lead' && normalized === 'sale') return 'buy';
       if (normalized === 'buy' && sourceType !== 'lead') {
         return normalizedSection === 'requirements' ? 'buy' : 'sale';
       }
-      return ['rent', 'buy', 'sale'].includes(normalized) ? normalized : '';
+      if (normalized === 'monthly rent' || normalized === 'monthly') return 'monthly_rent';
+      return ['rent', 'buy', 'sale', 'monthly_rent'].includes(normalized) ? normalized : '';
     }
 
     function getConnectorPublicPurposeValue(record = {}) {
@@ -462,9 +500,10 @@
 
     function getConnectorPublicPurposeLabel(record = {}) {
       const normalized = getConnectorPublicPurposeValue(record);
-      if (normalized === 'rent') return 'Rent';
+      if (normalized === 'rent') return record?.sourceType === 'lead' ? 'Rent' : 'Yearly Rent';
       if (normalized === 'buy') return 'Buy';
       if (normalized === 'sale') return 'Sale';
+      if (normalized === 'monthly_rent') return 'Monthly Rent';
       return '--';
     }
 
@@ -505,14 +544,21 @@
     }
 
     function getListingsForActiveConnectorSection(sectionName = state.activeSection) {
-      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : (sectionName || state.activeSection || 'requirements');
+      const normalizedSection = normalizePublicSectionName(sectionName || state.activeSection || 'requirements');
       if (normalizedSection === 'requirements') {
         return state.listings.filter(listing => listing?.sourceType === 'lead');
       }
-      if (normalizedSection === 'distress-deals') {
-        return state.listings.filter(listing => listing?.sourceType === 'property' && listing?.isDistress);
+      if (normalizedSection === 'monthly-rent') {
+        return state.listings.filter(listing => listing?.sourceType === 'property' && getConnectorPublicPurposeValue(listing) === 'monthly_rent');
       }
-      return state.listings.filter(listing => listing?.sourceType === 'property');
+      if (normalizedSection === 'distress-deals') {
+        return state.listings.filter(listing => listing?.sourceType === 'property' && getConnectorPublicPurposeValue(listing) === 'sale' && listing?.isDistress);
+      }
+      return state.listings.filter(listing =>
+        listing?.sourceType === 'property'
+        && !listing?.isDistress
+        && getConnectorPublicPurposeValue(listing) !== 'monthly_rent'
+      );
     }
 
     function getConnectorFilterOptions(field) {
@@ -794,19 +840,20 @@
     }
 
     function findMarketplaceListing(sectionName, listingId) {
-      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : sectionName;
+      const normalizedSection = normalizePublicSectionName(sectionName);
       return (Array.isArray(state.listings) ? state.listings : []).find(item =>
         String(item?.id || '') === String(listingId || '')
         && (!normalizedSection || normalizedSection === 'all'
           || (normalizedSection === 'requirements' && item?.sourceType === 'lead')
-          || (normalizedSection === 'marketplace' && item?.sourceType === 'property' && !item?.isDistress)
-          || (normalizedSection === 'distress-deals' && item?.sourceType === 'property' && item?.isDistress))
+          || (normalizedSection === 'marketplace' && item?.sourceType === 'property' && !item?.isDistress && getConnectorPublicPurposeValue(item) !== 'monthly_rent')
+          || (normalizedSection === 'monthly-rent' && item?.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'monthly_rent')
+          || (normalizedSection === 'distress-deals' && item?.sourceType === 'property' && getConnectorPublicPurposeValue(item) === 'sale' && item?.isDistress))
       ) || null;
     }
 
     function openAuthRequiredModal(sectionName, listingId, listing = null, preferredMode = 'signin') {
       const selectedListing = listing || findMarketplaceListing(sectionName, listingId);
-      const normalizedSection = sectionName === 'shared-leads' ? 'requirements' : sectionName;
+      const normalizedSection = normalizePublicSectionName(sectionName || state.activeSection);
       saveMarketplaceAuthIntent({
         type: 'contact-reveal',
         sectionName: normalizedSection || state.activeSection || 'marketplace',
