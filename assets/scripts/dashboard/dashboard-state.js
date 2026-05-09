@@ -24,8 +24,9 @@
           { value: 'buy', label: 'Buy' }
         ],
         listings: [
-          { value: 'rent', label: 'Rent' },
-          { value: 'sale', label: 'Sale' }
+          { value: 'rent', label: 'Yearly Rent' },
+          { value: 'sale', label: 'Sale' },
+          { value: 'monthly_rent', label: 'Monthly Rent' }
         ]
       },
       statuses: {
@@ -1736,6 +1737,17 @@
         floorLevel: document.getElementById('propertyFloorLevel')?.value || '',
         furnishing: document.getElementById('propertyFurnishing')?.value || '',
         rentPrice: getMoneyInputFullValue('propertyRentPrice'),
+        monthlyRentPrice: getMoneyInputFullValue('propertyMonthlyRentPrice'),
+        billsIncluded: Boolean(document.getElementById('propertyBillsIncluded')?.checked),
+        furnishedStatus: document.getElementById('propertyMonthlyFurnishedStatus')?.value || '',
+        availableFrom: document.getElementById('propertyAvailableFrom')?.value || '',
+        minimumStay: document.getElementById('propertyMinimumStay')?.value || '',
+        chillerIncluded: Boolean(document.getElementById('propertyChillerIncluded')?.checked),
+        internetIncluded: Boolean(document.getElementById('propertyInternetIncluded')?.checked),
+        dewaIncluded: Boolean(document.getElementById('propertyDewaIncluded')?.checked),
+        securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
+        paymentTerms: document.getElementById('propertyPaymentTerms')?.value || '',
+        availabilityStatus: document.getElementById('propertyMonthlyAvailabilityStatus')?.value || 'available',
         salePrice: getMoneyInputFullValue('propertySalePrice'),
         marketPrice: getMoneyInputFullValue('propertyMarketPrice'),
         cheques: document.getElementById('propertyCheques')?.value || '',
@@ -1831,6 +1843,17 @@
         document.getElementById('propertyFloorLevel').value = values.floorLevel || '';
         document.getElementById('propertyFurnishing').value = values.furnishing || '';
         setMoneyInputValue('propertyRentPrice', values.rentPrice || '');
+        setMoneyInputValue('propertyMonthlyRentPrice', values.monthlyRentPrice || '');
+        document.getElementById('propertyBillsIncluded').checked = Boolean(values.billsIncluded);
+        document.getElementById('propertyMonthlyFurnishedStatus').value = values.furnishedStatus || '';
+        document.getElementById('propertyAvailableFrom').value = values.availableFrom || '';
+        document.getElementById('propertyMinimumStay').value = values.minimumStay || '';
+        document.getElementById('propertyChillerIncluded').checked = Boolean(values.chillerIncluded);
+        document.getElementById('propertyInternetIncluded').checked = Boolean(values.internetIncluded);
+        document.getElementById('propertyDewaIncluded').checked = Boolean(values.dewaIncluded);
+        setMoneyInputValue('propertySecurityDeposit', values.securityDeposit || '');
+        document.getElementById('propertyPaymentTerms').value = values.paymentTerms || '';
+        document.getElementById('propertyMonthlyAvailabilityStatus').value = values.availabilityStatus || 'available';
         setMoneyInputValue('propertySalePrice', values.salePrice || '');
         setMoneyInputValue('propertyMarketPrice', values.marketPrice || '');
         document.getElementById('propertyCheques').value = values.cheques || '';
@@ -1886,15 +1909,27 @@
         const unitLayout = document.getElementById('propertyUnitLayout')?.value || '';
         const saleStatus = normalizeDashboardSalePropertyStatusValue(document.getElementById('propertySaleStatus')?.value) || '';
         const distressDeal = Boolean(document.getElementById('propertyDistress')?.checked);
+        const priceInputId = purpose === 'monthly_rent'
+          ? 'propertyMonthlyRentPrice'
+          : purpose === 'rent'
+            ? 'propertyRentPrice'
+            : 'propertySalePrice';
+        const priceLabel = purpose === 'monthly_rent'
+          ? 'Monthly rent price'
+          : purpose === 'rent'
+            ? 'Yearly rent price'
+            : 'Asking price';
         return [
           { label: 'Purpose', complete: Boolean(purpose) },
           { label: 'Property category', complete: Boolean(propertyCategory) },
           { label: 'Unit layout', complete: !dashboardCategoryAllowsSelectableLayout(propertyCategory) || Boolean(unitLayout), active: Boolean(propertyCategory) },
           { label: 'Location', complete: Boolean(document.getElementById('propertyLocation')?.value?.trim()) },
-          { label: purpose === 'rent' ? 'Rent price' : 'Asking price', complete: Boolean(purpose === 'rent' ? getMoneyInputFullValue('propertyRentPrice') : getMoneyInputFullValue('propertySalePrice')), active: Boolean(purpose) },
+          { label: priceLabel, complete: Boolean(getMoneyInputFullValue(priceInputId)), active: Boolean(purpose) },
+          { label: 'Furnished status', complete: Boolean(document.getElementById('propertyMonthlyFurnishedStatus')?.value), active: purpose === 'monthly_rent' },
+          { label: 'Available from', complete: Boolean(document.getElementById('propertyAvailableFrom')?.value), active: purpose === 'monthly_rent' },
           { label: 'Sale status', complete: Boolean(saleStatus), active: purpose === 'sale' },
           { label: 'Handover timing', complete: Boolean(document.getElementById('propertyHandoverQuarter')?.value && document.getElementById('propertyHandoverYear')?.value), active: purpose === 'sale' && saleStatus === 'Off Plan Property' },
-          { label: 'Market price', complete: Boolean(getMoneyInputFullValue('propertyMarketPrice')), active: distressDeal }
+          { label: 'Market price', complete: Boolean(getMoneyInputFullValue('propertyMarketPrice')), active: purpose === 'sale' && distressDeal }
         ].filter(item => item.active !== false);
       }
 
@@ -1928,7 +1963,11 @@
         const location = normalizeTaxonomyToken(document.getElementById('propertyLocation')?.value || '');
         const building = normalizeTaxonomyToken(document.getElementById('propertyBuildingName')?.value || '');
         const propertyType = normalizeTaxonomyToken(document.getElementById('propertyType')?.value || '');
-        const price = purpose === 'rent' ? getMoneyInputFullValue('propertyRentPrice') : getMoneyInputFullValue('propertySalePrice');
+        const price = purpose === 'monthly_rent'
+          ? getMoneyInputFullValue('propertyMonthlyRentPrice')
+          : purpose === 'rent'
+            ? getMoneyInputFullValue('propertyRentPrice')
+            : getMoneyInputFullValue('propertySalePrice');
         if (!purpose || !location || !propertyType) return '';
         const match = (Array.isArray(state.properties) ? state.properties : []).find(item => {
           if (Number(item.id) === id) return false;
@@ -1937,7 +1976,7 @@
           const itemBuilding = normalizeTaxonomyToken(item.buildingName || '');
           const itemLayout = getDashboardDisplayUnitLayout(item);
           const itemType = normalizeTaxonomyToken(itemLayout && itemLayout !== 'N/A' ? itemLayout : (item.propertyType || ''));
-          const itemPrice = item.ownerAskingPrice || item.rentPrice || item.price || '';
+          const itemPrice = item.monthlyRentPrice || item.ownerAskingPrice || item.rentPrice || item.price || '';
           return itemPurpose === purpose
             && itemLocation === location
             && itemType === propertyType
@@ -2032,7 +2071,7 @@
           ? `Distress workflow active${status ? ` · ${formatStatusLabel(status)}` : ''}`
           : `${status ? formatStatusLabel(status) : 'Available'} · Private inventory`;
 
-        setWorkspaceSummaryValue('workspaceSummaryPurpose', purpose === 'Listing' ? '' : purpose, 'Choose rent or sale');
+        setWorkspaceSummaryValue('workspaceSummaryPurpose', purpose === 'Listing' ? '' : purpose, 'Choose sale, yearly rent, or monthly rent');
         setWorkspaceSummaryValue('workspaceSummaryType', formatDashboardPropertyDimensions(propertyCategory, unitLayout), 'Choose category and layout');
         setWorkspaceSummaryValue('workspaceSummaryLocation', [location, building].filter(Boolean).join(' · '), 'Add area or project details');
         setWorkspaceSummaryValue('workspaceSummaryState', visibilityText, 'Starts private inside Broker Desk');
@@ -2482,16 +2521,18 @@
     }
 
     function getPropertyPurpose(value) {
-      const normalized = String(value || '').trim().toLowerCase();
+      const normalized = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
       if (normalized === 'rent') return 'rent';
       if (normalized === 'sale') return 'sale';
+      if (normalized === 'monthly_rent' || normalized === 'monthly') return 'monthly_rent';
       return '';
     }
 
     function getPropertyPurposeLabel(value) {
       const normalized = getPropertyPurpose(value);
-      if (normalized === 'rent') return 'Rent';
+      if (normalized === 'rent') return 'Yearly Rent';
       if (normalized === 'sale') return 'Sale';
+      if (normalized === 'monthly_rent') return 'Monthly Rent';
       return 'Listing';
     }
 
@@ -2572,6 +2613,9 @@
         'propertyUnitLayoutError',
         'propertyLocationError',
         'propertyRentPriceError',
+        'propertyMonthlyRentPriceError',
+        'propertyMonthlyFurnishedStatusError',
+        'propertyAvailableFromError',
         'propertySalePriceError',
         'propertySaleStatusError',
         'propertyHandoverQuarterError',
@@ -2591,6 +2635,13 @@
         'propertyFloorLevel',
         'propertyFurnishing',
         'propertyRentPrice',
+        'propertyMonthlyRentPrice',
+        'propertyMonthlyFurnishedStatus',
+        'propertyAvailableFrom',
+        'propertyMinimumStay',
+        'propertySecurityDeposit',
+        'propertyMonthlyAvailabilityStatus',
+        'propertyPaymentTerms',
         'propertyCheques',
         'propertyChiller',
         'propertySalePrice',
@@ -2615,6 +2666,9 @@
         unitLayout: 'propertyUnitLayoutError',
         location: 'propertyLocationError',
         rentPrice: 'propertyRentPriceError',
+        monthlyRentPrice: 'propertyMonthlyRentPriceError',
+        furnishedStatus: 'propertyMonthlyFurnishedStatusError',
+        availableFrom: 'propertyAvailableFromError',
         ownerAskingPrice: 'propertySalePriceError',
         salePropertyStatus: 'propertySaleStatusError',
         handoverQuarter: 'propertyHandoverQuarterError',
@@ -2627,6 +2681,9 @@
         unitLayout: 'propertyUnitLayout',
         location: 'propertyLocation',
         rentPrice: 'propertyRentPrice',
+        monthlyRentPrice: 'propertyMonthlyRentPrice',
+        furnishedStatus: 'propertyMonthlyFurnishedStatus',
+        availableFrom: 'propertyAvailableFrom',
         ownerAskingPrice: 'propertySalePrice',
         salePropertyStatus: 'propertySaleStatus',
         handoverQuarter: 'propertyHandoverQuarter',
@@ -2665,7 +2722,7 @@
     }
 
     function setPropertyPurpose(purpose, options = {}) {
-      const normalizedPurpose = ['rent', 'sale'].includes(String(purpose || '').toLowerCase()) ? String(purpose).toLowerCase() : '';
+      const normalizedPurpose = getPropertyPurpose(purpose);
       const hiddenInput = document.getElementById('propertyPurposeValue');
       const baseFields = document.getElementById('propertyBaseFields');
       const pricingSection = document.getElementById('propertyPricingSection');
@@ -2675,6 +2732,7 @@
       const workflowSection = document.getElementById('propertyWorkflowSection');
       const rentFields = document.getElementById('propertyRentFields');
       const saleFields = document.getElementById('propertySaleFields');
+      const monthlyFields = document.getElementById('propertyMonthlyFields');
       const saleToggleRow = document.getElementById('propertySaleToggleRow');
       const handoverQuarterWrap = document.getElementById('propertyHandoverQuarterWrap');
       const handoverYearWrap = document.getElementById('propertyHandoverYearWrap');
@@ -2698,17 +2756,33 @@
       workflowSection?.classList.add('crm-hidden');
       rentFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'rent');
       saleFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      monthlyFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'monthly_rent');
       saleToggleRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       handoverQuarterWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
       handoverYearWrap?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
-      distressRow?.classList.toggle('crm-hidden', !showSections);
-      distressFields?.classList.toggle('crm-hidden', !showSections || !document.getElementById('propertyDistress')?.checked);
+      distressRow?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale');
+      distressFields?.classList.toggle('crm-hidden', normalizedPurpose !== 'sale' || !document.getElementById('propertyDistress')?.checked);
+      if (normalizedPurpose !== 'sale') {
+        const distressToggle = document.getElementById('propertyDistress');
+        if (distressToggle) distressToggle.checked = false;
+      }
 
       if (!options.preserveValues) {
         document.getElementById('propertyFurnishing').value = '';
         setMoneyInputValue('propertyRentPrice', '');
+        setMoneyInputValue('propertyMonthlyRentPrice', '');
+        setMoneyInputValue('propertySecurityDeposit', '');
         document.getElementById('propertyCheques').value = '';
         document.getElementById('propertyChiller').value = '';
+        document.getElementById('propertyMonthlyFurnishedStatus').value = '';
+        document.getElementById('propertyAvailableFrom').value = '';
+        document.getElementById('propertyMinimumStay').value = '';
+        document.getElementById('propertyMonthlyAvailabilityStatus').value = 'available';
+        document.getElementById('propertyBillsIncluded').checked = false;
+        document.getElementById('propertyChillerIncluded').checked = false;
+        document.getElementById('propertyInternetIncluded').checked = false;
+        document.getElementById('propertyDewaIncluded').checked = false;
+        document.getElementById('propertyPaymentTerms').value = '';
         setMoneyInputValue('propertySalePrice', '');
         setMoneyInputValue('propertyMarketPrice', '');
         document.getElementById('propertyMortgageStatus').value = '';
@@ -2749,7 +2823,11 @@
 
     function refreshPropertyDistressUI() {
       const purpose = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value);
-      const distressEnabled = Boolean(document.getElementById('propertyDistress')?.checked);
+      const distressToggle = document.getElementById('propertyDistress');
+      if (purpose !== 'sale' && distressToggle) {
+        distressToggle.checked = false;
+      }
+      const distressEnabled = purpose === 'sale' && Boolean(distressToggle?.checked);
       const distressFields = document.getElementById('propertyDistressFields');
       const distressMetric = document.getElementById('propertyDistressMetric');
       const distressMetricText = document.getElementById('propertyDistressMetricText');
@@ -2758,17 +2836,17 @@
       const salePriceLabel = document.getElementById('propertySalePriceLabel');
       const activePrice = purpose === 'sale'
         ? getMoneyInputFullValue('propertySalePrice')
-        : getMoneyInputFullValue('propertyRentPrice');
+        : '';
       const marketPrice = getMoneyInputFullValue('propertyMarketPrice');
 
       if (rentPriceLabel) {
-        rentPriceLabel.textContent = distressEnabled ? 'Asking Price' : 'Rent Price';
+        rentPriceLabel.textContent = 'Yearly Rent Price';
       }
       if (salePriceLabel) {
         salePriceLabel.textContent = distressEnabled ? 'Asking Price' : 'Owner Asking Price';
       }
 
-      distressFields?.classList.toggle('crm-hidden', !purpose || !distressEnabled);
+      distressFields?.classList.toggle('crm-hidden', purpose !== 'sale' || !distressEnabled);
 
       const marketValue = Number(marketPrice || 0);
       const askingValue = Number(activePrice || 0);
@@ -2843,7 +2921,7 @@
       setPropertyPurpose('', { preserveValues: false });
       wireWorkspaceDraftAutosave('property');
 
-      ['propertyRentPrice', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
+      ['propertyRentPrice', 'propertyMonthlyRentPrice', 'propertySecurityDeposit', 'propertySalePrice', 'propertyMarketPrice'].forEach(id => {
         setupMoneyInput(id);
         document.getElementById(id)?.addEventListener('input', event => {
           event.target.classList.remove('is-invalid');
@@ -2872,6 +2950,15 @@
         'propertySizeUnit',
         'propertyFloorLevel',
         'propertyFurnishing',
+        'propertyMonthlyFurnishedStatus',
+        'propertyAvailableFrom',
+        'propertyMinimumStay',
+        'propertyMonthlyAvailabilityStatus',
+        'propertyBillsIncluded',
+        'propertyChillerIncluded',
+        'propertyInternetIncluded',
+        'propertyDewaIncluded',
+        'propertyPaymentTerms',
         'propertyCheques',
         'propertyChiller',
         'propertyMortgageStatus',
@@ -3264,6 +3351,17 @@
         floorLevel: document.getElementById('propertyFloorLevel').value.trim(),
         furnishing: document.getElementById('propertyFurnishing').value.trim(),
         rentPrice: getMoneyInputFullValue('propertyRentPrice'),
+        monthlyRentPrice: getMoneyInputFullValue('propertyMonthlyRentPrice'),
+        billsIncluded: Boolean(document.getElementById('propertyBillsIncluded').checked),
+        furnishedStatus: document.getElementById('propertyMonthlyFurnishedStatus').value.trim(),
+        availableFrom: document.getElementById('propertyAvailableFrom').value,
+        minimumStay: document.getElementById('propertyMinimumStay').value.trim(),
+        chillerIncluded: Boolean(document.getElementById('propertyChillerIncluded').checked),
+        internetIncluded: Boolean(document.getElementById('propertyInternetIncluded').checked),
+        dewaIncluded: Boolean(document.getElementById('propertyDewaIncluded').checked),
+        securityDeposit: getMoneyInputFullValue('propertySecurityDeposit'),
+        paymentTerms: document.getElementById('propertyPaymentTerms').value.trim(),
+        availabilityStatus: document.getElementById('propertyMonthlyAvailabilityStatus').value || 'available',
         cheques: document.getElementById('propertyCheques').value.trim(),
         chiller: document.getElementById('propertyChiller').value.trim(),
         ownerAskingPrice: getMoneyInputFullValue('propertySalePrice'),
@@ -3288,7 +3386,12 @@
       if (dashboardCategoryAllowsSelectableLayout(formData.propertyCategory) && !formData.unitLayout) errors.unitLayout = 'Select unit layout';
       if (!formData.location) errors.location = 'Enter location';
       if (getPropertyPurpose(formData.purpose) === 'rent' && (!formData.rentPrice || Number(formData.rentPrice) <= 0)) {
-        errors.rentPrice = 'Enter rent price';
+        errors.rentPrice = 'Enter yearly rent price';
+      }
+      if (getPropertyPurpose(formData.purpose) === 'monthly_rent') {
+        if (!formData.monthlyRentPrice || Number(formData.monthlyRentPrice) <= 0) errors.monthlyRentPrice = 'Enter monthly rent price';
+        if (!formData.furnishedStatus) errors.furnishedStatus = 'Select furnished status';
+        if (!formData.availableFrom) errors.availableFrom = 'Select available from date';
       }
       if (getPropertyPurpose(formData.purpose) === 'sale' && (!formData.ownerAskingPrice || Number(formData.ownerAskingPrice) <= 0)) {
         errors.ownerAskingPrice = 'Enter owner asking price';

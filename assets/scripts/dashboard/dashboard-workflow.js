@@ -1,9 +1,15 @@
     function getPropertyDisplayPrice(property) {
       const purpose = getPropertyPurpose(property.purpose);
-      const primaryPrice = normalizeBudgetDigits(property.rentPrice || property.ownerAskingPrice || property.price || '');
+      const primaryPrice = normalizeBudgetDigits(
+        purpose === 'monthly_rent'
+          ? (property.monthlyRentPrice || property.price || '')
+          : (property.rentPrice || property.ownerAskingPrice || property.price || '')
+      );
       if (!primaryPrice) return '--';
       const formattedPrice = Number(primaryPrice).toLocaleString('en-AE');
-      return `AED ${formattedPrice}${purpose === 'rent' ? ' / year' : ''}`;
+      if (purpose === 'rent') return `AED ${formattedPrice} / year`;
+      if (purpose === 'monthly_rent') return `AED ${formattedPrice} / month`;
+      return `AED ${formattedPrice}`;
     }
 
     function getPropertySaleStatusLabel(property) {
@@ -22,7 +28,17 @@
           property.furnishing,
           property.cheques,
           property.chiller
-        ]) || 'Standard rent terms';
+        ]) || 'Standard yearly rent terms';
+      }
+
+      if (purpose === 'monthly_rent') {
+        return joinDisplayParts([
+          property.furnishedStatus ? formatStatusLabel(property.furnishedStatus.replace(/_/g, ' ')) : '',
+          property.billsIncluded ? 'Bills included' : '',
+          property.availableFrom ? `Available ${property.availableFrom}` : '',
+          property.minimumStay ? `Min ${property.minimumStay}` : '',
+          property.availabilityStatus ? formatStatusLabel(property.availabilityStatus) : ''
+        ]) || 'Monthly rent terms';
       }
 
       return joinDisplayParts([
@@ -184,9 +200,8 @@
 
     function calculateDashboardDistressPercent(property) {
       const marketValue = Number(normalizeBudgetDigits(property?.marketPrice || ''));
-      const askingSource = getPropertyPurpose(property?.purpose) === 'sale'
-        ? (property?.ownerAskingPrice || property?.price || '')
-        : (property?.rentPrice || property?.price || '');
+      if (getPropertyPurpose(property?.purpose) !== 'sale') return 0;
+      const askingSource = property?.ownerAskingPrice || property?.price || '';
       const askingValue = Number(normalizeBudgetDigits(askingSource));
       if (!marketValue || !askingValue || askingValue >= marketValue) return 0;
       return Math.round(((marketValue - askingValue) / marketValue) * 100);
@@ -229,7 +244,12 @@
           item.salePropertyStatus,
           item.handoverLabel,
           item.rentPrice,
+          item.monthlyRentPrice,
           item.ownerAskingPrice,
+          item.furnishedStatus,
+          item.availableFrom,
+          item.minimumStay,
+          item.availabilityStatus,
           item.price,
           item.sizeSqft,
           item.size,
@@ -315,7 +335,7 @@
             </div>
           </div>
           <div class="detail-grid">
-            <div class="detail-cell"><small>${getPropertyPurpose(property.purpose) === 'rent' ? 'Rent Price' : 'Asking Price'}</small><strong>${getPropertyDisplayPrice(property)}</strong></div>
+            <div class="detail-cell"><small>${getPropertyPurpose(property.purpose) === 'monthly_rent' ? 'Monthly Rent' : getPropertyPurpose(property.purpose) === 'rent' ? 'Yearly Rent' : 'Asking Price'}</small><strong>${getPropertyDisplayPrice(property)}</strong></div>
             <div class="detail-cell"><small>Size</small><strong>${formatSizeDisplay(property.sizeSqft || property.size, property.sizeUnit)}</strong></div>
             <div class="detail-cell"><small>Floor Level</small><strong>${property.floorLevel || '--'}</strong></div>
             <div class="detail-cell"><small>Updated</small><strong>${new Date(property.updatedAt || property.createdAt || Date.now()).toLocaleDateString()}</strong></div>
@@ -417,6 +437,17 @@
           floorLevel: formData.floorLevel,
           furnishing: formData.furnishing,
           rentPrice: formData.rentPrice,
+          monthlyRentPrice: formData.monthlyRentPrice,
+          billsIncluded: formData.billsIncluded,
+          furnishedStatus: formData.furnishedStatus,
+          availableFrom: formData.availableFrom,
+          minimumStay: formData.minimumStay,
+          chillerIncluded: formData.chillerIncluded,
+          internetIncluded: formData.internetIncluded,
+          dewaIncluded: formData.dewaIncluded,
+          securityDeposit: formData.securityDeposit,
+          paymentTerms: formData.paymentTerms,
+          availabilityStatus: formData.availabilityStatus,
           cheques: formData.cheques,
           chiller: formData.chiller,
           ownerAskingPrice: formData.ownerAskingPrice,

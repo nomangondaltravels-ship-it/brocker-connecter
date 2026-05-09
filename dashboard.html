@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-06-layout-type-conflict-fix" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-06-layout-type-conflict-fix"></script>
+  <meta name="nexbridge-build" content="2026-05-10-monthly-rent-form-phase3" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-10-monthly-rent-form-phase3"></script>
   <title>Broker Desk | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-06-layout-type-conflict-fix" />
-  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-06-layout-type-conflict-fix">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-10-monthly-rent-form-phase3" />
+  <link rel="stylesheet" href="assets/styles/dashboard.css?v=2026-05-10-monthly-rent-form-phase3">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-06-layout-type-conflict-fix" alt="NexBridge logo">
+        <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-10-monthly-rent-form-phase3" alt="NexBridge logo">
         <div class="brand-copy">
           <div class="brand-title">Nex<span>Bridge</span></div>
           <small>Connect • Match • Close</small>
@@ -394,13 +394,14 @@
                 <div class="form-section-head">
                   <span class="form-section-kicker">Main Details</span>
                   <h4>Listing</h4>
-                  <p>Select rent or sale first, then complete the relevant property details in a clean broker workflow.</p>
+                  <p>Select sale, yearly rent, or monthly rent first, then complete the relevant property details in a clean broker workflow.</p>
                 </div>
                 <div class="field-block full">
                   <div class="small" id="propertyPurposeLabel">Purpose</div>
                   <div class="segmented-control" id="propertyPurposeControl" role="group" aria-labelledby="propertyPurposeLabel">
-                    <button class="segment-btn" type="button" data-purpose="rent">Rent</button>
+                    <button class="segment-btn" type="button" data-purpose="rent">Yearly Rent</button>
                     <button class="segment-btn" type="button" data-purpose="sale">Sale</button>
+                    <button class="segment-btn" type="button" data-purpose="monthly_rent">Monthly Rent</button>
                   </div>
                   <input type="hidden" id="propertyPurposeValue">
                   <div class="field-error" id="propertyPurposeError"></div>
@@ -483,7 +484,7 @@
                 <div class="form-section-head">
                   <span class="form-section-kicker">Price / Budget Details</span>
                   <h4>Pricing</h4>
-                  <p>Only the relevant pricing fields are shown based on whether the listing is for rent or sale.</p>
+                  <p>Only the relevant pricing fields are shown based on whether the listing is sale, yearly rent, or monthly rent.</p>
                 </div>
                 <div class="form-grid crm-hidden" id="propertyRentFields">
                   <div class="field-block">
@@ -494,7 +495,7 @@
                     <div class="field-error" id="propertyFurnishingError"></div>
                   </div>
                   <div class="field-block">
-                    <label class="small" id="propertyRentPriceLabel" for="propertyRentPrice">Rent Price</label>
+                    <label class="small" id="propertyRentPriceLabel" for="propertyRentPrice">Yearly Rent Price</label>
                     <div class="currency-field">
                       <span class="currency-prefix">AED</span>
                       <input id="propertyRentPrice" type="text" inputmode="numeric" placeholder="Enter yearly rent" autocomplete="off">
@@ -514,6 +515,82 @@
                       <option value="">Select chiller status</option>
                     </select>
                     <div class="field-error" id="propertyChillerError"></div>
+                  </div>
+                </div>
+                <div class="form-grid crm-hidden" id="propertyMonthlyFields">
+                  <div class="field-block">
+                    <label class="small" for="propertyMonthlyRentPrice">Monthly Rent Price</label>
+                    <div class="currency-field">
+                      <span class="currency-prefix">AED</span>
+                      <input id="propertyMonthlyRentPrice" type="text" inputmode="numeric" placeholder="5K, 12K, or full AED" autocomplete="off">
+                    </div>
+                    <div class="field-error" id="propertyMonthlyRentPriceError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small" for="propertyMonthlyFurnishedStatus">Furnished Status</label>
+                    <select id="propertyMonthlyFurnishedStatus">
+                      <option value="">Select furnished status</option>
+                      <option value="furnished">Furnished</option>
+                      <option value="unfurnished">Unfurnished</option>
+                      <option value="semi_furnished">Semi Furnished</option>
+                    </select>
+                    <div class="field-error" id="propertyMonthlyFurnishedStatusError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small" for="propertyAvailableFrom">Available From</label>
+                    <input id="propertyAvailableFrom" type="date">
+                    <div class="field-error" id="propertyAvailableFromError"></div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small" for="propertyMinimumStay">Minimum Stay</label>
+                    <input id="propertyMinimumStay" type="text" placeholder="Example: 1 month, 3 months" autocomplete="off">
+                  </div>
+                  <div class="field-block">
+                    <label class="small" for="propertySecurityDeposit">Security Deposit</label>
+                    <div class="currency-field">
+                      <span class="currency-prefix">AED</span>
+                      <input id="propertySecurityDeposit" type="text" inputmode="numeric" placeholder="Optional deposit" autocomplete="off">
+                    </div>
+                  </div>
+                  <div class="field-block">
+                    <label class="small" for="propertyMonthlyAvailabilityStatus">Availability Status</label>
+                    <select id="propertyMonthlyAvailabilityStatus">
+                      <option value="available">Available</option>
+                      <option value="reserved">Reserved</option>
+                      <option value="rented">Rented</option>
+                    </select>
+                  </div>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyBillsIncluded">
+                    <span>
+                      <strong>Bills Included</strong>
+                      <small>Show a public-safe badge on monthly listings.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyChillerIncluded">
+                    <span>
+                      <strong>Chiller Included</strong>
+                      <small>Useful for monthly rent inquiries.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyInternetIncluded">
+                    <span>
+                      <strong>Internet Included</strong>
+                      <small>Only shown for monthly rent.</small>
+                    </span>
+                  </label>
+                  <label class="toggle-card compact-toggle">
+                    <input type="checkbox" id="propertyDewaIncluded">
+                    <span>
+                      <strong>DEWA Included</strong>
+                      <small>Only shown for monthly rent.</small>
+                    </span>
+                  </label>
+                  <div class="field-block full">
+                    <label class="small" for="propertyPaymentTerms">Payment Terms</label>
+                    <textarea id="propertyPaymentTerms" placeholder="Example: Monthly advance payment, refundable deposit, agency fee"></textarea>
                   </div>
                 </div>
                 <div class="form-grid crm-hidden" id="propertySaleFields">
@@ -879,8 +956,9 @@
               <label class="small" for="propertyPurposeFilter">Purpose</label>
               <select id="propertyPurposeFilter" onchange="updateDashboardFilter('properties','purpose', this.value)">
                 <option value="all">All Purposes</option>
-                <option value="rent">Rent</option>
+                <option value="rent">Yearly Rent</option>
                 <option value="sale">Sale</option>
+                <option value="monthly_rent">Monthly Rent</option>
               </select>
             </div>
             <div class="field-block">
@@ -1031,15 +1109,15 @@
     </div>
   </div>
 
-  <script src="assets/dashboard-lead-config.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/platform-rules-config.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/complaint-center-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/action-feedback-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="/assets/listing-media-ui.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-06-layout-type-conflict-fix"></script>
-  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-06-layout-type-conflict-fix"></script>
+  <script src="assets/dashboard-lead-config.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/platform-rules-config.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/complaint-center-ui.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/action-feedback-ui.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="/assets/listing-media-ui.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/scripts/dashboard/dashboard-state.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/scripts/dashboard/dashboard-navigation.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/scripts/dashboard/dashboard-rendering.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/scripts/dashboard/dashboard-workflow.js?v=2026-05-10-monthly-rent-form-phase3"></script>
+  <script src="assets/scripts/dashboard/dashboard-workspace.js?v=2026-05-10-monthly-rent-form-phase3"></script>
 </body>
 </html>

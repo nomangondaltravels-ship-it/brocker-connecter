@@ -550,8 +550,9 @@
       { value: 'buy', label: 'Buy' }
     ],
     listings: [
-      { value: 'rent', label: 'Rent' },
-      { value: 'sale', label: 'Sale' }
+      { value: 'rent', label: 'Yearly Rent' },
+      { value: 'sale', label: 'Sale' },
+      { value: 'monthly_rent', label: 'Monthly Rent' }
     ],
     connector: [
       { value: 'rent', label: 'Rent' },
@@ -705,6 +706,13 @@
   const PURPOSE_ALIASES = {
     rent: 'rent',
     rental: 'rent',
+    'yearly rent': 'rent',
+    'annual rent': 'rent',
+    monthly: 'monthly_rent',
+    'monthly rent': 'monthly_rent',
+    'monthly rental': 'monthly_rent',
+    'short term': 'monthly_rent',
+    'short term rent': 'monthly_rent',
     buy: 'buy',
     buyer: 'buy',
     sale: 'sale',
