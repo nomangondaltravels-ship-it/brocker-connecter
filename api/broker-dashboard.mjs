@@ -521,10 +521,12 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
   const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
   const isMonthlyRent = purpose === 'monthly_rent';
   const { dimensions, propertyType } = getCanonicalPropertyTypeFromDimensions({
-    propertyCategory: body?.propertyCategory ?? existingProperty?.property_category,
+    propertyCategory: isMonthlyRent ? 'Apartment' : (body?.propertyCategory ?? existingProperty?.property_category),
     unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
-    propertyType: body?.propertyType || existingProperty?.property_type || existingProperty?.category,
-    category: existingProperty?.category
+    propertyType: isMonthlyRent
+      ? (body?.unitLayout || existingProperty?.unit_layout || body?.propertyType || existingProperty?.property_type)
+      : (body?.propertyType || existingProperty?.property_type || existingProperty?.category),
+    category: isMonthlyRent ? 'Apartment' : existingProperty?.category
   });
   const meta = getPropertyMeta(body, existingProperty, overrides);
   const distressDeal = purpose === 'sale' && (

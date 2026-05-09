@@ -1256,6 +1256,18 @@
       m: { label: 'M', multiplier: 1000000 }
     };
     const MONEY_QUICK_VALUES = ['500K', '750K', '1M', '1.5M', '2M', '3M', '5M', '10M', '20M'];
+    const MONEY_INPUT_FIELD_CONFIG = {
+      propertyMonthlyRentPrice: {
+        placeholder: 'Enter monthly rent amount',
+        quickValues: [],
+        showPreview: false
+      },
+      propertySecurityDeposit: {
+        placeholder: 'Optional security deposit',
+        quickValues: [],
+        showPreview: false
+      }
+    };
 
     function getMoneyUnit(unit) {
       const normalized = String(unit || '').trim().toLowerCase();
@@ -1382,10 +1394,11 @@
     function setupMoneyInput(id) {
       const field = document.getElementById(id);
       if (!field || field.dataset.moneyEnhanced === 'true') return;
+      const fieldConfig = MONEY_INPUT_FIELD_CONFIG[id] || {};
       field.dataset.moneyEnhanced = 'true';
       field.dataset.moneyUnit = getMoneyUnit(field.dataset.moneyUnit);
       field.inputMode = 'decimal';
-      field.placeholder = '5M, 500K, or full AED';
+      field.placeholder = fieldConfig.placeholder || '5M, 500K, or full AED';
 
       const wrapper = field.closest('.currency-field');
       if (wrapper && !document.getElementById(`${id}MoneyUnit`)) {
@@ -1406,11 +1419,16 @@
         });
       }
 
-      if (wrapper && !document.getElementById(`${id}MoneyQuickRow`)) {
+      const quickValues = Array.isArray(fieldConfig.quickValues) ? fieldConfig.quickValues : MONEY_QUICK_VALUES;
+      const existingQuickRow = document.getElementById(`${id}MoneyQuickRow`);
+      if (!quickValues.length && existingQuickRow) {
+        existingQuickRow.remove();
+      }
+      if (wrapper && quickValues.length && !existingQuickRow) {
         const quickRow = document.createElement('div');
         quickRow.id = `${id}MoneyQuickRow`;
         quickRow.className = 'money-quick-row';
-        quickRow.innerHTML = MONEY_QUICK_VALUES.map(value => `<button type="button" class="money-quick-chip" data-money-value="${value}">${value}</button>`).join('');
+        quickRow.innerHTML = quickValues.map(value => `<button type="button" class="money-quick-chip" data-money-value="${value}">${value}</button>`).join('');
         wrapper.insertAdjacentElement('afterend', quickRow);
         quickRow.addEventListener('click', event => {
           const chip = event.target.closest('[data-money-value]');
@@ -1427,7 +1445,11 @@
         });
       }
 
-      if (wrapper && !document.getElementById(`${id}MoneyPreview`)) {
+      const existingPreview = document.getElementById(`${id}MoneyPreview`);
+      if (fieldConfig.showPreview === false && existingPreview) {
+        existingPreview.remove();
+      }
+      if (fieldConfig.showPreview !== false && wrapper && !existingPreview) {
         const preview = document.createElement('div');
         preview.id = `${id}MoneyPreview`;
         preview.className = 'money-input-preview is-muted';
@@ -2539,9 +2561,12 @@
     function populatePropertyCategoryOptions(selectedValue = '') {
       const select = document.getElementById('propertyCategory');
       if (!select) return;
-      select.innerHTML = '<option value="">Select property category</option>' + DASHBOARD_PROPERTY_CATEGORY_OPTIONS.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      const isMonthlyRent = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value) === 'monthly_rent';
+      const options = isMonthlyRent ? ['Apartment'] : DASHBOARD_PROPERTY_CATEGORY_OPTIONS;
+      select.innerHTML = '<option value="">Select property category</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
       const normalizedSelectedValue = normalizeDashboardPropertyCategoryValue(selectedValue);
-      select.value = normalizedSelectedValue && DASHBOARD_PROPERTY_CATEGORY_OPTIONS.includes(normalizedSelectedValue) ? normalizedSelectedValue : '';
+      select.value = isMonthlyRent ? 'Apartment' : (normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '');
+      select.disabled = isMonthlyRent;
     }
 
     function populatePropertyUnitLayoutOptions(selectedValue = '', propertyCategory = '') {
@@ -2571,10 +2596,20 @@
         propertyType: document.getElementById('propertyType')?.value
       });
       populatePropertyCategoryOptions(derived.propertyCategory);
-      populatePropertyUnitLayoutOptions(derived.unitLayout, derived.propertyCategory);
+      const effectivePropertyCategory = document.getElementById('propertyCategory')?.value || derived.propertyCategory;
+      populatePropertyUnitLayoutOptions(derived.unitLayout, effectivePropertyCategory);
+      const effectiveUnitLayout = document.getElementById('propertyUnitLayout')?.value || (dashboardCategoryAllowsSelectableLayout(effectivePropertyCategory) ? '' : 'N/A');
+      const effectivePropertyType = effectiveUnitLayout && effectiveUnitLayout !== 'N/A'
+        ? effectiveUnitLayout
+        : effectivePropertyCategory || derived.propertyType || '';
       const hiddenInput = document.getElementById('propertyType');
-      if (hiddenInput) hiddenInput.value = derived.propertyType || '';
-      return derived;
+      if (hiddenInput) hiddenInput.value = effectivePropertyType;
+      return {
+        ...derived,
+        propertyCategory: effectivePropertyCategory,
+        unitLayout: effectiveUnitLayout,
+        propertyType: effectivePropertyType
+      };
     }
 
     function populatePropertyFloorOptions(selectedValue = '') {
@@ -2794,6 +2829,7 @@
 
       refreshPropertyDistressUI();
       refreshPropertySaleStatusUI();
+      syncPropertyDimensionControls();
       syncWorkspaceFormSummary('property');
     }
 
