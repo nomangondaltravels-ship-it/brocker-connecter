@@ -4,6 +4,7 @@ import {
   getBearerToken,
   getSupabaseConfig,
   json,
+  normalizeListingPurposeValue,
   normalizeText,
   parseLeadMeta,
   parsePropertyMeta,
@@ -19,6 +20,10 @@ function getPublicRowFreshnessMs(row) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function getPublicPropertyPurpose(item) {
+  return item?.source_type === 'property' ? normalizeListingPurposeValue(item?.purpose) : '';
+}
+
 function applySectionFilter(rows, section) {
   const items = Array.isArray(rows) ? rows : [];
   switch (section) {
@@ -32,11 +37,32 @@ function applySectionFilter(rows, section) {
       return items
         .filter(item => item.source_type === 'property')
         .sort((left, right) => getPublicRowFreshnessMs(right) - getPublicRowFreshnessMs(left));
+    case 'sale':
+    case 'sale-listings':
+      return items.filter(item => item.source_type === 'property' && getPublicPropertyPurpose(item) === 'sale');
+    case 'yearly-rent':
+    case 'yearly-rentals':
+    case 'rent':
+      return items.filter(item => item.source_type === 'property' && getPublicPropertyPurpose(item) === 'rent');
+    case 'monthly-rent':
+    case 'monthly-rentals':
+    case 'monthly':
+      return items.filter(item => item.source_type === 'property' && getPublicPropertyPurpose(item) === 'monthly_rent');
     case 'distress-deals':
-      return items.filter(item => item.source_type === 'property' && item.is_distress);
+      return items.filter(item => item.source_type === 'property' && getPublicPropertyPurpose(item) === 'sale' && item.is_distress);
     default:
       return items;
   }
+}
+
+function isExpiredMonthlyPublicRow(row) {
+  if (row?.source_type !== 'property' || normalizeListingPurposeValue(row?.purpose) !== 'monthly_rent') {
+    return false;
+  }
+  const expiryDate = normalizeText(row?.expiry_date);
+  if (!expiryDate) return false;
+  const parsed = Date.parse(`${expiryDate}T23:59:59+04:00`);
+  return Number.isFinite(parsed) && parsed < Date.now();
 }
 
 function isLeadPublicSourceValid(row) {
@@ -249,7 +275,19 @@ export async function GET(request) {
           handoverQuarter: meta.handoverQuarter || '',
           handoverYear: meta.handoverYear || '',
           marketPrice: meta.marketPrice || '',
-          distressGapPercent: meta.distressDiscountPercent || ''
+          distressGapPercent: meta.distressDiscountPercent || '',
+          monthlyRentPrice: meta.monthlyRentPrice || '',
+          billsIncluded: Boolean(meta.billsIncluded),
+          furnishedStatus: meta.furnishedStatus || '',
+          availableFrom: meta.availableFrom || '',
+          minimumStay: meta.minimumStay || '',
+          chillerIncluded: Boolean(meta.chillerIncluded),
+          internetIncluded: Boolean(meta.internetIncluded),
+          dewaIncluded: Boolean(meta.dewaIncluded),
+          securityDeposit: meta.securityDeposit || '',
+          paymentTerms: meta.paymentTerms || '',
+          availabilityStatus: meta.availabilityStatus || '',
+          expiryDate: meta.expiryDate || ''
         }
       });
     }
@@ -259,37 +297,7 @@ export async function GET(request) {
       supabaseUrl,
       serviceRoleKey,
       table: 'public_listings',
-      select: [
-        'id',
-        'broker_uuid',
-        'broker_display_name',
-        'broker_id_number',
-        'broker_mobile',
-        'source_type',
-        'source_id',
-        'listing_kind',
-        'purpose',
-        'property_type',
-        'category',
-        'property_category',
-        'unit_layout',
-        'sale_property_status',
-        'handover_quarter',
-        'handover_year',
-        'market_price',
-        'distress_gap_percent',
-        'location',
-        'price_label',
-        'size_label',
-        'bedrooms',
-        'bathrooms',
-        'public_notes',
-        'status',
-        'is_urgent',
-        'is_distress',
-        'created_at',
-        'updated_at'
-      ].join(','),
+      select: '*',
       filters: {
         public_listing_status: 'listed'
       },
@@ -297,7 +305,8 @@ export async function GET(request) {
     });
 
     const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows });
-    const filtered = applySectionFilter(validRows, section).map(row => sanitizePublicListing(row, { exposeBrokerContact }));
+    const activeRows = validRows.filter(row => !isExpiredMonthlyPublicRow(row));
+    const filtered = applySectionFilter(activeRows, section).map(row => sanitizePublicListing(row, { exposeBrokerContact }));
     return json(
       { listings: filtered, authenticated: exposeBrokerContact },
       200,

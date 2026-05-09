@@ -5,15 +5,19 @@ import {
   derivePropertyDimensions,
   getPropertyDimensionDbFields,
   getSupabasePublishableKey,
+  isMonthlyListingColumnError,
   isPropertyDimensionColumnError,
   json,
+  normalizeBooleanFlag,
   normalizeBool,
   normalizeDecimalValue,
   normalizeEmail,
+  normalizeFurnishedStatusValue,
   normalizeLeadStatusValue,
   normalizeListingPurposeValue,
   normalizeListingStatusValue,
   normalizeLocationValue,
+  normalizeMonthlyAvailabilityStatusValue,
   normalizePhoneNumber,
   normalizeSalePropertyStatusValue,
   normalizeSizeUnit,
@@ -31,6 +35,7 @@ import {
   sanitizePublicListing,
   serializeLeadMeta,
   serializePropertyMeta,
+  stripMonthlyListingFields,
   stripPropertyDimensionFields,
   supabaseAuthAdminGetUser,
   supabaseAuthGetUser,
@@ -109,6 +114,30 @@ function normalizeTimeValue(value, fallback = '') {
   return value === undefined ? normalizeText(fallback) : normalizeText(value);
 }
 
+function firstDefined(...values) {
+  return values.find(value => value !== undefined);
+}
+
+function normalizeNumericColumnValue(value) {
+  const rawValue = normalizeText(value).replace(/,/g, '');
+  if (!rawValue) return null;
+  const match = rawValue.toLowerCase().match(/^(\d+(?:\.\d+)?)([km])?$/u);
+  if (!match) {
+    const digits = rawValue.replace(/[^\d.]/g, '');
+    return digits || null;
+  }
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const multiplier = match[2] === 'm' ? 1000000 : match[2] === 'k' ? 1000 : 1;
+  return String(Math.round(amount * multiplier * 100) / 100);
+}
+
+function defaultMonthlyExpiryDate() {
+  const date = new Date();
+  date.setDate(date.getDate() + 30);
+  return formatDateInDubai(date);
+}
+
 function parseMoney(value) {
   const digits = String(value || '').replace(/[^\d]/g, '');
   return digits ? Number(digits) : 0;
@@ -141,32 +170,63 @@ function prependActivityLog(existingLog, text, type = 'system') {
   return [createActivityEntry(message, type), ...(Array.isArray(existingLog) ? existingLog : [])].slice(0, 80);
 }
 
+function stripOptionalListingFields(payload, options = {}) {
+  let nextPayload = payload;
+  if (options.stripPropertyDimensions) {
+    nextPayload = stripPropertyDimensionFields(nextPayload);
+  }
+  if (options.stripMonthlyFields) {
+    nextPayload = stripMonthlyListingFields(nextPayload);
+  }
+  return nextPayload;
+}
+
 async function safeSupabaseInsertWithPropertyDimensions(options) {
-  try {
-    return await supabaseInsert(options);
-  } catch (error) {
-    if (!isPropertyDimensionColumnError(error)) {
+  let payload = options.payload;
+  let stripPropertyDimensions = false;
+  let stripMonthlyFields = false;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await supabaseInsert({ ...options, payload });
+    } catch (error) {
+      if (!stripPropertyDimensions && isPropertyDimensionColumnError(error)) {
+        stripPropertyDimensions = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        continue;
+      }
+      if (!stripMonthlyFields && isMonthlyListingColumnError(error)) {
+        stripMonthlyFields = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        continue;
+      }
       throw error;
     }
-    return supabaseInsert({
-      ...options,
-      payload: stripPropertyDimensionFields(options.payload)
-    });
   }
+  return supabaseInsert({ ...options, payload });
 }
 
 async function safeSupabasePatchWithPropertyDimensions(options) {
-  try {
-    return await supabasePatch(options);
-  } catch (error) {
-    if (!isPropertyDimensionColumnError(error)) {
+  let payload = options.payload;
+  let stripPropertyDimensions = false;
+  let stripMonthlyFields = false;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      return await supabasePatch({ ...options, payload });
+    } catch (error) {
+      if (!stripPropertyDimensions && isPropertyDimensionColumnError(error)) {
+        stripPropertyDimensions = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        continue;
+      }
+      if (!stripMonthlyFields && isMonthlyListingColumnError(error)) {
+        stripMonthlyFields = true;
+        payload = stripOptionalListingFields(options.payload, { stripPropertyDimensions, stripMonthlyFields });
+        continue;
+      }
       throw error;
     }
-    return supabasePatch({
-      ...options,
-      payload: stripPropertyDimensionFields(options.payload)
-    });
   }
+  return supabasePatch({ ...options, payload });
 }
 
 function buildFollowUpText(dateValue, timeValue, urgent) {
@@ -209,7 +269,8 @@ function getLeadMeta(body, existingLead = null, overrides = {}) {
 
 function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   const existingMeta = parsePropertyMeta(existingProperty?.description);
-  const purpose = normalizeText(body?.purpose || existingProperty?.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
+  const isMonthlyRent = purpose === 'monthly_rent';
   const salePropertyStatus = purpose === 'sale'
     ? normalizeSalePropertyStatusValue(
       body?.salePropertyStatus !== undefined
@@ -231,7 +292,9 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
         : existingProperty?.handover_year || existingMeta.handoverYear
     )
     : '';
-  const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
+  const distressDeal = purpose === 'sale' && (
+    body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress)
+  );
   const distressAskingPrice = distressDeal
     ? (body?.distressAskingPrice !== undefined
         ? normalizeText(body?.distressAskingPrice)
@@ -247,6 +310,11 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
   const distressDiscountPercent = distressDeal
     ? calculateDistressDiscountPercent(marketPrice, distressAskingPrice || body?.rentPrice || body?.ownerAskingPrice)
     : '';
+  const billsIncludedInput = firstDefined(body?.billsIncluded, body?.bills_included);
+  const chillerIncludedInput = firstDefined(body?.chillerIncluded, body?.chiller_included);
+  const internetIncludedInput = firstDefined(body?.internetIncluded, body?.internet_included);
+  const dewaIncludedInput = firstDefined(body?.dewaIncluded, body?.dewa_included);
+  const availabilityStatusInput = firstDefined(body?.availabilityStatus, body?.availability_status, body?.status);
   return {
     buildingName: body?.buildingName !== undefined ? normalizeText(body?.buildingName) : existingMeta.buildingName,
     floorLevel: body?.floorLevel !== undefined ? normalizeText(body?.floorLevel) : existingMeta.floorLevel,
@@ -272,6 +340,47 @@ function getPropertyMeta(body, existingProperty = null, overrides = {}) {
     marketPrice,
     distressAskingPrice,
     distressDiscountPercent,
+    monthlyRentPrice: isMonthlyRent
+      ? normalizeText(firstDefined(body?.monthlyRentPrice, body?.monthly_rent_price) ?? existingProperty?.monthly_rent_price ?? existingMeta.monthlyRentPrice ?? existingProperty?.price)
+      : '',
+    billsIncluded: isMonthlyRent
+      ? normalizeBooleanFlag(billsIncludedInput, normalizeBooleanFlag(existingProperty?.bills_included, existingMeta.billsIncluded))
+      : false,
+    furnishedStatus: isMonthlyRent
+      ? normalizeFurnishedStatusValue(firstDefined(body?.furnishedStatus, body?.furnished_status) ?? existingProperty?.furnished_status ?? existingMeta.furnishedStatus)
+      : '',
+    availableFrom: isMonthlyRent
+      ? normalizeDateValue(firstDefined(body?.availableFrom, body?.available_from), existingProperty?.available_from || existingMeta.availableFrom)
+      : '',
+    minimumStay: isMonthlyRent
+      ? normalizeText(firstDefined(body?.minimumStay, body?.minimum_stay) ?? existingProperty?.minimum_stay ?? existingMeta.minimumStay)
+      : '',
+    chillerIncluded: isMonthlyRent
+      ? normalizeBooleanFlag(chillerIncludedInput, normalizeBooleanFlag(existingProperty?.chiller_included, existingMeta.chillerIncluded))
+      : false,
+    internetIncluded: isMonthlyRent
+      ? normalizeBooleanFlag(internetIncludedInput, normalizeBooleanFlag(existingProperty?.internet_included, existingMeta.internetIncluded))
+      : false,
+    dewaIncluded: isMonthlyRent
+      ? normalizeBooleanFlag(dewaIncludedInput, normalizeBooleanFlag(existingProperty?.dewa_included, existingMeta.dewaIncluded))
+      : false,
+    securityDeposit: isMonthlyRent
+      ? normalizeText(firstDefined(body?.securityDeposit, body?.security_deposit) ?? existingProperty?.security_deposit ?? existingMeta.securityDeposit)
+      : '',
+    paymentTerms: isMonthlyRent
+      ? normalizeText(firstDefined(body?.paymentTerms, body?.payment_terms) ?? existingProperty?.payment_terms ?? existingMeta.paymentTerms)
+      : '',
+    availabilityStatus: isMonthlyRent
+      ? normalizeMonthlyAvailabilityStatusValue(
+        availabilityStatusInput
+        ?? existingProperty?.availability_status
+        ?? existingProperty?.status
+        ?? existingMeta.availabilityStatus
+      )
+      : 'available',
+    expiryDate: isMonthlyRent
+      ? normalizeDateValue(firstDefined(body?.expiryDate, body?.expiry_date), existingProperty?.expiry_date || existingMeta.expiryDate)
+      : '',
     listingImages: body?.listingImages !== undefined ? parsePropertyMeta(serializePropertyMeta({ listingImages: body?.listingImages })).listingImages : existingMeta.listingImages,
     legacyDescription: body?.legacyDescription !== undefined ? normalizeText(body?.legacyDescription) : existingMeta.legacyDescription,
     nextFollowUpDate: normalizeDateValue(body?.nextFollowUpDate, existingMeta.nextFollowUpDate),
@@ -410,6 +519,7 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
 
 function getPropertyPayload(body, brokerId, existingProperty = null, overrides = {}) {
   const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
+  const isMonthlyRent = purpose === 'monthly_rent';
   const { dimensions, propertyType } = getCanonicalPropertyTypeFromDimensions({
     propertyCategory: body?.propertyCategory ?? existingProperty?.property_category,
     unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
@@ -417,9 +527,20 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     category: existingProperty?.category
   });
   const meta = getPropertyMeta(body, existingProperty, overrides);
-  const distressDeal = body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress);
+  const distressDeal = purpose === 'sale' && (
+    body?.isDistress !== undefined ? normalizeBool(body?.isDistress) : Boolean(existingProperty?.is_distress)
+  );
+  const listingStatus = isMonthlyRent
+    ? normalizeMonthlyAvailabilityStatusValue(
+      firstDefined(body?.availabilityStatus, body?.availability_status, body?.status)
+      ?? existingProperty?.availability_status
+      ?? existingProperty?.status
+      ?? meta.availabilityStatus
+    )
+    : normalizeListingStatus(body?.status ?? existingProperty?.status);
   const effectivePrice = normalizeText(
     body?.price ||
+    (isMonthlyRent ? meta.monthlyRentPrice : '') ||
     (distressDeal ? meta.distressAskingPrice : '') ||
     body?.rentPrice ||
     body?.ownerAskingPrice ||
@@ -440,6 +561,18 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     handover_year: purpose === 'sale' ? meta.handoverYear || null : null,
     market_price: meta.marketPrice || null,
     distress_gap_percent: meta.distressDiscountPercent || null,
+    monthly_rent_price: isMonthlyRent ? normalizeNumericColumnValue(meta.monthlyRentPrice || effectivePrice) : null,
+    bills_included: isMonthlyRent ? Boolean(meta.billsIncluded) : false,
+    furnished_status: isMonthlyRent ? meta.furnishedStatus || null : null,
+    available_from: isMonthlyRent ? meta.availableFrom || null : null,
+    minimum_stay: isMonthlyRent ? meta.minimumStay || null : null,
+    chiller_included: isMonthlyRent ? Boolean(meta.chillerIncluded) : false,
+    internet_included: isMonthlyRent ? Boolean(meta.internetIncluded) : false,
+    dewa_included: isMonthlyRent ? Boolean(meta.dewaIncluded) : false,
+    security_deposit: isMonthlyRent ? normalizeNumericColumnValue(meta.securityDeposit) : null,
+    payment_terms: isMonthlyRent ? meta.paymentTerms || null : null,
+    availability_status: isMonthlyRent ? listingStatus : null,
+    expiry_date: isMonthlyRent ? meta.expiryDate || existingProperty?.expiry_date || defaultMonthlyExpiryDate() : null,
     location: normalizeLocationValue(body?.location || existingProperty?.location),
     price: effectivePrice,
     size: normalizeDecimalValue(body?.size || body?.sizeSqft || existingProperty?.size),
@@ -450,7 +583,7 @@ function getPropertyPayload(body, brokerId, existingProperty = null, overrides =
     internal_notes: normalizeText(body?.internalNotes ?? existingProperty?.internal_notes),
     owner_name: normalizeText(body?.ownerName ?? existingProperty?.owner_name),
     owner_phone: normalizePhoneNumber(body?.ownerPhone ?? existingProperty?.owner_phone),
-    status: normalizeListingStatus(body?.status ?? existingProperty?.status),
+    status: listingStatus,
     is_urgent: false,
     is_distress: distressDeal,
     is_listed_public: isListedPublic,

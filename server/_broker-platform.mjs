@@ -265,6 +265,12 @@ const LISTING_STATUS_VALUES = new Set([
   'draft'
 ]);
 
+const MONTHLY_AVAILABILITY_STATUS_VALUES = new Set([
+  'available',
+  'reserved',
+  'rented'
+]);
+
 const CONNECTOR_STATUS_VALUES = new Set([
   ...LEAD_STATUS_VALUES,
   ...LISTING_STATUS_VALUES,
@@ -440,6 +446,40 @@ export function isPropertyDimensionColumnError(error) {
   );
 }
 
+const MONTHLY_LISTING_COLUMN_NAMES = Object.freeze([
+  'monthly_rent_price',
+  'bills_included',
+  'furnished_status',
+  'available_from',
+  'minimum_stay',
+  'chiller_included',
+  'internet_included',
+  'dewa_included',
+  'security_deposit',
+  'payment_terms',
+  'availability_status',
+  'expiry_date'
+]);
+
+export function stripMonthlyListingFields(payload) {
+  if (Array.isArray(payload)) {
+    return payload.map(item => stripMonthlyListingFields(item));
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  const clone = { ...payload };
+  MONTHLY_LISTING_COLUMN_NAMES.forEach(columnName => {
+    delete clone[columnName];
+  });
+  return clone;
+}
+
+export function isMonthlyListingColumnError(error) {
+  const message = String(error?.message || error || '').toLowerCase();
+  return MONTHLY_LISTING_COLUMN_NAMES.some(columnName => message.includes(columnName));
+}
+
 export function normalizeLocationValue(value) {
   const rawValue = normalizeText(value);
   if (!rawValue) return '';
@@ -456,6 +496,11 @@ export function normalizeListingStatusValue(value, fallback = 'available') {
   return LISTING_STATUS_VALUES.has(normalized) ? normalized : fallback;
 }
 
+export function normalizeMonthlyAvailabilityStatusValue(value, fallback = 'available') {
+  const normalized = STATUS_ALIASES[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
+  return MONTHLY_AVAILABILITY_STATUS_VALUES.has(normalized) ? normalized : fallback;
+}
+
 export function normalizeConnectorStatusValue(value, fallback = 'active') {
   const normalized = STATUS_ALIASES[normalizeTaxonomyToken(value)] || normalizeTaxonomyToken(value);
   return CONNECTOR_STATUS_VALUES.has(normalized) ? normalized : fallback;
@@ -464,6 +509,20 @@ export function normalizeConnectorStatusValue(value, fallback = 'active') {
 function parseMoneyLikeValue(value) {
   const digits = String(value || '').replace(/[^\d]/g, '');
   return digits ? Number(digits) : 0;
+}
+
+function normalizeNumericColumnValue(value) {
+  const rawValue = normalizeText(value).replace(/,/g, '');
+  if (!rawValue) return null;
+  const match = rawValue.toLowerCase().match(/^(\d+(?:\.\d+)?)([km])?$/u);
+  if (!match) {
+    const digits = rawValue.replace(/[^\d.]/g, '');
+    return digits || null;
+  }
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  const multiplier = match[2] === 'm' ? 1000000 : match[2] === 'k' ? 1000 : 1;
+  return String(Math.round(amount * multiplier * 100) / 100);
 }
 
 function calculateDistressGapPercentValue(marketPrice, askingPrice) {
@@ -476,9 +535,41 @@ function calculateDistressGapPercentValue(marketPrice, askingPrice) {
 
 export function normalizeListingPurposeValue(value) {
   const normalized = normalizeTaxonomyToken(value);
-  if (normalized === 'rent' || normalized === 'rental') return 'rent';
+  if (
+    normalized === 'monthly'
+    || normalized === 'monthly rent'
+    || normalized === 'monthly rental'
+    || normalized === 'short term'
+    || normalized === 'short term rent'
+    || normalized === 'short stay'
+    || normalized === 'holiday home'
+  ) return 'monthly_rent';
+  if (
+    normalized === 'rent'
+    || normalized === 'rental'
+    || normalized === 'yearly rent'
+    || normalized === 'annual rent'
+    || normalized === 'yearly rental'
+  ) return 'rent';
   if (normalized === 'sale' || normalized === 'sell' || normalized === 'selling') return 'sale';
   return '';
+}
+
+export function normalizeBooleanFlag(value, fallback = false) {
+  if (value === undefined || value === null || value === '') return Boolean(fallback);
+  const normalized = normalizeTaxonomyToken(value);
+  if (['true', 'yes', 'y', '1', 'included', 'include'].includes(normalized)) return true;
+  if (['false', 'no', 'n', '0', 'not included', 'excluded', 'exclude'].includes(normalized)) return false;
+  return Boolean(value);
+}
+
+export function normalizeFurnishedStatusValue(value, fallback = '') {
+  const normalized = normalizeTaxonomyToken(value);
+  if (!normalized) return fallback;
+  if (normalized === 'furnished' || normalized === 'fully furnished') return 'furnished';
+  if (normalized === 'unfurnished' || normalized === 'not furnished') return 'unfurnished';
+  if (normalized === 'semi furnished' || normalized === 'semi') return 'semi_furnished';
+  return fallback;
 }
 
 export function normalizeDecimalValue(value) {
@@ -615,6 +706,24 @@ function normalizePropertyWorkflow(rawWorkflow) {
   };
 }
 
+function normalizeMonthlyListingMeta(rawMonthly) {
+  const source = rawMonthly && typeof rawMonthly === 'object' ? rawMonthly : {};
+  return {
+    monthlyRentPrice: normalizeText(source.monthlyRentPrice ?? source.monthly_rent_price),
+    billsIncluded: normalizeBooleanFlag(source.billsIncluded ?? source.bills_included, false),
+    furnishedStatus: normalizeFurnishedStatusValue(source.furnishedStatus ?? source.furnished_status),
+    availableFrom: normalizeText(source.availableFrom ?? source.available_from),
+    minimumStay: normalizeText(source.minimumStay ?? source.minimum_stay),
+    chillerIncluded: normalizeBooleanFlag(source.chillerIncluded ?? source.chiller_included, false),
+    internetIncluded: normalizeBooleanFlag(source.internetIncluded ?? source.internet_included, false),
+    dewaIncluded: normalizeBooleanFlag(source.dewaIncluded ?? source.dewa_included, false),
+    securityDeposit: normalizeText(source.securityDeposit ?? source.security_deposit),
+    paymentTerms: normalizeText(source.paymentTerms ?? source.payment_terms),
+    availabilityStatus: normalizeMonthlyAvailabilityStatusValue(source.availabilityStatus ?? source.availability_status, 'available'),
+    expiryDate: normalizeText(source.expiryDate ?? source.expiry_date)
+  };
+}
+
 export function parseLeadMeta(rawValue) {
   const rawText = normalizeText(rawValue);
   if (!rawText) {
@@ -701,6 +810,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      ...normalizeMonthlyListingMeta({}),
       listingImages: [],
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
@@ -723,6 +833,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      ...normalizeMonthlyListingMeta({}),
       listingImages: [],
       legacyDescription: rawText,
       ...normalizePropertyWorkflow({})
@@ -746,6 +857,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: normalizeText(parsed?.marketPrice),
       distressAskingPrice: normalizeText(parsed?.distressAskingPrice),
       distressDiscountPercent: normalizeText(parsed?.distressDiscountPercent),
+      ...normalizeMonthlyListingMeta(parsed?.monthly || parsed),
       listingImages: sanitizePropertyImageList(parsed?.listingImages),
       legacyDescription: normalizeText(parsed?.legacyDescription),
       ...normalizePropertyWorkflow(parsed?.workflow || parsed)
@@ -766,6 +878,7 @@ export function parsePropertyMeta(rawValue) {
       marketPrice: '',
       distressAskingPrice: '',
       distressDiscountPercent: '',
+      ...normalizeMonthlyListingMeta({}),
       listingImages: [],
       legacyDescription: '',
       ...normalizePropertyWorkflow({})
@@ -811,10 +924,25 @@ export function serializePropertyMeta(meta) {
     marketPrice: normalizeText(meta?.marketPrice),
     distressAskingPrice: normalizeText(meta?.distressAskingPrice),
     distressDiscountPercent: normalizeText(meta?.distressDiscountPercent),
+    ...normalizeMonthlyListingMeta(meta),
     listingImages: sanitizePropertyImageList(meta?.listingImages),
     legacyDescription: normalizeText(meta?.legacyDescription),
     workflow
   };
+
+  const hasMonthlyListingValues =
+    payload.monthlyRentPrice ||
+    payload.billsIncluded ||
+    payload.furnishedStatus ||
+    payload.availableFrom ||
+    payload.minimumStay ||
+    payload.chillerIncluded ||
+    payload.internetIncluded ||
+    payload.dewaIncluded ||
+    payload.securityDeposit ||
+    payload.paymentTerms ||
+    payload.availabilityStatus !== 'available' ||
+    payload.expiryDate;
 
   if (
     !payload.buildingName &&
@@ -831,6 +959,7 @@ export function serializePropertyMeta(meta) {
     !payload.marketPrice &&
     !payload.distressAskingPrice &&
     !payload.distressDiscountPercent &&
+    !hasMonthlyListingValues &&
     !payload.listingImages.length &&
     !payload.legacyDescription
   ) {
@@ -1519,29 +1648,34 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   });
   const category = propertyType;
   const location = normalizeLocationValue(item.location);
-  const priceLabel = isLead ? normalizeText(item.budget) : normalizeText(item.price);
   const propertyMeta = !isLead ? parsePropertyMeta(item.description) : null;
-  const salePropertyStatus = !isLead
+  const monthlyRentPrice = !isLead && purpose === 'monthly_rent'
+    ? normalizeText(item?.monthlyRentPrice || item?.monthly_rent_price || propertyMeta?.monthlyRentPrice || item.price)
+    : '';
+  const priceLabel = isLead
+    ? normalizeText(item.budget)
+    : (purpose === 'monthly_rent' ? monthlyRentPrice : normalizeText(item.price));
+  const salePropertyStatus = !isLead && purpose === 'sale'
     ? normalizeSalePropertyStatusValue(
       item?.salePropertyStatus
       || item?.sale_property_status
       || propertyMeta?.salePropertyStatus
-      || (purpose === 'sale' ? 'Ready Property' : '')
+      || 'Ready Property'
     )
     : '';
-  const handoverQuarter = !isLead
+  const handoverQuarter = !isLead && purpose === 'sale'
     ? normalizeHandoverQuarterValue(item?.handoverQuarter || item?.handover_quarter || propertyMeta?.handoverQuarter)
     : '';
-  const handoverYear = !isLead
+  const handoverYear = !isLead && purpose === 'sale'
     ? normalizeHandoverYearValue(item?.handoverYear || item?.handover_year || propertyMeta?.handoverYear)
     : '';
-  const marketPrice = !isLead
+  const marketPrice = !isLead && purpose === 'sale'
     ? normalizeText(item?.marketPrice || item?.market_price || propertyMeta?.marketPrice)
     : '';
   const listingImages = !isLead
     ? sanitizePropertyImageList(item?.listingImages || item?.listing_images || propertyMeta?.listingImages)
     : [];
-  const distressGapPercent = !isLead
+  const distressGapPercent = !isLead && purpose === 'sale'
     ? normalizeText(item?.distressGapPercent || item?.distress_gap_percent || item?.distressDiscountPercent || propertyMeta?.distressDiscountPercent)
     : '';
   const projectOrBuilding = isLead
@@ -1553,10 +1687,18 @@ export function buildPublicListingPayload(sourceType, broker, item) {
   const generalNotes = isLead
     ? normalizeText(item.public_general_notes || buildLeadPublicSummary(item))
     : normalizeText(item.public_notes);
+  const availabilityStatus = !isLead && purpose === 'monthly_rent'
+    ? normalizeMonthlyAvailabilityStatusValue(
+      item?.availabilityStatus
+      || item?.availability_status
+      || item?.status
+      || propertyMeta?.availabilityStatus
+    )
+    : '';
   const status = isLead
     ? normalizeLeadStatusValue(item.status || 'new')
-    : normalizeListingStatusValue(item.status || 'available');
-  const isDistress = normalizeBool(item.is_distress);
+    : (purpose === 'monthly_rent' ? availabilityStatus : normalizeListingStatusValue(item.status || 'available'));
+  const isDistress = !isLead && purpose === 'sale' && normalizeBool(item.is_distress);
 
   return {
     broker_uuid: broker.id,
@@ -1576,6 +1718,38 @@ export function buildPublicListingPayload(sourceType, broker, item) {
     handover_year: handoverYear || null,
     market_price: marketPrice || null,
     distress_gap_percent: distressGapPercent || null,
+    monthly_rent_price: purpose === 'monthly_rent' ? normalizeNumericColumnValue(monthlyRentPrice) : null,
+    bills_included: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.billsIncluded ?? item?.bills_included, propertyMeta?.billsIncluded)
+      : false,
+    furnished_status: purpose === 'monthly_rent'
+      ? normalizeFurnishedStatusValue(item?.furnishedStatus || item?.furnished_status || propertyMeta?.furnishedStatus)
+      : null,
+    available_from: purpose === 'monthly_rent'
+      ? normalizeText(item?.availableFrom || item?.available_from || propertyMeta?.availableFrom) || null
+      : null,
+    minimum_stay: purpose === 'monthly_rent'
+      ? normalizeText(item?.minimumStay || item?.minimum_stay || propertyMeta?.minimumStay) || null
+      : null,
+    chiller_included: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.chillerIncluded ?? item?.chiller_included, propertyMeta?.chillerIncluded)
+      : false,
+    internet_included: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.internetIncluded ?? item?.internet_included, propertyMeta?.internetIncluded)
+      : false,
+    dewa_included: purpose === 'monthly_rent'
+      ? normalizeBooleanFlag(item?.dewaIncluded ?? item?.dewa_included, propertyMeta?.dewaIncluded)
+      : false,
+    security_deposit: purpose === 'monthly_rent'
+      ? normalizeNumericColumnValue(item?.securityDeposit || item?.security_deposit || propertyMeta?.securityDeposit)
+      : null,
+    payment_terms: purpose === 'monthly_rent'
+      ? normalizeText(item?.paymentTerms || item?.payment_terms || propertyMeta?.paymentTerms) || null
+      : null,
+    availability_status: purpose === 'monthly_rent' ? availabilityStatus : null,
+    expiry_date: purpose === 'monthly_rent'
+      ? normalizeText(item?.expiryDate || item?.expiry_date || propertyMeta?.expiryDate) || null
+      : null,
     location,
     price_label: priceLabel,
     size_label: isLead ? projectOrBuilding : sizeLabel,
@@ -1661,31 +1835,38 @@ export function sanitizeProperty(row) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
-  const distressGapPercent = normalizeText(
-    row.distress_gap_percent
-    || meta.distressDiscountPercent
-    || calculateDistressGapPercentValue(row.market_price || meta.marketPrice, row.price || meta.distressAskingPrice)
-  );
-  const salePropertyStatus = normalizeSalePropertyStatusValue(
-    row.sale_property_status
-    || meta.salePropertyStatus
-    || (normalizeText(row.purpose).toLowerCase() === 'sale' ? 'Ready Property' : '')
-  );
-  const handoverQuarter = normalizeHandoverQuarterValue(row.handover_quarter || meta.handoverQuarter);
-  const handoverYear = normalizeHandoverYearValue(row.handover_year || meta.handoverYear);
-  const handoverLabel = formatPropertyHandoverLabel({ handoverQuarter, handoverYear });
+  const purpose = normalizeListingPurposeValue(row.purpose) || row.purpose;
+  const isSalePurpose = purpose === 'sale';
+  const isYearlyRentPurpose = purpose === 'rent';
+  const isMonthlyRentPurpose = purpose === 'monthly_rent';
+  const distressGapPercent = isSalePurpose
+    ? normalizeText(
+      row.distress_gap_percent
+      || meta.distressDiscountPercent
+      || calculateDistressGapPercentValue(row.market_price || meta.marketPrice, row.price || meta.distressAskingPrice)
+    )
+    : '';
+  const salePropertyStatus = isSalePurpose
+    ? normalizeSalePropertyStatusValue(row.sale_property_status || meta.salePropertyStatus || 'Ready Property')
+    : '';
+  const handoverQuarter = isSalePurpose ? normalizeHandoverQuarterValue(row.handover_quarter || meta.handoverQuarter) : '';
+  const handoverYear = isSalePurpose ? normalizeHandoverYearValue(row.handover_year || meta.handoverYear) : '';
+  const handoverLabel = isSalePurpose ? formatPropertyHandoverLabel({ handoverQuarter, handoverYear }) : '';
   const listingImages = sanitizePropertyImageList(row.listing_images || meta.listingImages);
+  const monthlyRentPrice = normalizeText(row.monthly_rent_price || meta.monthlyRentPrice || (isMonthlyRentPurpose ? row.price : ''));
+  const availabilityStatus = normalizeMonthlyAvailabilityStatusValue(row.availability_status || meta.availabilityStatus || row.status);
   return {
     id: row.id,
-    purpose: normalizeListingPurposeValue(row.purpose) || row.purpose,
+    purpose,
     propertyType,
     category: propertyType,
     propertyCategory,
     unitLayout,
     location,
     price: row.price,
-    rentPrice: normalizeText(row.purpose).toLowerCase() === 'rent' ? row.price || '' : '',
-    ownerAskingPrice: normalizeText(row.purpose).toLowerCase() === 'sale' ? row.price || '' : '',
+    rentPrice: isYearlyRentPurpose ? row.price || '' : '',
+    ownerAskingPrice: isSalePurpose ? row.price || '' : '',
+    monthlyRentPrice,
     size: normalizeDecimalValue(row.size),
     sizeSqft: normalizeDecimalValue(row.size),
     sizeUnit: normalizeSizeUnit(meta.sizeUnit),
@@ -1706,10 +1887,21 @@ export function sanitizeProperty(row) {
     handoverQuarter,
     handoverYear,
     handoverLabel,
-    marketPrice: normalizeText(row.market_price || meta.marketPrice),
-    distressAskingPrice: meta.distressAskingPrice || '',
+    marketPrice: isSalePurpose ? normalizeText(row.market_price || meta.marketPrice) : '',
+    distressAskingPrice: isSalePurpose ? meta.distressAskingPrice || '' : '',
     distressDiscountPercent: distressGapPercent,
     distressGapPercent,
+    billsIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.bills_included, meta.billsIncluded) : false,
+    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status || meta.furnishedStatus) : '',
+    availableFrom: isMonthlyRentPurpose ? normalizeText(row.available_from || meta.availableFrom) : '',
+    minimumStay: isMonthlyRentPurpose ? normalizeText(row.minimum_stay || meta.minimumStay) : '',
+    chillerIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.chiller_included, meta.chillerIncluded) : false,
+    internetIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.internet_included, meta.internetIncluded) : false,
+    dewaIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.dewa_included, meta.dewaIncluded) : false,
+    securityDeposit: isMonthlyRentPurpose ? normalizeText(row.security_deposit || meta.securityDeposit) : '',
+    paymentTerms: isMonthlyRentPurpose ? normalizeText(row.payment_terms || meta.paymentTerms) : '',
+    availabilityStatus: isMonthlyRentPurpose ? availabilityStatus : '',
+    expiryDate: isMonthlyRentPurpose ? normalizeText(row.expiry_date || meta.expiryDate) : '',
     listingImageCount: Number(row.listing_image_count || listingImages.length || 0) || 0,
     ownerName: row.owner_name || '',
     ownerPhone: row.owner_phone || '',
@@ -1724,9 +1916,9 @@ export function sanitizeProperty(row) {
     isArchived: Boolean(meta.isArchived),
     archivedAt: meta.archivedAt || '',
     activityLog: Array.isArray(meta.activityLog) ? meta.activityLog : [],
-    status: normalizeListingStatusValue(row.status),
+    status: isMonthlyRentPurpose ? availabilityStatus : normalizeListingStatusValue(row.status),
     isUrgent: Boolean(row.is_urgent),
-    isDistress: Boolean(row.is_distress),
+    isDistress: isSalePurpose && Boolean(row.is_distress),
     isListedPublic: Boolean(row.is_listed_public),
     publicListingStatus: row.public_listing_status || 'private',
     createdAt: row.created_at,
@@ -1803,22 +1995,28 @@ export function sanitizePublicListing(row, options = {}) {
   const unitLayout = getDisplayUnitLayout(row);
   const propertyType = getDisplayPropertyType(row);
   const location = normalizeLocationValue(row.location);
-  const distressGapPercent = !isLead
+  const purpose = isLead ? normalizeLeadClientPurpose(row.purpose) : (normalizeListingPurposeValue(row.purpose) || row.purpose);
+  const isSalePurpose = !isLead && purpose === 'sale';
+  const isMonthlyRentPurpose = !isLead && purpose === 'monthly_rent';
+  const distressGapPercent = isSalePurpose
     ? normalizeText(
         row.distress_gap_percent
         || calculateDistressGapPercentValue(row.market_price, row.price)
       )
     : '';
-  const salePropertyStatus = !isLead
+  const salePropertyStatus = isSalePurpose
     ? normalizeSalePropertyStatusValue(
       row.sale_property_status
-      || (normalizeText(row.purpose).toLowerCase() === 'sale' ? 'Ready Property' : '')
+      || 'Ready Property'
     )
     : '';
-  const handoverQuarter = !isLead ? normalizeHandoverQuarterValue(row.handover_quarter) : '';
-  const handoverYear = !isLead ? normalizeHandoverYearValue(row.handover_year) : '';
-  const handoverLabel = !isLead ? formatPropertyHandoverLabel({ handoverQuarter, handoverYear }) : '';
+  const handoverQuarter = isSalePurpose ? normalizeHandoverQuarterValue(row.handover_quarter) : '';
+  const handoverYear = isSalePurpose ? normalizeHandoverYearValue(row.handover_year) : '';
+  const handoverLabel = isSalePurpose ? formatPropertyHandoverLabel({ handoverQuarter, handoverYear }) : '';
   const listingImages = !isLead ? sanitizePropertyImageList(row.listing_images) : [];
+  const availabilityStatus = isMonthlyRentPurpose
+    ? normalizeMonthlyAvailabilityStatusValue(row.availability_status || row.status)
+    : '';
   return {
     id: row.id,
     brokerUuid: exposeBrokerContact ? normalizeText(row.broker_uuid) : '',
@@ -1831,7 +2029,7 @@ export function sanitizePublicListing(row, options = {}) {
     sourceType: row.source_type,
     sourceId: row.source_id,
     listingKind: row.listing_kind,
-    purpose: isLead ? normalizeLeadClientPurpose(row.purpose) : (normalizeListingPurposeValue(row.purpose) || row.purpose),
+    purpose,
     propertyType,
     category: propertyType,
     propertyCategory,
@@ -1842,18 +2040,30 @@ export function sanitizePublicListing(row, options = {}) {
     handoverLabel,
     location,
     priceLabel: row.price_label,
-    marketPrice: !isLead ? normalizeText(row.market_price) : '',
+    marketPrice: isSalePurpose ? normalizeText(row.market_price) : '',
     distressDiscountPercent: distressGapPercent,
     distressGapPercent,
+    monthlyRentPrice: isMonthlyRentPurpose ? normalizeText(row.monthly_rent_price || row.price_label) : '',
+    billsIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.bills_included, false) : false,
+    furnishedStatus: isMonthlyRentPurpose ? normalizeFurnishedStatusValue(row.furnished_status) : '',
+    availableFrom: isMonthlyRentPurpose ? normalizeText(row.available_from) : '',
+    minimumStay: isMonthlyRentPurpose ? normalizeText(row.minimum_stay) : '',
+    chillerIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.chiller_included, false) : false,
+    internetIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.internet_included, false) : false,
+    dewaIncluded: isMonthlyRentPurpose ? normalizeBooleanFlag(row.dewa_included, false) : false,
+    securityDeposit: isMonthlyRentPurpose ? normalizeText(row.security_deposit) : '',
+    paymentTerms: isMonthlyRentPurpose ? normalizeText(row.payment_terms) : '',
+    availabilityStatus,
+    expiryDate: isMonthlyRentPurpose ? normalizeText(row.expiry_date) : '',
     listingImageCount: !isLead ? Number(row.listing_image_count || listingImages.length || 0) || 0 : 0,
     buildingLabel: row.building_label || (row.source_type === 'lead' ? row.size_label : ''),
     sizeLabel: row.source_type === 'property' ? row.size_label || '' : '',
     bedrooms: row.bedrooms,
     bathrooms: row.bathrooms,
     publicNotes: row.public_notes,
-    status: normalizeConnectorStatusValue(row.status),
+    status: isMonthlyRentPurpose ? availabilityStatus : normalizeConnectorStatusValue(row.status),
     isUrgent: Boolean(row.is_urgent),
-    isDistress: Boolean(row.is_distress),
+    isDistress: isSalePurpose && Boolean(row.is_distress),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     marketplaceRefreshedAt: row.marketplace_refreshed_at || row.updated_at,
