@@ -471,6 +471,11 @@
       'Land / Plot',
       'Other'
     ]);
+    const DASHBOARD_MONTHLY_RENT_CATEGORY_OPTIONS = Object.freeze([
+      'Apartment',
+      'Townhouse',
+      'Villa'
+    ]);
 
     const DASHBOARD_UNIT_LAYOUT_OPTIONS = Object.freeze([
       'Studio',
@@ -2580,11 +2585,13 @@
       const select = document.getElementById('propertyCategory');
       if (!select) return;
       const isMonthlyRent = getPropertyPurpose(document.getElementById('propertyPurposeValue')?.value) === 'monthly_rent';
-      const options = isMonthlyRent ? ['Apartment'] : DASHBOARD_PROPERTY_CATEGORY_OPTIONS;
+      const options = isMonthlyRent ? DASHBOARD_MONTHLY_RENT_CATEGORY_OPTIONS : DASHBOARD_PROPERTY_CATEGORY_OPTIONS;
       select.innerHTML = '<option value="">Select property category</option>' + options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
       const normalizedSelectedValue = normalizeDashboardPropertyCategoryValue(selectedValue);
-      select.value = isMonthlyRent ? 'Apartment' : (normalizedSelectedValue && options.includes(normalizedSelectedValue) ? normalizedSelectedValue : '');
-      select.disabled = isMonthlyRent;
+      select.value = normalizedSelectedValue && options.includes(normalizedSelectedValue)
+        ? normalizedSelectedValue
+        : (isMonthlyRent ? 'Apartment' : '');
+      select.disabled = false;
     }
 
     function populatePropertyUnitLayoutOptions(selectedValue = '', propertyCategory = '') {

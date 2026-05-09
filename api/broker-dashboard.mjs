@@ -60,9 +60,15 @@ const INACTIVE_LISTING_STATUSES = new Set(['rented', 'sold', 'off market']);
 const ACTIVE_MATCH_LISTING_STATUSES = new Set(['available', 'reserved']);
 const DUBAI_TIME_ZONE = 'Asia/Dubai';
 const MARKETPLACE_REFRESH_COOLDOWN_MS = 12 * 60 * 60 * 1000;
+const MONTHLY_RENT_PROPERTY_CATEGORY_OPTIONS = ['Apartment', 'Townhouse', 'Villa'];
 
 function nowIso() {
   return new Date().toISOString();
+}
+
+function normalizeMonthlyRentPropertyCategory(value) {
+  const normalized = normalizeText(value).toLowerCase().replace(/\s+/g, ' ').trim();
+  return MONTHLY_RENT_PROPERTY_CATEGORY_OPTIONS.find(option => option.toLowerCase() === normalized) || 'Apartment';
 }
 
 function getCanonicalPropertyTypeFromDimensions(source, options = {}) {
@@ -556,13 +562,16 @@ function getLeadPayload(body, brokerId, existingLead = null, overrides = {}) {
 function getPropertyPayload(body, brokerId, existingProperty = null, overrides = {}) {
   const purpose = normalizeListingPurposeValue(body?.purpose || existingProperty?.purpose) || 'sale';
   const isMonthlyRent = purpose === 'monthly_rent';
+  const monthlyRentPropertyCategory = normalizeMonthlyRentPropertyCategory(
+    body?.propertyCategory ?? existingProperty?.property_category ?? existingProperty?.category
+  );
   const { dimensions, propertyType } = getCanonicalPropertyTypeFromDimensions({
-    propertyCategory: isMonthlyRent ? 'Apartment' : (body?.propertyCategory ?? existingProperty?.property_category),
+    propertyCategory: isMonthlyRent ? monthlyRentPropertyCategory : (body?.propertyCategory ?? existingProperty?.property_category),
     unitLayout: body?.unitLayout ?? existingProperty?.unit_layout,
     propertyType: isMonthlyRent
       ? (body?.unitLayout || existingProperty?.unit_layout || body?.propertyType || existingProperty?.property_type)
       : (body?.propertyType || existingProperty?.property_type || existingProperty?.category),
-    category: isMonthlyRent ? 'Apartment' : existingProperty?.category
+    category: isMonthlyRent ? monthlyRentPropertyCategory : existingProperty?.category
   });
   const meta = getPropertyMeta(body, existingProperty, overrides);
   const distressDeal = purpose === 'sale' && (
