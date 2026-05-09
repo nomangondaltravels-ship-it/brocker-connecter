@@ -3106,6 +3106,11 @@
         propertyImagesInput.addEventListener('change', handlePropertyImagesSelected);
         propertyImagesInput.dataset.bound = 'true';
       }
+      const propertyImagesPreview = document.getElementById('propertyImagesChipRow');
+      if (propertyImagesPreview && propertyImagesPreview.dataset.bound !== 'true') {
+        propertyImagesPreview.addEventListener('click', handlePropertyImagePreviewAction);
+        propertyImagesPreview.dataset.bound = 'true';
+      }
       updatePropertyImageUploadUi();
     }
 
@@ -3136,13 +3141,26 @@
 
       if (chipRow) {
         if (isLoading) {
-          chipRow.innerHTML = '';
+          chipRow.innerHTML = '<div class="listing-upload-preview-empty">Loading pictures...</div>';
+        } else if (!images.length) {
+          chipRow.innerHTML = '<div class="listing-upload-preview-empty">No pictures selected yet.</div>';
         } else {
           chipRow.innerHTML = images.map((image, index) => `
-            <span class="listing-upload-chip" title="${escapeHtml(image.name || `Picture ${index + 1}`)}">
-              <strong>${index + 1}</strong>
-              <span>${escapeHtml(image.name || `Picture ${index + 1}`)}</span>
-            </span>
+            <figure class="listing-upload-preview-card" title="${escapeHtml(image.name || `Picture ${index + 1}`)}">
+              <div class="listing-upload-preview-media">
+                <img src="${escapeHtml(image.dataUrl)}" alt="${escapeHtml(image.name || `Picture ${index + 1}`)}" loading="lazy">
+                <span class="listing-upload-preview-index">${index + 1}</span>
+                ${index === 0 ? '<span class="listing-upload-preview-badge">Cover</span>' : ''}
+                <button
+                  class="listing-upload-remove-btn"
+                  type="button"
+                  aria-label="Remove picture"
+                  title="Remove picture"
+                  data-remove-property-image-id="${escapeHtml(image.id)}"
+                >&times;</button>
+              </div>
+              <figcaption>${escapeHtml(image.name || `Picture ${index + 1}`)}</figcaption>
+            </figure>
           `).join('');
         }
       }
@@ -3164,6 +3182,25 @@
 
     function triggerPropertyImagesUpload() {
       document.getElementById('propertyImagesInput')?.click();
+    }
+
+    function handlePropertyImagePreviewAction(event) {
+      const button = event?.target?.closest?.('[data-remove-property-image-id]');
+      if (!button) return;
+      const imageId = button.dataset.removePropertyImageId || '';
+      removePropertyImage(imageId);
+    }
+
+    function removePropertyImage(imageId = '') {
+      const normalizedId = String(imageId || '').trim();
+      if (!normalizedId) return;
+      const images = Array.isArray(state.propertyImageDraft) ? state.propertyImageDraft : [];
+      const nextImages = images.filter(image => String(image?.id || '') !== normalizedId);
+      if (nextImages.length === images.length) return;
+      document.getElementById('propertyImagesInput').value = '';
+      setPropertyImagesError('');
+      setPropertyImages(nextImages, { loaded: true, dirty: true });
+      setStatus('Picture removed. Save listing to apply.', 'success');
     }
 
     function clearPropertyImages() {
