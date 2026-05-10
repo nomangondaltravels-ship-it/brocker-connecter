@@ -296,8 +296,8 @@
       contentNode.innerHTML = images.length
         ? `<div class="listing-media-grid">${images.map((image, index) => `
             <figure class="listing-media-tile">
-              <img src="${image.dataUrl}" alt="${escapeHtmlAttr(image.name || `Listing picture ${index + 1}`)}" loading="lazy">
-              <span>${escapeHtml(image.name || `Picture ${index + 1}`)}</span>
+              <img src="${image.dataUrl}" alt="Listing photo ${index + 1}" loading="lazy">
+              <span>Photo ${index + 1}</span>
             </figure>
           `).join('')}</div>`
         : `<div class="listing-media-empty"><div><strong>No pictures uploaded</strong><br><span>Pictures are optional for this listing.</span></div></div>`;
@@ -316,8 +316,8 @@
       <div class="listing-pdf-options-card" role="dialog" aria-modal="true" aria-labelledby="listingPdfOptionsTitle">
         <div class="listing-pdf-options-head">
           <div>
-            <h3 id="listingPdfOptionsTitle">Customize PDF Details</h3>
-            <p id="listingPdfOptionsMeta">Choose which optional sections should appear in the PDF.</p>
+            <h3 id="listingPdfOptionsTitle">Download Browser</h3>
+            <p id="listingPdfOptionsMeta">Choose the safe listing sections to include before downloading.</p>
           </div>
           <button class="btn btn-secondary" type="button" id="listingPdfOptionsClose">Close</button>
         </div>
@@ -368,8 +368,8 @@
     const metaNode = overlay.querySelector('#listingPdfOptionsMeta');
     const bodyNode = overlay.querySelector('#listingPdfOptionsBody');
     const formNode = overlay.querySelector('#listingPdfOptionsForm');
-    if (titleNode) titleNode.textContent = normalizeText(config.title) || 'Customize PDF Details';
-    if (metaNode) metaNode.textContent = normalizeText(config.description) || 'Choose which optional sections should appear in the PDF.';
+    if (titleNode) titleNode.textContent = normalizeText(config.title) || 'Download Browser';
+    if (metaNode) metaNode.textContent = normalizeText(config.description) || 'Choose the safe listing sections to include before downloading.';
     if (bodyNode) {
       bodyNode.innerHTML = sections.map((section) => `
         <label class="listing-pdf-option${section.checked ? ' is-selected' : ''}">
@@ -535,45 +535,71 @@
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const pageSize = { width: 595, height: 842 };
-    const margin = 42;
+    const margin = 40;
+    const footerHeight = 34;
     const contentWidth = pageSize.width - (margin * 2);
-    const gold = rgb(0.768, 0.612, 0.122);
-    const goldSoft = rgb(0.976, 0.953, 0.898);
+    const gold = rgb(0.72, 0.54, 0.10);
+    const goldSoft = rgb(0.98, 0.94, 0.84);
     const paper = rgb(0.996, 0.988, 0.965);
-    const ink = rgb(0.12, 0.16, 0.26);
+    const ink = rgb(0.10, 0.14, 0.23);
     const muted = rgb(0.40, 0.45, 0.54);
-    const border = rgb(0.874, 0.784, 0.537);
+    const border = rgb(0.88, 0.80, 0.60);
+    const softBorder = rgb(0.92, 0.90, 0.84);
+    const softFill = rgb(0.98, 0.99, 1);
+    const white = rgb(1, 1, 1);
     let page = pdfDoc.addPage([pageSize.width, pageSize.height]);
     let y = pageSize.height - margin;
 
-    function addPage() {
-      page = pdfDoc.addPage([pageSize.width, pageSize.height]);
-      page.drawRectangle({
-        x: 0,
-        y: 0,
-        width: pageSize.width,
-        height: pageSize.height,
-        color: paper
-      });
-      y = pageSize.height - margin;
+    const fields = normalizePdfFields(payload.fields);
+    const sections = normalizePdfSections(payload.sections);
+    const images = sanitizeImageList(payload.images);
+    const logoDataUrl = await getBrandLogoDataUrl();
+    const pdfTitle = sanitizePdfText(payload.title || 'NexBridge Listing Summary') || 'NexBridge Listing Summary';
+    const priceLabel = getFieldValue('Price') || getFieldValue('Monthly Rent') || getFieldValue('Budget / Price') || '';
+    const locationLabel = getFieldValue('Location') || getFieldValue('Area / Location') || '';
+    const buildingLabel = getFieldValue('Building / Project') || '';
+    const purposeLabel = getFieldValue('Purpose') || 'Listing';
+    const categoryLabel = getFieldValue('Property Category') || getFieldValue('Category') || '';
+    const layoutLabel = getFieldValue('Unit Layout') || getFieldValue('Type') || '';
+    const heroMeta = [categoryLabel, layoutLabel, buildingLabel || locationLabel].filter(Boolean).join(' | ');
+
+    if (pdfDoc.setTitle) pdfDoc.setTitle(pdfTitle);
+    if (pdfDoc.setSubject) pdfDoc.setSubject('NexBridge public-safe listing summary');
+
+    function drawBasePage() {
+      page.drawRectangle({ x: 0, y: 0, width: pageSize.width, height: pageSize.height, color: paper });
+      drawFooter();
     }
 
-    page.drawRectangle({
-      x: 0,
-      y: 0,
-      width: pageSize.width,
-      height: pageSize.height,
-      color: paper
-    });
+    function addPage() {
+      page = pdfDoc.addPage([pageSize.width, pageSize.height]);
+      y = pageSize.height - margin;
+      drawBasePage();
+    }
 
     function ensureSpace(height) {
-      if (y - height < margin) {
+      if (y - height < margin + footerHeight) {
         addPage();
       }
     }
 
+    function getTextWidth(text, size = 11, bold = false) {
+      return (bold ? fontBold : fontRegular).widthOfTextAtSize(sanitizePdfText(text), size);
+    }
+
+    function fitTextToWidth(text, size, bold, maxWidth) {
+      let clean = sanitizePdfText(text);
+      if (!maxWidth || getTextWidth(clean, size, bold) <= maxWidth) return clean;
+      while (clean.length > 4 && getTextWidth(`${clean}...`, size, bold) > maxWidth) {
+        clean = clean.slice(0, -1).trim();
+      }
+      return clean.length > 4 ? `${clean}...` : clean;
+    }
+
     function drawText(text, x, nextY, options = {}) {
-      page.drawText(sanitizePdfText(text), {
+      const clean = sanitizePdfText(text);
+      if (!clean) return;
+      page.drawText(clean, {
         x,
         y: nextY,
         size: options.size || 11,
@@ -582,10 +608,196 @@
       });
     }
 
-    const fields = normalizePdfFields(payload.fields);
-    const sections = normalizePdfSections(payload.sections);
-    const images = sanitizeImageList(payload.images);
-    const logoDataUrl = await getBrandLogoDataUrl();
+    function drawWrappedText(text, x, topY, maxChars, options = {}) {
+      const size = options.size || 11;
+      const lineHeight = options.lineHeight || size + 4;
+      const maxLines = options.maxLines || 3;
+      const lines = splitText(text, maxChars).slice(0, maxLines);
+      lines.forEach((line, index) => {
+        const suffix = index === maxLines - 1 && splitText(text, maxChars).length > maxLines ? '...' : '';
+        drawText(`${line}${suffix}`, x, topY - (index * lineHeight), options);
+      });
+      return lines.length * lineHeight;
+    }
+
+    function drawPill(text, x, topY, options = {}) {
+      const clean = sanitizePdfText(text);
+      if (!clean) return 0;
+      const size = options.size || 9;
+      const height = options.height || 22;
+      const paddingX = options.paddingX || 10;
+      const maxWidth = options.maxWidth || 210;
+      const fitted = fitTextToWidth(clean, size, true, maxWidth - (paddingX * 2));
+      const width = Math.min(maxWidth, getTextWidth(fitted, size, true) + (paddingX * 2));
+      page.drawRectangle({
+        x,
+        y: topY - height,
+        width,
+        height,
+        color: options.fill || goldSoft,
+        borderColor: options.border || border,
+        borderWidth: 0.8
+      });
+      drawText(fitted, x + paddingX, topY - height + 7, {
+        size,
+        bold: true,
+        color: options.color || gold
+      });
+      return width;
+    }
+
+    function drawFooter() {
+      const lineY = 31;
+      page.drawRectangle({
+        x: margin,
+        y: lineY,
+        width: contentWidth,
+        height: 0.7,
+        color: rgb(0.90, 0.86, 0.74)
+      });
+      drawText('Powered by NexBridge | UAE Broker Private Marketplace', margin, 16, { size: 8, bold: true, color: gold });
+      drawText('Search NexBridge Broker Connector', pageSize.width - margin - 170, 16, { size: 8, color: muted });
+    }
+
+    function getFieldValue(label) {
+      const normalizedLabel = sanitizePdfText(label).toLowerCase();
+      return fields.find((field) => sanitizePdfText(field.label).toLowerCase() === normalizedLabel)?.value || '';
+    }
+
+    async function drawPromotionHeader() {
+      const cardHeight = 92;
+      ensureSpace(cardHeight + 12);
+      page.drawRectangle({
+        x: margin,
+        y: y - cardHeight,
+        width: contentWidth,
+        height: cardHeight,
+        color: white,
+        borderColor: border,
+        borderWidth: 1
+      });
+      if (logoDataUrl) {
+        // Logo failures should never block the PDF.
+        await drawLogo(margin + 16, y - 68, 46, 46);
+      }
+      drawText('NexBridge', margin + 76, y - 28, { size: 20, bold: true, color: ink });
+      drawText('CONNECT - MATCH - CLOSE', margin + 77, y - 45, { size: 8.5, bold: true, color: muted });
+      drawText('UAE Broker Private Marketplace', margin + 77, y - 65, { size: 10, bold: true, color: gold });
+      drawPill('Search NexBridge Broker Connector', margin + contentWidth - 222, y - 24, {
+        maxWidth: 206,
+        size: 8.5,
+        height: 24
+      });
+      drawWrappedText('Verified broker requirements, listings, distress deals, and monthly rentals.', margin + contentWidth - 222, y - 56, 35, {
+        size: 8.5,
+        lineHeight: 11,
+        maxLines: 2,
+        color: muted
+      });
+      y -= cardHeight + 14;
+    }
+
+    async function drawLogo(x, logoY, width, height) {
+      const embeddedLogo = await embedMaybeImage(logoDataUrl);
+      if (!embeddedLogo) return;
+      page.drawImage(embeddedLogo, { x, y: logoY, width, height });
+    }
+
+    function drawHeroSummary() {
+      const cardHeight = 126;
+      ensureSpace(cardHeight + 12);
+      page.drawRectangle({
+        x: margin,
+        y: y - cardHeight,
+        width: contentWidth,
+        height: cardHeight,
+        color: white,
+        borderColor: softBorder,
+        borderWidth: 1
+      });
+      drawPill(purposeLabel, margin + 16, y - 16, { size: 8.5, height: 22, maxWidth: 160 });
+      drawWrappedText(pdfTitle, margin + 16, y - 52, 44, { size: 20, lineHeight: 23, bold: true, maxLines: 2 });
+      if (heroMeta) drawText(heroMeta, margin + 16, y - 104, { size: 10, color: muted });
+      if (locationLabel && buildingLabel) drawText(locationLabel, margin + 16, y - 119, { size: 9, color: muted });
+      if (priceLabel) {
+        drawPill(priceLabel, margin + contentWidth - 166, y - 48, {
+          size: 10,
+          height: 28,
+          maxWidth: 150,
+          fill: gold,
+          border: gold,
+          color: white
+        });
+      }
+      y -= cardHeight + 14;
+    }
+
+    function drawFieldsGrid(title, sectionFields) {
+      const items = normalizePdfFields(sectionFields);
+      if (!items.length) return;
+      const columns = 2;
+      const gap = 10;
+      const cellWidth = (contentWidth - gap) / columns;
+      const cellHeight = 52;
+      const rows = Math.ceil(items.length / columns);
+      const titleHeight = 32;
+      const cardHeight = titleHeight + (rows * cellHeight) + ((rows - 1) * gap) + 16;
+      ensureSpace(cardHeight + 12);
+      page.drawRectangle({
+        x: margin,
+        y: y - cardHeight,
+        width: contentWidth,
+        height: cardHeight,
+        color: white,
+        borderColor: softBorder,
+        borderWidth: 1
+      });
+      drawText(title, margin + 16, y - 22, { size: 10, bold: true, color: gold });
+      items.forEach((field, index) => {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+        const x = margin + 16 + (column * (cellWidth + gap));
+        const topY = y - titleHeight - 8 - (row * (cellHeight + gap));
+        page.drawRectangle({
+          x,
+          y: topY - cellHeight,
+          width: cellWidth - 16,
+          height: cellHeight,
+          color: softFill,
+          borderColor: rgb(0.92, 0.94, 0.97),
+          borderWidth: 0.8
+        });
+        drawText(field.label.toUpperCase(), x + 10, topY - 16, { size: 7.5, bold: true, color: muted });
+        drawWrappedText(field.value, x + 10, topY - 34, 27, { size: 10.5, bold: true, maxLines: 2, lineHeight: 12 });
+      });
+      y -= cardHeight + 14;
+    }
+
+    async function drawSection(section) {
+      if (!section?.fields?.length && !section?.notes && !section?.avatarDataUrl) return;
+      if (section.fields.length) {
+        drawFieldsGrid(section.title, section.fields);
+      }
+      if (section.notes) {
+        const noteLines = splitText(section.notes, 82);
+        const cardHeight = Math.max(76, 42 + (noteLines.length * 14));
+        ensureSpace(cardHeight + 12);
+        page.drawRectangle({
+          x: margin,
+          y: y - cardHeight,
+          width: contentWidth,
+          height: cardHeight,
+          color: white,
+          borderColor: softBorder,
+          borderWidth: 1
+        });
+        drawText(section.title, margin + 16, y - 22, { size: 10, bold: true, color: gold });
+        noteLines.forEach((line, index) => {
+          drawText(line, margin + 16, y - 46 - (index * 14), { size: 10.5, color: muted });
+        });
+        y -= cardHeight + 14;
+      }
+    }
 
     async function embedMaybeImage(dataUrl) {
       const safe = normalizeText(dataUrl);
@@ -600,132 +812,77 @@
       }
     }
 
-    function sectionLineCount(section) {
-      const fieldLines = section.fields.reduce((sum, field) => sum + Math.max(1, splitText(`${field.label}: ${field.value}`, 70).length), 0);
-      const noteLines = section.notes ? splitText(section.notes, 74).length : 0;
-      return fieldLines + noteLines;
+    function drawImageFit(embeddedImage, x, bottomY, boxWidth, boxHeight) {
+      const dimensions = embeddedImage.scale(1);
+      const ratio = Math.min(boxWidth / dimensions.width, boxHeight / dimensions.height);
+      const width = Math.max(40, Math.round(dimensions.width * ratio));
+      const height = Math.max(40, Math.round(dimensions.height * ratio));
+      page.drawImage(embeddedImage, {
+        x: x + ((boxWidth - width) / 2),
+        y: bottomY + ((boxHeight - height) / 2),
+        width,
+        height
+      });
     }
 
-    async function drawSection(section) {
-      const hasAvatar = Boolean(section.avatarDataUrl);
-      const avatarSize = hasAvatar ? 62 : 0;
-      const noteLines = section.notes ? splitText(section.notes, 74) : [];
-      const lineCount = sectionLineCount(section);
-      const minHeight = hasAvatar ? 118 : 84;
-      const boxHeight = Math.max(minHeight, 42 + (lineCount * 16));
-      ensureSpace(boxHeight + 14);
-      page.drawRectangle({
-        x: margin,
-        y: y - boxHeight,
-        width: contentWidth,
-        height: boxHeight,
-        color: rgb(1, 1, 1),
-        borderColor: border,
-        borderWidth: 1
-      });
-      drawText(section.title, margin + 16, y - 18, { size: 10, bold: true, color: gold });
-      let contentX = margin + 16;
-      let rowY = y - 40;
-      if (hasAvatar) {
-        const embeddedAvatar = await embedMaybeImage(section.avatarDataUrl);
-        if (embeddedAvatar) {
-          page.drawImage(embeddedAvatar, {
-            x: margin + 16,
-            y: y - 96,
-            width: avatarSize,
-            height: avatarSize
+    async function drawImagesSection() {
+      if (payload.images === undefined || !images.length) return;
+      ensureSpace(48);
+      drawText('Pictures', margin, y - 10, { size: 12, bold: true, color: ink });
+      y -= 24;
+      const coverImage = await embedMaybeImage(images[0]?.dataUrl);
+      if (coverImage) {
+        const cardHeight = 238;
+        ensureSpace(cardHeight + 12);
+        page.drawRectangle({
+          x: margin,
+          y: y - cardHeight,
+          width: contentWidth,
+          height: cardHeight,
+          color: white,
+          borderColor: softBorder,
+          borderWidth: 1
+        });
+        drawImageFit(coverImage, margin + 12, y - 214, contentWidth - 24, 196);
+        drawPill('Photo 1', margin + 18, y - 16, { size: 8, height: 20, maxWidth: 70 });
+        y -= cardHeight + 12;
+      }
+      const gap = 12;
+      const cardWidth = (contentWidth - gap) / 2;
+      const cardHeight = 158;
+      for (let index = 1; index < images.length; index += 2) {
+        ensureSpace(cardHeight + 12);
+        for (let column = 0; column < 2; column += 1) {
+          const image = images[index + column];
+          if (!image) continue;
+          const embeddedImage = await embedMaybeImage(image.dataUrl);
+          if (!embeddedImage) continue;
+          const x = margin + (column * (cardWidth + gap));
+          page.drawRectangle({
+            x,
+            y: y - cardHeight,
+            width: cardWidth,
+            height: cardHeight,
+            color: white,
+            borderColor: softBorder,
+            borderWidth: 1
           });
-          contentX += avatarSize + 16;
+          drawImageFit(embeddedImage, x + 8, y - 126, cardWidth - 16, 108);
+          drawText(`Photo ${index + column + 1}`, x + 10, y - 146, { size: 8.5, bold: true, color: gold });
         }
-      }
-      section.fields.forEach((field) => {
-        const lines = splitText(`${field.label}: ${field.value}`, hasAvatar ? 54 : 72);
-        lines.forEach((line, index) => {
-          drawText(line, contentX, rowY, { size: 11, bold: index === 0 && line.startsWith(`${field.label}:`) });
-          rowY -= 14;
-        });
-        rowY -= 4;
-      });
-      if (noteLines.length) {
-        noteLines.forEach((line) => {
-          drawText(line, contentX, rowY, { size: 11, color: muted });
-          rowY -= 14;
-        });
-      }
-      y -= boxHeight + 14;
-    }
-
-    ensureSpace(88);
-    page.drawRectangle({
-      x: margin,
-      y: y - 70,
-      width: contentWidth,
-      height: 70,
-      color: rgb(1, 1, 1),
-      borderColor: border,
-      borderWidth: 1.2
-    });
-    if (logoDataUrl) {
-      const embeddedLogo = await embedMaybeImage(logoDataUrl);
-      if (embeddedLogo) {
-        page.drawImage(embeddedLogo, {
-          x: margin + 18,
-          y: y - 54,
-          width: 38,
-          height: 38
-        });
+        y -= cardHeight + 12;
       }
     }
-    y -= 86;
 
-    await drawSection({
-      title: 'Listing Details',
-      fields
-    });
-
+    drawBasePage();
+    await drawPromotionHeader();
+    drawHeroSummary();
+    drawFieldsGrid('Listing Details', fields);
     for (const section of sections) {
       await drawSection(section);
     }
+    await drawImagesSection();
 
-    if (payload.images !== undefined) {
-      const imageSection = {
-        title: 'Pictures',
-        fields: [],
-        notes: images.length ? '' : 'No pictures uploaded'
-      };
-      await drawSection(imageSection);
-      if (images.length) {
-        for (let index = 0; index < images.length; index += 1) {
-          const image = images[index];
-          const targetWidth = 240;
-          const targetHeight = 180;
-          ensureSpace(targetHeight + 30);
-          const embeddedImage = await embedMaybeImage(image.dataUrl);
-          if (!embeddedImage) continue;
-          const dimensions = embeddedImage.scale(1);
-          const ratio = Math.min(targetWidth / dimensions.width, targetHeight / dimensions.height);
-          const width = Math.max(60, Math.round(dimensions.width * ratio));
-          const height = Math.max(60, Math.round(dimensions.height * ratio));
-          page.drawRectangle({
-            x: margin,
-            y: y - height - 16,
-            width: contentWidth,
-            height: height + 16,
-            color: rgb(1, 1, 1),
-            borderColor: border,
-            borderWidth: 1
-          });
-          page.drawImage(embeddedImage, {
-            x: margin + 12,
-            y: y - height - 4,
-            width,
-            height
-          });
-          drawText(sanitizePdfText(image.name || `Picture ${index + 1}`), margin + width + 28, y - 24, { size: 10, bold: true, color: gold });
-          y -= height + 28;
-        }
-      }
-    }
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);

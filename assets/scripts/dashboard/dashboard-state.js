@@ -3322,6 +3322,13 @@
           hidden: purpose !== 'rent'
         },
         {
+          key: 'monthlyDetails',
+          label: 'Monthly rent details',
+          description: 'Include furnishing, availability, included bills, amenities, deposit, and permit details.',
+          checked: true,
+          hidden: purpose !== 'monthly_rent'
+        },
+        {
           key: 'companyDetails',
           label: 'Company details',
           description: 'Show your company name and office location.',
@@ -3330,8 +3337,8 @@
         },
         {
           key: 'images',
-          label: 'Images',
-          description: 'Include uploaded listing pictures in the PDF.',
+          label: 'Pictures',
+          description: 'Include uploaded listing pictures without original file names.',
           checked: true
         },
         {
@@ -3392,6 +3399,21 @@
           fields: [{ label: 'Cheques', value: property.cheques }]
         });
       }
+      if (selections.monthlyDetails && purpose === 'monthly_rent') {
+        const monthlyFields = [
+          { label: 'Furnished', value: property.furnishedStatus ? formatStatusLabel(String(property.furnishedStatus).replace(/_/g, ' ')) : '--' },
+          { label: 'Available From', value: property.availableFrom || '--' },
+          { label: 'Availability', value: formatStatusLabel(property.availabilityStatus || property.status || 'available') },
+          { label: 'Included', value: joinDisplayParts([property.billsIncluded ? 'Bills' : '', property.chillerIncluded ? 'Chiller' : '', property.internetIncluded ? 'Internet' : '', property.dewaIncluded ? 'DEWA' : '']) || '--' },
+          { label: 'Amenities', value: joinDisplayParts([property.gymAvailable ? 'Gym' : '', property.poolAvailable ? 'Pool' : '', property.parkingAvailable ? 'Parking' : '']) || '--' },
+          { label: 'Pets', value: property.petsAvailable ? 'Pets Allowed' : 'Pets Not Allowed' },
+          { label: 'Minimum Stay', value: property.minimumStay || '--' },
+          { label: 'Security Deposit', value: property.securityDeposit ? formatBudgetLabel(property.securityDeposit) : '--' },
+          { label: 'Payment Terms', value: property.paymentTerms || '--' },
+          { label: 'Unit Permit', value: property.unitPermit || '--' }
+        ];
+        sections.push({ title: 'Monthly Rent Details', fields: monthlyFields });
+      }
       if (selections.companyDetails && (requester?.companyName || requester?.officeLocation)) {
         const companyFields = [];
         if (requester.companyName) companyFields.push({ label: 'Company Name', value: requester.companyName });
@@ -3441,8 +3463,8 @@
         }
         const requester = getPropertyPdfRequesterProfile();
         const selections = await window.ListingMediaUi.openPdfOptionsModal({
-          title: 'Customize PDF Details',
-          description: 'Select which optional public-safe sections should appear in the PDF.',
+          title: 'Download Browser',
+          description: 'Select the public-safe sections, pictures, and branding to include in the listing PDF.',
           sections: buildPropertyPdfOptionSections(property, requester)
         });
         if (!selections) return;
