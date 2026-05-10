@@ -316,7 +316,7 @@
       <div class="listing-pdf-options-card" role="dialog" aria-modal="true" aria-labelledby="listingPdfOptionsTitle">
         <div class="listing-pdf-options-head">
           <div>
-            <h3 id="listingPdfOptionsTitle">Download Browser</h3>
+            <h3 id="listingPdfOptionsTitle">Download PDF</h3>
             <p id="listingPdfOptionsMeta">Choose the safe listing sections to include before downloading.</p>
           </div>
           <button class="btn btn-secondary" type="button" id="listingPdfOptionsClose">Close</button>
@@ -368,7 +368,7 @@
     const metaNode = overlay.querySelector('#listingPdfOptionsMeta');
     const bodyNode = overlay.querySelector('#listingPdfOptionsBody');
     const formNode = overlay.querySelector('#listingPdfOptionsForm');
-    if (titleNode) titleNode.textContent = normalizeText(config.title) || 'Download Browser';
+    if (titleNode) titleNode.textContent = normalizeText(config.title) || 'Download PDF';
     if (metaNode) metaNode.textContent = normalizeText(config.description) || 'Choose the safe listing sections to include before downloading.';
     if (bodyNode) {
       bodyNode.innerHTML = sections.map((section) => `

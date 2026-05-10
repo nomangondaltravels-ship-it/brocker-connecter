@@ -3412,7 +3412,7 @@
             onclick: `openPropertyPictures(${property.id})`
           })}
           ${renderRecordActionButton({
-            label: 'Download Browser',
+            label: 'Download PDF',
             icon: 'download',
             tone: 'secondary',
             onclick: `downloadPropertyPdf(${property.id})`

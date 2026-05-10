@@ -967,7 +967,7 @@
               onclick: `openConnectorListingPictures('${sectionName}', '${listing.id}')`
             })}
             ${isMarketplaceBrokerAuthenticated() ? renderConnectorActionButton({
-              label: 'Download Browser',
+              label: 'Download PDF',
               icon: 'download',
               tone: 'ghost',
               onclick: `downloadConnectorListingPdf('${sectionName}', '${listing.id}')`
@@ -1237,7 +1237,7 @@
         const mediaBundle = await fetchConnectorListingMediaBundle(listing);
         const requester = getMarketplaceCurrentBrokerProfile();
         const selections = await window.ListingMediaUi.openPdfOptionsModal({
-          title: 'Download Browser',
+          title: 'Download PDF',
           description: 'Select the public-safe sections, pictures, and branding to include in the listing PDF.',
           sections: buildConnectorListingPdfOptionSections(listing, mediaBundle, requester)
         });

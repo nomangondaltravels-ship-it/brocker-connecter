@@ -3463,7 +3463,7 @@
         }
         const requester = getPropertyPdfRequesterProfile();
         const selections = await window.ListingMediaUi.openPdfOptionsModal({
-          title: 'Download Browser',
+          title: 'Download PDF',
           description: 'Select the public-safe sections, pictures, and branding to include in the listing PDF.',
           sections: buildPropertyPdfOptionSections(property, requester)
         });
