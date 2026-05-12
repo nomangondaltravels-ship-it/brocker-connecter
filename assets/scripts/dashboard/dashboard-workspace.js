@@ -3000,7 +3000,7 @@
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V5l9-2v18"></path><path d="M14 9h5v12"></path><path d="M8 8h2"></path><path d="M8 12h2"></path><path d="M8 16h2"></path><path d="M17 13h1"></path><path d="M17 17h1"></path></svg>';
       }
       if (value.includes('distress')) {
-        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 3 20h18Z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>';
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12.5 12.5 20a2.1 2.1 0 0 1-3 0L4 14.5V5h9.5L20 11.5a2.1 2.1 0 0 1 0 3Z"></path><path d="M8.5 8.5h.01"></path><path d="m10 15 5-5"></path><path d="M10.25 10.25h.01"></path><path d="M14.75 14.75h.01"></path></svg>';
       }
       if (value.includes('alert')) {
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"></path><path d="M10 21h4"></path></svg>';
