@@ -114,13 +114,13 @@
 
     function getConnectorWhatsappIntro(listing) {
       return listing?.sourceType === 'lead'
-        ? 'I checked your requirement on BCP.'
-        : 'I checked your listing on BCP.';
+        ? 'I checked your requirement on NexBridge.'
+        : 'I checked your listing on NexBridge.';
     }
 
     function getConnectorWhatsappIdentityLine() {
       const brokerName = getConnectorCurrentUserName();
-      return brokerName ? `I am ${brokerName}.` : 'I am a broker from BCP.';
+      return brokerName ? `I am ${brokerName}.` : 'I am a broker from NexBridge.';
     }
 
     function buildConnectorWhatsappMessage(listing, sectionName) {
