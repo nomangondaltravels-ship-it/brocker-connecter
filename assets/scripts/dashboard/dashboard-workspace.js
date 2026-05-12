@@ -3848,15 +3848,30 @@
     function getDashboardBrokerShareContact() {
       const profile = typeof buildBrokerProfileModel === 'function' ? buildBrokerProfileModel() : {};
       const broker = state.overview?.broker || state.broker || {};
-      const name = normalizeText(profile.fullName || broker.fullName || broker.name || broker.email || 'NexBridge broker');
+      const name = normalizeText(profile.fullName || broker.fullName || broker.name || broker.email || 'Broker');
       const company = normalizeText(profile.companyName || broker.companyName || '');
       const phone = formatPhoneDisplay(profile.whatsappNumber || profile.mobileNumber || broker.whatsappNumber || broker.mobileNumber || broker.phone || '');
       return { name, company, phone };
     }
 
+    function formatBulkListingShareDate(date = new Date()) {
+      try {
+        return new Intl.DateTimeFormat('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }).format(date).replace(/,/g, '');
+      } catch (error) {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+    }
+
     function buildBulkListingShareMessage(properties = getSelectedBulkListingShareProperties(), includeContact = state.bulkListingShareIncludeContact) {
       const items = (Array.isArray(properties) ? properties : []).slice(0, 10);
-      const lines = ['NexBridge Listings Available', ''];
+      const lines = [`(${formatBulkListingShareDate()}) (Updated Listing)`, ''];
       items.forEach((property, index) => {
         lines.push(`${index + 1}. ${getPropertyPurposeLabel(property.purpose).toUpperCase()} ${property.propertyType || 'Property'}`);
         lines.push(`Location: ${property.location || '-'}`);
@@ -3886,7 +3901,6 @@
         lines.push(`WhatsApp/Call: ${contact.phone || 'Number not set'}`);
         lines.push('');
       }
-      lines.push('Generated from NexBridge');
       return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
     }
 
