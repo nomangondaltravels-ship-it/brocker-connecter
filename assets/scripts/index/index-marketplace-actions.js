@@ -1,3 +1,5 @@
+    const PUBLIC_LISTING_PAGE_SIZE = 30;
+
     function openSection(name, options = {}) {
       const preserveRevealParams = Boolean(options?.preserveRevealParams);
       const normalized = normalizePublicSectionName(name);
@@ -266,6 +268,7 @@
 
     function buildListingLink(listing, sectionName) {
       const url = new URL(window.location.href);
+      url.searchParams.set('view', 'public');
       url.searchParams.set('section', sectionName);
       url.searchParams.set('listing', String(listing.id));
       return url.toString();
@@ -1295,7 +1298,7 @@
     }
 
     function paginatePublicItems(sectionName, items) {
-      const pageSize = 30;
+      const pageSize = PUBLIC_LISTING_PAGE_SIZE;
       const currentPage = Math.max(1, Number(state.pagination?.[sectionName] || 1));
       const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
       const safePage = Math.min(currentPage, totalPages);

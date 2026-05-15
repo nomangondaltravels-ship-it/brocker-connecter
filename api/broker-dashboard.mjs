@@ -926,7 +926,8 @@ function buildPublicLeadCandidate(item) {
 }
 
 function buildPublicPropertyCandidate(item) {
-  const purpose = normalizeText(item.purpose).toLowerCase() === 'rent' ? 'rent' : 'sale';
+  const publicPurpose = normalizeListingPurposeValue(item?.purpose);
+  const purpose = publicPurpose === 'rent' || publicPurpose === 'monthly_rent' ? 'rent' : 'sale';
   return {
     id: item.sourceId || item.id,
     purpose,
@@ -939,6 +940,13 @@ function buildPublicPropertyCandidate(item) {
     status: 'available',
     isArchived: false
   };
+}
+
+function getPublicPropertyMarketplaceSection(item) {
+  const purpose = normalizeListingPurposeValue(item?.purpose);
+  if (purpose === 'monthly_rent') return 'monthly-rent';
+  if (purpose === 'sale' && item?.isDistress) return 'distress-deals';
+  return 'broker-connector-listings';
 }
 
 function computeMatchData(leads, properties, publicListings = [], currentBrokerId = '') {
@@ -1014,6 +1022,7 @@ function computeMatchData(leads, properties, publicListings = [], currentBrokerI
       const match = evaluateMatch(lead, buildPublicPropertyCandidate(publicProperty));
       if (!match) return;
       const visibilityScope = lead.isListedPublic ? 'shared-both' : 'private-pocket';
+      const publicPropertySection = getPublicPropertyMarketplaceSection(publicProperty);
 
       aiMatches.push({
         id: `lead-${match.leadId}-public-property-${publicProperty.id}`,
@@ -1039,13 +1048,14 @@ function computeMatchData(leads, properties, publicListings = [], currentBrokerI
         counterpart_building: publicProperty.buildingLabel,
         counterpart_price_label: publicProperty.priceLabel,
         counterpart_public_notes: publicProperty.publicNotes,
-        counterpart_section: publicProperty.isDistress ? 'distress-deals' : 'broker-connector-listings',
+        counterpart_section: publicPropertySection,
         visibility_scope: visibilityScope
       });
 
       lead.matchingListings.push({
         id: publicProperty.id,
         sourceId: publicProperty.sourceId,
+        purpose: publicProperty.purpose,
         propertyType: publicProperty.propertyType,
         location: publicProperty.location,
         price: publicProperty.priceLabel,
@@ -1056,7 +1066,7 @@ function computeMatchData(leads, properties, publicListings = [], currentBrokerI
         isExternalPublic: true,
         brokerName: publicProperty.brokerName,
         brokerMobile: publicProperty.brokerMobile,
-        sourceSection: publicProperty.isDistress ? 'distress-deals' : 'broker-connector-listings',
+        sourceSection: publicPropertySection,
         publicNotes: publicProperty.publicNotes,
         visibilityScope
       });

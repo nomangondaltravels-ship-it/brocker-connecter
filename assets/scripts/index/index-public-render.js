@@ -479,17 +479,38 @@
       const section = params.get('section');
       const listingId = params.get('listing');
       if (!listingId) return;
-      const normalizedSection = normalizePublicSectionName(section || state.activeSection);
+      state.forcePublicView = true;
+      state.publicSearchQuery = '';
+      state.publicFilters = {
+        purpose: 'all',
+        propertyCategory: 'all',
+        unitLayout: 'all',
+        location: 'all'
+      };
+      const requestedSection = normalizePublicSectionName(section || state.activeSection);
+      const requestedListing = findMarketplaceListing(requestedSection, listingId)
+        || state.listings.find(item => String(item?.id || '') === String(listingId || ''))
+        || state.listings.find(item => String(item?.sourceId || '') === String(listingId || ''))
+        || null;
+      const normalizedSection = requestedListing
+        ? getPublicSectionForListing(requestedListing)
+        : requestedSection;
+      const selectedListingId = requestedListing?.id || listingId;
       if (normalizedSection && normalizedSection !== state.activeSection) {
         document.getElementById(`${normalizedSection}-section`)?.classList.add('active');
         openSection(normalizedSection, { preserveRevealParams: true });
       }
       if (normalizedSection) {
-        state.selectedPublicListingKeys[normalizedSection] = `${normalizedSection}:${listingId}`;
+        state.selectedPublicListingKeys[normalizedSection] = `${normalizedSection}:${selectedListingId}`;
+        const sectionItems = sortPublicListings(getListingsForActiveConnectorSection(normalizedSection));
+        const selectedIndex = sectionItems.findIndex(item => String(item?.id || '') === String(selectedListingId || ''));
+        if (selectedIndex >= 0) {
+          state.pagination[normalizedSection] = Math.floor(selectedIndex / PUBLIC_LISTING_PAGE_SIZE) + 1;
+        }
         safeRenderPublicViews();
         clearMarketplaceRevealParams(normalizedSection);
       }
-      const target = document.querySelector(`[data-listing-id="${listingId}"]`);
+      const target = document.querySelector(`[data-listing-id="${selectedListingId}"]`);
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.style.borderColor = 'rgba(212,175,55,0.46)';

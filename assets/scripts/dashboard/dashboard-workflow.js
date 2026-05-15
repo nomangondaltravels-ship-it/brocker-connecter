@@ -1007,18 +1007,67 @@
       openPropertyRecord(id, section);
     }
 
-    function openBrokerConnectorFromWorkflow(section = 'marketplace', listingId = '') {
-      const normalizedSection = ({
+    function getWorkflowPublicSection(section = 'marketplace', match = null) {
+      const normalized = String(section || '').trim().toLowerCase();
+      if (String(match?.counterpartType || match?.sourceType || '').trim().toLowerCase() === 'lead') {
+        return 'requirements';
+      }
+      if (String(match?.counterpartPurpose || match?.purpose || '').trim().toLowerCase().replace(/\s+/g, '_') === 'monthly_rent') {
+        return 'monthly-rent';
+      }
+      return ({
         'broker-requirements': 'requirements',
+        'leads': 'requirements',
+        'requirements': 'requirements',
         'broker-connector-listings': 'marketplace',
+        'properties': 'marketplace',
+        'marketplace': 'marketplace',
+        'monthly': 'monthly-rent',
+        'monthly-rent': 'monthly-rent',
+        'monthly_rent': 'monthly-rent',
+        'distress': 'distress-deals',
         'distress-deals': 'distress-deals'
-      })[String(section || '').trim().toLowerCase()] || section || 'marketplace';
+      })[normalized] || 'marketplace';
+    }
+
+    function openBrokerConnectorFromWorkflow(section = 'marketplace', listingId = '') {
+      const normalizedSection = getWorkflowPublicSection(section);
       const url = new URL('index.html', window.location.href);
+      url.searchParams.set('view', 'public');
       url.searchParams.set('section', normalizedSection);
       if (listingId) {
         url.searchParams.set('listing', String(listingId));
       }
-      window.open(url.toString(), '_blank', 'noopener');
+      const popup = window.open(url.toString(), '_blank', 'noopener');
+      if (!popup) {
+        window.location.href = url.toString();
+      }
+    }
+
+    function openBrokerConnectorMatchFromWorkflow(encodedMatch = '') {
+      let match = null;
+      try {
+        match = JSON.parse(decodeURIComponent(String(encodedMatch || '')));
+      } catch (error) {
+        match = null;
+      }
+      const section = getWorkflowPublicSection(match?.counterpartSection || match?.sourceSection || 'marketplace', match);
+      const listingId = match?.counterpartRecordId || match?.id || '';
+      openBrokerConnectorFromWorkflow(section, listingId);
+    }
+
+    function buildWorkflowPublicMatchButton(match, fallbackSection = 'marketplace', variant = 'secondary') {
+      const payload = encodeURIComponent(JSON.stringify({
+        id: match?.id || '',
+        sourceSection: match?.sourceSection || fallbackSection,
+        counterpartSection: match?.counterpartSection || fallbackSection,
+        counterpartRecordId: match?.counterpartRecordId || '',
+        counterpartType: match?.counterpartType || '',
+        counterpartPurpose: match?.counterpartPurpose || match?.purpose || '',
+        purpose: match?.purpose || ''
+      }));
+      const buttonClass = variant === 'primary' ? 'btn-primary' : 'btn-secondary';
+      return `<button class="btn ${buttonClass} btn-tiny" type="button" onclick="openBrokerConnectorMatchFromWorkflow('${payload}')">Open NexBridge Marketplace</button>`;
     }
 
     function renderWorkflowLeadSummary(lead) {
@@ -1072,7 +1121,7 @@
               </div>
               <div class="workflow-modal-actions">
                 ${match.isExternalPublic
-                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'marketplace')}', '${escapeHtml(match.id)}')">Open NexBridge Marketplace</button>`
+                  ? buildWorkflowPublicMatchButton(match, match.sourceSection || 'marketplace')
                   : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openPropertyRecordFromWorkflow(${Number(match.id)}, '${targetSection}')">Open Listing</button>`}
               </div>
             </div>
@@ -1098,7 +1147,7 @@
               </div>
               <div class="workflow-modal-actions">
                 ${match.isExternalPublic
-                  ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.sourceSection || 'requirements')}', '${escapeHtml(match.id)}')">Open NexBridge Marketplace</button>`
+                  ? buildWorkflowPublicMatchButton(match, match.sourceSection || 'requirements')
                   : `<button class="btn btn-secondary btn-tiny" type="button" onclick="openLeadRecordFromWorkflow(${Number(match.id)})">Open Requirement</button>`}
               </div>
             </div>
@@ -1278,7 +1327,7 @@
       }
 
       if (!isInternalMatch && match.counterpartSection) {
-        actions.push(`<button class="btn btn-primary btn-tiny" type="button" onclick="openBrokerConnectorFromWorkflow('${escapeHtml(match.counterpartSection)}', '${escapeHtml(match.counterpartRecordId || '')}')">Open NexBridge Marketplace</button>`);
+        actions.push(buildWorkflowPublicMatchButton(match, match.counterpartSection, 'primary'));
       }
 
       return {
