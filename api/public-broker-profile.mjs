@@ -9,6 +9,7 @@ import {
   parseLeadMeta,
   parsePropertyMeta,
   sanitizePublicListing,
+  slugifyPublicValue,
   supabaseSelect
 } from '../server/_broker-platform.mjs';
 
@@ -130,6 +131,68 @@ async function loadBrokerPublicRows({ supabaseUrl, serviceRoleKey, broker }) {
   return Array.from(rowMap.values());
 }
 
+function isPublicRowForBrokerSlug(row = {}, slug = '') {
+  const target = normalizeText(slug).toLowerCase();
+  if (!target) return false;
+  const displayNameSlug = slugifyPublicValue(row.broker_display_name || row.brokerDisplayName);
+  const candidates = [
+    buildBrokerPublicSlug(row),
+    normalizeText(row.broker_uuid),
+    normalizeText(row.broker_id_number),
+    displayNameSlug
+  ].map(item => normalizeText(item).toLowerCase()).filter(Boolean);
+  return candidates.includes(target);
+}
+
+async function loadPublicRowsByBrokerSlug({ supabaseUrl, serviceRoleKey, slug }) {
+  const rows = await supabaseSelect({
+    supabaseUrl,
+    serviceRoleKey,
+    table: 'public_listings',
+    select: '*',
+    filters: {
+      source_type: 'property',
+      public_listing_status: 'listed'
+    },
+    order: { column: 'updated_at', ascending: false }
+  }).catch(() => []);
+
+  return (Array.isArray(rows) ? rows : []).filter(row => isPublicRowForBrokerSlug(row, slug));
+}
+
+function buildBrokerProfileFromPublicRows(rows = [], slug = '') {
+  const row = Array.isArray(rows) ? rows[0] : null;
+  return {
+    id: normalizeText(row?.broker_uuid),
+    broker_id_number: normalizeText(row?.broker_id_number),
+    full_name: normalizeText(row?.broker_display_name || 'NexBridge Broker'),
+    company_name: normalizeText(row?.broker_company_name || row?.company_name),
+    is_verified: false,
+    public_slug: slug
+  };
+}
+
+function filterRowsForActiveBrokers(rows = [], brokers = []) {
+  const activeBrokers = (Array.isArray(brokers) ? brokers : []).filter(item => !item?.is_blocked);
+  const brokerIds = new Set(activeBrokers.map(item => normalizeText(item.id)).filter(Boolean));
+  const brokerIdNumbers = new Set(activeBrokers.map(item => normalizeText(item.broker_id_number)).filter(Boolean));
+  return (Array.isArray(rows) ? rows : []).filter(row => {
+    const brokerUuid = normalizeText(row?.broker_uuid);
+    const brokerIdNumber = normalizeText(row?.broker_id_number);
+    return (brokerUuid && brokerIds.has(brokerUuid)) || (brokerIdNumber && brokerIdNumbers.has(brokerIdNumber));
+  });
+}
+
+function findBrokerByPublicRow(brokers = [], row = {}) {
+  const brokerUuid = normalizeText(row?.broker_uuid);
+  const brokerIdNumber = normalizeText(row?.broker_id_number);
+  return (Array.isArray(brokers) ? brokers : []).find(broker => {
+    if (broker?.is_blocked) return false;
+    return (brokerUuid && normalizeText(broker.id) === brokerUuid)
+      || (brokerIdNumber && normalizeText(broker.broker_id_number) === brokerIdNumber);
+  }) || null;
+}
+
 async function hydrateAndFilterRows({ supabaseUrl, serviceRoleKey, rows }) {
   const items = Array.isArray(rows) ? rows : [];
   if (!items.length) return [];
@@ -218,12 +281,23 @@ export async function GET(request) {
       select: 'id,broker_id_number,full_name,company_name,is_verified,is_blocked,avatar_data_url,avatar_url,profile_image_url,profile_photo_url',
       order: { column: 'updated_at', ascending: false }
     }).catch(() => []);
-    const broker = findBrokerBySlug((Array.isArray(brokers) ? brokers : []).filter(item => !item?.is_blocked), slug);
-    if (!broker) {
+    const activeBrokers = (Array.isArray(brokers) ? brokers : []).filter(item => !item?.is_blocked);
+    const brokerFromTable = findBrokerBySlug(activeBrokers, slug);
+    let publicRows = brokerFromTable
+      ? await loadBrokerPublicRows({ supabaseUrl, serviceRoleKey, broker: brokerFromTable })
+      : [];
+
+    const fallbackRows = filterRowsForActiveBrokers((!brokerFromTable || !publicRows.length)
+      ? await loadPublicRowsByBrokerSlug({ supabaseUrl, serviceRoleKey, slug })
+      : [], activeBrokers);
+    const broker = brokerFromTable || findBrokerByPublicRow(activeBrokers, fallbackRows[0]) || buildBrokerProfileFromPublicRows(fallbackRows, slug);
+    if (!brokerFromTable && !fallbackRows.length) {
       return json({ message: 'Broker profile was not found.' }, 404);
     }
+    if (!publicRows.length && fallbackRows.length) {
+      publicRows = fallbackRows;
+    }
 
-    const publicRows = await loadBrokerPublicRows({ supabaseUrl, serviceRoleKey, broker });
     const hydratedRows = await hydrateAndFilterRows({ supabaseUrl, serviceRoleKey, rows: publicRows });
     const listings = hydratedRows.map(row => {
       const safeListing = sanitizePublicListing(row, { exposeBrokerContact: false });
