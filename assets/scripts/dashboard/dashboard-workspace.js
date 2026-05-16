@@ -379,6 +379,7 @@
       state.dashboardLoadError = '';
       syncProfileStorage();
       syncBrokerIdentityButton();
+      syncWorkspaceBrokerWebsiteCard();
 
       syncFilterInputs('leads');
       syncFilterInputs('properties');
@@ -3412,12 +3413,79 @@
       return url.toString();
     }
 
+    function getWorkspaceBrokerWebsiteLabel() {
+      const profile = typeof buildBrokerProfileModel === 'function' ? buildBrokerProfileModel() : {};
+      const broker = state.overview?.broker || state.broker || {};
+      const rawName = normalizeText(
+        profile.fullName
+        || broker.fullName
+        || broker.name
+        || profile.companyName
+        || broker.companyName
+        || broker.email
+        || 'Broker'
+      );
+      const safeName = rawName.includes('@') ? rawName.split('@')[0] : rawName;
+      const nameParts = safeName.replace(/[._-]+/g, ' ').split(/\s+/).map(normalizeText).filter(Boolean);
+      const displayName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : nameParts[0] || 'Broker';
+      return `${displayName} website`;
+    }
+
+    function syncWorkspaceBrokerWebsiteCard() {
+      const label = document.getElementById('brokerWebsiteLabel');
+      const meta = document.getElementById('brokerWebsiteMeta');
+      if (label) label.textContent = getWorkspaceBrokerWebsiteLabel();
+      if (meta) {
+        const publicCount = (Array.isArray(state.properties) ? state.properties : [])
+          .filter(item => item?.isListedPublic && !item?.isArchived)
+          .length;
+        meta.textContent = publicCount ? `${publicCount} public listings` : 'Share public listings';
+      }
+    }
+
+    function closeBrokerWebsiteMenu() {
+      document.getElementById('brokerWebsiteMenu')?.classList.add('hidden');
+      document.getElementById('brokerWebsiteTrigger')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleBrokerWebsiteMenu(event) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      syncWorkspaceBrokerWebsiteCard();
+      const menu = document.getElementById('brokerWebsiteMenu');
+      const trigger = document.getElementById('brokerWebsiteTrigger');
+      if (!menu || !trigger) return;
+      const shouldOpen = menu.classList.contains('hidden');
+      if (shouldOpen) {
+        menu.classList.remove('hidden');
+        trigger.setAttribute('aria-expanded', 'true');
+      } else {
+        closeBrokerWebsiteMenu();
+      }
+    }
+
+    function initBrokerWebsiteMenu() {
+      if (document.body.dataset.brokerWebsiteMenuReady === 'true') return;
+      document.addEventListener('click', event => {
+        if (!event.target?.closest?.('.sidebar-website-card')) {
+          closeBrokerWebsiteMenu();
+        }
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          closeBrokerWebsiteMenu();
+        }
+      });
+      document.body.dataset.brokerWebsiteMenuReady = 'true';
+    }
+
     function openWorkspaceBrokerProfile() {
       const url = buildWorkspaceBrokerProfileLink();
       if (!url) {
         setStatus('Broker profile link is not available yet.', 'error');
         return;
       }
+      closeBrokerWebsiteMenu();
       window.open(url, '_blank', 'noopener');
     }
 
@@ -3429,10 +3497,39 @@
       }
       try {
         await copyTextToClipboard(url);
+        closeBrokerWebsiteMenu();
         window.ActionFeedbackUi?.showToast?.('success', 'Broker profile link copied.');
         setStatus('Broker profile link copied.', 'success');
       } catch (error) {
         setStatus('Could not copy broker profile link. Please open it and copy from the browser.', 'error');
+      }
+    }
+
+    async function shareWorkspaceBrokerProfileLink() {
+      const url = buildWorkspaceBrokerProfileLink();
+      if (!url) {
+        setStatus('Broker profile link is not available yet.', 'error');
+        return;
+      }
+      const title = getWorkspaceBrokerWebsiteLabel();
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title,
+            text: 'My NexBridge public listings website.',
+            url
+          });
+          closeBrokerWebsiteMenu();
+          setStatus('Broker website share opened.', 'success');
+          return;
+        }
+        await copyTextToClipboard(url);
+        closeBrokerWebsiteMenu();
+        window.ActionFeedbackUi?.showToast?.('success', 'Broker website URL copied.');
+        setStatus('Sharing is not available in this browser, so the URL was copied.', 'success');
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+        setStatus('Could not share broker website link.', 'error');
       }
     }
 
@@ -4382,6 +4479,7 @@
         if (enforceBrokerSessionVersion(true)) {
           return;
         }
+        initBrokerWebsiteMenu();
         initDashboardCallPopover();
         if (typeof initDashboardComplaintModal === 'function') {
           try {
