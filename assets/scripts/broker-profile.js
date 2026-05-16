@@ -503,6 +503,7 @@
         listing.unitLayout && listing.unitLayout !== 'N/A' ? listing.unitLayout : '',
         listing.propertyCategory || '',
         listing.sizeLabel || '',
+        Number(listing.listingImageCount || 0) > 0 ? `${Number(listing.listingImageCount)} photos` : '',
         listing.purpose === 'monthly_rent' && listing.furnishedStatus ? listing.furnishedStatus.replace(/_/g, ' ') : ''
       ].filter(Boolean);
       return `

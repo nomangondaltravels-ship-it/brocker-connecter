@@ -51,6 +51,18 @@ function getBrokerAvatar(broker = {}) {
   );
 }
 
+function getSafeListingCoverImageUrl(images = []) {
+  const firstImage = Array.isArray(images) ? images[0] : null;
+  const rawUrl = normalizeText(
+    firstImage?.url
+    || firstImage?.src
+    || firstImage?.imageUrl
+    || (typeof firstImage === 'string' ? firstImage : '')
+  );
+  if (!rawUrl || rawUrl.startsWith('data:') || rawUrl.startsWith('blob:')) return '';
+  return rawUrl;
+}
+
 function sanitizeBrokerProfile(broker = {}, listings = []) {
   const name = normalizeText(broker.full_name || broker.broker_display_name || broker.company_name || 'NexBridge Broker');
   const companyName = normalizeText(broker.company_name);
@@ -94,7 +106,7 @@ function withListingCover(row, sourceRow) {
     size_label: formatSizeLabel(sourceRow?.size, meta.sizeUnit),
     listing_image_count: images.length,
     broker_avatar_url: '',
-    listing_cover_image_url: normalizeText(images[0]?.url || images[0]?.dataUrl || images[0]?.src || images[0] || '')
+    listing_cover_image_url: getSafeListingCoverImageUrl(images)
   };
 }
 
