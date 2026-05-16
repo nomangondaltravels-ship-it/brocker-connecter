@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-16-broker-website-sidebar" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-16-broker-website-sidebar"></script>
-  <title>Broker Listings | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-16-broker-website-sidebar" />
-  <link rel="stylesheet" href="assets/styles/broker-profile.css?v=2026-05-16-broker-website-sidebar">
+  <meta name="nexbridge-build" content="2026-05-16-client-inventory-detail" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-16-client-inventory-detail"></script>
+  <title>Client Inventory | NexBridge</title>
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-16-client-inventory-detail" />
+  <link rel="stylesheet" href="assets/styles/broker-profile.css?v=2026-05-16-client-inventory-detail">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="index.html?view=public" aria-label="Open NexBridge Marketplace">
-      <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-16-broker-website-sidebar" alt="NexBridge logo">
+    <a class="brand" href="#listingGrid" aria-label="Open broker inventory">
+      <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-16-client-inventory-detail" alt="NexBridge logo">
       <span class="brand-copy">
         <strong>Nex<span>Bridge</span></strong>
         <small>Connect • Match • Close</small>
       </span>
     </a>
     <div class="topbar-actions">
-      <a class="btn btn-secondary" href="index.html?view=public">Marketplace</a>
-      <button class="btn btn-primary" type="button" id="copyProfileBtn">Copy Profile Link</button>
+      <a class="btn btn-secondary" href="#listingGrid">Broker Inventory</a>
+      <button class="btn btn-primary" type="button" id="copyProfileBtn">Copy Inventory Link</button>
     </div>
   </header>
 
@@ -62,7 +62,7 @@
 
     <section class="section-head">
       <div>
-        <h1>Broker Listings</h1>
+        <h1>Available Inventory</h1>
         <p id="resultMeta">Loading public listings...</p>
       </div>
       <span class="privacy-chip">Owner and private data hidden</span>
@@ -75,8 +75,14 @@
     </section>
   </main>
 
+  <div class="detail-overlay" id="listingDetailOverlay" hidden>
+    <article class="detail-sheet" role="dialog" aria-modal="true" aria-labelledby="listingDetailTitle">
+      <div id="listingDetailContent"></div>
+    </article>
+  </div>
+
   <div class="toast" id="profileToast" role="status" aria-live="polite"></div>
 
-  <script src="assets/scripts/broker-profile.js?v=2026-05-16-broker-website-sidebar"></script>
+  <script src="assets/scripts/broker-profile.js?v=2026-05-16-client-inventory-detail"></script>
 </body>
 </html>

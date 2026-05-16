@@ -5,6 +5,7 @@ import {
   getSupabaseConfig,
   json,
   normalizeListingPurposeValue,
+  normalizePhoneNumber,
   normalizeText,
   parseLeadMeta,
   parsePropertyMeta,
@@ -53,6 +54,13 @@ function getBrokerAvatar(broker = {}) {
 function sanitizeBrokerProfile(broker = {}, listings = []) {
   const name = normalizeText(broker.full_name || broker.broker_display_name || broker.company_name || 'NexBridge Broker');
   const companyName = normalizeText(broker.company_name);
+  const contactMobile = normalizePhoneNumber(
+    broker.whatsapp_number
+    || broker.whatsappNumber
+    || broker.mobile_number
+    || broker.mobileNumber
+    || broker.broker_mobile
+  );
   const saleCount = listings.filter(item => item.sourceType === 'property' && item.purpose === 'sale' && !item.isDistress).length;
   const yearlyRentCount = listings.filter(item => item.sourceType === 'property' && item.purpose === 'rent').length;
   const monthlyRentCount = listings.filter(item => item.sourceType === 'property' && item.purpose === 'monthly_rent').length;
@@ -64,6 +72,7 @@ function sanitizeBrokerProfile(broker = {}, listings = []) {
     companyName,
     initials: name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'NB',
     avatarUrl: getBrokerAvatar(broker),
+    contactMobile,
     isVerified: Boolean(broker.is_verified),
     listingCount: listings.length,
     counts: {
@@ -167,6 +176,7 @@ function buildBrokerProfileFromPublicRows(rows = [], slug = '') {
     broker_id_number: normalizeText(row?.broker_id_number),
     full_name: normalizeText(row?.broker_display_name || 'NexBridge Broker'),
     company_name: normalizeText(row?.broker_company_name || row?.company_name),
+    broker_mobile: normalizeText(row?.broker_mobile),
     is_verified: false,
     public_slug: slug
   };
