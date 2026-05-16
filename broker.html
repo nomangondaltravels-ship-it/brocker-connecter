@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="nexbridge-build" content="2026-05-16-client-inventory-detail" />
-  <script src="assets/scripts/runtime-health.js?v=2026-05-16-client-inventory-detail"></script>
+  <meta name="nexbridge-build" content="2026-05-16-client-inventory-mobile" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-16-client-inventory-mobile"></script>
   <title>Client Inventory | NexBridge</title>
-  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-16-client-inventory-detail" />
-  <link rel="stylesheet" href="assets/styles/broker-profile.css?v=2026-05-16-client-inventory-detail">
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-16-client-inventory-mobile" />
+  <link rel="stylesheet" href="assets/styles/broker-profile.css?v=2026-05-16-client-inventory-mobile">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="#listingGrid" aria-label="Open broker inventory">
-      <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-16-client-inventory-detail" alt="NexBridge logo">
+      <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-16-client-inventory-mobile" alt="NexBridge logo">
       <span class="brand-copy">
         <strong>Nex<span>Bridge</span></strong>
         <small>Connect • Match • Close</small>
@@ -20,7 +20,7 @@
     </a>
     <div class="topbar-actions">
       <a class="btn btn-secondary" href="#listingGrid">Broker Inventory</a>
-      <button class="btn btn-primary" type="button" id="copyProfileBtn">Copy Inventory Link</button>
+      <button class="btn btn-primary" type="button" id="copyProfileBtn">Copy Link</button>
     </div>
   </header>
 
@@ -65,7 +65,6 @@
         <h1>Available Inventory</h1>
         <p id="resultMeta">Loading public listings...</p>
       </div>
-      <span class="privacy-chip">Owner and private data hidden</span>
     </section>
 
     <section class="listing-grid" id="listingGrid" aria-live="polite">
@@ -83,6 +82,6 @@
 
   <div class="toast" id="profileToast" role="status" aria-live="polite"></div>
 
-  <script src="assets/scripts/broker-profile.js?v=2026-05-16-client-inventory-detail"></script>
+  <script src="assets/scripts/broker-profile.js?v=2026-05-16-client-inventory-mobile"></script>
 </body>
 </html>

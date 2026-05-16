@@ -173,8 +173,7 @@
     }
 
     .profile-kicker,
-    .tab-count,
-    .privacy-chip {
+    .tab-count {
       color: #936b0d;
       background: var(--gold-soft);
       border: 1px solid rgba(189, 146, 40, 0.26);
@@ -322,12 +321,6 @@
       margin: 4px 0 0;
       color: var(--muted);
       font-weight: 700;
-    }
-
-    .privacy-chip {
-      padding: 9px 12px;
-      font-size: 0.68rem;
-      white-space: nowrap;
     }
 
     .listing-grid {
@@ -766,49 +759,253 @@
     }
 
     @media (max-width: 720px) {
-      .topbar,
-      .section-head {
-        align-items: flex-start;
-        flex-direction: column;
+      body {
+        background: #f3f5f9;
+      }
+
+      .topbar {
+        gap: 10px;
+        padding: 10px 12px;
+      }
+
+      .brand {
+        gap: 8px;
+      }
+
+      .brand-logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+      }
+
+      .brand-copy strong {
+        font-size: 1rem;
+      }
+
+      .brand-copy small {
+        font-size: 0.58rem;
+        letter-spacing: 0.12em;
+      }
+
+      .topbar-actions .btn-secondary {
+        display: none;
       }
 
       .topbar-actions {
-        width: 100%;
-        justify-content: stretch;
+        flex: 0 0 auto;
       }
 
       .topbar-actions .btn {
-        flex: 1;
+        min-height: 38px;
+        border-radius: 999px;
+        padding: 0 12px;
+        font-size: 0.82rem;
       }
 
       .page-shell {
-        width: min(100% - 20px, 1440px);
-        margin-top: 14px;
+        width: min(100% - 12px, 1440px);
+        margin-top: 10px;
+        gap: 10px;
       }
 
       .profile-hero {
-        grid-template-columns: 1fr;
+        grid-template-columns: 56px minmax(0, 1fr);
         min-height: auto;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
       }
 
       .profile-avatar {
-        width: 76px;
-        height: 76px;
-        border-radius: 20px;
-        font-size: 1.45rem;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        font-size: 1.12rem;
       }
 
-      .filter-grid,
+      .profile-copy {
+        gap: 6px;
+      }
+
+      .profile-kicker {
+        padding: 5px 8px;
+        font-size: 0.58rem;
+        max-width: 100%;
+      }
+
+      .profile-copy h1 {
+        font-size: 1.45rem;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+      }
+
+      .profile-copy p {
+        font-size: 0.86rem;
+        line-height: 1.25;
+      }
+
+      .profile-badges {
+        gap: 5px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+      }
+
+      .profile-badge {
+        padding: 5px 8px;
+        font-size: 0.68rem;
+        white-space: nowrap;
+      }
+
+      .toolbar,
+      .section-head {
+        border-radius: 18px;
+        box-shadow: 0 10px 28px rgba(17, 24, 39, 0.05);
+      }
+
+      .toolbar {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .tabs {
+        gap: 6px;
+      }
+
+      .tab-btn {
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 0.78rem;
+      }
+
+      .tab-count {
+        min-width: 22px;
+        height: 22px;
+        margin-left: 4px;
+        font-size: 0.64rem;
+      }
+
+      .filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .search-field {
+        grid-column: 1 / -1;
+      }
+
+      .field {
+        gap: 5px;
+      }
+
+      .field span {
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+      }
+
+      .field input,
+      .field select,
+      .clear-btn {
+        min-height: 40px;
+        border-radius: 12px;
+        padding: 0 10px;
+        font-size: 0.82rem;
+      }
+
+      .section-head {
+        padding: 12px 14px;
+      }
+
+      .section-head h1 {
+        font-size: 1.05rem;
+      }
+
+      .section-head p {
+        margin-top: 2px;
+        font-size: 0.82rem;
+      }
+
       .listing-grid {
         grid-template-columns: 1fr;
+        gap: 10px;
       }
 
-      .privacy-chip {
-        white-space: normal;
+      .listing-card {
+        grid-template-columns: 126px minmax(0, 1fr);
+        border-radius: 16px;
+        min-height: 168px;
+      }
+
+      .listing-card:hover {
+        transform: none;
+      }
+
+      .listing-media {
+        min-height: 100%;
+        aspect-ratio: auto;
+      }
+
+      .listing-media-fallback {
+        font-size: 1.7rem;
+      }
+
+      .listing-badge-row {
+        inset: 8px 8px auto;
+        gap: 5px;
+      }
+
+      .listing-badge {
+        padding: 5px 7px;
+        font-size: 0.62rem;
+        box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12);
+      }
+
+      .listing-body {
+        padding: 11px;
+        gap: 7px;
+      }
+
+      .listing-price {
+        font-size: 1rem;
+      }
+
+      .listing-title {
+        font-size: 0.92rem;
+        line-height: 1.2;
+      }
+
+      .listing-meta {
+        font-size: 0.78rem;
+        line-height: 1.25;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .listing-specs {
+        gap: 5px;
+      }
+
+      .listing-specs span {
+        padding: 5px 7px;
+        font-size: 0.68rem;
+      }
+
+      .listing-actions {
+        gap: 6px;
+      }
+
+      .listing-actions .btn {
+        min-height: 34px;
+        border-radius: 11px;
+        padding: 0 9px;
+        font-size: 0.74rem;
       }
 
       .detail-overlay {
-        padding: 10px;
+        padding: 0;
       }
 
       .detail-topbar,
@@ -817,12 +1014,74 @@
         flex-direction: column;
       }
 
+      .detail-sheet {
+        min-height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .detail-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 12px;
+      }
+
+      .detail-topbar h2 {
+        margin: 6px 0 4px;
+        font-size: 1.35rem;
+      }
+
+      .detail-topbar p {
+        font-size: 0.82rem;
+      }
+
+      .detail-close {
+        min-height: 38px;
+        width: 100%;
+      }
+
       .detail-layout {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .detail-gallery,
+      .detail-copy,
+      .client-contact-card,
+      .detail-notes {
+        border-radius: 16px;
+      }
+
+      .detail-gallery,
+      .detail-copy {
+        padding: 10px;
+      }
+
+      .detail-main-photo {
+        aspect-ratio: 16 / 11;
+        border-radius: 14px;
+      }
+
+      .detail-thumbs {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .detail-thumbs button {
+        border-radius: 10px;
+      }
+
+      .detail-price {
+        font-size: 1.5rem;
+      }
+
+      .client-contact-card {
         padding: 10px;
       }
 
       .detail-grid {
-        grid-template-columns: 1fr;
+        gap: 8px;
       }
 
       .detail-actions {
@@ -831,5 +1090,31 @@
 
       .detail-actions .btn {
         flex: 1;
+      }
+
+      .detail-cell {
+        min-height: 68px;
+        border-radius: 13px;
+        padding: 10px;
+      }
+
+      .detail-cell small,
+      .client-contact-card small,
+      .detail-notes small {
+        font-size: 0.6rem;
+      }
+
+      .detail-cell strong {
+        font-size: 0.88rem;
+      }
+
+      .detail-notes {
+        padding: 10px;
+      }
+
+      .toast {
+        bottom: 12px;
+        width: calc(100% - 24px);
+        text-align: center;
       }
     }
