@@ -34,6 +34,34 @@ export function normalizeText(value) {
   return String(value || '').trim();
 }
 
+export function slugifyPublicValue(value) {
+  return normalizeText(value)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 72);
+}
+
+export function buildBrokerPublicSlug(broker = {}) {
+  const namePart = slugifyPublicValue(
+    broker.public_slug
+    || broker.publicSlug
+    || broker.full_name
+    || broker.broker_display_name
+    || broker.brokerDisplayName
+    || broker.company_name
+    || broker.companyName
+    || 'broker'
+  ) || 'broker';
+  const suffix = slugifyPublicValue(
+    broker.broker_id_number
+    || broker.brokerIdNumber
+    || normalizeText(broker.id || broker.broker_uuid || broker.brokerUuid).slice(-8)
+  );
+  return suffix ? `${namePart}-${suffix}` : namePart;
+}
+
 const PROPERTY_TYPE_ALIASES = Object.freeze({
   apartment: 'Apartment',
   studio: 'Studio',
@@ -2071,6 +2099,7 @@ export function sanitizePublicListing(row, options = {}) {
     : '';
   return {
     id: row.id,
+    brokerSlug: buildBrokerPublicSlug(row),
     brokerUuid: exposeBrokerContact ? normalizeText(row.broker_uuid) : '',
     brokerIdNumber: exposeBrokerContact ? normalizeText(row.broker_id_number) : '',
     brokerName: exposeBrokerContact ? normalizeText(row.broker_display_name) : 'Broker Hidden',

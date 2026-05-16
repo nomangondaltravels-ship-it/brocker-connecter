@@ -274,6 +274,24 @@
       return url.toString();
     }
 
+    function buildBrokerProfileLink(listing) {
+      const slug = normalizeText(listing?.brokerSlug);
+      if (!slug) return '';
+      const url = new URL('broker.html', window.location.href);
+      url.searchParams.set('broker', slug);
+      return url.toString();
+    }
+
+    function openBrokerProfileFromListing(listingId, sectionName) {
+      const listing = findMarketplaceListing(sectionName, listingId) || state.listings.find(item => String(item.id) === String(listingId));
+      const url = buildBrokerProfileLink(listing);
+      if (!url) {
+        setSystemBanner('Broker profile link is not available for this listing yet.', 'error');
+        return;
+      }
+      window.open(url, '_blank', 'noopener');
+    }
+
     function getPublicSearchText(listing) {
       return [
         listing.sourceType === 'lead' ? 'broker requirement' : 'nexbridge listing',
@@ -961,6 +979,7 @@
         selfDisabledText: 'You cannot report your own shared record.'
       });
       const sectionName = getPublicSectionForListing(listing);
+      const brokerProfileLink = listing.sourceType === 'property' ? buildBrokerProfileLink(listing) : '';
       const mediaActions = listing.sourceType === 'property'
         ? `
             ${renderConnectorActionButton({
@@ -1017,6 +1036,12 @@
               tone: 'ghost',
               onclick: `showSharePopover(this, '${shareLink.replace(/'/g, '%27')}')`
           })}
+          ${brokerProfileLink ? renderConnectorActionButton({
+            label: 'View Broker Listings',
+            icon: 'open',
+            tone: 'ghost',
+            onclick: `openBrokerProfileFromListing('${listing.id}', '${sectionName}')`
+          }) : ''}
           ${listing.brokerEmail ? renderConnectorActionButton({
             label: 'Email',
             icon: 'email',

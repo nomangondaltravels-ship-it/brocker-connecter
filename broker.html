@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="nexbridge-build" content="2026-05-16-broker-profile-links" />
+  <script src="assets/scripts/runtime-health.js?v=2026-05-16-broker-profile-links"></script>
+  <title>Broker Listings | NexBridge</title>
+  <link rel="icon" type="image/svg+xml" href="assets/nexbridge-favicon.svg?v=2026-05-16-broker-profile-links" />
+  <link rel="stylesheet" href="assets/styles/broker-profile.css?v=2026-05-16-broker-profile-links">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html?view=public" aria-label="Open NexBridge Marketplace">
+      <img class="brand-logo" src="assets/broker-connector-logo.svg?v=2026-05-16-broker-profile-links" alt="NexBridge logo">
+      <span class="brand-copy">
+        <strong>Nex<span>Bridge</span></strong>
+        <small>Connect • Match • Close</small>
+      </span>
+    </a>
+    <div class="topbar-actions">
+      <a class="btn btn-secondary" href="index.html?view=public">Marketplace</a>
+      <button class="btn btn-primary" type="button" id="copyProfileBtn">Copy Profile Link</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="profile-hero" id="profileHero" aria-live="polite">
+      <div class="profile-avatar skeleton-box"></div>
+      <div class="profile-copy">
+        <div class="skeleton-line wide"></div>
+        <div class="skeleton-line"></div>
+        <div class="profile-badges">
+          <span class="skeleton-pill"></span>
+          <span class="skeleton-pill"></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Broker listing filters">
+      <div class="tabs" id="profileTabs"></div>
+      <div class="filter-grid">
+        <label class="field search-field">
+          <span>Search</span>
+          <input id="profileSearch" type="search" placeholder="Area, building, unit, price">
+        </label>
+        <label class="field">
+          <span>Location</span>
+          <select id="locationFilter"></select>
+        </label>
+        <label class="field">
+          <span>Unit Layout</span>
+          <select id="layoutFilter"></select>
+        </label>
+        <label class="field">
+          <span>Max Price</span>
+          <input id="maxPriceFilter" type="text" inputmode="numeric" placeholder="AED">
+        </label>
+        <button class="btn btn-secondary clear-btn" type="button" id="clearFiltersBtn">Clear</button>
+      </div>
+    </section>
+
+    <section class="section-head">
+      <div>
+        <h1>Broker Listings</h1>
+        <p id="resultMeta">Loading public listings...</p>
+      </div>
+      <span class="privacy-chip">Owner and private data hidden</span>
+    </section>
+
+    <section class="listing-grid" id="listingGrid" aria-live="polite">
+      <div class="listing-card skeleton-card"></div>
+      <div class="listing-card skeleton-card"></div>
+      <div class="listing-card skeleton-card"></div>
+    </section>
+  </main>
+
+  <div class="toast" id="profileToast" role="status" aria-live="polite"></div>
+
+  <script src="assets/scripts/broker-profile.js?v=2026-05-16-broker-profile-links"></script>
+</body>
+</html>

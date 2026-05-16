@@ -3373,6 +3373,69 @@
         `;
     }
 
+    function slugifyWorkspacePublicValue(value) {
+      return normalizeText(value)
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 72);
+    }
+
+    function buildWorkspaceBrokerProfileSlug() {
+      const profile = typeof buildBrokerProfileModel === 'function' ? buildBrokerProfileModel() : {};
+      const broker = state.overview?.broker || state.broker || {};
+      const namePart = slugifyWorkspacePublicValue(
+        profile.publicSlug
+        || broker.publicSlug
+        || profile.fullName
+        || broker.fullName
+        || broker.name
+        || profile.companyName
+        || broker.companyName
+        || 'broker'
+      ) || 'broker';
+      const brokerId = normalizeText(
+        profile.brokerIdNumber
+        || broker.brokerIdNumber
+        || broker.broker_id_number
+      );
+      const suffix = slugifyWorkspacePublicValue(brokerId || normalizeText(broker.id || broker.broker_uuid || '').slice(-8));
+      return suffix ? `${namePart}-${suffix}` : namePart;
+    }
+
+    function buildWorkspaceBrokerProfileLink() {
+      const slug = buildWorkspaceBrokerProfileSlug();
+      if (!slug) return '';
+      const url = new URL('broker.html', window.location.href);
+      url.searchParams.set('broker', slug);
+      return url.toString();
+    }
+
+    function openWorkspaceBrokerProfile() {
+      const url = buildWorkspaceBrokerProfileLink();
+      if (!url) {
+        setStatus('Broker profile link is not available yet.', 'error');
+        return;
+      }
+      window.open(url, '_blank', 'noopener');
+    }
+
+    async function copyWorkspaceBrokerProfileLink() {
+      const url = buildWorkspaceBrokerProfileLink();
+      if (!url) {
+        setStatus('Broker profile link is not available yet.', 'error');
+        return;
+      }
+      try {
+        await copyTextToClipboard(url);
+        window.ActionFeedbackUi?.showToast?.('success', 'Broker profile link copied.');
+        setStatus('Broker profile link copied.', 'success');
+      } catch (error) {
+        setStatus('Could not copy broker profile link. Please open it and copy from the browser.', 'error');
+      }
+    }
+
     function renderPropertySecondaryActions(property) {
       const reportButton = window.ComplaintCenterUi?.renderReportButton({
         label: 'Report',
@@ -3416,6 +3479,18 @@
             icon: 'download',
             tone: 'secondary',
             onclick: `downloadPropertyPdf(${property.id})`
+          })}
+          ${renderRecordActionButton({
+            label: 'Broker Profile',
+            icon: 'view',
+            tone: 'secondary',
+            onclick: 'openWorkspaceBrokerProfile()'
+          })}
+          ${renderRecordActionButton({
+            label: 'Copy Profile Link',
+            icon: 'share',
+            tone: 'ghost',
+            onclick: 'copyWorkspaceBrokerProfileLink()'
           })}
           ${reportButton}
         </div>
