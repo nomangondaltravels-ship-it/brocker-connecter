@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-16-broker-profile-listings-fallback",
-  "phase": "broker-profile-listings-fallback"
+  "version": "2026-05-16-public-broker-profile-api-fix",
+  "phase": "public-broker-profile-api-fix"
 }
