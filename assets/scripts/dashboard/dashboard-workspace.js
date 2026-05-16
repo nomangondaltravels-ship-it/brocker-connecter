@@ -3520,14 +3520,21 @@
             onclick: onclickBuilder(rowId),
             extraClass: 'record-quick-btn'
           })}
+          ${renderRecordActionButton({
+            label: 'Profile',
+            icon: 'share',
+            tone: 'ghost',
+            onclick: 'event.stopPropagation();openWorkspaceBrokerProfile()',
+            extraClass: 'record-quick-btn'
+          })}
         `;
       });
     }
 
     const WORKSPACE_TABLE_COLUMNS = {
       leads: '56px 180px 110px 120px 160px 120px 110px 96px 140px',
-      listings: '56px 180px 120px 160px 110px 120px 110px 110px 140px',
-      distress: '56px 180px 110px 160px 120px 120px 110px 96px 140px'
+      listings: '56px 180px 120px 160px 110px 120px 110px 110px 190px',
+      distress: '56px 180px 110px 160px 120px 120px 110px 96px 190px'
     };
 
     function renderLeadDetailPanel(lead) {
@@ -3990,6 +3997,8 @@
             <span>Select up to 10 listings and create one safe WhatsApp-ready message.</span>
           </div>
           <div class="bulk-share-toolbar-actions">
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="openWorkspaceBrokerProfile()">Public Profile</button>
+            <button class="btn btn-secondary btn-tiny" type="button" onclick="copyWorkspaceBrokerProfileLink()">Copy Profile Link</button>
             <button class="btn btn-secondary btn-tiny" type="button" onclick="setBulkListingShareVisibleSelection(event, '${sectionName}', true)" ${reachedLimit ? 'disabled' : ''}>Select Visible</button>
             ${visibleSelectedCount ? `<button class="btn btn-secondary btn-tiny" type="button" onclick="setBulkListingShareVisibleSelection(event, '${sectionName}', false)">Unselect Visible</button>` : ''}
             <button class="btn btn-secondary btn-tiny" type="button" onclick="clearBulkListingShareSelection(event)" ${selectedCount ? '' : 'disabled'}>Clear</button>
@@ -4204,6 +4213,13 @@
                             onclick: `event.stopPropagation();editProperty(${property.id})`,
                             extraClass: 'record-quick-btn'
                           })}
+                          ${renderRecordActionButton({
+                            label: 'Profile',
+                            icon: 'share',
+                            tone: 'ghost',
+                            onclick: 'event.stopPropagation();openWorkspaceBrokerProfile()',
+                            extraClass: 'record-quick-btn'
+                          })}
                         </div>
                       </div>
                     `;
@@ -4322,6 +4338,13 @@
                             icon: 'edit',
                             tone: 'secondary',
                             onclick: `event.stopPropagation();editProperty(${property.id})`,
+                            extraClass: 'record-quick-btn'
+                          })}
+                          ${renderRecordActionButton({
+                            label: 'Profile',
+                            icon: 'share',
+                            tone: 'ghost',
+                            onclick: 'event.stopPropagation();openWorkspaceBrokerProfile()',
                             extraClass: 'record-quick-btn'
                           })}
                         </div>
