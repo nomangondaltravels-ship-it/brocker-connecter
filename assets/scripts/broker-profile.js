@@ -75,6 +75,55 @@
     return 'marketplace';
   }
 
+  function getBrokerNameFromSlug(slug) {
+    const parts = normalizeText(slug)
+      .split('-')
+      .filter(Boolean);
+    if (parts.length > 1 && (/^\d+$/.test(parts[parts.length - 1]) || /^bc$/i.test(parts[parts.length - 2]))) {
+      parts.pop();
+    }
+    return parts.length
+      ? parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
+      : 'NexBridge Broker';
+  }
+
+  function buildBrokerFromPublicListings(slug, listings) {
+    const items = Array.isArray(listings) ? listings : [];
+    const name = getBrokerNameFromSlug(slug);
+    return {
+      slug,
+      name,
+      companyName: 'NexBridge public broker profile',
+      initials: name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase() || 'NB',
+      avatarUrl: '',
+      isVerified: false,
+      listingCount: items.length,
+      counts: {
+        sale: items.filter(item => item.sourceType === 'property' && item.purpose === 'sale' && !item.isDistress).length,
+        yearlyRent: items.filter(item => item.sourceType === 'property' && item.purpose === 'rent').length,
+        monthlyRent: items.filter(item => item.sourceType === 'property' && item.purpose === 'monthly_rent').length,
+        distress: items.filter(item => item.sourceType === 'property' && item.isDistress).length
+      }
+    };
+  }
+
+  async function loadPublicListingsFallback(slug) {
+    const response = await fetch('/api/public-marketplace?section=all', { cache: 'no-store' });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result?.message || 'Broker profile could not load.');
+    }
+    const listings = (Array.isArray(result.listings) ? result.listings : [])
+      .filter(listing => normalizeText(listing.brokerSlug).toLowerCase() === normalizeText(slug).toLowerCase());
+    if (!listings.length) {
+      throw new Error('Broker profile was not found.');
+    }
+    return {
+      broker: buildBrokerFromPublicListings(slug, listings),
+      listings
+    };
+  }
+
   function getListingLink(listing) {
     const url = new URL('index.html', window.location.href);
     url.searchParams.set('view', 'public');
@@ -298,7 +347,11 @@
     const response = await fetch(`/api/public-broker-profile?broker=${encodeURIComponent(broker)}`, { cache: 'no-store' });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(result?.message || 'Broker profile could not load.');
+      const fallback = await loadPublicListingsFallback(broker);
+      state.broker = fallback.broker || null;
+      state.listings = Array.isArray(fallback.listings) ? fallback.listings : [];
+      render();
+      return;
     }
     state.broker = result.broker || null;
     state.listings = Array.isArray(result.listings) ? result.listings : [];
