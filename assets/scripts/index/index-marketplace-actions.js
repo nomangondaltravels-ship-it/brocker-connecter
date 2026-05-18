@@ -116,13 +116,13 @@
 
     function getConnectorWhatsappIntro(listing) {
       return listing?.sourceType === 'lead'
-        ? 'I checked your requirement on NexBridge.'
-        : 'I checked your listing on NexBridge.';
+        ? 'I saw your requirement on NexBridge.'
+        : 'I saw your listing on NexBridge.';
     }
 
     function getConnectorWhatsappIdentityLine() {
       const brokerName = getConnectorCurrentUserName();
-      return brokerName ? `I am ${brokerName}.` : 'I am a broker from NexBridge.';
+      return brokerName ? `Hi, this is ${brokerName}.` : 'Hi, this is a NexBridge broker.';
     }
 
     function buildConnectorWhatsappMessage(listing, sectionName) {
@@ -142,13 +142,19 @@
       }
       const referenceLabel = buildConnectorWhatsappReference(listing);
       const link = listing ? buildListingLink(listing, sectionName) : '';
+      const isRequirement = listing?.sourceType === 'lead';
       return [
         getConnectorWhatsappIdentityLine(),
         getConnectorWhatsappIntro(listing),
-        referenceLabel ? `Reference: ${referenceLabel}` : '',
-        link ? `Link: ${link}` : '',
-        'I have a client/buyer for this.'
-      ].filter(Boolean).join('\n');
+        '',
+        referenceLabel ? `${isRequirement ? 'Requirement' : 'Listing'}: ${referenceLabel}` : null,
+        link ? `${isRequirement ? 'Open Requirement' : 'Open Listing'}: ${link}` : null,
+        '',
+        isRequirement
+          ? 'I may have a matching property option for this requirement.'
+          : 'I may have a matching client for this listing.',
+        'Please confirm if it is still available.'
+      ].filter(line => line !== null && line !== undefined).join('\n');
     }
 
     function logConnectorContactAttempt(listing, sectionName) {
