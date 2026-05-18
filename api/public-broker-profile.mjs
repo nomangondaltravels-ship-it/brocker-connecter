@@ -300,7 +300,7 @@ export async function GET(request) {
       supabaseUrl,
       serviceRoleKey,
       table: 'brokers',
-      select: '*',
+      select: 'id,broker_id_number,public_slug,full_name,broker_display_name,company_name,whatsapp_number,mobile_number,broker_mobile,avatar_url,profile_image_url,profile_photo_url,is_verified,is_blocked,updated_at',
       order: { column: 'updated_at', ascending: false }
     }).catch(() => []);
     const activeBrokers = (Array.isArray(brokers) ? brokers : []).filter(item => !item?.is_blocked);
