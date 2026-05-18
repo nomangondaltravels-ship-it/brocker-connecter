@@ -223,7 +223,6 @@
         <div class="profile-badges">
           <span class="profile-badge">${broker.isVerified ? 'Verified Broker' : 'NexBridge Broker'}</span>
           <span class="profile-badge">${Number(broker.listingCount || 0)} public listings</span>
-          <span class="profile-badge">Owner data hidden</span>
         </div>
       </div>
     `;
