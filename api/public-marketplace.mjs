@@ -24,36 +24,6 @@ function getPublicPropertyPurpose(item) {
   return item?.source_type === 'property' ? normalizeListingPurposeValue(item?.purpose) : '';
 }
 
-function getPublicListingFilters(section) {
-  const normalizedSection = normalizeText(section).toLowerCase();
-  const filters = { public_listing_status: 'listed' };
-  switch (normalizedSection) {
-    case 'requirements':
-    case 'broker-requirements':
-    case 'shared-leads':
-      return { ...filters, source_type: 'lead' };
-    case 'marketplace':
-    case 'broker-connector-listings':
-    case 'shared-properties':
-      return { ...filters, source_type: 'property' };
-    case 'sale':
-    case 'sale-listings':
-      return { ...filters, source_type: 'property', purpose: 'sale' };
-    case 'yearly-rent':
-    case 'yearly-rentals':
-    case 'rent':
-      return { ...filters, source_type: 'property', purpose: 'rent' };
-    case 'monthly-rent':
-    case 'monthly-rentals':
-    case 'monthly':
-      return { ...filters, source_type: 'property', purpose: 'monthly_rent' };
-    case 'distress-deals':
-      return { ...filters, source_type: 'property', purpose: 'sale', is_distress: true };
-    default:
-      return filters;
-  }
-}
-
 function applySectionFilter(rows, section) {
   const items = Array.isArray(rows) ? rows : [];
   switch (section) {
@@ -128,7 +98,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
           supabaseUrl,
           serviceRoleKey,
           table: 'brokers',
-          select: 'id,broker_id_number,is_blocked,last_activity,avatar_url,profile_image_url,profile_photo_url',
+          select: '*',
           filters: { id: buildPostgrestInFilter(brokerIds) }
         }).catch(() => [])
       : [],
@@ -137,7 +107,7 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
           supabaseUrl,
           serviceRoleKey,
           table: 'brokers',
-          select: 'id,broker_id_number,is_blocked,last_activity,avatar_url,profile_image_url,profile_photo_url',
+          select: '*',
           filters: { broker_id_number: buildPostgrestInFilter(brokerIdNumbers) }
         }).catch(() => [])
       : [],
@@ -177,7 +147,8 @@ async function filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows }) {
     const brokerId = normalizeText(broker.id);
     const brokerIdNumber = normalizeText(broker.broker_id_number);
     const brokerAvatar = normalizeText(
-      broker.avatar_url
+      broker.avatar_data_url
+      || broker.avatar_url
       || broker.profile_image_url
       || broker.profile_photo_url
     );
@@ -336,12 +307,13 @@ export async function GET(request) {
       serviceRoleKey,
       table: 'public_listings',
       select: '*',
-      filters: getPublicListingFilters(section),
+      filters: {
+        public_listing_status: 'listed'
+      },
       order: { column: 'updated_at', ascending: false }
     });
 
-    const sectionRows = applySectionFilter(rows, section);
-    const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows: sectionRows });
+    const validRows = await filterValidPublicRows({ supabaseUrl, serviceRoleKey, rows });
     const activeRows = validRows.filter(row => !isExpiredMonthlyPublicRow(row));
     const filtered = applySectionFilter(activeRows, section).map(row => sanitizePublicListing(row, { exposeBrokerContact }));
     return json(
