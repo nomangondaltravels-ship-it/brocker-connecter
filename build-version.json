@@ -1,5 +1,5 @@
 {
   "app": "NexBridge",
-  "version": "2026-05-18-client-profile-clean",
-  "phase": "client-profile-clean"
+  "version": "2026-05-21-remove-version-banner",
+  "phase": "remove-version-banner"
 }

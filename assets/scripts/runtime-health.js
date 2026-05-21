@@ -1,9 +1,6 @@
 (function () {
-  const BUILD_META_SELECTOR = 'meta[name="nexbridge-build"]';
   const BANNER_ID = 'runtimeHealthBanner';
   const STYLE_ID = 'runtimeHealthStyles';
-  const VERSION_ENDPOINT = '/build-version.json';
-  const currentBuild = document.querySelector(BUILD_META_SELECTOR)?.content || '';
   let bannerVisible = false;
 
   function injectStyles() {
@@ -145,29 +142,4 @@
     showBanner('A browser loading issue was detected. Refresh once to reload the latest NexBridge files.');
   });
 
-  async function checkBuildVersion() {
-    if (!currentBuild || !window.fetch) return;
-    try {
-      const response = await fetch(`${VERSION_ENDPOINT}?t=${Date.now()}`, {
-        cache: 'no-store',
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      if (!response.ok) return;
-      const payload = await response.json().catch(() => null);
-      const liveBuild = String(payload?.version || '').trim();
-      if (liveBuild && liveBuild !== currentBuild) {
-        showBanner('A newer NexBridge version is live. Refresh once before continuing.');
-      }
-    } catch (error) {
-      if (navigator.onLine === false) {
-        showBanner('You appear to be offline. Reconnect and refresh to load live NexBridge records.', { autoHideMs: 9000 });
-      }
-    }
-  }
-
-  if (document.readyState === 'complete') {
-    checkBuildVersion();
-  } else {
-    window.addEventListener('load', checkBuildVersion, { once: true });
-  }
 })();
